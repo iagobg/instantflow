@@ -10,7 +10,7 @@ defmodule InstantflowWeb.HomeLive do
           <p class="eyebrow">SEU ESPAÇO DE TRABALHO</p><h1>Visão geral</h1><p>
             Olá, {@current_scope.user.name}. Tudo começa com uma equipe conectada.
           </p>
-        </div><span class="badge">◷ Fundação</span>
+        </div><span class="badge">✓ Ambiente disponível</span>
       </div>
       <section class="welcome-panel" aria-labelledby="welcome-title">
         <div>
@@ -39,17 +39,17 @@ defmodule InstantflowWeb.HomeLive do
           </p><span class="badge">✓ Acesso por convite</span>
         </section>
         <section class="card">
-          <.icon name="hero-squares-2x2" /><p class="eyebrow">PRÓXIMA ENTREGA</p><h2>
+          <.icon name="hero-squares-2x2" /><p class="eyebrow">TRABALHO EM FLUXO</p><h2>
             Fluxos de trabalho
           </h2><p>
-            Definições versionadas, solicitações e transições serão implementadas no Sprint 01.
-          </p><span class="badge muted">◷ Planejado</span>
+            Crie uma solicitação e acompanhe aprovação, correção e entregas simuladas.
+          </p><.link navigate={~p"/solicitacoes"} class="badge">→ Abrir solicitações</.link>
         </section>
       </div>
       <section class="note">
         <.icon name="hero-information-circle" /><div>
           <strong>Uma base pronta para crescer</strong><p>
-            Esta entrega disponibiliza autenticação, equipe e convites. Os processos escolares chegam nas próximas etapas do desenvolvimento.
+            Use o fluxo de aprovação para explorar solicitações, decisões e histórico com dados fictícios.
           </p>
         </div>
       </section>

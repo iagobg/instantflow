@@ -7,16 +7,20 @@ defmodule Instantflow.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      InstantflowWeb.Telemetry,
-      Instantflow.Repo,
-      {DNSCluster, query: Application.get_env(:instantflow, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Instantflow.PubSub},
-      # Start a worker by calling: Instantflow.Worker.start_link(arg)
-      # {Instantflow.Worker, arg},
-      # Start to serve requests, typically the last entry
-      InstantflowWeb.Endpoint
-    ]
+    delivery =
+      if Application.get_env(:instantflow, :delivery_worker, true),
+        do: [Instantflow.Delivery.Worker],
+        else: []
+
+    children =
+      [
+        InstantflowWeb.Telemetry,
+        Instantflow.Repo,
+        {DNSCluster, query: Application.get_env(:instantflow, :dns_cluster_query) || :ignore},
+        {Phoenix.PubSub, name: Instantflow.PubSub},
+        # Start to serve requests, typically the last entry
+        InstantflowWeb.Endpoint
+      ] ++ delivery
 
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options

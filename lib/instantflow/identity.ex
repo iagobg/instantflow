@@ -149,6 +149,22 @@ defmodule Instantflow.Identity do
 
   def accept_invitation(_, _), do: {:error, :invalid_invitation}
   # Lock order: user, membership, business rows. Revocation must follow the same order.
+  def lock_scope!(%Membership{user_id: id}) do
+    user = Repo.one(from u in User, where: u.id == ^id, lock: "FOR UPDATE")
+
+    member =
+      Repo.one(
+        from m in Membership,
+          where: m.user_id == ^id and m.organization_id == 1,
+          lock: "FOR UPDATE"
+      )
+
+    unless user && user.active && member && member.active, do: Repo.rollback(:forbidden)
+    member
+  end
+
+  def lock_scope!(_), do: Repo.rollback(:forbidden)
+
   defp lock_admin!(%Membership{user_id: id}) do
     user = Repo.one(from u in User, where: u.id == ^id, lock: "FOR UPDATE")
 

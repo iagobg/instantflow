@@ -1,5 +1,27 @@
 @import "./tokens.css";
 
+.requests-list, .request-heading, .history-card { margin-top: 24px; }
+.create-request form { display: flex; align-items: end; gap: 16px; }
+.create-request form .form-field { flex: 1; margin-bottom: 0; }
+.create-request form button { min-height: 46px; }
+.request-row { display: flex; align-items: center; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--if-border); }
+.request-row > div { flex: 1; }
+.request-row small { display: block; }
+.request-row:hover { text-decoration: none; }
+.empty-state { padding: 28px 0; }
+.empty-state:not(:only-child) { display: none; }
+.request-detail-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 24px; margin-top: 24px; }
+.section-card, .request-actions .card { margin-bottom: 20px; }
+.transition-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+textarea { width: 100%; min-height: 120px; resize: vertical; border: 1px solid var(--if-border-strong); border-radius: 7px; padding: 11px 12px; background: var(--if-bg); color: var(--if-text); font: inherit; }
+dt { font-size: 12px; color: var(--if-text-subtle); margin-top: 18px; }
+dd { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.delivery-row, .history-card article { padding: 16px 0; border-bottom: 1px solid var(--if-border); }
+.delivery-row p, .history-card article p { font-size: 12px; }
+.history-card small { display: block; }
+@media (max-width: 1000px) { .request-detail-grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .create-request form { display: block; } .create-request form button { margin-top: 16px; } .sidebar nav { flex-wrap: wrap; } }
+
 * {
   box-sizing:border-box}
 body {

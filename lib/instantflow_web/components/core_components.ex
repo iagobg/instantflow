@@ -44,8 +44,16 @@ defmodule InstantflowWeb.CoreComponents do
         <option :if={@prompt} value="">{@prompt}</option>
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
+      <textarea
+        :if={@type == "textarea"}
+        id={@id}
+        name={@name}
+        aria-invalid={@errors != []}
+        aria-describedby={if @errors != [], do: "#{@id}-errors"}
+        {@rest}
+      >{@value}</textarea>
       <input
-        :if={@type != "select"}
+        :if={@type not in ["select", "textarea"]}
         type={@type}
         id={@id}
         name={@name}

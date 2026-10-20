@@ -35,6 +35,8 @@ defmodule InstantflowWeb.Router do
     live_session :internal, on_mount: [{InstantflowWeb.UserAuth, :authenticated}] do
       live "/", HomeLive, :index
       live "/equipe", TeamLive, :index
+      live "/solicitacoes", RequestsLive, :index
+      live "/solicitacoes/:id", RequestLive, :show
     end
   end
 

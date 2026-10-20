@@ -18,6 +18,7 @@ defmodule InstantflowWeb.Layouts do
         </div>
         <p class="nav-label">ESPAÇO DE TRABALHO</p>
         <nav aria-label="Navegação principal">
+          <.link navigate={~p"/solicitacoes"} class="nav-link"><.icon name="hero-squares-2x2" />Solicitações</.link>
           <.link navigate={~p"/"} class="nav-link"><.icon name="hero-squares-2x2" />Visão geral</.link><.link
             :if={@current_scope.role == "admin"}
             navigate={~p"/equipe"}

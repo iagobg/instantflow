@@ -4,9 +4,11 @@ PT-BR school workflow demonstration built with Phoenix LiveView and PostgreSQL. 
 
 ## Current delivery
 
+Sprints 00 and 01 are implemented. Sprint 01 adds validated immutable workflow versions, guarded requests, typed section values, safe command retries, correction/rejection/cancellation history, and a durable simulated delivery outbox.
+
 Sprint 00 provides one fictional organization, nine departments and staff accounts, invitation acceptance, password sign-in, revocable 24-hour sessions, a protected overview, and administrator-only staff invitations. Both themes use the supplied tokens and logos. Invitation delivery is explicitly simulated: an administrator shares a one-time code locally, valid for 48 hours. There is no outbound email.
 
-Workflow execution, granular/overlapping role grants, parents, confidential records, files and finance belong to later sprints. This foundation is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
+Granular/overlapping role grants, the visual editor, parents, confidential records, files and finance belong to later sprints. This foundation is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
 
 ## Prerequisites and setup
 
@@ -65,3 +67,11 @@ See `sprint_plan/sprint_00.md` for delivery evidence. In the current WSL environ
 ## Development plan
 
 Start with `sprint_plan/sprint_index.md` and `design/index.md`. The functional plan determines screens; the example page in the visual identity does not determine functionality.
+
+## Try the workflow runtime
+
+Open **Solicitações** to create a request using the published approval fixture. The seed includes a draft owned by docente@escola.example. Fill and save **Resumo** and **Justificativa**, then submit for review. Sign in as financeiro@escola.example to review it. The first simulated notification deliberately fails; approval waits until the reviewer chooses **Tentar novamente** and its second attempt succeeds. Corrections, rejection and cancellation require explicit reasons. All effects and notifications are fictional.
+
+The backend validates published definitions, required fields, actor scopes, typed guards, reviewed revisions and idempotency keys inside short transactions. Published versions, command receipts, history and delivery attempts have database immutability triggers. Tickets remain pinned when version 2 is published. A durable refresh intent exists for each mutation and simulated delivery result; the polling worker recovers a missing post-commit wakeup. Refresh invalidations contain only a ticket identifier. Delivery is at least once and never calls an external provider.
+
+The current UI exercises the text-based fixture. Directory/file values fail closed pending their owning contexts; the full editor, interchange schema and type-specific authoring controls remain in Sprint 03. The list is capped at 100 recent authorized records. Independent-connection races, detailed grants, reconciliation, and broader multi-session UX are next in Sprint 02.

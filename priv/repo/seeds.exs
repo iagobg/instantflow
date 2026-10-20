@@ -42,3 +42,48 @@ end)
 IO.puts(
   "Demonstração preparada. Administração: admin@escola.example. Senha: valor de DEMO_PASSWORD."
 )
+
+alias Instantflow.{Identity, WorkflowCatalog, WorkflowRuntime}
+alias Instantflow.WorkflowCatalog.Workflow
+admin = Identity.scope(Repo.get_by!(User, email: "admin@escola.example").id)
+
+unless Repo.get_by(Workflow, organization_id: 1, key: "simple_approval") do
+  definition =
+    File.read!(Application.app_dir(:instantflow, "priv/workflows/simple_approval.json"))
+    |> Jason.decode!()
+
+  finance = Repo.get_by!(Department, organization_id: 1, name: "Financeiro")
+
+  bindings = %{
+    "roles" => %{"requester" => ["admin", "staff"], "reviewer" => ["staff"]},
+    "departments" => %{"review_department" => finance.id}
+  }
+
+  {:ok, version} = WorkflowCatalog.publish(admin, definition, bindings)
+  requester = Identity.scope(Repo.get_by!(User, email: "docente@escola.example").id)
+
+  {:ok, result} =
+    WorkflowRuntime.command(requester, %{
+      "operation" => "create",
+      "workflow_id" => version.workflow_id,
+      "key" => "seed:sample-request"
+    })
+
+  {:ok, _} =
+    WorkflowRuntime.command(requester, %{
+      "operation" => "save_section",
+      "ticket_id" => result["ticket_id"],
+      "key" => "seed:sample-values",
+      "section" => "request",
+      "expected_stage_revision" => 1,
+      "expected_section_revision" => 1,
+      "values" => %{
+        "summary" => "Materiais para oficina de leitura",
+        "justification" => "Atividade pedagógica fictícia da demonstração."
+      }
+    })
+end
+
+IO.puts(
+  "Fluxo de aprovação disponível. Analista: financeiro@escola.example. Solicitante de exemplo: docente@escola.example."
+)

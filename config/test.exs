@@ -1,4 +1,5 @@
 import Config
+config :instantflow, :delivery_worker, false
 
 # Configure your database
 #
