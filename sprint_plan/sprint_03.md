@@ -15,6 +15,7 @@ Goal: administrators create, review, exchange, and publish workflows without sou
 ## Acceptance criteria
 
 - Administrator creates a simple workflow without code.
+- Organization A's editor, role preview, import/export, and bindings cannot reference B resources, even for a user with both memberships. Installing the same template in both creates independent versions and configuration.
 - A cloned template accepts new fields/stages; publishing version 2 preserves active version-1 tickets.
 - Invalid graph, reference, type, capability, or unauthorized mapping cannot publish.
 - Role preview exposes no real records; concurrent draft edits conflict safely.
@@ -22,6 +23,7 @@ Goal: administrators create, review, exchange, and publish workflows without sou
 - Export contains no student/ticket data, secrets, or actual grants; unresolved local mappings block publication.
 - A template generated from the guide validates as a reviewed draft using the delivered schema.
 - All drag actions have keyboard equivalents and use guarded commands.
+- The capability catalogue distinguishes current support from planned Python automation. Unknown Python actions/inline code remain rejected; no script editor or runner ships in this sprint. A later explicit format extension may bind reviewed script versions without weakening current validation.
 
 ## Progress
 

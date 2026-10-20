@@ -20,6 +20,7 @@ Goal: complete the first school slice with restricted external participation.
 - Finance completion updates IT's queue; provisioning failure stays pending with retry status.
 - Simulations are labeled; retries do not duplicate receipts/provisioning.
 - Internal comments and assessments remain absent from external projections.
+- Parent accounts shared across schools have independent local guardian links; invitations, private object keys, uploads, and downloads reject foreign organization IDs. Switching school cannot reuse the previous school's draft or documents.
 
 ## Progress
 

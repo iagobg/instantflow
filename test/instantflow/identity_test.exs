@@ -23,7 +23,7 @@ defmodule Instantflow.IdentityTest do
 
     assert {:ok, user} = Identity.accept_invitation(result.token, attrs)
     assert user.email == "new@escola.example"
-    assert Identity.scope(user.id).role == "staff"
+    assert Identity.scope(user.id, 1).role == "staff"
     assert {:error, :invalid_invitation} = Identity.accept_invitation(result.token, attrs)
     assert {:ok, _} = Identity.authenticate("NEW@escola.example", attrs["password"])
     assert Repo.get!(Invitation, result.invitation.id).token_hash != result.token
@@ -84,17 +84,17 @@ defmodule Instantflow.IdentityTest do
   test "logout, expiration, and membership revocation invalidate sessions" do
     admin = staff_fixture()
     token = Identity.create_session(admin.user)
-    assert Identity.scope_for_token(token).user_id == admin.user_id
+    assert Identity.scope_for_token(token, 1).user_id == admin.user_id
     Identity.delete_session(token)
-    assert Identity.scope_for_token(token) == nil
+    assert Identity.scope_for_token(token, 1) == nil
     token = Identity.create_session(admin.user)
     Repo.update_all(Session, set: [expires_at: DateTime.add(DateTime.utc_now(:second), -1)])
-    assert Identity.scope_for_token(token) == nil
+    assert Identity.scope_for_token(token, 1) == nil
     token = Identity.create_session(admin.user)
     Repo.update!(Ecto.Changeset.change(Repo.get!(Membership, admin.id), active: false))
-    assert Identity.scope_for_token(token) == nil
+    assert Identity.scope_for_token(token, 1) == nil
 
-    assert {:error, :invalid_credentials} =
+    assert {:ok, _} =
              Identity.authenticate(admin.user.email, "fictional-password-123")
   end
 

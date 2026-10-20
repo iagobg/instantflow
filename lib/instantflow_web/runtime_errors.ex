@@ -1,4 +1,8 @@
 defmodule InstantflowWeb.RuntimeErrors do
+  def message(:queue_full),
+    do:
+      "A fila desta organização atingiu o limite. Aguarde as entregas pendentes antes de tentar novamente."
+
   def message(:conflict),
     do:
       "Esta solicitação foi atualizada. Seu rascunho foi preservado. Revise os dados antes de tentar novamente."

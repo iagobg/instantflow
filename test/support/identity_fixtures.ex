@@ -3,7 +3,10 @@ defmodule Instantflow.IdentityFixtures do
   alias Instantflow.Identity.{Department, Membership, Organization, User}
 
   def staff_fixture(role \\ "admin") do
-    Repo.insert!(%Organization{id: 1, name: "Escola de Teste"}, on_conflict: :nothing)
+    Repo.insert!(%Organization{id: 1, slug: "horizonte", name: "Escola de Teste"},
+      on_conflict: :nothing
+    )
+
     Repo.insert!(%Department{organization_id: 1, name: "Secretaria"}, on_conflict: :nothing)
     department = Repo.get_by!(Department, organization_id: 1, name: "Secretaria")
     email = "person#{System.unique_integer([:positive])}@escola.example"
@@ -23,7 +26,7 @@ defmodule Instantflow.IdentityFixtures do
       role: role
     })
 
-    Instantflow.Identity.scope(user.id)
+    Instantflow.Identity.scope(user.id, 1)
   end
 
   def login(conn, scope) do

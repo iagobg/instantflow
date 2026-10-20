@@ -9,7 +9,7 @@ defmodule InstantflowWeb.RequestLiveTest do
   test "requester creates, fills and submits a request through the UI", %{conn: conn} do
     f = workflow_fixture()
     conn = login(conn, f.requester)
-    {:ok, view, _} = live(conn, ~p"/solicitacoes")
+    {:ok, view, _} = live(conn, ~p"/o/horizonte/solicitacoes")
 
     view
     |> form("#new-request-form", request: %{workflow_id: f.version.workflow_id})
@@ -33,7 +33,7 @@ defmodule InstantflowWeb.RequestLiveTest do
   test "stale form errors preserve drafts and block advancing stale data", %{conn: conn} do
     f = workflow_fixture()
     id = create_ticket(f)
-    {:ok, view, _} = live(login(conn, f.requester), ~p"/solicitacoes/#{id}")
+    {:ok, view, _} = live(login(conn, f.requester), ~p"/o/horizonte/solicitacoes/#{id}")
 
     view
     |> form("#section-form-request",
@@ -45,8 +45,8 @@ defmodule InstantflowWeb.RequestLiveTest do
 
     Phoenix.PubSub.broadcast(
       Instantflow.PubSub,
-      Instantflow.Delivery.topic(id),
-      {:ticket_changed, id}
+      Instantflow.Delivery.topic(1, id),
+      {:ticket_changed, 1, id}
     )
 
     assert has_element?(view, "#stale-warning")
@@ -81,7 +81,7 @@ defmodule InstantflowWeb.RequestLiveTest do
     assert {:error, :not_found} = WorkflowRuntime.get(outsider, id)
     assert WorkflowRuntime.list(outsider) == []
 
-    assert {:error, {:live_redirect, %{to: "/solicitacoes"}}} =
-             live(login(conn, outsider), ~p"/solicitacoes/#{id}")
+    assert {:error, {:live_redirect, %{to: "/o/horizonte/solicitacoes"}}} =
+             live(login(conn, outsider), ~p"/o/horizonte/solicitacoes/#{id}")
   end
 end

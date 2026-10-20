@@ -4,6 +4,8 @@
 
 Goal: reproducible Phoenix application shell and identity foundations.
 
+Historical scope: delivered for one organization. Its completion evidence is unchanged; the later multi-organization requirement is implemented in [Sprint 01A](sprint_01a.md), not retroactively claimed here.
+
 ## Tasks
 
 - [x] S00-T01 Bootstrap pinned compatible Elixir/Phoenix/LiveView/Ecto/PostgreSQL and developer setup.

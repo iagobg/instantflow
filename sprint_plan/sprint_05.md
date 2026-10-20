@@ -20,6 +20,7 @@ Goal: quantitative consistency and cross-department approvals.
 - Partial delivery cannot complete an incomplete order.
 - Trips cannot skip academic, finance, transport, or safety prerequisites.
 - Approval-sensitive changes require renewed review; viewers converge to committed totals.
+- Same-named departments/budgets in two organizations remain independent. Cross-organization account bindings and requests fail, including when the finance user belongs to both schools; calendar/counts expose only the active tenant.
 
 ## Progress
 

@@ -1,12 +1,12 @@
 # Sprint 02 — Permissions and live collaboration
 
-[Sprint index](sprint_index.md) · Status: Planned · Dependencies: Sprint 01; D-13
+[Sprint index](sprint_index.md) · Status: Planned · Dependencies: Sprint 01A; D-13
 
 Goal: safe collaboration through authorized live tables and section forms.
 
 ## Tasks
 
-- [ ] S02-T01 Implement role/department/relationship/stage policies and restricted projections.
+- [ ] S02-T01 Implement organization-local role/department/relationship/stage policies and restricted projections on the migrated tenant boundary.
 - [ ] S02-T02 Build tables, filters, scoped counts, subscriptions, reconnect/reconciliation.
 - [ ] S02-T03 Add section editors, advisory presence, pending states, conflict reconciliation.
 - [ ] S02-T04 Implement revocation invalidation and transactional authorization coordination.
@@ -20,6 +20,7 @@ Goal: safe collaboration through authorized live tables and section forms.
 - Revoked users cannot refresh protected data or mutate records; protected UI clears.
 - Duplicate/out-of-order events and disconnects converge.
 - Counts, history, presence, and events do not reveal hidden records.
+- A shared user's different organization roles never combine; concurrent tabs, membership revocation, and live events remain scoped. Retain Sprint 01A isolation regression coverage while adding finer policies.
 
 ## Progress
 

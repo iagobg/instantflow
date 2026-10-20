@@ -7,6 +7,7 @@ defmodule Instantflow.WorkflowCatalog.Version do
     field :bindings, :map
     belongs_to :workflow, Instantflow.WorkflowCatalog.Workflow
     belongs_to :published_by, Instantflow.Identity.User
+    belongs_to :organization, Instantflow.Identity.Organization
     timestamps(type: :utc_datetime)
   end
 end

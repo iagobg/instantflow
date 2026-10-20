@@ -5,7 +5,7 @@ defmodule InstantflowWeb.TeamLiveTest do
 
   test "admin generates a working invitation through the form", %{conn: conn} do
     admin = staff_fixture()
-    {:ok, view, _} = live(login(conn, admin), ~p"/equipe")
+    {:ok, view, _} = live(login(conn, admin), ~p"/o/horizonte/equipe")
     assert has_element?(view, "#staff")
 
     view
@@ -37,14 +37,16 @@ defmodule InstantflowWeb.TeamLiveTest do
 
   test "staff cannot access team management", %{conn: conn} do
     staff = staff_fixture("staff")
-    assert {:error, {:live_redirect, %{to: "/"}}} = live(login(conn, staff), ~p"/equipe")
+
+    assert {:error, {:live_redirect, %{to: "/o/horizonte"}}} =
+             live(login(conn, staff), ~p"/o/horizonte/equipe")
   end
 
   test "revoked sessions cannot submit on an already mounted screen", %{conn: conn} do
     admin = staff_fixture()
     token = Instantflow.Identity.create_session(admin.user)
     conn = Plug.Test.init_test_session(conn, user_token: token)
-    {:ok, view, _} = live(conn, ~p"/equipe")
+    {:ok, view, _} = live(conn, ~p"/o/horizonte/equipe")
     Instantflow.Identity.delete_session(token)
 
     view
@@ -57,13 +59,13 @@ defmodule InstantflowWeb.TeamLiveTest do
     )
     |> render_submit()
 
-    assert_redirect(view, "/entrar")
+    assert_redirect(view, "/organizacoes")
     assert Instantflow.Repo.aggregate(Instantflow.Identity.Invitation, :count) == 0
   end
 
   test "overview links to workflow requests", %{conn: conn} do
-    {:ok, view, _} = live(login(conn, staff_fixture()), ~p"/")
+    {:ok, view, _} = live(login(conn, staff_fixture()), ~p"/o/horizonte")
     assert has_element?(view, "#main-content")
-    assert has_element?(view, "a[href='/solicitacoes']", "Abrir solicitações")
+    assert has_element?(view, "a[href='/o/horizonte/solicitacoes']", "Abrir solicitações")
   end
 end

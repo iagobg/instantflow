@@ -15,6 +15,8 @@ Forneça este guia à IA junto com o esquema JSON, o catálogo de recursos da ve
 
 Use dados fictícios. Não envie informações de estudantes, documentos reais, credenciais ou dados internos desnecessários ao serviço de IA.
 
+Cada modelo será instalado na organização selecionada pela pessoa administradora. Use somente papéis e referências simbólicas; não inclua IDs de organizações, usuários ou recursos reais. O mapeamento ocorre dentro da organização de destino. Compartilhar um modelo não compartilha solicitações, estudantes, permissões ou atualizações futuras.
+
 ## Regras para o modelo
 
 1. Produza JSON declarativo na versão solicitada. Não invente propriedades, tipos, operadores ou ações.

@@ -26,7 +26,11 @@ defmodule InstantflowWeb.RequestsLive do
                "workflow_id" => id
              }) do
           {:ok, result} ->
-            {:noreply, push_navigate(socket, to: ~p"/solicitacoes/#{result["ticket_id"]}")}
+            {:noreply,
+             push_navigate(socket,
+               to:
+                 ~p"/o/#{socket.assigns.current_scope.organization.slug}/solicitacoes/#{result["ticket_id"]}"
+             )}
 
           {:error, error} ->
             {:noreply, put_flash(socket, :error, InstantflowWeb.RuntimeErrors.message(error))}
@@ -66,7 +70,7 @@ defmodule InstantflowWeb.RequestsLive do
           </p><.link
             :for={{id, ticket} <- @streams.tickets}
             id={id}
-            navigate={~p"/solicitacoes/#{ticket.id}"}
+            navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes/#{ticket.id}"}
             class="request-row"
           ><div>
             <strong>Solicitação #{ticket.id}</strong><small>{ticket.workflow_version.definition[

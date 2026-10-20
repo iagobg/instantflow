@@ -3,8 +3,8 @@ defmodule InstantflowWeb.SessionController do
   alias Instantflow.Identity
 
   def new(conn, _params) do
-    if conn.assigns.current_scope,
-      do: redirect(conn, to: ~p"/"),
+    if conn.assigns.current_user,
+      do: redirect(conn, to: Instantflow.Organizations.home(conn.assigns.current_user)),
       else: render(conn, :new, form: Phoenix.Component.to_form(%{}, as: :login))
   end
 
@@ -19,7 +19,7 @@ defmodule InstantflowWeb.SessionController do
         |> clear_session()
         |> put_session(:user_token, token)
         |> put_session(:live_socket_id, Identity.socket_id(token))
-        |> redirect(to: ~p"/")
+        |> redirect(to: Instantflow.Organizations.home(user))
 
       {:error, _} ->
         conn
@@ -43,7 +43,7 @@ defmodule InstantflowWeb.SessionController do
     do: render(conn, :invitation, form: Phoenix.Component.to_form(%{}, as: :account))
 
   def accept(conn, %{"account" => params}) do
-    case Identity.accept_invitation(params["code"], params) do
+    case Identity.accept_invitation(params["code"], params, conn.assigns.current_user) do
       {:ok, _user} ->
         conn
         |> put_flash(:info, "Conta criada. Entre com seu e-mail e senha.")

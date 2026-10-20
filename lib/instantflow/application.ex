@@ -16,6 +16,7 @@ defmodule Instantflow.Application do
       [
         InstantflowWeb.Telemetry,
         Instantflow.Repo,
+        Instantflow.RuntimeDatabase,
         {DNSCluster, query: Application.get_env(:instantflow, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Instantflow.PubSub},
         # Start to serve requests, typically the last entry

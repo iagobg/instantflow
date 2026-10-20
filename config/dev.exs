@@ -2,11 +2,24 @@ import Config
 
 # Configure your database
 config :instantflow, Instantflow.Repo,
-  username: System.get_env("PGUSER", "postgres"),
-  password: System.get_env("PGPASSWORD", "instantflow-local-only"),
+  username: System.get_env("PGUSER", "instantflow_runtime"),
+  password: System.get_env("RUNTIME_DB_PASSWORD", "instantflow-runtime-local-only"),
   hostname: System.get_env("PGHOST", "localhost"),
   port: String.to_integer(System.get_env("PGPORT", "55432")),
   database: "instantflow_dev",
+  template: "template0",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: false,
+  pool_size: 10
+
+config :instantflow, Instantflow.OperatorRepo,
+  priv: "priv/repo",
+  log: false,
+  username: System.get_env("MIGRATION_PGUSER", "postgres"),
+  password: System.get_env("MIGRATION_PGPASSWORD", "instantflow-local-only"),
+  hostname: System.get_env("PGHOST", "localhost"),
+  port: String.to_integer(System.get_env("PGPORT", "55432")),
+  database: System.get_env("MIGRATION_DATABASE") || "instantflow_dev",
   template: "template0",
   stacktrace: true,
   show_sensitive_data_on_connection_error: false,

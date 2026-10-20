@@ -66,9 +66,19 @@ defmodule Instantflow.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
-      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
-      "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      "ecto.setup": [
+        "ecto.create -r Instantflow.OperatorRepo",
+        "ecto.migrate -r Instantflow.OperatorRepo",
+        "instantflow.db_roles",
+        "run priv/repo/seeds.exs"
+      ],
+      "ecto.reset": ["ecto.drop -r Instantflow.OperatorRepo", "ecto.setup"],
+      test: [
+        "ecto.create -r Instantflow.OperatorRepo --quiet",
+        "ecto.migrate -r Instantflow.OperatorRepo --quiet",
+        "instantflow.db_roles",
+        "test"
+      ],
       "assets.setup": ["esbuild.install --if-missing"],
       "assets.build": ["compile", "esbuild instantflow"],
       "assets.deploy": [

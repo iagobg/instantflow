@@ -9,6 +9,7 @@ defmodule Instantflow.WorkflowRuntime.Event do
     field :revision, :integer
     belongs_to :ticket, Instantflow.WorkflowRuntime.Ticket
     belongs_to :actor, Instantflow.Identity.User
+    belongs_to :organization, Instantflow.Identity.Organization
     timestamps(type: :utc_datetime)
   end
 end

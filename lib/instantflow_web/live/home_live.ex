@@ -18,8 +18,11 @@ defmodule InstantflowWeb.HomeLive do
             Menos caminhos soltos.<br />Mais trabalho em fluxo.
           </h2><p>
             Um lugar para organizar solicitações, conectar departamentos e acompanhar cada decisão da sua escola.
-          </p><.link :if={@current_scope.role == "admin"} navigate={~p"/equipe"} class="btn primary">Organizar equipe
-          <.icon name="hero-arrow-right" /></.link>
+          </p><.link
+            :if={@current_scope.role == "admin"}
+            navigate={~p"/o/#{@current_scope.organization.slug}/equipe"}
+            class="btn primary"
+          >Organizar equipe <.icon name="hero-arrow-right" /></.link>
         </div>
         <div class="flow-illustration" aria-hidden="true">
           <span>01 · Solicitar</span><i></i><span>02 · Colaborar</span><i></i><span>03 · Concluir</span>
@@ -43,7 +46,7 @@ defmodule InstantflowWeb.HomeLive do
             Fluxos de trabalho
           </h2><p>
             Crie uma solicitação e acompanhe aprovação, correção e entregas simuladas.
-          </p><.link navigate={~p"/solicitacoes"} class="badge">→ Abrir solicitações</.link>
+          </p><.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes"} class="badge">→ Abrir solicitações</.link>
         </section>
       </div>
       <section class="note">

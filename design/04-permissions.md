@@ -6,6 +6,8 @@
 
 Deny by default. Roles grant capabilities; department, assignment, requester/guardian relationship, stage, and classification restrict scope.
 
+First require an active organization and membership in that organization. All subsequent permissions are local: an administrator in A has no implied role in B. A global user may have multiple independent memberships. Tenant administrators cannot view a global user directory, change other memberships, or disable a global account. Platform provisioning/suspension authority is separate and grants no default ticket access. See [organization isolation](11-organizations.md).
+
 Evaluate separately: discover/list, summary, detail, section read/edit, create, comment visibility, assign, transition by edge, attachment/download, history, configure, publish, import, and export. Stage access does not imply transition authority; ticket access does not imply all-field access. Context functions enforce policy independently of hidden controls.
 
 | Actor | Proposed scope | Exclusions |
@@ -26,6 +28,8 @@ Proposed separation of duties: no finance-sensitive self-approval, including ove
 ## Parent portal
 
 Expiring invitations establish accounts; staff separately verify guardian relationships. Do not infer authority from matching names/domains. Parent A cannot discover Parent B through IDs, counts, search, events, files, or history.
+
+Invitations and verified guardian relationships are organization-bound. An existing account must authenticate as the invited identity to accept a new organization membership. The same parent/student names at two schools create no automatic link. Scoped downloads, history, counts, and invitations must also reject foreign-organization IDs.
 
 Use an explicit public projection: allowed submitted fields, public status, corrections, messages, and attachments. Internal stages may map to “Em análise”. Do not merely hide controls on an internal form.
 

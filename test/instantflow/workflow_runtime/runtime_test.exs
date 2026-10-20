@@ -128,13 +128,13 @@ defmodule Instantflow.WorkflowRuntimeTest do
   test "outbox recovers an omitted post-commit refresh and duplicate processing is safe" do
     f = workflow_fixture()
     id = create_ticket(f)
-    Phoenix.PubSub.subscribe(Instantflow.PubSub, Delivery.topic(id))
-    refute_received {:ticket_changed, ^id}
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, Delivery.topic(1, id))
+    refute_received {:ticket_changed, 1, ^id}
     [message] = Repo.all(Message)
-    assert {:ok, _} = Delivery.process(message.id)
-    assert_receive {:ticket_changed, ^id}
-    assert {:ok, :already_processed} = Delivery.process(message.id)
-    refute_received {:ticket_changed, ^id}
+    assert {:ok, _} = Delivery.process(1, message.id)
+    assert_receive {:ticket_changed, 1, ^id}
+    assert {:ok, :already_processed} = Delivery.process(1, message.id)
+    refute_received {:ticket_changed, 1, ^id}
     assert Repo.get!(Message, message.id).attempts == 1
   end
 end

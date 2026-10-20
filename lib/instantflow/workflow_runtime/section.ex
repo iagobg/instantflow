@@ -6,6 +6,7 @@ defmodule Instantflow.WorkflowRuntime.Section do
     field :values, :map, default: %{}
     field :revision, :integer, default: 1
     belongs_to :ticket, Instantflow.WorkflowRuntime.Ticket
+    belongs_to :organization, Instantflow.Identity.Organization
     timestamps(type: :utc_datetime)
   end
 end

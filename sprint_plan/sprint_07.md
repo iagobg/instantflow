@@ -6,7 +6,7 @@ Goal: reproducible, verified proof of concept.
 
 ## Tasks
 
-- [ ] S07-T01 Assemble fictional school seeds and multi-role demo covering four templates.
+- [ ] S07-T01 Assemble two-school seeds and multi-role demo covering four templates, tenant switching, independent customization, and isolation; generate the agreed multi-organization load dataset.
 - [ ] S07-T02 Run authorization, concurrency, idempotency, interchange, and fault-injection gates.
 - [ ] S07-T03 Measure agreed performance targets and address observed bottlenecks.
 - [ ] S07-T04 Review PT-BR coverage, mobile layout, focus, keyboard access, failure states.
@@ -20,6 +20,7 @@ Goal: reproducible, verified proof of concept.
 - Recovery from missed events/retries/lost acknowledgement does not duplicate business effects.
 - Setup and backup/restore succeed; no real student data is used.
 - Production-readiness limitations and deferred scope are documented.
+- Tenant-isolation gates run under the runtime DB role; uneven-load tests report per-organization behavior. Provisioning/suspension and shared-backup recovery are exercised without exposing or overwriting another organization's records.
 
 ## Progress
 

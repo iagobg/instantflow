@@ -20,6 +20,7 @@ Goal: urgent triage and independent confidential sections.
 - Same-section conflicts preserve authorized drafts; revocation clears protected content.
 - Closure requires resolution and configured simulated communication outcome.
 - Urgency works without color; mobile/keyboard interaction remains usable.
+- A counselor assigned in one school gains no access in another; presence, urgency announcements, files, and derived summaries never cross tenant boundaries.
 
 ## Progress
 

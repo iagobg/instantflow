@@ -4,9 +4,11 @@ PT-BR school workflow demonstration built with Phoenix LiveView and PostgreSQL. 
 
 ## Current delivery
 
+Sprint 01A implements multiple isolated organizations on the existing foundation. Global login, local memberships, organization-bound routes, RLS and composite ownership constraints are in place. Existing Sprint 01 records were preserved by a forward migration. See [operator setup and recovery](docs/organizations-operations.md) and [organization isolation](design/11-organizations.md).
+
 Sprints 00 and 01 are implemented. Sprint 01 adds validated immutable workflow versions, guarded requests, typed section values, safe command retries, correction/rejection/cancellation history, and a durable simulated delivery outbox.
 
-Sprint 00 provides one fictional organization, nine departments and staff accounts, invitation acceptance, password sign-in, revocable 24-hour sessions, a protected overview, and administrator-only staff invitations. Both themes use the supplied tokens and logos. Invitation delivery is explicitly simulated: an administrator shares a one-time code locally, valid for 48 hours. There is no outbound email.
+The demonstration includes Escola Horizonte and Escola Aurora. The same `admin@escola.example` account is an administrator in Horizonte and a collaborator in Aurora; `gestao@aurora.example` administers Aurora. Global sessions last 24 hours. Existing-account recipients sign in before accepting local invitations; credentials and other memberships are preserved. Both themes use the supplied tokens and logos. Invitation delivery remains explicitly simulated with one-time 48-hour codes and no outbound email.
 
 Granular/overlapping role grants, the visual editor, parents, confidential records, files and finance belong to later sprints. This foundation is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
 
@@ -28,7 +30,7 @@ mix phx.server
 
 Open http://localhost:4000. Sign in as `admin@escola.example` with the password you supplied. Other fictional staff addresses are `secretaria`, `docente`, `coordenacao`, `financeiro`, `operacoes`, `ti`, `direcao`, and `orientacao`, each at `escola.example`. They share the seed password and have the staff profile. Parent accounts will be added with the parent portal in Sprint 04.
 
-`PGHOST`, `PGPORT`, `PGUSER`, and `PGPASSWORD` override local defaults; see `.env.example`. Mix does not automatically load `.env`: export the variables in your shell. Set these before setup and checks if using an existing PostgreSQL instance. Production requires `DATABASE_URL`, `SECRET_KEY_BASE`, and `PHX_HOST`; `PHX_SERVER=true` enables the endpoint. Generate a production secret using `mix phx.gen.secret`. Production cookies require HTTPS and seeds refuse to run in production.
+See `.env.example` for the separate runtime and migration credentials. The server uses `PGUSER=instantflow_runtime` and `RUNTIME_DB_PASSWORD`; operators use `MIGRATION_PGUSER`/`MIGRATION_PGPASSWORD`. `PGHOST` and `PGPORT` select the local server. Mix does not automatically load `.env`: export variables in your shell. Production requires a non-owner runtime `DATABASE_URL`, `SECRET_KEY_BASE` and `PHX_HOST`; `PHX_SERVER=true` enables the endpoint. Only operator commands receive `OPERATOR_DATABASE_URL`. Production cookies require HTTPS and seeds refuse to run in production.
 
 ## Invite a colleague in the demo
 
@@ -45,16 +47,12 @@ The code is displayed once and stored only as a SHA-256 digest. Acceptance is tr
 mix precommit
 mix assets.setup
 mix assets.build
-# Migration reversibility check, on a disposable development database only:
-mix ecto.rollback --all
-mix ecto.migrate
-# Reset only the fictional local development database (removes all its records):
-export DEMO_PASSWORD='choose-a-local-demo-password'
-mix ecto.reset
+# Forward migration and full backup/restore rehearsal, in newly created isolated databases:
+python3 scripts/rehearse_01a.py
 ```
 
 
-The seed is repeatable and preserves existing users/passwords. To choose a new seed password, reset the disposable local database. `mix precommit` checks compilation warnings, unused lock entries, formatting and database/LiveView tests. CI also checks migration rollback/reapply, asset builds, and seeds. Database tests run in Ecto's sandbox; they do not constitute concurrency race evidence for later sprints.
+The seed is repeatable and preserves existing users/passwords. Sprint 01A is forward-only: never reset or remove another school to accommodate singleton rollback. Follow the [operator recovery procedure](docs/organizations-operations.md). `mix precommit` checks compilation warnings, unused lock entries, formatting and tests. CI also checks a legacy forward migration, multitenant backup/restore, rollback refusal, asset builds and seeds. Ordinary regression fixtures use the SQL sandbox; dedicated runtime-role tests additionally use independent connections and real non-owner credentials.
 
 ## Conventions
 
@@ -74,4 +72,4 @@ Open **Solicitações** to create a request using the published approval fixture
 
 The backend validates published definitions, required fields, actor scopes, typed guards, reviewed revisions and idempotency keys inside short transactions. Published versions, command receipts, history and delivery attempts have database immutability triggers. Tickets remain pinned when version 2 is published. A durable refresh intent exists for each mutation and simulated delivery result; the polling worker recovers a missing post-commit wakeup. Refresh invalidations contain only a ticket identifier. Delivery is at least once and never calls an external provider.
 
-The current UI exercises the text-based fixture. Directory/file values fail closed pending their owning contexts; the full editor, interchange schema and type-specific authoring controls remain in Sprint 03. The list is capped at 100 recent authorized records. Independent-connection races, detailed grants, reconciliation, and broader multi-session UX are next in Sprint 02.
+The current UI exercises the text-based fixture. Directory/file values fail closed pending their owning contexts; the full editor, interchange schema and type-specific authoring controls remain in Sprint 03. The list is capped at 100 recent authorized records. Sprint 01A verifies independent-connection tenant isolation and lifecycle races; detailed grants, simultaneous section editing, presence and broader collaboration remain in Sprint 02. Open a school under `/o/horizonte` or `/o/aurora`; the global organization picker is `/organizacoes`.

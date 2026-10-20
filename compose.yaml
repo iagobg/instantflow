@@ -3,7 +3,7 @@ services:
     image: postgres:16.15-bookworm
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${PGPASSWORD:-instantflow-local-only}
+      POSTGRES_PASSWORD: ${MIGRATION_PGPASSWORD:-instantflow-local-only}
       POSTGRES_DB: instantflow_dev
     ports:
       - "127.0.0.1:${PGPORT:-55432}:5432"

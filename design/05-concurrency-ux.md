@@ -6,6 +6,8 @@
 
 PostgreSQL is authoritative; LiveView is a projection; PubSub invalidates; Presence is advisory. Commands remain safe against stale and forged input.
 
+Every socket, command, draft, cache key, presence/topic subscription, and receipt has an explicit organization scope. A URL or selected organization is never itself authorization. Switching organizations mounts a fresh view and removes old subscriptions/projections; another tab retains its own scope. Late events/responses from the previous organization cannot update the new screen. Organization suspension and membership revocation invalidate the affected context. Include organization in deduplication keys and validate scope on replay.
+
 | Situation | Required behavior |
 |---|---|
 | Same-section saves | One wins; loser sees conflict with draft preserved |

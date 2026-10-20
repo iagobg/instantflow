@@ -19,7 +19,8 @@ jobs:
       - run: mix deps.get --check-locked
       - run: mix precommit
       - run: mix assets.setup && mix assets.build
-      - run: mix ecto.create && mix ecto.migrate && mix ecto.rollback --all && mix ecto.migrate
+      - run: mix ecto.create -r Instantflow.OperatorRepo && mix ecto.migrate -r Instantflow.OperatorRepo && mix instantflow.db_roles
+      - run: python3 scripts/rehearse_01a.py
       - run: mix run priv/repo/seeds.exs
         env:
           DEMO_PASSWORD: ci-fictional-accounts-only

@@ -1,0 +1,18 @@
+<Layouts.app flash={@flash}>
+  <section class="card invite-page">
+    <p class="eyebrow">SEU ACESSO</p><h1>Selecionar organização</h1>
+    <p>Escolha onde deseja trabalhar. Cada organização tem seus próprios dados e permissões.</p>
+    <nav id="organization-choices" aria-label="Suas organizações">
+      <.link
+        :for={organization <- @organizations}
+        href={~p"/o/#{organization.slug}"}
+        class="request-row"
+      ><strong>{organization.name}</strong><.icon name="hero-arrow-right" /></.link>
+    </nav>
+    <p :if={@organizations == []} id="no-organization-access">
+      Nenhuma organização disponível para seu acesso. Peça um convite à administração.
+    </p>
+    <.link href={~p"/convite"}>Usar um convite</.link>
+    · <.link href={~p"/sair"} method="delete">Sair da conta</.link>
+  </section>
+</Layouts.app>

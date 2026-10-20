@@ -4,6 +4,8 @@
 
 Displayed labels are PT-BR and configurable. Each template has authorized correction/rejection/cancellation paths with reasons where appropriate.
 
+Install these as independent organization-owned copies. Students, guardians, permissions, accounts, configuration, and operational records never transfer with a template. A second fictional school must demonstrate separate customization and budgets; the same named department or shared user account must not link their records.
+
 ## Matrícula de estudantes
 
 **Rascunho → Verificação de documentos → Análise acadêmica → Confirmação do pagamento → Criação de acesso → Concluída**.

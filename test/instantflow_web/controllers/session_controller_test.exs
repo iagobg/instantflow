@@ -4,7 +4,7 @@ defmodule InstantflowWeb.SessionControllerTest do
 
   test "internal routes require authentication", %{conn: conn} do
     assert redirected_to(get(conn, ~p"/")) == "/entrar"
-    assert redirected_to(get(conn, ~p"/equipe")) == "/entrar"
+    assert redirected_to(get(conn, ~p"/o/horizonte/equipe")) == "/entrar"
   end
 
   test "login and logout use a revocable server-side session", %{conn: conn} do
@@ -16,11 +16,11 @@ defmodule InstantflowWeb.SessionControllerTest do
       )
 
     token = get_session(conn, :user_token)
-    assert redirected_to(conn) == "/"
-    assert Instantflow.Identity.scope_for_token(token)
+    assert redirected_to(conn) == "/o/horizonte"
+    assert Instantflow.Identity.scope_for_token(token, 1)
     conn = conn |> recycle() |> delete(~p"/sair")
     assert redirected_to(conn) == "/entrar"
-    assert Instantflow.Identity.scope_for_token(token) == nil
+    assert Instantflow.Identity.scope_for_token(token, 1) == nil
   end
 
   test "bad credentials display a PT-BR error without reflecting the password", %{conn: conn} do

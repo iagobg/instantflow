@@ -5,11 +5,15 @@ defmodule InstantflowWeb.RequestLive do
 
   def mount(%{"id" => id}, _session, socket) do
     case Integer.parse(id) do
-      {id, ""} when id > 0 ->
+      {id, ""} when id > 0 and id < 9_223_372_036_854_775_807 ->
         case WorkflowRuntime.get(socket.assigns.current_scope, id) do
           {:ok, data} ->
             if connected?(socket),
-              do: Phoenix.PubSub.subscribe(Instantflow.PubSub, Delivery.topic(id))
+              do:
+                Phoenix.PubSub.subscribe(
+                  Instantflow.PubSub,
+                  Delivery.topic(socket.assigns.current_scope.organization_id, id)
+                )
 
             {:ok,
              socket
@@ -102,7 +106,10 @@ defmodule InstantflowWeb.RequestLive do
 
   def handle_event("refresh", _, socket), do: refresh(socket)
 
-  def handle_info({:ticket_changed, id}, socket) do
+  def handle_info(
+        {:ticket_changed, organization_id, id},
+        %{assigns: %{current_scope: %{organization_id: organization_id}}} = socket
+      ) do
     case WorkflowRuntime.get(socket.assigns.current_scope, id) do
       {:ok, data} ->
         if socket.assigns.dirty do
@@ -124,6 +131,8 @@ defmodule InstantflowWeb.RequestLive do
     end
   end
 
+  def handle_info({:ticket_changed, _, _}, socket), do: {:noreply, socket}
+
   defp respond(socket, {:ok, _}) do
     socket =
       assign(socket, dirty: false, reason: to_form(%{}, as: :action))
@@ -143,8 +152,14 @@ defmodule InstantflowWeb.RequestLive do
 
   defp refresh(socket) do
     case WorkflowRuntime.get(socket.assigns.current_scope, socket.assigns.data.ticket.id) do
-      {:ok, data} -> {:noreply, socket |> assign(dirty: false, stale: false) |> load(data)}
-      _ -> {:noreply, push_navigate(socket, to: ~p"/solicitacoes")}
+      {:ok, data} ->
+        {:noreply, socket |> assign(dirty: false, stale: false) |> load(data)}
+
+      _ ->
+        {:noreply,
+         push_navigate(socket,
+           to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/solicitacoes"
+         )}
     end
   end
 
@@ -153,7 +168,7 @@ defmodule InstantflowWeb.RequestLive do
       {:ok,
        socket
        |> put_flash(:error, "Solicitação não encontrada ou sem acesso.")
-       |> push_navigate(to: ~p"/solicitacoes")}
+       |> push_navigate(to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/solicitacoes")}
 
   defp load(socket, data) do
     forms = Map.new(data.sections, &{&1.key, to_form(&1.values, as: :section)})
@@ -216,8 +231,8 @@ defmodule InstantflowWeb.RequestLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <.link navigate={~p"/solicitacoes"}>← Todas as solicitações</.link>
+    <Layouts.app flash={@flash} current_scope={@current_scope} unsaved={@dirty}>
+      <.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes"}>← Todas as solicitações</.link>
       <div class="page-heading request-heading">
         <div>
           <p class="eyebrow">{@data.version.definition["name"]} · VERSÃO {@data.version.number}</p><h1>
@@ -309,7 +324,8 @@ defmodule InstantflowWeb.RequestLive do
         <h2>Histórico</h2><div id="history" phx-update="stream">
           <article :for={{id, event} <- @streams.events} id={id}>
             <strong>{event_label(event, @data)}</strong><small> Pessoa #{event.actor_id} · {Instantflow.LocalTime.format(
-              event.inserted_at
+              event.inserted_at,
+              @current_scope.organization.timezone
             )}</small><p :if={event.reason}>{event.reason}</p>
           </article>
         </div>

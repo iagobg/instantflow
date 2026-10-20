@@ -29,8 +29,19 @@ defmodule InstantflowWeb.Router do
     plug InstantflowWeb.UserAuth, :require_authenticated
   end
 
+  pipeline :organization do
+    plug InstantflowWeb.UserAuth, :require_organization
+  end
+
   scope "/", InstantflowWeb do
     pipe_through [:browser, :authenticated]
+
+    get "/", OrganizationController, :home
+    get "/organizacoes", OrganizationController, :index
+  end
+
+  scope "/o/:organization_slug", InstantflowWeb do
+    pipe_through [:browser, :authenticated, :organization]
 
     live_session :internal, on_mount: [{InstantflowWeb.UserAuth, :authenticated}] do
       live "/", HomeLive, :index

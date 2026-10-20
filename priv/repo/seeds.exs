@@ -1,89 +1,121 @@
-alias Instantflow.Repo
-alias Instantflow.Identity.{Department, Membership, Organization, User}
-
-if Application.get_env(:instantflow, :environment) == :prod do
-  raise "As contas de demonstração não podem ser criadas em produção."
-end
+if Application.get_env(:instantflow, :environment) == :prod,
+  do: raise("Seeds de demonstração são proibidos em produção.")
 
 password = System.fetch_env!("DEMO_PASSWORD")
 
 unless String.length(password) in 12..128,
   do: raise("DEMO_PASSWORD deve ter entre 12 e 128 caracteres.")
 
-Repo.transaction(fn ->
-  Repo.insert!(%Organization{id: 1, name: "Escola Horizonte (fictícia)"}, on_conflict: :nothing)
-
-  for {slug, name, department, role} <- [
-        {"admin", "Ana Martins", "Administração", "admin"},
-        {"secretaria", "Bruno Lima", "Secretaria", "staff"},
-        {"docente", "Clara Oliveira", "Docência", "staff"},
-        {"coordenacao", "Daniel Costa", "Coordenação", "staff"},
-        {"financeiro", "Elisa Souza", "Financeiro", "staff"},
-        {"operacoes", "Felipe Santos", "Operações", "staff"},
-        {"ti", "Gabriela Rocha", "Tecnologia", "staff"},
-        {"direcao", "Hugo Almeida", "Direção", "staff"},
-        {"orientacao", "Isabela Ribeiro", "Orientação", "staff"}
-      ] do
-    Repo.insert!(%Department{organization_id: 1, name: department}, on_conflict: :nothing)
-    department = Repo.get_by!(Department, organization_id: 1, name: department)
-    email = slug <> "@escola.example"
-
-    user =
-      Repo.get_by(User, email: email) ||
-        Repo.insert!(User.changeset(%User{email: email}, %{name: name, password: password}))
-
-    Repo.insert!(
-      %Membership{organization_id: 1, department_id: department.id, user_id: user.id, role: role},
-      on_conflict: :nothing
-    )
-  end
-end)
-
-IO.puts(
-  "Demonstração preparada. Administração: admin@escola.example. Senha: valor de DEMO_PASSWORD."
-)
-
+{:ok, operator_pid} = Instantflow.OperatorRepo.start_link()
+alias Instantflow.OperatorRepo, as: OperatorRepo
+alias Instantflow.Identity.{Department, Membership, Organization, User}
 alias Instantflow.{Identity, WorkflowCatalog, WorkflowRuntime}
 alias Instantflow.WorkflowCatalog.Workflow
-admin = Identity.scope(Repo.get_by!(User, email: "admin@escola.example").id)
 
-unless Repo.get_by(Workflow, organization_id: 1, key: "simple_approval") do
-  definition =
-    File.read!(Application.app_dir(:instantflow, "priv/workflows/simple_approval.json"))
-    |> Jason.decode!()
+for {slug, school} <- [
+      {"horizonte", "Escola Horizonte (fictícia)"},
+      {"aurora", "Escola Aurora (fictícia)"}
+    ] do
+  organization =
+    OperatorRepo.get_by(Organization, slug: slug) ||
+      OperatorRepo.insert!(%Organization{slug: slug, name: school})
 
-  finance = Repo.get_by!(Department, organization_id: 1, name: "Financeiro")
+  entries =
+    if slug == "horizonte",
+      do: [
+        {"admin@escola.example", "Ana Martins", "Administração", "admin"},
+        {"secretaria@escola.example", "Bruno Lima", "Secretaria", "staff"},
+        {"docente@escola.example", "Clara Oliveira", "Docência", "staff"},
+        {"coordenacao@escola.example", "Daniel Costa", "Coordenação", "staff"},
+        {"financeiro@escola.example", "Elisa Souza", "Financeiro", "staff"},
+        {"operacoes@escola.example", "Felipe Santos", "Operações", "staff"},
+        {"ti@escola.example", "Gabriela Rocha", "Tecnologia", "staff"},
+        {"direcao@escola.example", "Hugo Almeida", "Direção", "staff"},
+        {"orientacao@escola.example", "Isabela Ribeiro", "Orientação", "staff"}
+      ],
+      else: [
+        {"gestao@aurora.example", "Joana Teixeira", "Administração", "admin"},
+        {"admin@escola.example", "Ana Martins", "Docência", "staff"},
+        {"financeiro@aurora.example", "Luís Andrade", "Financeiro", "staff"}
+      ]
 
-  bindings = %{
-    "roles" => %{"requester" => ["admin", "staff"], "reviewer" => ["staff"]},
-    "departments" => %{"review_department" => finance.id}
-  }
+  OperatorRepo.transaction(fn ->
+    for {email, name, department_name, role} <- entries do
+      OperatorRepo.insert!(%Department{organization_id: organization.id, name: department_name},
+        on_conflict: :nothing
+      )
 
-  {:ok, version} = WorkflowCatalog.publish(admin, definition, bindings)
-  requester = Identity.scope(Repo.get_by!(User, email: "docente@escola.example").id)
+      department =
+        OperatorRepo.get_by!(Department, organization_id: organization.id, name: department_name)
 
-  {:ok, result} =
-    WorkflowRuntime.command(requester, %{
-      "operation" => "create",
-      "workflow_id" => version.workflow_id,
-      "key" => "seed:sample-request"
-    })
+      user =
+        OperatorRepo.get_by(User, email: email) ||
+          OperatorRepo.insert!(
+            User.changeset(%User{email: email}, %{name: name, password: password})
+          )
 
-  {:ok, _} =
-    WorkflowRuntime.command(requester, %{
-      "operation" => "save_section",
-      "ticket_id" => result["ticket_id"],
-      "key" => "seed:sample-values",
-      "section" => "request",
-      "expected_stage_revision" => 1,
-      "expected_section_revision" => 1,
-      "values" => %{
-        "summary" => "Materiais para oficina de leitura",
-        "justification" => "Atividade pedagógica fictícia da demonstração."
-      }
-    })
+      OperatorRepo.insert!(
+        %Membership{
+          organization_id: organization.id,
+          department_id: department.id,
+          user_id: user.id,
+          role: role
+        },
+        on_conflict: :nothing
+      )
+    end
+  end)
+
+  admin_email = if slug == "horizonte", do: "admin@escola.example", else: "gestao@aurora.example"
+  admin = Identity.scope(OperatorRepo.get_by!(User, email: admin_email).id, organization.id)
+
+  if admin &&
+       !OperatorRepo.get_by(Workflow, organization_id: organization.id, key: "simple_approval") do
+    definition =
+      File.read!(Application.app_dir(:instantflow, "priv/workflows/simple_approval.json"))
+      |> Jason.decode!()
+
+    finance =
+      OperatorRepo.get_by!(Department, organization_id: organization.id, name: "Financeiro")
+
+    bindings = %{
+      "roles" => %{"requester" => ["admin", "staff"], "reviewer" => ["staff"]},
+      "departments" => %{"review_department" => finance.id}
+    }
+
+    {:ok, version} = WorkflowCatalog.publish(admin, definition, bindings)
+
+    requester_email =
+      if slug == "horizonte", do: "docente@escola.example", else: "admin@escola.example"
+
+    requester =
+      Identity.scope(OperatorRepo.get_by!(User, email: requester_email).id, organization.id)
+
+    {:ok, result} =
+      WorkflowRuntime.command(requester, %{
+        "operation" => "create",
+        "workflow_id" => version.workflow_id,
+        "key" => "seed:sample-request"
+      })
+
+    {:ok, _} =
+      WorkflowRuntime.command(requester, %{
+        "operation" => "save_section",
+        "ticket_id" => result["ticket_id"],
+        "key" => "seed:sample-values",
+        "section" => "request",
+        "expected_stage_revision" => 1,
+        "expected_section_revision" => 1,
+        "values" => %{
+          "summary" => "Materiais para oficina de leitura",
+          "justification" => "Atividade pedagógica fictícia da demonstração."
+        }
+      })
+  end
 end
 
+GenServer.stop(operator_pid)
+
 IO.puts(
-  "Fluxo de aprovação disponível. Analista: financeiro@escola.example. Solicitante de exemplo: docente@escola.example."
+  "Duas escolas preparadas. Ana é administradora na Horizonte e colaboradora na Aurora. Senhas existentes e dados anteriores foram preservados."
 )

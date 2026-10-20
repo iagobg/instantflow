@@ -10,6 +10,7 @@ defmodule Instantflow.Delivery.Message do
     belongs_to :retried_by, Instantflow.Identity.User
     belongs_to :ticket, Instantflow.WorkflowRuntime.Ticket
     belongs_to :event, Instantflow.WorkflowRuntime.Event
+    belongs_to :organization, Instantflow.Identity.Organization
     timestamps(type: :utc_datetime)
   end
 end

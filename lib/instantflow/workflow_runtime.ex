@@ -1,17 +1,24 @@
 defmodule Instantflow.WorkflowRuntime do
   @moduledoc "Transactional guarded commands. Lock order: actor user, membership, workflow (create) or ticket, sections, receipt/outbox."
   import Ecto.Query
-  alias Instantflow.{Identity, Repo}
+  alias Instantflow.{Identity, Repo, Tenant}
   alias Instantflow.WorkflowCatalog.{Definition, Version, Workflow}
   alias Instantflow.WorkflowRuntime.{Event, Guards, Policy, Receipt, Section, Ticket}
   alias Instantflow.Delivery.Message
 
   def command(actor, command) when is_map(command) do
     with :ok <- command_shape(command) do
-      Repo.transaction(fn ->
+      Tenant.transaction(actor, fn actor ->
         actor = Identity.lock_scope!(actor)
         digest = :crypto.hash(:sha256, :erlang.term_to_binary(command, [:deterministic]))
-        receipt = Repo.get_by(Receipt, actor_id: actor.user_id, key: command["key"])
+
+        receipt =
+          Repo.get_by(Receipt,
+            organization_id: actor.organization_id,
+            actor_id: actor.user_id,
+            operation: command["operation"],
+            key: command["key"]
+          )
 
         if receipt do
           ticket = Repo.get!(Ticket, receipt.ticket_id)
@@ -24,6 +31,8 @@ defmodule Instantflow.WorkflowRuntime do
           result = %{"ticket_id" => ticket.id, "revision" => ticket.revision}
 
           Repo.insert!(%Receipt{
+            organization_id: actor.organization_id,
+            operation: command["operation"],
             actor_id: actor.user_id,
             key: command["key"],
             digest: digest,
@@ -39,8 +48,10 @@ defmodule Instantflow.WorkflowRuntime do
 
   def command(_, _), do: {:error, :invalid_command}
 
-  def get(actor, id) do
-    with scope when not is_nil(scope) <- Identity.scope(actor.user_id),
+  def get(actor, id), do: Tenant.read(actor, &get_scoped(&1, id), {:error, :not_found})
+
+  defp get_scoped(actor, id) do
+    with scope when not is_nil(scope) <- Identity.scope(actor.user_id, actor.organization_id),
          %Ticket{} = ticket <- Repo.get(Ticket, id),
          %Version{} = version <- Repo.get(Version, ticket.workflow_version_id),
          true <- Policy.discover?(scope, ticket, version) do
@@ -80,8 +91,10 @@ defmodule Instantflow.WorkflowRuntime do
     end
   end
 
-  def list(actor) do
-    case Identity.scope(actor.user_id) do
+  def list(actor), do: Tenant.read(actor, &list_scoped/1, [])
+
+  defp list_scoped(actor) do
+    case Identity.scope(actor.user_id, actor.organization_id) do
       nil ->
         []
 
@@ -89,7 +102,7 @@ defmodule Instantflow.WorkflowRuntime do
         Repo.all(
           from t in Ticket,
             where:
-              t.organization_id == 1 and
+              t.organization_id == ^actor.organization_id and
                 (t.requester_id == ^scope.user_id or
                    t.assigned_department_id == ^scope.department_id),
             order_by: [desc: t.updated_at, desc: t.id],
@@ -104,7 +117,7 @@ defmodule Instantflow.WorkflowRuntime do
     workflow =
       Repo.one(
         from w in Workflow,
-          where: w.id == ^command["workflow_id"] and w.organization_id == 1,
+          where: w.id == ^command["workflow_id"] and w.organization_id == ^actor.organization_id,
           lock: "FOR UPDATE"
       )
 
@@ -129,7 +142,7 @@ defmodule Instantflow.WorkflowRuntime do
 
     ticket =
       Repo.insert!(%Ticket{
-        organization_id: 1,
+        organization_id: actor.organization_id,
         workflow_id: workflow.id,
         workflow_version_id: version.id,
         requester_id: actor.user_id,
@@ -139,7 +152,12 @@ defmodule Instantflow.WorkflowRuntime do
       })
 
     for s <- version.definition["sections"],
-        do: Repo.insert!(%Section{ticket_id: ticket.id, key: s["key"]})
+        do:
+          Repo.insert!(%Section{
+            organization_id: actor.organization_id,
+            ticket_id: ticket.id,
+            key: s["key"]
+          })
 
     record(ticket, actor, "create", nil, nil, [])
     ticket
@@ -149,7 +167,7 @@ defmodule Instantflow.WorkflowRuntime do
     ticket =
       Repo.one(
         from t in Ticket,
-          where: t.id == ^command["ticket_id"] and t.organization_id == 1,
+          where: t.id == ^command["ticket_id"] and t.organization_id == ^actor.organization_id,
           lock: "FOR UPDATE"
       )
 
@@ -261,8 +279,25 @@ defmodule Instantflow.WorkflowRuntime do
   end
 
   defp record(ticket, actor, operation, from_stage, reason, actions) do
+    Repo.query!("SELECT pg_advisory_xact_lock(hashtextextended('outbox:' || $1::text, 0))", [
+      to_string(actor.organization_id)
+    ])
+
+    queued =
+      Repo.aggregate(
+        from(m in Message,
+          where: m.organization_id == ^actor.organization_id and m.status == "pending"
+        ),
+        :count
+      )
+
+    if queued + length(actions) + 1 >
+         Application.get_env(:instantflow, :max_pending_deliveries_per_organization, 1000),
+       do: Repo.rollback(:queue_full)
+
     event =
       Repo.insert!(%Event{
+        organization_id: actor.organization_id,
         ticket_id: ticket.id,
         actor_id: actor.user_id,
         operation: operation,
@@ -275,6 +310,7 @@ defmodule Instantflow.WorkflowRuntime do
     for {action, index} <-
           Enum.with_index([%{"type" => "refresh", "behavior" => "success"} | actions]) do
       Repo.insert!(%Message{
+        organization_id: actor.organization_id,
         ticket_id: ticket.id,
         event_id: event.id,
         key: "event:#{event.id}:#{index}",

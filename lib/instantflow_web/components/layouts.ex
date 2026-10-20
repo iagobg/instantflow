@@ -3,6 +3,7 @@ defmodule InstantflowWeb.Layouts do
   embed_templates "layouts/*"
   attr :flash, :map, required: true
   attr :current_scope, :any, default: nil
+  attr :unsaved, :boolean, default: false
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -10,18 +11,34 @@ defmodule InstantflowWeb.Layouts do
     <a href="#main-content" class="skip-link">Pular para o conteúdo</a>
     <div class={if @current_scope, do: "app-shell", else: "auth-shell"}>
       <aside :if={@current_scope} class="sidebar">
-        <.link navigate={~p"/"} class="brand" aria-label="InstantFlow, início"><.logo /></.link>
+        <.link
+          navigate={~p"/o/#{@current_scope.organization.slug}"}
+          class="brand"
+          aria-label="InstantFlow, início"
+        ><.logo /></.link>
         <div class="organization-label">
-          <span class="org-avatar">EH</span><div>
+          <span class="org-avatar">{@current_scope.organization.name
+          |> String.split()
+          |> Enum.take(2)
+          |> Enum.map_join(&String.first/1)}</span><div>
             <strong>{@current_scope.organization.name}</strong><small>Ambiente escolar</small>
           </div>
         </div>
         <p class="nav-label">ESPAÇO DE TRABALHO</p>
+        <.link
+          id="switch-organization"
+          href={~p"/organizacoes"}
+          class="nav-link"
+          data-confirm={
+            if @unsaved,
+              do: "Há alterações não salvas. Deseja descartá-las e selecionar outra organização?"
+          }
+        >Trocar organização</.link>
         <nav aria-label="Navegação principal">
-          <.link navigate={~p"/solicitacoes"} class="nav-link"><.icon name="hero-squares-2x2" />Solicitações</.link>
-          <.link navigate={~p"/"} class="nav-link"><.icon name="hero-squares-2x2" />Visão geral</.link><.link
+          <.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes"} class="nav-link"><.icon name="hero-squares-2x2" />Solicitações</.link>
+          <.link navigate={~p"/o/#{@current_scope.organization.slug}"} class="nav-link"><.icon name="hero-squares-2x2" />Visão geral</.link><.link
             :if={@current_scope.role == "admin"}
-            navigate={~p"/equipe"}
+            navigate={~p"/o/#{@current_scope.organization.slug}/equipe"}
             class="nav-link"
           ><.icon name="hero-users" />Equipe e convites</.link>
         </nav>

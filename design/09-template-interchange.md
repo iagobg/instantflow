@@ -18,6 +18,8 @@ Export definition structure, public metadata, forms, transitions, role requireme
 
 Portable roles are symbolic requirements, not installed grants. Directory/domain references use symbolic bindings resolved locally. Imported keys cannot override built-in roles or another workflow's namespace.
 
+Import destination comes from the authenticated active organization, never file-supplied organization IDs. Resolve all bindings inside that organization and reject foreign resource IDs even if the importing user belongs to both tenants. Sharing a portable definition is explicit export/import by authorized users; it never shares live data or links future updates. Platform templates install as independent copies. Imported content cannot create/switch organizations or grant membership.
+
 ## Import pipeline
 
 1. Authorized administrator uploads JSON. Proposed limits: 1 MiB, depth 20, 100 stages, 500 transitions, 300 fields. Reject duplicate keys, unknown properties, malformed types, oversized expressions, and unsupported versions.
@@ -28,6 +30,8 @@ Portable roles are symbolic requirements, not installed grants. Directory/domain
 6. An authorized publisher explicitly publishes through normal validation and revision checks. Audit source metadata, content digest, mapping, actor, and resulting version.
 
 Render imported labels/descriptions as escaped plain text. Embedded instructions cannot change policies or invoke tools. Future built-in LLM assistance, if added, must use this pipeline and cannot publish automatically.
+
+Python is not a supported capability in Sprints 00–07. Do not relax unknown-action rejection to reserve it. When the [isolated extension](10-python-automation.md) ships, add a versioned capability for symbolic references to separately reviewed immutable scripts, input/output mappings, and limits. Workflow files contain no inline Python. Imports require local script-version binding and cannot activate code. Script source exchange, if later needed, is a separate review/import operation; the current LLM workflow guide must not generate executable scripts.
 
 ## Compatibility and deliverables
 

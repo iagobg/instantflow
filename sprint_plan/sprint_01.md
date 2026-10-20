@@ -4,6 +4,8 @@
 
 Goal: execute validated, versioned workflows through guarded commands.
 
+Historical scope: delivered against the single-organization foundation. [Sprint 01A](sprint_01a.md) adds tenant scope, migration, and isolation before Sprint 02. The completed criteria below do not establish multi-organization readiness.
+
 ## Tasks
 
 - [x] S01-T01 Implement definition schema, typed fields/guards, validation, immutable versions.

@@ -1,5 +1,13 @@
 import Config
 
+if operator_url = System.get_env("OPERATOR_DATABASE_URL") do
+  config :instantflow, Instantflow.OperatorRepo,
+    url: operator_url,
+    priv: "priv/repo",
+    log: false,
+    pool_size: 2
+end
+
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
 # system starts, so it is typically used to load production configuration

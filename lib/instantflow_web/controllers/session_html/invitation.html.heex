@@ -2,7 +2,7 @@
   <div class="invite-page">
     <.link href={~p"/entrar"}>← Voltar para entrar</.link><section class="card auth-card">
       <Layouts.logo /><h1>Seu próximo passo começa aqui.</h1><p>
-        Use o código de convite para ativar sua conta. O e-mail e o departamento já foram definidos pela administração.
+        Se você já possui uma conta, entre nela antes de aceitar o convite. Use o código de convite para ativar sua conta. O e-mail e o departamento já foram definidos pela administração.
       </p><.form for={@form} id="accept-invitation-form" action={~p"/convite"}>
         <.input
           field={@form[:code]}
@@ -11,6 +11,7 @@
           maxlength="128"
           autocomplete="off"
         /><.input
+          :if={!@current_user}
           field={@form[:name]}
           label="Seu nome"
           required
@@ -18,6 +19,7 @@
           maxlength="100"
           autocomplete="name"
         /><.input
+          :if={!@current_user}
           field={@form[:password]}
           type="password"
           label="Crie uma senha (12 a 128 caracteres)"

@@ -11,7 +11,8 @@ defmodule InstantflowWeb.TeamLive do
          page_title: "Equipe",
          code: nil,
          expires_at: nil,
-         departments: Enum.map(Identity.departments(), &{&1.name, &1.id}),
+         departments:
+           Enum.map(Identity.departments(socket.assigns.current_scope), &{&1.name, &1.id}),
          form: to_form(Invitation.changeset(%Invitation{}, %{}))
        )
        |> stream(:staff, Identity.list_staff(socket.assigns.current_scope))}
@@ -19,7 +20,7 @@ defmodule InstantflowWeb.TeamLive do
       {:ok,
        socket
        |> put_flash(:error, "Apenas administradores podem gerenciar a equipe.")
-       |> push_navigate(to: ~p"/")}
+       |> push_navigate(to: ~p"/o/#{socket.assigns.current_scope.organization.slug}")}
     end
   end
 
@@ -29,7 +30,11 @@ defmodule InstantflowWeb.TeamLive do
         {:noreply,
          assign(socket,
            code: result.token,
-           expires_at: Instantflow.LocalTime.format(result.invitation.expires_at),
+           expires_at:
+             Instantflow.LocalTime.format(
+               result.invitation.expires_at,
+               socket.assigns.current_scope.organization.timezone
+             ),
            form: to_form(Invitation.changeset(%Invitation{}, %{}))
          )}
 

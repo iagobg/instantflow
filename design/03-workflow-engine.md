@@ -6,11 +6,15 @@
 
 Each version contains PT-BR labels/help text, stable stages, entry/terminal states, directed transitions, typed sections/fields, permission requirements, assignments, guards, actions, and view configuration. Editor and importer use this same model.
 
+Each workflow/version belongs to one organization. Template installation copies a portable definition into the selected authorized organization and resolves local bindings; customer edits cannot mutate another organization's copy or a platform template. Keys/version numbers are local to their owning workflow/organization. No transition may target a foreign ticket, department, budget, script, or workflow version.
+
 Initial fields: short/long text, integer, money, date, datetime, boolean, single/multiple choice, directory reference, attachment. Requiredness can vary by stage. Administrator-authored SQL, HTML, JavaScript, and Elixir are excluded.
 
 Guards use bounded typed expressions: equality/comparison, presence, enumerated membership, all/any, attachment readiness, and registered domain checks. Limit size/depth and reject unknown references. Domain checks include budget availability and successful simulated receipt.
 
 Actions are registered typed capabilities: assignment, simulated notification/provisioning, and finance operations. No arbitrary URLs or executable handlers. Each action has an idempotency policy.
+
+For Sprints 00–07 this remains a closed registry. The planned [Python extension](10-python-automation.md) adds a separately isolated asynchronous action only after its readiness gate; it does not turn transactional guards into Python expressions. A required computation uses an explicit waiting stage and a fresh-result guard. Existing built-in guards remain authoritative.
 
 ## Editor
 
