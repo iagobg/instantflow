@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aprovação de passeios · InstantFlow</title>
+<!--
+  Example screen — NON-FUNCTIONAL visual reference for screen captures.
+  No data is loaded or saved. Only the theme toggle and drawer open/close
+  are wired, purely for presentation.
+
+  URL params for automated captures:
+    ?theme=dark | ?theme=light
+    ?drawer=closed
+-->
+<link rel="icon" href="../logo/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../components.css">
+<script>
+  // Apply theme before paint to avoid a flash
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var t = p.get("theme") || localStorage.getItem("if-theme") ||
+      (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", t);
+    if (p.get("drawer") === "closed") document.documentElement.classList.add("drawer-closed");
+  })();
+</script>
+<style>
+  html, body { height: 100%; }
+  body { overflow: hidden; }
+
+  .app {
+    display: grid;
+    grid-template-columns: var(--if-sidebar-width) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100vh;
+  }
+
+  /* Demonstration environment strip (Sprint 00 acceptance criterion) */
+  .sim-strip {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    height: 32px; padding: 0 16px;
+    font-size: var(--if-text-xs); font-weight: 500;
+    color: var(--if-sim); background: var(--if-sim-subtle);
+    border-bottom: 1px dashed var(--if-sim-border);
+  }
+  .sim-strip strong { font-weight: 700; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    display: flex; flex-direction: column; min-height: 0;
+    background: var(--if-bg-subtle); border-right: 1px solid var(--if-border);
+  }
+  .brand { display: flex; align-items: center; height: var(--if-topbar-height); padding: 0 18px; }
+  .brand img { height: 30px; }
+  .brand .logo-dark { display: none; }
+  [data-theme="dark"] .brand .logo-light { display: none; }
+  [data-theme="dark"] .brand .logo-dark { display: block; }
+
+  .org {
+    margin: 4px 12px 8px; padding: 8px 10px;
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--if-border); border-radius: var(--if-radius-md); background: var(--if-surface);
+  }
+  .org-badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--if-accent-text); background: var(--if-accent-subtle); border: 1px solid var(--if-accent-border); }
+  .org-name { font-size: var(--if-text-sm); font-weight: 600; line-height: 1.2; }
+  .org-sub { font-size: 11px; color: var(--if-text-subtle); line-height: 1.3; }
+
+  .nav { flex: 1; overflow: auto; padding: 8px 12px 16px; }
+  .nav-group + .nav-group { margin-top: 18px; }
+  .nav-group .t-overline { padding: 0 10px 6px; display: block; }
+  .nav a {
+    display: flex; align-items: center; gap: 10px;
+    height: 34px; padding: 0 10px; margin-bottom: 1px;
+    font-size: var(--if-text-sm); font-weight: 500; color: var(--if-text-muted);
+    text-decoration: none; border-radius: var(--if-radius-sm);
+  }
+  .nav a:hover { color: var(--if-text); background: var(--if-bg-muted); }
+  .nav a[aria-current="page"] { color: var(--if-accent-text); background: var(--if-accent-subtle); font-weight: 600; box-shadow: inset 2px 0 0 var(--if-accent); }
+  .nav a .count { margin-left: auto; line-height: 1; font-size: 11px; font-weight: 600; min-width: 20px; height: 18px; padding: 0 6px; border-radius: 9px; display: grid; place-items: center; background: var(--if-bg-muted); color: var(--if-text-muted); border: 1px solid var(--if-border); }
+  .nav a[aria-current="page"] .count, .nav a .count.hot { background: var(--if-accent); color: #fff; border-color: transparent; }
+
+  .me { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--if-border); }
+  .me .who { min-width: 0; flex: 1; }
+  .me .name { font-size: var(--if-text-sm); font-weight: 600; line-height: 1.2; }
+  .me .role { font-size: 11px; color: var(--if-text-subtle); }
+
+  /* ---------- Main ---------- */
+  .main { display: grid; grid-template-rows: var(--if-topbar-height) minmax(0, 1fr); min-width: 0; min-height: 0; }
+  .topbar {
+    display: flex; align-items: center; gap: 12px; padding: 0 20px;
+    border-bottom: 1px solid var(--if-border); background: var(--if-bg);
+  }
+  .crumbs { display: flex; align-items: center; gap: 6px; font-size: var(--if-text-sm); color: var(--if-text-subtle); white-space: nowrap; }
+  .crumbs strong { color: var(--if-text); font-weight: 600; }
+  .topbar .search { margin-left: auto; width: 300px; }
+  .live { display: inline-flex; align-items: center; gap: 7px; font-size: var(--if-text-xs); font-weight: 600; color: var(--if-success); padding: 0 10px; height: 28px; border-radius: var(--if-radius-full); background: var(--if-success-subtle); border: 1px solid var(--if-success-border); }
+  .live i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 25%, transparent); }
+  .bell { position: relative; }
+  .bell::after { content: ""; position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--if-accent); box-shadow: 0 0 0 2px var(--if-bg); }
+  .theme-toggle .moon { display: none; }
+  [data-theme="dark"] .theme-toggle .sun { display: none; }
+  [data-theme="dark"] .theme-toggle .moon { display: block; }
+
+  .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 400px; min-height: 0; }
+  .drawer-closed .workspace { grid-template-columns: minmax(0, 1fr) 0; }
+  .drawer-closed .drawer { display: none; }
+
+  .content { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 22px 24px 0; gap: 16px; }
+
+  .page-head { display: flex; align-items: flex-end; gap: 16px; }
+  .page-head .titles { min-width: 0; }
+  .page-head .meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: var(--if-text-sm); color: var(--if-text-muted); flex-wrap: wrap; }
+  .page-head .meta .sep { color: var(--if-border-strong); }
+  .page-head .actions { margin-left: auto; display: flex; gap: 8px; }
+
+  .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .toolbar .spacer { flex: 1; }
+
+  .stats { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.7fr); gap: 12px; }
+  .stat { padding: 12px 14px; }
+  .stat .label-row { display: flex; align-items: center; gap: 6px; font-size: var(--if-text-xs); font-weight: 500; color: var(--if-text-muted); }
+  .stat .label-row .icon { width: 14px; height: 14px; color: var(--if-accent-text); }
+  .stat .value { font-family: var(--if-font-display); font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; margin-top: 4px; }
+  .stat .value small { font-family: var(--if-font-sans); font-size: var(--if-text-xs); font-weight: 500; color: var(--if-text-subtle); letter-spacing: 0; margin-left: 4px; }
+  .stat.budget .value { font-size: 20px; line-height: 26px; }
+  .stat .label-row { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat.budget .meter { margin: 8px 0 6px; }
+  .stat.budget .legend { display: flex; gap: 14px; font-size: 11px; color: var(--if-text-subtle); }
+
+  /* ---------- Kanban ---------- */
+  .board { flex: 1; min-height: 0; display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; padding-bottom: 20px; }
+  .lane {
+    flex: 0 0 232px; min-width: 0; display: flex; flex-direction: column; min-height: 0;
+    background: var(--if-bg-muted); border: 1px solid var(--if-border); border-radius: var(--if-radius-lg);
+  }
+  .lane-head { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; }
+  .lane-stage { flex: none; }
+  .lane-head h3 { margin: 0; font-size: 13px; font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lane-head .n { font-size: 11px; font-weight: 600; color: var(--if-text-subtle); background: var(--if-surface); border: 1px solid var(--if-border); border-radius: 9px; padding: 0 7px; line-height: 17px; }
+  .lane-head .btn { margin-left: auto; width: 26px; height: 26px; }
+  .lane-stage { width: 8px; height: 8px; border-radius: 2px; background: var(--if-border-strong); }
+  .lane.mine .lane-stage { background: var(--if-accent); }
+  .lane.mine { border-color: var(--if-accent-border); }
+  .lane.mine .lane-head h3 { color: var(--if-accent-text); }
+  .lane-body { flex: 1; overflow: auto; padding: 4px 8px 10px; display: flex; flex-direction: column; gap: 12px; }
+
+  .kcard {
+    position: relative; display: block; text-align: left; width: 100%;
+    padding: 11px 12px 10px; font: inherit; color: inherit; cursor: pointer;
+    background: var(--if-surface); border: 1px solid var(--if-border); border-radius: 12px; box-shadow: var(--if-shadow-xs);
+    transition: border-color var(--if-duration-fast), box-shadow var(--if-duration-fast), transform var(--if-duration-fast);
+  }
+  .kcard:hover { border-color: var(--if-border-strong); box-shadow: var(--if-shadow-sm); }
+  .kcard[aria-current="true"] { border-color: var(--if-accent); box-shadow: 0 0 0 3px var(--if-accent-subtle-2), var(--if-shadow-sm); }
+  .kcard-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 6px; margin-bottom: 6px; }
+  .kcard-id { font-family: var(--if-font-mono); font-size: 11px; color: var(--if-text-subtle); white-space: nowrap; }
+  .kcard h4 { margin: 0; font-size: var(--if-text-sm); line-height: 1.35; font-weight: 600; }
+  .kcard .sub { font-size: var(--if-text-xs); color: var(--if-text-muted); margin-top: 2px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 9px; font-size: var(--if-text-xs); color: var(--if-text-muted); }
+  .facts span { display: inline-flex; align-items: center; gap: 4px; }
+  .facts .icon { width: 13px; height: 13px; color: var(--if-text-subtle); }
+  .kcard-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 9px; }
+  .kcard-foot { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--if-border); }
+  .kcard-foot .end { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; font-size: 11px; color: var(--if-text-subtle); }
+  .kcard-foot .end span { display: inline-flex; align-items: center; gap: 3px; }
+  .kcard-foot .end .icon { width: 13px; height: 13px; }
+  .kcard .editing { position: absolute; top: -9px; right: 10px; display: inline-flex; align-items: center; gap: 5px; height: 18px; padding: 0 7px 0 3px; font-size: 10px; font-weight: 600; color: #fff; background: var(--if-presence-2); border-radius: 9px; box-shadow: 0 0 0 2px var(--if-bg-muted); }
+  [data-theme="dark"] .kcard .editing { color: #131316; }
+  .kcard .editing .avatar { width: 14px; height: 14px; font-size: 7px; box-shadow: none; background: rgb(255 255 255 / .3); color: inherit; }
+  .kcard.dim { opacity: .9; }
+  .lane-more { font-size: var(--if-text-xs); color: var(--if-text-subtle); text-align: center; padding: 4px; }
+
+  /* ---------- Drawer ---------- */
+  .drawer {
+    display: flex; flex-direction: column; min-height: 0;
+    background: var(--if-surface); border-left: 1px solid var(--if-border);
+    box-shadow: -12px 0 32px -24px rgb(38 16 79 / .35);
+  }
+  .drawer-head { padding: 16px 20px 14px; border-bottom: 1px solid var(--if-border); }
+  .drawer-head .row { display: flex; align-items: center; gap: 8px; }
+  .drawer-head .row .tools { margin-left: auto; display: flex; gap: 2px; }
+  .drawer-head h2 { margin: 8px 0 2px; font-size: var(--if-text-lg); line-height: 1.35; font-weight: 700; letter-spacing: -0.01em; }
+  .drawer-head .who { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: var(--if-text-xs); color: var(--if-text-muted); }
+  .drawer-body { flex: 1; overflow: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+  .drawer-foot { padding: 12px 20px 14px; border-top: 1px solid var(--if-border); display: grid; gap: 8px; background: var(--if-bg-subtle); }
+  .drawer-foot .row { display: flex; gap: 8px; }
+  .drawer-foot .row .btn { flex: 1; }
+  .drawer-foot .note { font-size: 11px; color: var(--if-text-subtle); display: flex; align-items: center; gap: 6px; }
+
+  .section-card { border: 1px solid var(--if-border); border-radius: var(--if-radius-md); }
+  .section-card > header { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--if-border); background: var(--if-bg-subtle); border-radius: var(--if-radius-md) var(--if-radius-md) 0 0; }
+  .section-card > header h3 { margin: 0; font-size: var(--if-text-sm); font-weight: 600; }
+  .section-card > header .presence { margin-left: auto; }
+  .section-card > header .rev { margin-left: auto; font-family: var(--if-font-mono); font-size: 10px; color: var(--if-text-subtle); }
+  .section-card.changed { border-color: var(--if-warning-border); }
+  .section-card.changed > header { background: var(--if-warning-subtle); }
+  .kv { display: grid; grid-template-columns: 136px 1fr; gap: 8px 12px; padding: 12px; font-size: var(--if-text-sm); }
+  .kv dt { color: var(--if-text-subtle); }
+  .kv dd { margin: 0; font-weight: 500; }
+  .kv del { color: var(--if-text-subtle); font-weight: 400; margin-left: 6px; }
+  .kv ins { text-decoration: none; background: var(--if-warning-subtle); color: var(--if-text); padding: 0 4px; border-radius: 4px; box-shadow: inset 0 -2px 0 var(--if-warning); }
+
+  .alert > div { flex: 1; min-width: 0; }
+  .alert-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .timeline li { position: relative; display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding-bottom: 12px; font-size: var(--if-text-sm); }
+  .timeline li:not(:last-child)::before { content: ""; position: absolute; left: 10.5px; top: 24px; bottom: 0; width: 1px; background: var(--if-border); }
+  .timeline .dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--if-bg-muted); border: 1px solid var(--if-border); color: var(--if-text-muted); }
+  .timeline .dot .icon { width: 12px; height: 12px; stroke-width: 2.2; }
+  .timeline .dot.accent { background: var(--if-accent-subtle); border-color: var(--if-accent-border); color: var(--if-accent-text); }
+  .timeline .dot.warn { background: var(--if-warning-subtle); border-color: var(--if-warning-border); color: var(--if-warning); }
+  .timeline .when { display: block; font-size: 11px; color: var(--if-text-subtle); }
+  .timeline b { font-weight: 600; }
+
+  .toast-wrap { position: fixed; right: 424px; bottom: 24px; z-index: 5; }
+  .drawer-closed .toast-wrap { right: 24px; }
+</style>
+</head>
+<body>
+
+<!-- Icon sprite (outline, 24px grid, 1.75 stroke) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+    <symbol id="i-idcard" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h3.5M14.5 13.5h3.5"/></symbol>
+    <symbol id="i-bus" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="14" rx="3"/><path d="M4 11h16M8 17.5V20M16 17.5V20M8.5 7h7"/><circle cx="8" cy="14.3" r=".6"/><circle cx="16" cy="14.3" r=".6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 4.9a2 2 0 0 1 3.4 0l7 12.1a2 2 0 0 1-1.7 3H5a2 2 0 0 1-1.7-3z"/><path d="M12 10v3.5M12 16.6v.1"/></symbol>
+    <symbol id="i-package" viewBox="0 0 24 24"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9M8 5.3l8 4.5"/></symbol>
+    <symbol id="i-flow" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="5.5" rx="1.5"/><rect x="14" y="14.5" width="7" height="5.5" rx="1.5"/><path d="M6.5 9.5v2.7a5 5 0 0 0 5 5H14M12 15l2 2.2-2 2.2"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M4 8V7.5A2.5 2.5 0 0 1 6.5 5H17v3"/><rect x="4" y="8" width="16" height="11" rx="2.5"/><path d="M15.5 13.5h1.5"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.7-3 2.9-4.5 5.5-4.5s4.8 1.5 5.5 4.5M15.5 5.8a3 3 0 0 1 0 5.4M17.5 14.8c1.5.6 2.6 2 3 4.2"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3L4.5 9"/><path d="M4.5 4.5V9H9M12 8v4.5l3 2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M8.5 3v4M15.5 3v4"/></symbol>
+    <symbol id="i-table" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 10h16M4 14.5h16M10 10v9"/></symbol>
+    <symbol id="i-kanban" viewBox="0 0 24 24"><rect x="4" y="4" width="4.5" height="16" rx="1.5"/><rect x="10" y="4" width="4.5" height="11" rx="1.5"/><rect x="16" y="4" width="4" height="7" rx="1.5"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6.5h16M7 12h10M10 17.5h4"/></symbol>
+    <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+    <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="m10 7 5 5-5 5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 11A7.5 7.5 0 0 0 6 7l-2 2M4.5 13A7.5 7.5 0 0 0 18 17l2-2"/><path d="M4 4.5V9h4.5M20 19.5V15h-4.5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+    <symbol id="i-clip" viewBox="0 0 24 24"><path d="m20 11.5-7.8 7.8a5 5 0 0 1-7-7l8-8a3.3 3.3 0 0 1 4.7 4.7l-7.9 7.9a1.7 1.7 0 0 1-2.4-2.4L15 7"/></symbol>
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 17h-8l-4.5 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 5 5z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.1"/><circle cx="12" cy="12" r="1.1"/><circle cx="18" cy="12" r="1.1"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9.5 3.5h5M10.5 3.5V9L5 18.5a1.4 1.4 0 0 0 1.2 2h11.6a1.4 1.4 0 0 0 1.2-2L13.5 9V3.5M7.6 14.5h8.8"/></symbol>
+    <symbol id="i-money" viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="11" rx="2.5"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v5M17.5 9.5v5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 19 6v5.5c0 4.4-3 7.8-7 9-4-1.2-7-4.6-7-9V6z"/><path d="m9 12 2.2 2.2L15.5 10"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4.5 9.5 9 5"/><path d="M4.5 9.5H14a5.5 5.5 0 0 1 0 11h-2"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <div class="sim-strip" role="note">
+    <svg class="icon icon-sm"><use href="#i-flask"/></svg>
+    <span><strong>Ambiente de demonstração.</strong> Pagamentos, notificações e criação de acessos são simulados. Dados fictícios.</span>
+  </div>
+
+  <!-- ===================== Sidebar ===================== -->
+  <aside class="sidebar" aria-label="Navegação principal">
+    <div class="brand">
+      <img class="logo-light" src="../logo/instantflow-logo-light.svg" alt="InstantFlow">
+      <img class="logo-dark" src="../logo/instantflow-logo-dark.svg" alt="InstantFlow">
+    </div>
+
+    <div class="org">
+      <span class="org-badge">CA</span>
+      <div style="min-width:0;flex:1">
+        <div class="org-name">Colégio Aurora</div>
+        <div class="org-sub">Unidade Centro · 2026</div>
+      </div>
+      <svg class="icon icon-sm subtle"><use href="#i-chev-down"/></svg>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-group">
+        <a href="#"><svg class="icon"><use href="#i-home"/></svg>Início</a>
+        <a href="#"><svg class="icon"><use href="#i-tasks"/></svg>Minhas tarefas <span class="count hot">7</span></a>
+      </div>
+      <div class="nav-group">
+        <span class="t-overline">Solicitações</span>
+        <a href="#"><svg class="icon"><use href="#i-idcard"/></svg>Matrícula <span class="count">12</span></a>
+        <a href="#" aria-current="page"><svg class="icon"><use href="#i-bus"/></svg>Passeios <span class="count">24</span></a>
+        <a href="#"><svg class="icon"><use href="#i-alert"/></svg>Ocorrências <span class="count">5</span></a>
+        <a href="#"><svg class="icon"><use href="#i-package"/></svg>Requisições <span class="count">18</span></a>
+      </div>
+      <div class="nav-group">
+        <span class="t-overline">Administração</span>
+        <a href="#"><svg class="icon"><use href="#i-flow"/></svg>Fluxos de trabalho</a>
+        <a href="#"><svg class="icon"><use href="#i-wallet"/></svg>Orçamentos</a>
+        <a href="#"><svg class="icon"><use href="#i-users"/></svg>Pessoas e acessos</a>
+        <a href="#"><svg class="icon"><use href="#i-history"/></svg>Auditoria</a>
+      </div>
+    </nav>
+
+    <div class="me">
+      <span class="avatar avatar-lg">MC</span>
+      <div class="who">
+        <div class="name">Mariana Costa</div>
+        <div class="role">Financeiro · Coordenação</div>
+      </div>
+      <svg class="icon icon-sm subtle"><use href="#i-dots"/></svg>
+    </div>
+  </aside>
+
+  <!-- ===================== Main ===================== -->
+  <div class="main">
+    <header class="topbar">
+      <nav class="crumbs" aria-label="Trilha">
+        <span>Solicitações</span>
+        <svg class="icon icon-sm"><use href="#i-chev-right"/></svg>
+        <strong>Aprovação de passeios</strong>
+      </nav>
+
+      <label class="input-affix search">
+        <span class="sr-only">Buscar</span>
+        <svg class="icon icon-sm"><use href="#i-search"/></svg>
+        <input class="input" placeholder="Buscar solicitações…">
+        <span class="kbd">Ctrl K</span>
+      </label>
+
+      <span class="live" title="Atualizações em tempo real ativas"><i></i>Ao vivo</span>
+      <button class="btn btn-ghost btn-icon theme-toggle" type="button" aria-label="Alternar tema claro/escuro" onclick="toggleTheme()">
+        <svg class="icon sun"><use href="#i-sun"/></svg>
+        <svg class="icon moon"><use href="#i-moon"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-icon bell" type="button" aria-label="Notificações (3 novas)">
+        <svg class="icon"><use href="#i-bell"/></svg>
+      </button>
+    </header>
+
+    <div class="workspace">
+      <!-- ---------- Board column ---------- -->
+      <main class="content">
+        <div class="page-head">
+          <div class="titles">
+            <h1 class="t-h1">Aprovação de passeios</h1>
+            <div class="meta">
+              <span class="badge badge-accent badge-square">Versão 3 · publicada</span>
+              <span>24 solicitações abertas</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn" type="button"><svg class="icon"><use href="#i-flow"/></svg>Ver fluxo</button>
+            <button class="btn btn-primary" type="button"><svg class="icon"><use href="#i-plus"/></svg>Nova solicitação</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="segmented" role="group" aria-label="Visualização">
+            <button type="button" aria-pressed="false"><svg class="icon icon-sm"><use href="#i-table"/></svg>Tabela</button>
+            <button type="button" aria-pressed="true"><svg class="icon icon-sm"><use href="#i-kanban"/></svg>Kanban</button>
+            <button type="button" aria-pressed="false"><svg class="icon icon-sm"><use href="#i-calendar"/></svg>Calendário</button>
+          </div>
+          <span class="chip chip-active">Departamento: <strong>Ciências</strong> <svg class="icon icon-sm"><use href="#i-x"/></svg></span>
+          <span class="chip"><svg class="icon icon-sm"><use href="#i-filter"/></svg>Filtros</span>
+        </div>
+
+        <section class="stats" aria-label="Resumo">
+          <div class="card stat">
+            <div class="label-row"><svg class="icon"><use href="#i-tasks"/></svg>Aguardando minha ação</div>
+            <div class="value tnum">3<small>de 24</small></div>
+          </div>
+          <div class="card stat">
+            <div class="label-row"><svg class="icon"><use href="#i-calendar"/></svg>Próximos 30 dias</div>
+            <div class="value tnum">5<small>passeios</small></div>
+          </div>
+          <div class="card stat budget">
+            <div class="label-row"><svg class="icon"><use href="#i-wallet"/></svg>Orçamento Ciências 2026 · disponível</div>
+            <div class="value tnum">R$ 12.480,00<small>de R$ 40.000,00</small></div>
+            <div class="meter" role="img" aria-label="Comprometido 52%, reservado 17%, disponível 31%">
+              <span class="committed" style="width:52%"></span><span class="reserved" style="width:17%"></span>
+            </div>
+            <div class="legend">
+              <span><i class="legend-dot" style="background:var(--if-accent)"></i>Comprometido</span>
+              <span><i class="legend-dot" style="background:var(--if-violet-400)"></i>Reservado</span>
+              <span><i class="legend-dot" style="background:var(--if-bg-muted);border:1px solid var(--if-border-strong)"></i>Disponível</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="board" aria-label="Quadro Kanban por etapa">
+          <!-- Lane: Proposta -->
+          <div class="lane">
+            <div class="lane-head"><i class="lane-stage"></i><h3>Proposta</h3><span class="n">3</span></div>
+            <div class="lane-body">
+              <button class="kcard" type="button">
+                <div class="kcard-top"><span class="kcard-id">PAS-0151</span><span class="badge">Rascunho</span></div>
+                <h4>Observatório Municipal</h4>
+                <div class="sub">9º ano A · Física</div>
+                <div class="facts">
+                  <span><svg class="icon"><use href="#i-calendar"/></svg>21/11</span>
+                  <span><svg class="icon"><use href="#i-users"/></svg>28</span>
+                  <span class="tnum"><svg class="icon"><use href="#i-money"/></svg>R$ 1.120</span>
+                </div>
+                <div class="kcard-foot"><span class="avatar avatar-sm p4">RL</span>
+                  <span class="end"><span><svg class="icon"><use href="#i-clip"/></svg>1</span></span></div>
+              </button>
+              <button class="kcard" type="button">
+                <span class="editing"><span class="avatar">AS</span>Ana está editando</span>
+                <div class="kcard-top"><span class="kcard-id">PAS-0149</span><span class="badge badge-warning"><svg class="icon"><use href="#i-undo"/></svg>Correção solicitada</span></div>
+                <h4>Jardim Botânico — trilha</h4>
+                <div class="sub">6º ano C · Ciências</div>
+                <div class="facts">
+                  <span><svg class="icon"><use href="#i-calendar"/></svg>14/11</span>
+                  <span><svg class="icon"><use href="#i-users"/></svg>31</span>
+                  <span class="tnum"><svg class="icon"><use href="#i-money"/></svg>R$ 860</span>
+                </div>
+                <div class="kcard-foot"><span class="avatar-stack"><span class="avatar avatar-sm p2">AS</span><span class="avatar avatar-sm p3">JP</span></span>
+                  <span class="end"><span><svg class="icon"><use href="#i-message"/></svg>4</span><span><svg class="icon"><use href="#i-clip"/></svg>2</span></span></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Lane: Análise pedagógica -->
+          <div class="lane">
+            <div class="lane-head"><i class="lane-stage"></i><h3>Análise pedagógica</h3><span class="n">4</span></div>
+            <div class="lane-body">
+              <button class="kcard" type="button">
+                <div class="kcard-top"><span class="kcard-id">PAS-0146</span><span class="badge badge-info"><svg class="icon"><use href="#i-clock"/></svg>Vence em 2 dias</span></div>
+                <h4>Pinacoteca — exposição modernista</h4>
+                <div class="sub">8º ano B · Artes</div>
+                <div class="facts">
+                  <span><svg class="icon"><use href="#i-calendar"/></svg>07/11</span>
+                  <span><svg class="icon"><use href="#i-users"/></svg>30</span>
+                  <span class="tnum"><svg class="icon"><use href="#i-money"/></svg>R$ 1.480</span>
+                </div>
+                <div class="kcard-foot"><span class="avatar avatar-sm p5">LM</span>
+                  <span class="end"><span><svg class="icon"><use href="#i-message"/></svg>1</span></span></div>
+              </button>
+              <button class="kcard" type="button">
+                <div class="kcard-top"><span class="kcard-id">PAS-0144</span></div>
+                <h4>Estação de tratamento de água</h4>
+                <div class="sub">7º ano A · Ciências</div>
+                <div class="facts">
+                  <span><svg class="icon"><use href="#i-calendar"/></svg>12/11</span>
+                  <span><svg class="icon"><use href="#i-users"/></svg>29</span>
+                  <span class="tnum"><svg class="icon"><use href="#i-money"/></svg>R$ 640</span>
+                </div>
+                <div class="kcard-foot"><span class="avatar avatar-sm p4">RL</span>
+                  <span class="end"><span><svg class="icon"><use href="#i-clip"/></svg>3</span></span></div>
+              </button>
+              <div class="lane-more">+ 2 solicitações</div>
+            </div>
+          </div>
+
+          <!-- Lane: Aprovação financeira (current user's stage) -->
+          <div class="lane mine">
+            <div class="lane-head"><i class="lane-stage"></i><h3>Aprovação financeira</h3><span class="n">5</span></div>
+            <div class="lane-body">
+              <button class="kcard" type="button" aria-current="true" onclick="openDrawer()">
+                <div class="kcard-top"><span class="kcard-id">PAS-0138</span><span class="badge badge-warning"><svg class="icon"><use href="#i-refresh"/></svg>Atualizada</span></div>
+                <h4>Instituto Butantan — laboratórios</h4>
+                <div class="sub">8º ano A · Ciências</div>
+                <div class="facts">
+                  <span><svg class="icon"><use href="#i-calendar"/></svg>24/10</span>
+                  <span><svg class="icon"><use href="#i-users"/></svg>32</span>
+                  <span class="tnum"><svg class="icon"><use href="#i-money"/></svg>R$ 3.180</span>
+                </div>
+                <div class="kcard-foot"><span class="avatar-stack"><span class="avatar avatar-sm">MC</span><span class="avatar avatar-sm p2">AS</span></span>
+                  <span class="end"><span><svg class="icon"><use href="#i-message"/></svg>6</span><span><svg class="icon"><use href="#i-clip"/></svg>3</span></span></div>
+              </button>
+              <button class="kcard" type="button">
+                <div class="kcard-top"><span class="kcard-id">PAS-0135</span><span class="badge badge-success"><svg class="icon"><use href="#i-check"/></svg>Orçamento reservado</span></div>
+                <h4>Museu Catavento</h4>
+                <div class="sub">7º ano B · Ciências</div>
+                <div class="facts">
+                  <span><svg class="icon"><use href="#i-calendar"/></svg>30/10</span>
+                  <span><svg class="icon"><use href="#i-users"/></svg>34</span>
+                  <span class="tnum"><svg class="icon"><use href="#i-money"/></svg>R$ 2.340</span>
+                </div>
+                <div class="kcard-foot"><span class="avatar avatar-sm">MC</span>
+                  <span class="end"><span><svg class="icon"><use href="#i-message"/></svg>2</span></span></div>
+              </button>
+              <button class="kcard" type="button">
+                <div class="kcard-top"><span class="kcard-id">PAS-0133</span><span class="badge badge-danger"><svg class="icon"><use href="#i-alert"/></svg>Saldo insuficiente</span></div>
+                <h4>Parque Estadual — estudo do meio</h4>
+                <div class="sub">9º ano B · Geografia</div>
+                <div class="facts">
+                  <span><svg class="icon"><use href="#i-calendar"/></svg>18/11</span>
+                  <span><svg class="icon"><use href="#i-users"/></svg>36</span>
+                  <span class="tnum"><svg class="icon"><use href="#i-money"/></svg>R$ 14.900</span>
+                </div>
+                <div class="kcard-foot"><span class="avatar avatar-sm p3">JP</span>
+                  <span class="end"><span><svg class="icon"><use href="#i-message"/></svg>3</span></span></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Lane: Organização do transporte -->
+          <div class="lane">
+            <div class="lane-head"><i class="lane-stage"></i><h3>Organização do transporte</h3><span class="n">2</span></div>
+            <div class="lane-body">
+              <button class="kcard" type="button">
+                <div class="kcard-top"><span class="kcard-id">PAS-0129</span><span class="badge badge-sim"><svg class="icon"><use href="#i-flask"/></svg>Notificação simulada falhou</span></div>
+                <h4>Memorial da América Latina</h4>
+                <div class="sub">9º ano A · História</div>
+                <div class="facts">
+                  <span><svg class="icon"><use href="#i-calendar"/></svg>27/10</span>
+                  <span><svg class="icon"><use href="#i-users"/></svg>33</span>
+                  <span class="tnum"><svg class="icon"><use href="#i-money"/></svg>R$ 1.950</span>
+                </div>
+                <div class="kcard-foot"><span class="avatar avatar-sm p4">TO</span>
+                  <span class="end"><span class="accent-text" style="font-weight:600"><svg class="icon"><use href="#i-refresh"/></svg>Tentar novamente</span></span></div>
+              </button>
+              <button class="kcard" type="button">
+                <div class="kcard-top"><span class="kcard-id">PAS-0127</span></div>
+                <h4>Teatro Municipal — ensaio aberto</h4>
+                <div class="sub">6º ano A · Artes</div>
+                <div class="facts">
+                  <span><svg class="icon"><use href="#i-calendar"/></svg>05/11</span>
+                  <span><svg class="icon"><use href="#i-users"/></svg>27</span>
+                  <span class="tnum"><svg class="icon"><use href="#i-money"/></svg>R$ 720</span>
+                </div>
+                <div class="kcard-foot"><span class="avatar avatar-sm p4">TO</span></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Lane: Análise de segurança -->
+          <div class="lane">
+            <div class="lane-head"><i class="lane-stage"></i><h3>Análise de segurança</h3><span class="n">2</span></div>
+            <div class="lane-body">
+              <button class="kcard" type="button">
+                <div class="kcard-top"><span class="kcard-id">PAS-0124</span><span class="badge"><svg class="icon"><use href="#i-shield"/></svg>Direção</span></div>
+                <h4>Fazenda-escola — sustentabilidade</h4>
+                <div class="sub">7º ano C · Ciências</div>
+                <div class="facts">
+                  <span><svg class="icon"><use href="#i-calendar"/></svg>23/10</span>
+                  <span><svg class="icon"><use href="#i-users"/></svg>30</span>
+                  <span class="tnum"><svg class="icon"><use href="#i-money"/></svg>R$ 2.050</span>
+                </div>
+                <div class="kcard-foot"><span class="avatar avatar-sm p5">DR</span></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Lane: Aprovado -->
+          <div class="lane">
+            <div class="lane-head"><i class="lane-stage" style="background:var(--if-success)"></i><h3>Aprovado</h3><span class="n">6</span></div>
+            <div class="lane-body">
+              <button class="kcard dim" type="button">
+                <div class="kcard-top"><span class="kcard-id">PAS-0118</span><span class="badge badge-success"><svg class="icon"><use href="#i-check"/></svg>Aprovado</span></div>
+                <h4>Museu do Ipiranga</h4>
+                <div class="sub">8º ano C · História</div>
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- ---------- Detail drawer ---------- -->
+      <aside class="drawer" aria-label="Detalhes da solicitação PAS-0138">
+        <div class="drawer-head">
+          <div class="row">
+            <span class="kcard-id">PAS-0138</span>
+            <span class="badge badge-accent"><i class="legend-dot" style="background:var(--if-accent);border-radius:50%;margin:0"></i>Aprovação financeira</span>
+            <div class="tools">
+              <button class="btn btn-ghost btn-icon btn-sm" aria-label="Abrir em página inteira"><svg class="icon icon-sm"><use href="#i-expand"/></svg></button>
+              <button class="btn btn-ghost btn-icon btn-sm" aria-label="Fechar" onclick="closeDrawer()"><svg class="icon icon-sm"><use href="#i-x"/></svg></button>
+            </div>
+          </div>
+          <h2>Instituto Butantan — laboratórios de biologia</h2>
+          <div class="who">
+            <span class="avatar avatar-sm p2">AS</span>
+            <span>Solicitado por <strong style="color:var(--if-text)">Ana Souza</strong> · Ciências · 08/10/2026</span>
+          </div>
+        </div>
+
+        <div class="drawer-body">
+          <div class="alert alert-warning" role="status">
+            <svg class="icon"><use href="#i-refresh"/></svg>
+            <div>
+              <div class="alert-title">Esta solicitação foi atualizada</div>
+              Ana Souza alterou <b>Custos</b> há 1 min. Revise antes de aprovar.
+              <div class="alert-actions">
+                <button class="btn btn-sm"><svg class="icon icon-sm"><use href="#i-eye"/></svg>Revisar alterações</button>
+                <button class="btn btn-sm btn-link">Reaplicar minhas alterações</button>
+              </div>
+            </div>
+          </div>
+
+
+          <section class="section-card changed">
+            <header>
+              <svg class="icon icon-sm" style="color:var(--if-warning)"><use href="#i-money"/></svg>
+              <h3>Custos</h3>
+              <span class="rev">rev. 4</span>
+            </header>
+            <dl class="kv">
+              <dt>Custo estimado</dt>
+              <dd class="tnum"><ins>R$ 3.180,00</ins><del>R$ 2.950,00</del></dd>
+              <dt>Conta</dt>
+              <dd>Ciências · 2026</dd>
+              <dt>Saldo após reserva</dt>
+              <dd class="tnum">R$ 9.300,00</dd>
+            </dl>
+          </section>
+
+          <section class="section-card">
+            <header>
+              <svg class="icon icon-sm subtle"><use href="#i-pin"/></svg>
+              <h3>Itinerário</h3>
+              <span class="presence"><span class="presence-dot"></span>Ana está editando</span>
+            </header>
+            <dl class="kv">
+              <dt>Destino</dt><dd>Instituto Butantan, São Paulo</dd>
+              <dt>Data</dt><dd class="tnum">24/10/2026 · 7h30–13h00</dd>
+              <dt>Participantes</dt><dd class="tnum">32 estudantes · 3 acompanhantes</dd>
+            </dl>
+          </section>
+
+          <div>
+            <div class="t-overline" style="margin-bottom:8px">Etapas</div>
+            <ol class="stepper">
+              <li class="done"><span class="step-node"><svg class="icon"><use href="#i-check"/></svg></span>Proposta<span class="t-xs subtle">08/10</span></li>
+              <li class="done"><span class="step-node"><svg class="icon"><use href="#i-check"/></svg></span>Análise pedagógica<span class="t-xs subtle">14/10</span></li>
+              <li class="current"><span class="step-node"></span>Aprovação financeira<span class="badge badge-accent">Você</span></li>
+              <li><span class="step-node"></span>Organização do transporte<span></span></li>
+              <li><span class="step-node"></span>Análise de segurança<span></span></li>
+              <li><span class="step-node"></span>Aprovado<span></span></li>
+            </ol>
+          </div>
+          <div>
+            <div class="t-overline" style="margin-bottom:10px">Histórico</div>
+            <ul class="timeline">
+              <li><span class="dot warn"><svg class="icon"><use href="#i-refresh"/></svg></span>
+                <div><b>Ana Souza</b> alterou Custos <span class="when">há 1 min</span></div></li>
+              <li><span class="dot accent"><svg class="icon"><use href="#i-check"/></svg></span>
+                <div><b>Luís Mendes</b> aprovou em Análise pedagógica <span class="when">14/10 · 16h42</span></div></li>
+              <li><span class="dot"><svg class="icon"><use href="#i-message"/></svg></span>
+                <div><b>Luís Mendes</b> comentou: “Incluir roteiro do laboratório de répteis.” <span class="when">13/10 · 09h15</span></div></li>
+            </ul>
+          </div>
+        </div>
+
+        <footer class="drawer-foot">
+          <button class="btn btn-primary btn-lg" type="button" disabled title="Revise as alterações recentes antes de aprovar">
+            <svg class="icon"><use href="#i-wallet"/></svg>Aprovar e reservar orçamento
+          </button>
+          <div class="row">
+            <button class="btn" type="button"><svg class="icon"><use href="#i-undo"/></svg>Solicitar correção</button>
+            <button class="btn btn-danger" type="button">Rejeitar</button>
+          </div>
+          <div class="note"><svg class="icon icon-sm"><use href="#i-lock"/></svg>Aprovação disponível após revisar as alterações em Custos.</div>
+        </footer>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap">
+  <div class="toast" role="status"><svg class="icon"><use href="#i-check"/></svg>Comentário publicado</div>
+</div>
+
+<script>
+  function toggleTheme() {
+    var el = document.documentElement;
+    var next = el.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    el.setAttribute("data-theme", next);
+    try { localStorage.setItem("if-theme", next); } catch (e) {}
+  }
+  function closeDrawer() { document.documentElement.classList.add("drawer-closed"); }
+  function openDrawer() { document.documentElement.classList.remove("drawer-closed"); }
+</script>
+</body>
+</html>

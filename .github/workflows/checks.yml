@@ -1,0 +1,25 @@
+name: Checks
+on: [push, pull_request]
+jobs:
+  foundation:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16.15-bookworm
+        env:
+          POSTGRES_PASSWORD: instantflow-local-only
+        ports: ["55432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: "28.5.0.2"
+          elixir-version: "1.19.5"
+      - run: mix deps.get --check-locked
+      - run: mix precommit
+      - run: mix assets.setup && mix assets.build
+      - run: mix ecto.create && mix ecto.migrate && mix ecto.rollback --all && mix ecto.migrate
+      - run: mix run priv/repo/seeds.exs
+        env:
+          DEMO_PASSWORD: ci-fictional-accounts-only

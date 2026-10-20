@@ -1,0 +1,255 @@
+/*
+ * InstantFlow — design tokens
+ * ------------------------------------------------------------------
+ * Single source of truth for colour, type, spacing, radius, elevation
+ * and motion. Framework-agnostic CSS custom properties; a Tailwind v4 /
+ * daisyUI mapping lives in tailwind-theme.css.
+ *
+ * Theme selection:
+ *   <html data-theme="light">   explicit light
+ *   <html data-theme="dark">    explicit dark
+ *   (no attribute)              follows prefers-color-scheme
+ *
+ * Contrast ratios noted as "n:1" are WCAG 2.x against the theme's
+ * default surface (--if-bg). Body text pairs are ≥ 4.5:1 (AA);
+ * purple text/links are ≥ 7:1 on the page background in both themes
+ * (≥ 6.4:1 on dark cards). Status colours are ≥ 4.5:1 on their subtle fills.
+ */
+
+/* ---------- Primitive palette (theme-independent) ---------------- */
+:root {
+  /* Violeta Fluxo — brand purple */
+  --if-violet-50:  #F5F1FF;
+  --if-violet-100: #EBE3FF;
+  --if-violet-200: #D9C9FF;
+  --if-violet-300: #BFA3FF;
+  --if-violet-400: #A37CFA;
+  --if-violet-500: #8A57F2;
+  --if-violet-600: #7438E4;
+  --if-violet-700: #6128CC; /* brand core */
+  --if-violet-800: #5021A6;
+  --if-violet-900: #401C82;
+  --if-violet-950: #26104F;
+
+  /* Grafite — neutral greys with a faint violet undertone */
+  --if-gray-0:   #FFFFFF;
+  --if-gray-25:  #FAFAFC;
+  --if-gray-50:  #F5F5F8;
+  --if-gray-100: #EDEDF2;
+  --if-gray-200: #E2E1E8;
+  --if-gray-300: #CBCAD4;
+  --if-gray-400: #A6A4B2;
+  --if-gray-500: #7D7B8A;
+  --if-gray-600: #5E5C6B;
+  --if-gray-700: #45434F;
+  --if-gray-750: #393940;
+  --if-gray-800: #2B2B31;
+  --if-gray-850: #232328;
+  --if-gray-900: #1B1B1F;
+  --if-gray-950: #131316;
+
+  /* Typography */
+  --if-font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --if-font-display: "Inter Display", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --if-font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* Type scale (1.200 minor third, 16px base) — size / line-height */
+  --if-text-xs:   0.75rem;   --if-leading-xs:   1rem;      /* 12 / 16 meta, badges */
+  --if-text-sm:   0.875rem;  --if-leading-sm:   1.25rem;   /* 14 / 20 tables, inputs */
+  --if-text-base: 1rem;      --if-leading-base: 1.5rem;    /* 16 / 24 body */
+  --if-text-lg:   1.125rem;  --if-leading-lg:   1.75rem;   /* 18 / 28 card titles */
+  --if-text-xl:   1.375rem;  --if-leading-xl:   1.875rem;  /* 22 / 30 section titles */
+  --if-text-2xl:  1.75rem;   --if-leading-2xl:  2.25rem;   /* 28 / 36 page titles */
+  --if-text-3xl:  2.25rem;   --if-leading-3xl:  2.625rem;  /* 36 / 42 display */
+
+  --if-weight-regular: 400;
+  --if-weight-medium: 500;
+  --if-weight-semibold: 600;
+  --if-weight-bold: 700;
+  --if-tracking-tight: -0.015em;
+  --if-tracking-caps: 0.06em;
+
+  /* Spacing (4px grid) */
+  --if-space-0-5: 0.125rem;
+  --if-space-1: 0.25rem;
+  --if-space-1-5: 0.375rem;
+  --if-space-2: 0.5rem;
+  --if-space-3: 0.75rem;
+  --if-space-4: 1rem;
+  --if-space-5: 1.25rem;
+  --if-space-6: 1.5rem;
+  --if-space-8: 2rem;
+  --if-space-10: 2.5rem;
+  --if-space-12: 3rem;
+  --if-space-16: 4rem;
+
+  /* Radius — echoes the logo tile (15/64 ≈ 23%) at UI scale */
+  --if-radius-xs: 4px;    /* badges, checkboxes */
+  --if-radius-sm: 6px;    /* inputs, small buttons */
+  --if-radius-md: 10px;   /* buttons, menus */
+  --if-radius-lg: 14px;   /* cards, panels */
+  --if-radius-xl: 20px;   /* dialogs, hero tiles */
+  --if-radius-full: 999px;
+
+  /* Motion — restrained; honour reduced motion */
+  --if-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --if-duration-fast: 120ms;
+  --if-duration-base: 200ms;
+  --if-duration-slow: 320ms;
+
+  /* Layout */
+  --if-sidebar-width: 248px;
+  --if-topbar-height: 56px;
+  --if-content-max: 1440px;
+  --if-focus-width: 2px;
+  --if-focus-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --if-duration-fast: 0ms;
+    --if-duration-base: 0ms;
+    --if-duration-slow: 0ms;
+  }
+}
+
+/* ---------- Semantic tokens: LIGHT (white background) ------------ */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --if-bg:            #FFFFFF;                 /* page */
+  --if-bg-subtle:     var(--if-gray-25);       /* sidebar, table header */
+  --if-bg-muted:      var(--if-gray-50);       /* kanban lanes, wells */
+  --if-surface:       #FFFFFF;                 /* cards */
+  --if-surface-raised:#FFFFFF;                 /* menus, dialogs (with shadow) */
+  --if-overlay:       rgb(19 19 22 / 0.45);
+
+  /* Borders */
+  --if-border:        var(--if-gray-200);
+  --if-border-strong: var(--if-gray-300);
+
+  /* Text */
+  --if-text:          #1C1B22;                 /* 17.1:1 */
+  --if-text-muted:    var(--if-gray-600);      /* 6.5:1 */
+  --if-text-subtle:   #6B6878;                 /* 5.4:1 — meta only */
+  --if-text-on-accent:#FFFFFF;
+
+  /* Brand accent */
+  --if-accent:          var(--if-violet-700);  /* 7.9:1 — buttons, links, active nav */
+  --if-accent-hover:    var(--if-violet-800);
+  --if-accent-active:   var(--if-violet-900);
+  --if-accent-text:     var(--if-violet-700);  /* purple text on white */
+  --if-accent-subtle:   var(--if-violet-50);   /* selected rows, active nav bg */
+  --if-accent-subtle-2: var(--if-violet-100);
+  --if-accent-border:   var(--if-violet-200);
+  --if-focus-ring:      var(--if-violet-500);
+
+  /* Status — always paired with an icon and a text label */
+  --if-success:        #157F3B;  --if-success-subtle: #EEFBF2;  --if-success-border: #BCE8CB;
+  --if-warning:        #A65006;  --if-warning-subtle: #FFF7E8;  --if-warning-border: #F6D9A6;
+  --if-danger:         #C42B2B;  --if-danger-subtle:  #FEF1F1;  --if-danger-border:  #F6C4C4;
+  --if-info:           #1E5FD0;  --if-info-subtle:    #EEF4FF;  --if-info-border:    #C3D6FA;
+
+  /* "Simulação" — simulated payments/notifications/provisioning.
+     Teal so it never reads as brand or as a real status. */
+  --if-sim:            #0E7068;  --if-sim-subtle:     #EAF8F6;  --if-sim-border:     #9ED9D1;
+
+  /* Restricted / confidential content (counselor notes) */
+  --if-restricted:     #8A2C6B;  --if-restricted-subtle: #FBEFF7; --if-restricted-border: #EBC0DC;
+
+  /* Presence avatars (advisory only) */
+  --if-presence-1: #6128CC; --if-presence-2: #0E7068; --if-presence-3: #B4400F;
+  --if-presence-4: #1E5FD0; --if-presence-5: #8A2C6B;
+
+  /* Elevation */
+  --if-shadow-xs: 0 1px 2px rgb(28 27 34 / 0.06);
+  --if-shadow-sm: 0 1px 3px rgb(28 27 34 / 0.08), 0 1px 2px rgb(28 27 34 / 0.04);
+  --if-shadow-md: 0 6px 16px -4px rgb(28 27 34 / 0.12), 0 2px 4px rgb(28 27 34 / 0.05);
+  --if-shadow-lg: 0 18px 40px -12px rgb(38 16 79 / 0.25), 0 4px 10px rgb(28 27 34 / 0.06);
+}
+
+/* ---------- Semantic tokens: DARK (dark grey background) --------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --if-bg:            var(--if-gray-900);      /* #1B1B1F — dark grey, not black */
+  --if-bg-subtle:     #19191D;                 /* sidebar */
+  --if-bg-muted:      #202025;                 /* kanban lanes, wells */
+  --if-surface:       var(--if-gray-850);      /* #232328 cards */
+  --if-surface-raised:var(--if-gray-800);      /* #2B2B31 menus, dialogs */
+  --if-overlay:       rgb(0 0 0 / 0.6);
+
+  --if-border:        var(--if-gray-750);
+  --if-border-strong: #4A4953;
+
+  --if-text:          var(--if-gray-100);      /* 14.6:1 */
+  --if-text-muted:    var(--if-gray-400);      /* 6.8:1 */
+  --if-text-subtle:   #9897A5;                 /* 5.9:1 — meta only */
+  --if-text-on-accent:#FFFFFF;
+
+  --if-accent:          var(--if-violet-600);  /* button fill, white text 5.6:1 */
+  --if-accent-hover:    #7F47EC;               /* white text 5.2:1 */
+  --if-accent-active:   var(--if-violet-700);
+  --if-accent-text:     #B394FF;               /* purple text/links/icons: 7.0:1 page, 6.4:1 card */
+  --if-accent-subtle:   #2A2340;               /* selected rows, active nav bg */
+  --if-accent-subtle-2: #342A55;
+  --if-accent-border:   #4A3A80;
+  --if-focus-ring:      var(--if-violet-400);
+
+  --if-success:        #5BD68A;  --if-success-subtle: #16291E;  --if-success-border: #24543A;
+  --if-warning:        #F5B544;  --if-warning-subtle: #2D2414;  --if-warning-border: #5C4520;
+  --if-danger:         #F57F7F;  --if-danger-subtle:  #331C1E;  --if-danger-border:  #6A3034;
+  --if-info:           #75A8FA;  --if-info-subtle:    #182438;  --if-info-border:    #2E4A78;
+
+  --if-sim:            #4FD1C1;  --if-sim-subtle:     #142A28;  --if-sim-border:     #24564F;
+
+  --if-restricted:     #EE8FCB;  --if-restricted-subtle: #2F1A29; --if-restricted-border: #5E2F4E;
+
+  --if-presence-1: #A37CFA; --if-presence-2: #4FD1C1; --if-presence-3: #F59E6B;
+  --if-presence-4: #75A8FA; --if-presence-5: #EE8FCB;
+
+  --if-shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --if-shadow-sm: 0 1px 3px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.2);
+  --if-shadow-md: 0 8px 20px -6px rgb(0 0 0 / 0.5), 0 2px 4px rgb(0 0 0 / 0.25);
+  --if-shadow-lg: 0 20px 48px -12px rgb(0 0 0 / 0.65), 0 4px 10px rgb(0 0 0 / 0.3);
+}
+
+/* Follow OS preference when no explicit theme is set */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --if-bg: var(--if-gray-900);
+    --if-bg-subtle: #19191D;
+    --if-bg-muted: #202025;
+    --if-surface: var(--if-gray-850);
+    --if-surface-raised: var(--if-gray-800);
+    --if-overlay: rgb(0 0 0 / 0.6);
+    --if-border: var(--if-gray-750);
+    --if-border-strong: #4A4953;
+    --if-text: var(--if-gray-100);
+    --if-text-muted: var(--if-gray-400);
+    --if-text-subtle: #9897A5;
+    --if-accent: var(--if-violet-600);
+    --if-accent-hover: #7F47EC;
+    --if-accent-active: var(--if-violet-700);
+    --if-accent-text: #B394FF;
+    --if-accent-subtle: #2A2340;
+    --if-accent-subtle-2: #342A55;
+    --if-accent-border: #4A3A80;
+    --if-focus-ring: var(--if-violet-400);
+    --if-success: #5BD68A; --if-success-subtle: #16291E; --if-success-border: #24543A;
+    --if-warning: #F5B544; --if-warning-subtle: #2D2414; --if-warning-border: #5C4520;
+    --if-danger: #F57F7F;  --if-danger-subtle: #331C1E;  --if-danger-border: #6A3034;
+    --if-info: #75A8FA;    --if-info-subtle: #182438;    --if-info-border: #2E4A78;
+    --if-sim: #4FD1C1;     --if-sim-subtle: #142A28;     --if-sim-border: #24564F;
+    --if-restricted: #EE8FCB; --if-restricted-subtle: #2F1A29; --if-restricted-border: #5E2F4E;
+    --if-presence-1: #A37CFA; --if-presence-2: #4FD1C1; --if-presence-3: #F59E6B;
+    --if-presence-4: #75A8FA; --if-presence-5: #EE8FCB;
+    --if-shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+    --if-shadow-sm: 0 1px 3px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.2);
+    --if-shadow-md: 0 8px 20px -6px rgb(0 0 0 / 0.5), 0 2px 4px rgb(0 0 0 / 0.25);
+    --if-shadow-lg: 0 20px 48px -12px rgb(0 0 0 / 0.65), 0 4px 10px rgb(0 0 0 / 0.3);
+  }
+}

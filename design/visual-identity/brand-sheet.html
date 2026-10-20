@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identidade visual · InstantFlow</title>
+<link rel="icon" href="logo/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="components.css">
+<style>
+  body { background: var(--if-bg-subtle); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 48px 40px 80px; }
+  .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; padding: 40px; border-radius: var(--if-radius-xl); color: #fff;
+    background: radial-gradient(120% 140% at 0% 0%, #8A57F2 0%, #6128CC 45%, #26104F 100%); position: relative; overflow: hidden; }
+  .hero::after { content: ""; position: absolute; right: -60px; bottom: -80px; width: 380px; height: 380px; background: url(logo/instantflow-glyph-white.svg) no-repeat center / contain; opacity: .08; }
+  .hero h1 { font-family: var(--if-font-display); font-size: 44px; line-height: 1.08; letter-spacing: -0.03em; margin: 18px 0 10px; }
+  .hero p { margin: 0; font-size: 17px; line-height: 1.6; color: rgb(255 255 255 / .82); max-width: 52ch; }
+  .hero .lockup { height: 44px; filter: drop-shadow(0 6px 14px rgb(0 0 0 / .2)); }
+  .principles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; position: relative; z-index: 1; }
+  .principle { padding: 14px 16px; border-radius: var(--if-radius-lg); background: rgb(255 255 255 / .09); border: 1px solid rgb(255 255 255 / .16); backdrop-filter: blur(6px); }
+  .principle b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .principle span { font-size: 13px; line-height: 1.45; color: rgb(255 255 255 / .78); }
+
+  section { margin-top: 56px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+  .sec-head .num { font-family: var(--if-font-mono); font-size: 13px; color: var(--if-accent-text); }
+  .sec-head p { margin: 0 0 0 auto; max-width: 56ch; font-size: 14px; color: var(--if-text-muted); text-align: right; }
+
+  .duo { display: grid; grid-template-columns: 1fr 1fr; border-radius: var(--if-radius-xl); overflow: hidden; border: 1px solid var(--if-border); box-shadow: var(--if-shadow-sm); }
+  .panel { background: var(--if-bg); color: var(--if-text); padding: 28px; display: flex; flex-direction: column; gap: 22px; }
+  .panel-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: var(--if-tracking-caps); text-transform: uppercase; color: var(--if-text-subtle); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+  /* Logo section */
+  .logo-dark-only { display: none; }
+  [data-theme="dark"] .logo-dark-only { display: block; }
+  [data-theme="dark"] .logo-light-only { display: none; }
+  .clear-space { position: relative; display: inline-block; padding: 16px; border: 1px dashed var(--if-accent-border); border-radius: 12px; background:
+      repeating-linear-gradient(45deg, transparent 0 6px, color-mix(in srgb, var(--if-accent) 6%, transparent) 6px 7px); }
+  .clear-space img { display: block; height: 48px; background: var(--if-bg); }
+  .sizes { display: flex; gap: 20px; align-items: flex-end; }
+  .sizes figure { margin: 0; text-align: center; font-size: 11px; color: var(--if-text-subtle); }
+  .sizes img { display: block; margin: 0 auto 6px; }
+  .mono-mark { color: var(--if-text); }
+  .on-photo { width: 64px; height: 64px; border-radius: 15px; display: grid; place-items: center; background: linear-gradient(135deg, #0E7068, #1E5FD0); }
+  .donts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .dont { padding: 14px; border-radius: var(--if-radius-lg); background: var(--if-surface); border: 1px solid var(--if-border); font-size: 12px; color: var(--if-text-muted); }
+  .dont .demo { height: 64px; display: grid; place-items: center; margin-bottom: 10px; border-radius: 10px; background: var(--if-bg-muted); position: relative; }
+  .dont .demo::after { content: ""; position: absolute; inset: 8px; background: linear-gradient(to top right, transparent calc(50% - 1px), var(--if-danger) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)); opacity: .55; }
+  .dont b { color: var(--if-danger); display: block; margin-bottom: 2px; }
+
+  /* Colour */
+  .scale { display: grid; grid-template-columns: repeat(11, 1fr); border-radius: var(--if-radius-lg); overflow: hidden; border: 1px solid var(--if-border); }
+  .scale div { height: 92px; padding: 8px; display: flex; flex-direction: column; justify-content: flex-end; font-size: 11px; line-height: 1.3; }
+  .scale div b { font-weight: 700; }
+  .scale div span { font-family: var(--if-font-mono); font-size: 10px; opacity: .85; }
+  .scale .core { box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px #6128CC; }
+  .swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sw { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: var(--if-radius-md); background: var(--if-surface); border: 1px solid var(--if-border); }
+  .sw i { width: 36px; height: 36px; border-radius: 8px; flex: none; border: 1px solid var(--if-border); }
+  .sw b { display: block; font-size: 12px; line-height: 1.3; }
+  .sw span { font-family: var(--if-font-mono); font-size: 10.5px; color: var(--if-text-subtle); }
+  .ratio { width: 100%; height: 14px; display: flex; border-radius: 7px; overflow: hidden; }
+
+  /* Type */
+  .type-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .face { padding: 20px; }
+  .face .big { font-size: 64px; line-height: 1; letter-spacing: -0.03em; margin: 8px 0 12px; }
+  .face p { margin: 0; font-size: 13px; color: var(--if-text-muted); }
+  .scale-list { display: grid; gap: 4px; }
+  .scale-list div { display: grid; grid-template-columns: 110px 1fr; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--if-border); }
+  .scale-list div:last-child { border-bottom: 0; }
+  .scale-list code { font-family: var(--if-font-mono); font-size: 11px; color: var(--if-text-subtle); }
+
+  /* Components demo */
+  .kcard-demo { padding: 11px 12px 10px; background: var(--if-surface); border: 1px solid var(--if-border); border-radius: 12px; box-shadow: var(--if-shadow-xs); width: 260px; }
+  .kcard-demo .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .kcard-demo .id { font-family: var(--if-font-mono); font-size: 11px; color: var(--if-text-subtle); }
+  .kcard-demo h4 { margin: 0; font-size: 14px; font-weight: 600; }
+  .kcard-demo .sub { font-size: 12px; color: var(--if-text-muted); }
+  .kcard-demo .foot { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--if-border); }
+
+  .voice { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .voice .card { padding: 16px 18px; font-size: 14px; }
+  .voice .yes { border-left: 3px solid var(--if-success); }
+  .voice .no { border-left: 3px solid var(--if-danger); }
+  .voice .lbl { font-size: 11px; font-weight: 700; letter-spacing: var(--if-tracking-caps); text-transform: uppercase; margin-bottom: 6px; }
+  .voice .yes .lbl { color: var(--if-success); } .voice .no .lbl { color: var(--if-danger); }
+  .voice ul { margin: 0; padding-left: 18px; color: var(--if-text-muted); line-height: 1.7; }
+  .voice li q { color: var(--if-text); quotes: "“" "”"; }
+  footer.meta { margin-top: 56px; font-size: 12px; color: var(--if-text-subtle); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4.5 9.5 9 5"/><path d="M4.5 9.5H14a5.5 5.5 0 0 1 0 11h-2"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 4.9a2 2 0 0 1 3.4 0l7 12.1a2 2 0 0 1-1.7 3H5a2 2 0 0 1-1.7-3z"/><path d="M12 10v3.5M12 16.6v.1"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9.5 3.5h5M10.5 3.5V9L5 18.5a1.4 1.4 0 0 0 1.2 2h11.6a1.4 1.4 0 0 0 1.2-2L13.5 9V3.5M7.6 14.5h8.8"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 11A7.5 7.5 0 0 0 6 7l-2 2M4.5 13A7.5 7.5 0 0 0 18 17l2-2"/><path d="M4 4.5V9h4.5M20 19.5V15h-4.5"/></symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M4 4l16 16M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 4-2.4M19 13a10 10 0 0 0-3-2M2 9.5a14 14 0 0 1 4.5-2.8M22 9.5A14 14 0 0 0 11 6"/><circle cx="12" cy="19.5" r=".6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M8.5 3v4M15.5 3v4"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 10h16M4 14.5h16M10 10v9"/></symbol>
+  <symbol id="i-kanban" viewBox="0 0 24 24"><rect x="4" y="4" width="4.5" height="16" rx="1.5"/><rect x="10" y="4" width="4.5" height="11" rx="1.5"/><rect x="16" y="4" width="4" height="7" rx="1.5"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 17h-8l-4.5 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 5 5z"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+
+  <!-- ============ Hero ============ -->
+  <header class="hero">
+    <div style="position:relative;z-index:1">
+      <img class="lockup" src="logo/instantflow-logo-on-accent.svg" alt="InstantFlow" style="height:46px">
+      <h1>Identidade visual</h1>
+      <p>Fluxos escolares que passam de mão em mão — com clareza, ao vivo e sem surpresas. Violeta como acento, superfícies calmas e estados sempre explícitos.</p>
+    </div>
+    <div class="principles">
+      <div class="principle"><b>Clareza antes de decoração</b><span>Densidade de ferramenta de trabalho; o roxo marca ação e foco, não enfeita.</span></div>
+      <div class="principle"><b>Estado nunca só por cor</b><span>Todo status combina ícone + texto. Urgência funciona em escala de cinza.</span></div>
+      <div class="principle"><b>Simulação é visível</b><span>Pagamentos, notificações e acessos simulados usam o marcador tracejado verde-azulado.</span></div>
+      <div class="principle"><b>Tempo real com calma</b><span>Presença é discreta; mudanças remotas avisam, não reordenam o que você está usando.</span></div>
+    </div>
+  </header>
+
+  <!-- ============ 01 Logo ============ -->
+  <section>
+    <div class="sec-head"><span class="num">01</span><h2 class="t-h2">Logotipo</h2>
+      <p>A haste do “i” desce sob “nstant”, sobe em curva entre as duas palavras e atravessa “flow” como uma seta contínua: a solicitação que percorre todas as etapas do fluxo.</p></div>
+    <div class="duo">
+      <div class="panel" data-theme="light">
+        <span class="panel-tag">Modo claro · fundo branco</span>
+        <img src="logo/instantflow-logo-light.svg" alt="instantflow" height="60" style="align-self:flex-start">
+        <div class="row" style="gap:28px;align-items:flex-end">
+          <img src="logo/instantflow-logo-stacked-light.svg" alt="" height="140">
+          <div class="clear-space" title="Área de proteção = altura do ponto do i × 2"><img src="logo/instantflow-logo-light.svg" alt=""></div>
+        </div>
+        <div class="sizes">
+          <figure><img src="logo/instantflow-mark.svg" width="96" alt="">96 px</figure>
+          <figure><img src="logo/instantflow-mark.svg" width="48" alt="">48 px</figure>
+          <figure><img src="logo/instantflow-mark.svg" width="32" alt="">32 px</figure>
+          <figure><img src="logo/instantflow-mark.svg" width="16" alt="">16 px</figure>
+          <figure class="mono-mark"><img src="logo/instantflow-mark-mono.svg" width="48" alt="">Mono</figure>
+        </div>
+      </div>
+      <div class="panel" data-theme="dark">
+        <span class="panel-tag">Modo escuro · fundo grafite</span>
+        <img src="logo/instantflow-logo-dark.svg" alt="instantflow" height="60" style="align-self:flex-start">
+        <div class="row" style="gap:28px;align-items:flex-end">
+          <img src="logo/instantflow-logo-stacked-dark.svg" alt="" height="140">
+          <div class="clear-space"><img src="logo/instantflow-logo-dark.svg" alt=""></div>
+        </div>
+        <div class="sizes">
+          <figure><img src="logo/instantflow-mark.svg" width="96" alt="">96 px</figure>
+          <figure><img src="logo/instantflow-mark.svg" width="48" alt="">48 px</figure>
+          <figure><img src="logo/instantflow-mark.svg" width="32" alt="">32 px</figure>
+          <figure><img src="logo/instantflow-mark.svg" width="16" alt="">16 px</figure>
+          <figure><div class="on-photo"><img src="logo/instantflow-glyph-white.svg" width="44" alt="" style="margin:0"></div>Sobre cor</figure>
+        </div>
+      </div>
+    </div>
+    <div class="donts" style="margin-top:14px">
+      <div class="dont"><div class="demo"><img class="logo-light-only" src="logo/instantflow-logo-light.svg" height="26" style="transform:scaleX(1.35)" alt=""><img class="logo-dark-only" src="logo/instantflow-logo-dark.svg" height="26" style="transform:scaleX(1.35)" alt=""></div><b>Não distorcer</b>Mantenha a proporção original.</div>
+      <div class="dont"><div class="demo"><img class="logo-light-only" src="logo/instantflow-logo-light.svg" height="26" style="filter:hue-rotate(150deg)" alt=""><img class="logo-dark-only" src="logo/instantflow-logo-dark.svg" height="26" style="filter:hue-rotate(150deg)" alt=""></div><b>Não recolorir</b>Violeta é a cor da marca; use a versão mono se necessário.</div>
+      <div class="dont"><div class="demo" style="background:#8A57F2"><img src="logo/instantflow-logo-light.svg" height="26" alt=""></div><b>Sem baixo contraste</b>Sobre roxo intenso, use o glifo branco ou a versão escura.</div>
+      <div class="dont"><div class="demo"><img class="logo-light-only" src="logo/instantflow-logo-light.svg" height="26" style="filter:drop-shadow(3px 3px 2px rgb(0 0 0 / .6))" alt=""><img class="logo-dark-only" src="logo/instantflow-logo-dark.svg" height="26" style="filter:drop-shadow(3px 3px 2px rgb(255 255 255 / .5))" alt=""></div><b>Sem efeitos</b>Nada de sombras, contornos ou brilhos extras.</div>
+    </div>
+  </section>
+  <section>
+    <div class="sec-head"><span class="num">02</span><h2 class="t-h2">Cor</h2>
+      <p>Violeta Fluxo é o único acento. O modo claro usa branco puro; o escuro usa grafite (#1B1B1F), nunca preto. Texto e links roxos têm contraste ≥ 7:1 no fundo da página.</p></div>
+
+    <div class="scale" aria-label="Escala Violeta Fluxo">
+      <div style="background:#F5F1FF;color:#26104F"><b>50</b><span>#F5F1FF</span></div>
+      <div style="background:#EBE3FF;color:#26104F"><b>100</b><span>#EBE3FF</span></div>
+      <div style="background:#D9C9FF;color:#26104F"><b>200</b><span>#D9C9FF</span></div>
+      <div style="background:#BFA3FF;color:#26104F"><b>300</b><span>#BFA3FF</span></div>
+      <div style="background:#A37CFA;color:#1B1B1F"><b>400</b><span>#A37CFA</span></div>
+      <div style="background:#8A57F2;color:#fff"><b>500</b><span>#8A57F2</span></div>
+      <div style="background:#7438E4;color:#fff"><b>600</b><span>#7438E4</span></div>
+      <div class="core" style="background:#6128CC;color:#fff"><b>700 · marca</b><span>#6128CC</span></div>
+      <div style="background:#5021A6;color:#fff"><b>800</b><span>#5021A6</span></div>
+      <div style="background:#401C82;color:#fff"><b>900</b><span>#401C82</span></div>
+      <div style="background:#26104F;color:#fff"><b>950</b><span>#26104F</span></div>
+    </div>
+
+    <div class="duo" style="margin-top:14px">
+      <div class="panel" data-theme="light">
+        <span class="panel-tag">Claro</span>
+        <div class="ratio" aria-hidden="true"><span style="flex:70;background:#FFFFFF;border:1px solid #E2E1E8"></span><span style="flex:18;background:#F5F5F8"></span><span style="flex:8;background:#1C1B22"></span><span style="flex:4;background:#6128CC"></span></div>
+        <div class="swatches">
+          <div class="sw"><i style="background:#FFFFFF"></i><div><b>Fundo</b><span>#FFFFFF</span></div></div>
+          <div class="sw"><i style="background:#FAFAFC"></i><div><b>Fundo sutil</b><span>#FAFAFC</span></div></div>
+          <div class="sw"><i style="background:#F5F5F8"></i><div><b>Fundo neutro</b><span>#F5F5F8</span></div></div>
+          <div class="sw"><i style="background:#E2E1E8"></i><div><b>Borda</b><span>#E2E1E8</span></div></div>
+          <div class="sw"><i style="background:#1C1B22"></i><div><b>Texto · 17:1</b><span>#1C1B22</span></div></div>
+          <div class="sw"><i style="background:#5E5C6B"></i><div><b>Texto secundário</b><span>#5E5C6B</span></div></div>
+          <div class="sw"><i style="background:#6128CC"></i><div><b>Acento · 7,8:1</b><span>#6128CC</span></div></div>
+          <div class="sw"><i style="background:#5021A6"></i><div><b>Acento hover</b><span>#5021A6</span></div></div>
+          <div class="sw"><i style="background:#F5F1FF"></i><div><b>Acento sutil</b><span>#F5F1FF</span></div></div>
+          <div class="sw"><i style="background:#157F3B"></i><div><b>Sucesso</b><span>#157F3B</span></div></div>
+          <div class="sw"><i style="background:#A65006"></i><div><b>Atenção</b><span>#A65006</span></div></div>
+          <div class="sw"><i style="background:#C42B2B"></i><div><b>Erro</b><span>#C42B2B</span></div></div>
+          <div class="sw"><i style="background:#1E5FD0"></i><div><b>Informação</b><span>#1E5FD0</span></div></div>
+          <div class="sw"><i style="background:#0E7068"></i><div><b>Simulação</b><span>#0E7068</span></div></div>
+          <div class="sw"><i style="background:#8A2C6B"></i><div><b>Restrito</b><span>#8A2C6B</span></div></div>
+        </div>
+      </div>
+      <div class="panel" data-theme="dark">
+        <span class="panel-tag">Escuro</span>
+        <div class="ratio" aria-hidden="true"><span style="flex:70;background:#1B1B1F;border:1px solid #393940"></span><span style="flex:18;background:#232328"></span><span style="flex:8;background:#EDEDF2"></span><span style="flex:4;background:#7438E4"></span></div>
+        <div class="swatches">
+          <div class="sw"><i style="background:#1B1B1F"></i><div><b>Fundo</b><span>#1B1B1F</span></div></div>
+          <div class="sw"><i style="background:#232328"></i><div><b>Superfície</b><span>#232328</span></div></div>
+          <div class="sw"><i style="background:#2B2B31"></i><div><b>Elevada</b><span>#2B2B31</span></div></div>
+          <div class="sw"><i style="background:#393940"></i><div><b>Borda</b><span>#393940</span></div></div>
+          <div class="sw"><i style="background:#EDEDF2"></i><div><b>Texto · 14,7:1</b><span>#EDEDF2</span></div></div>
+          <div class="sw"><i style="background:#A6A4B2"></i><div><b>Texto secundário</b><span>#A6A4B2</span></div></div>
+          <div class="sw"><i style="background:#7438E4"></i><div><b>Botão primário</b><span>#7438E4</span></div></div>
+          <div class="sw"><i style="background:#B394FF"></i><div><b>Texto acento · 7:1</b><span>#B394FF</span></div></div>
+          <div class="sw"><i style="background:#2A2340"></i><div><b>Acento sutil</b><span>#2A2340</span></div></div>
+          <div class="sw"><i style="background:#5BD68A"></i><div><b>Sucesso</b><span>#5BD68A</span></div></div>
+          <div class="sw"><i style="background:#F5B544"></i><div><b>Atenção</b><span>#F5B544</span></div></div>
+          <div class="sw"><i style="background:#F57F7F"></i><div><b>Erro</b><span>#F57F7F</span></div></div>
+          <div class="sw"><i style="background:#75A8FA"></i><div><b>Informação</b><span>#75A8FA</span></div></div>
+          <div class="sw"><i style="background:#4FD1C1"></i><div><b>Simulação</b><span>#4FD1C1</span></div></div>
+          <div class="sw"><i style="background:#EE8FCB"></i><div><b>Restrito</b><span>#EE8FCB</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 Type ============ -->
+  <section>
+    <div class="sec-head"><span class="num">03</span><h2 class="t-h2">Tipografia</h2>
+      <p>Inter para interface (ótima em PT-BR acentuado e números tabulares), Inter Display para títulos e JetBrains Mono para identificadores e JSON.</p></div>
+    <div class="type-grid">
+      <div class="card face"><span class="t-overline">Títulos</span><div class="big" style="font-family:var(--if-font-display);font-weight:700">Ação</div><p>Inter Display · 700 · tracking −1,5%</p></div>
+      <div class="card face"><span class="t-overline">Interface e texto</span><div class="big" style="font-weight:500">Ãéç</div><p>Inter · 400 / 500 / 600 · cv11, ss01</p></div>
+      <div class="card face"><span class="t-overline">Códigos e IDs</span><div class="big mono" style="font-size:52px;line-height:1.2">PAS‑0138</div><p>JetBrains Mono · 400 / 500</p></div>
+    </div>
+    <div class="card" style="margin-top:12px;padding:8px 20px">
+      <div class="scale-list">
+        <div><code>3xl · 36/42</code><span class="t-display">Painel de solicitações</span></div>
+        <div><code>2xl · 28/36</code><span class="t-h1">Aprovação de passeios</span></div>
+        <div><code>xl · 22/30</code><span class="t-h2">Organização do transporte</span></div>
+        <div><code>lg · 18/28</code><span class="t-h3">Instituto Butantan — laboratórios</span></div>
+        <div><code>base · 16/24</code><span class="t-body">A professora informa itinerário, datas, destino, participantes e custo estimado.</span></div>
+        <div><code>sm · 14/20</code><span class="t-sm">Tabelas, campos de formulário, cartões do Kanban e navegação.</span></div>
+        <div><code>xs · 12/16</code><span class="t-xs muted">Metadados, selos de status, carimbos de data e hora · 24/10/2026 · 7h30</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 Components ============ -->
+  <section>
+    <div class="sec-head"><span class="num">04</span><h2 class="t-h2">Componentes</h2>
+      <p>Raios suaves que ecoam o símbolo, bordas finas, sombras discretas. Estados de status sempre com ícone e texto.</p></div>
+    <div class="duo">
+      <div class="panel" data-theme="light" id="comp-light"></div>
+      <div class="panel" data-theme="dark" id="comp-dark"></div>
+    </div>
+  </section>
+
+  <template id="components">
+    <span class="panel-tag"></span>
+    <div class="row">
+      <button class="btn btn-primary"><svg class="icon"><use href="#i-plus"/></svg>Nova solicitação</button>
+      <button class="btn">Salvar rascunho</button>
+      <button class="btn btn-ghost">Cancelar</button>
+      <button class="btn btn-danger">Rejeitar</button>
+      <button class="btn btn-primary" aria-busy="true"><span class="spinner"></span>Enviando…</button>
+    </div>
+    <div class="row">
+      <span class="badge badge-accent">Aprovação financeira</span>
+      <span class="badge badge-success"><svg class="icon"><use href="#i-check"/></svg>Aprovado</span>
+      <span class="badge badge-warning"><svg class="icon"><use href="#i-undo"/></svg>Correção solicitada</span>
+      <span class="badge badge-danger"><svg class="icon"><use href="#i-alert"/></svg>Urgente</span>
+      <span class="badge badge-info"><svg class="icon"><use href="#i-clock"/></svg>Vence em 2 dias</span>
+      <span class="badge badge-sim"><svg class="icon"><use href="#i-flask"/></svg>Pagamento simulado</span>
+      <span class="badge badge-restricted"><svg class="icon"><use href="#i-lock"/></svg>Restrito à orientação</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <label class="field"><span class="label">Destino<span class="req">*</span></span><input class="input" value="Instituto Butantan"><span class="help">Local principal da visita.</span></label>
+      <label class="field"><span class="label">Custo estimado<span class="req">*</span></span><input class="input" value="R$ 0,00" aria-invalid="true"><span class="error-text"><svg class="icon icon-sm"><use href="#i-alert"/></svg>Informe um valor maior que zero.</span></label>
+    </div>
+    <div class="row" style="justify-content:space-between">
+      <div class="segmented" role="group" aria-label="Visualização">
+        <button aria-pressed="false"><svg class="icon icon-sm"><use href="#i-table"/></svg>Tabela</button>
+        <button aria-pressed="true"><svg class="icon icon-sm"><use href="#i-kanban"/></svg>Kanban</button>
+        <button aria-pressed="false"><svg class="icon icon-sm"><use href="#i-calendar"/></svg>Calendário</button>
+      </div>
+      <div class="input-affix" style="width:220px"><svg class="icon icon-sm"><use href="#i-search"/></svg><input class="input" placeholder="Buscar…"></div>
+    </div>
+    <div style="display:grid;gap:8px">
+      <div class="alert alert-warning"><svg class="icon"><use href="#i-refresh"/></svg><div><div class="alert-title">Esta solicitação foi atualizada</div>Suas alterações foram preservadas. <a href="#" class="accent-text">Revisar alterações</a></div></div>
+      <div class="alert alert-danger"><svg class="icon"><use href="#i-wifi-off"/></svg><div><div class="alert-title">Conexão interrompida. Reconectando…</div>Ações que alteram dados ficam bloqueadas até reconectar.</div></div>
+      <div class="alert alert-sim"><svg class="icon"><use href="#i-flask"/></svg><div><div class="alert-title">Notificação simulada não entregue</div>A aprovação continua registrada. <a href="#" style="color:var(--if-sim);font-weight:600">Tentar novamente</a></div></div>
+      <div class="alert alert-restricted"><svg class="icon"><use href="#i-lock"/></svg><div><div class="alert-title">Notas de acompanhamento</div>Visível apenas para orientação educacional e direção.</div></div>
+    </div>
+    <div class="row" style="align-items:flex-start;justify-content:space-between">
+      <div class="kcard-demo">
+        <div class="top"><span class="id">PAS-0135</span><span class="badge badge-success"><svg class="icon"><use href="#i-check"/></svg>Orçamento reservado</span></div>
+        <h4>Museu Catavento</h4><div class="sub">7º ano B · Ciências</div>
+        <div class="foot"><span class="avatar-stack"><span class="avatar avatar-sm">MC</span><span class="avatar avatar-sm p2">AS</span><span class="avatar avatar-sm p3">JP</span></span>
+          <span class="presence" style="margin-left:auto"><span class="presence-dot"></span>Ana está editando</span></div>
+      </div>
+      <div style="display:grid;gap:12px;flex:1;min-width:200px">
+        <div><div class="t-xs muted" style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Orçamento disponível</span><b class="tnum" style="color:var(--if-text)">R$ 12.480,00</b></div>
+          <div class="meter"><span class="committed" style="width:52%"></span><span class="reserved" style="width:17%"></span></div></div>
+        <div class="toast" style="justify-self:start"><svg class="icon"><use href="#i-check"/></svg>Alteração salva</div>
+      </div>
+    </div>
+  </template>
+
+  <!-- ============ 05 Voice ============ -->
+  <section>
+    <div class="sec-head"><span class="num">05</span><h2 class="t-h2">Voz e microtexto (PT-BR)</h2>
+      <p>Direto, cordial e verificável. Dizer o que aconteceu e o próximo passo — sem revelar dados que a pessoa não pode ver.</p></div>
+    <div class="voice">
+      <div class="card yes"><div class="lbl">Prefira</div><ul>
+        <li><q>Alteração salva</q> — só após confirmação do servidor</li>
+        <li><q>Conexão interrompida. Reconectando…</q></li>
+        <li><q>Saldo insuficiente na conta Ciências · 2026. Solicite correção do valor ou escolha outra conta.</q></li>
+        <li><q>Pagamento simulado registrado</q></li>
+      </ul></div>
+      <div class="card no"><div class="lbl">Evite</div><ul>
+        <li><q>Sucesso!!</q> antes de o servidor confirmar</li>
+        <li><q>Erro 409</q> ou mensagens técnicas sem próxima ação</li>
+        <li><q>Você não pode ver a nota da orientadora Carla</q> — revela dado oculto</li>
+        <li><q>Pagamento aprovado</q> quando é apenas simulação</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <footer class="meta"><span>InstantFlow · Identidade visual v1 · outubro de 2026</span><span>Tokens: tokens.css · Logos: /logo · Exemplo: examples/painel-passeios.html</span></footer>
+</div>
+
+<script>
+  var tpl = document.getElementById("components");
+  [["comp-light", "Claro"], ["comp-dark", "Escuro"]].forEach(function (p) {
+    var el = document.getElementById(p[0]);
+    el.appendChild(tpl.content.cloneNode(true));
+    el.querySelector(".panel-tag").textContent = p[1];
+  });
+  var t = new URLSearchParams(location.search).get("theme");
+  if (t) document.documentElement.setAttribute("data-theme", t);
+</script>
+</body>
+</html>

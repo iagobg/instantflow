@@ -1,0 +1,102 @@
+/*
+ * InstantFlow — Tailwind v4 / daisyUI 5 mapping (proposed)
+ * ------------------------------------------------------------------
+ * Phoenix 1.8 generators ship Tailwind v4 with daisyUI themes declared
+ * in assets/css/app.css. When Sprint 00 bootstraps the app, replace the
+ * generated "light"/"dark" theme blocks with these and import tokens.css
+ * for the --if-* variables used by custom components.
+ *
+ * Values mirror tokens.css; tokens.css stays the source of truth.
+ */
+
+@import "./tokens.css";
+
+@plugin "../vendor/daisyui-theme" {
+  name: "light";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: #FFFFFF;
+  --color-base-200: #FAFAFC;
+  --color-base-300: #E2E1E8;
+  --color-base-content: #1C1B22;
+  --color-primary: #6128CC;
+  --color-primary-content: #FFFFFF;
+  --color-secondary: #EBE3FF;
+  --color-secondary-content: #401C82;
+  --color-accent: #0E7068;          /* reserved for "Simulação" markers */
+  --color-accent-content: #FFFFFF;
+  --color-neutral: #2B2B31;
+  --color-neutral-content: #EDEDF2;
+  --color-info: #1E5FD0;
+  --color-info-content: #FFFFFF;
+  --color-success: #157F3B;
+  --color-success-content: #FFFFFF;
+  --color-warning: #A65006;
+  --color-warning-content: #FFFFFF;
+  --color-error: #C42B2B;
+  --color-error-content: #FFFFFF;
+  --radius-selector: 0.375rem;
+  --radius-field: 0.625rem;
+  --radius-box: 0.875rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "../vendor/daisyui-theme" {
+  name: "dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: #1B1B1F;
+  --color-base-200: #232328;
+  --color-base-300: #393940;
+  --color-base-content: #EDEDF2;
+  --color-primary: #7438E4;
+  --color-primary-content: #FFFFFF;
+  --color-secondary: #2A2340;
+  --color-secondary-content: #D9C9FF;
+  --color-accent: #4FD1C1;
+  --color-accent-content: #131316;
+  --color-neutral: #EDEDF2;
+  --color-neutral-content: #1B1B1F;
+  --color-info: #75A8FA;
+  --color-info-content: #131316;
+  --color-success: #5BD68A;
+  --color-success-content: #131316;
+  --color-warning: #F5B544;
+  --color-warning-content: #131316;
+  --color-error: #F57F7F;
+  --color-error-content: #131316;
+  --radius-selector: 0.375rem;
+  --radius-field: 0.625rem;
+  --radius-box: 0.875rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* Matches Phoenix 1.8's theme toggle, which sets data-theme on <html> */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Display", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-violet-50: #F5F1FF;
+  --color-violet-100: #EBE3FF;
+  --color-violet-200: #D9C9FF;
+  --color-violet-300: #BFA3FF;
+  --color-violet-400: #A37CFA;
+  --color-violet-500: #8A57F2;
+  --color-violet-600: #7438E4;
+  --color-violet-700: #6128CC;
+  --color-violet-800: #5021A6;
+  --color-violet-900: #401C82;
+  --color-violet-950: #26104F;
+}

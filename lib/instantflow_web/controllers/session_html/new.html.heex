@@ -1,0 +1,43 @@
+<Layouts.app flash={@flash}>
+  <div class="auth-grid">
+    <section class="auth-story">
+      <Layouts.logo /><p class="eyebrow">A ESCOLA ACONTECE EM EQUIPE</p><h1>
+        Cada solicitação.<br />Um próximo passo.
+      </h1><p>Conecte pessoas, organize decisões e dê fluidez ao dia a dia da sua escola.</p><div class="story-detail">
+        <span>01</span><div>
+          <strong>O trabalho encontra seu caminho.</strong><p>
+            Uma organização. Vários departamentos. Todos na mesma direção.
+          </p>
+        </div>
+      </div>
+    </section>
+    <section class="card auth-card" aria-labelledby="login-title">
+      <span class="badge">Acesso da equipe</span><h2 id="login-title">Bom ter você por aqui.</h2><p>
+        Entre com sua conta institucional.
+      </p><.form for={@form} id="login-form" action={~p"/entrar"}>
+        <.input
+          field={@form[:email]}
+          type="email"
+          label="E-mail"
+          autocomplete="username"
+          required
+          maxlength="160"
+        /><.input
+          field={@form[:password]}
+          type="password"
+          label="Senha"
+          autocomplete="current-password"
+          required
+          maxlength="128"
+        /><button id="login-submit" class="btn primary full">Entrar
+        <.icon name="hero-arrow-right" /></button>
+      </.form><div class="auth-help">
+        <strong>Recebeu um convite?</strong><p>
+          <.link href={~p"/convite"}>Ative sua conta com o código recebido.</.link>
+        </p>
+      </div><p class="small-text">
+        O acesso é exclusivo para pessoas convidadas pela administração.
+      </p>
+    </section>
+  </div>
+</Layouts.app>

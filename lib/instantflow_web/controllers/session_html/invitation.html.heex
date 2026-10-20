@@ -1,0 +1,33 @@
+<Layouts.app flash={@flash}>
+  <div class="invite-page">
+    <.link href={~p"/entrar"}>← Voltar para entrar</.link><section class="card auth-card">
+      <Layouts.logo /><h1>Seu próximo passo começa aqui.</h1><p>
+        Use o código de convite para ativar sua conta. O e-mail e o departamento já foram definidos pela administração.
+      </p><.form for={@form} id="accept-invitation-form" action={~p"/convite"}>
+        <.input
+          field={@form[:code]}
+          label="Código do convite"
+          required
+          maxlength="128"
+          autocomplete="off"
+        /><.input
+          field={@form[:name]}
+          label="Seu nome"
+          required
+          minlength="2"
+          maxlength="100"
+          autocomplete="name"
+        /><.input
+          field={@form[:password]}
+          type="password"
+          label="Crie uma senha (12 a 128 caracteres)"
+          minlength="12"
+          maxlength="128"
+          autocomplete="new-password"
+          required
+        /><button id="accept-invitation" class="btn primary full">Ativar minha conta
+        <.icon name="hero-arrow-right" /></button>
+      </.form>
+    </section>
+  </div>
+</Layouts.app>
