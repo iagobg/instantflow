@@ -27,6 +27,25 @@ class BrokerTest(unittest.TestCase):
         return patch("broker.docker_args", return_value=[sys.executable, "-c",
                      "import sys; sys.stdin.read(); " + code])
 
+    def test_startup_removes_only_labelled_orphans_before_admission(self):
+        from subprocess import CompletedProcess
+        container = "a" * 64
+        with patch("broker.subprocess.run", side_effect=[
+                CompletedProcess([], 0, container, ""), CompletedProcess([], 0, "", ""),
+                CompletedProcess([], 0, "", "")]) as docker:
+            broker.reconcile_startup()
+            self.assertEqual(docker.call_args_list[1].args[0], [broker.DOCKER, "rm", "-f", container])
+            self.assertIn("label=instantflow.python=true", docker.call_args_list[0].args[0])
+
+    def test_startup_refuses_cleanup_failure_or_remaining_workloads(self):
+        from subprocess import CompletedProcess
+        container = "a" * 64
+        for results in (
+                [CompletedProcess([], 0, container, ""), CompletedProcess([], 1, "", "daemon error")],
+                [CompletedProcess([], 0, "", ""), CompletedProcess([], 0, container, "")]):
+            with patch("broker.subprocess.run", side_effect=results), self.assertRaises(RuntimeError):
+                broker.reconcile_startup()
+
     def test_unix_socket_is_private_and_replaces_only_owned_socket(self):
         path = str(pathlib.Path(self.temp.name) / "broker.sock")
         with broker.make_server(path):

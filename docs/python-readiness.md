@@ -1,6 +1,6 @@
 # Sprint 08 readiness assessment
 
-Updated 2026-10-21. Implementation is in progress; execution and completion remain gated on target-host verification.
+Completed 2026-10-21. Target-host isolation, broker recovery and deployed-release integration passed; the private university deployment is explicitly enabled.
 
 ## Confirmed scope and decision
 
@@ -22,7 +22,7 @@ Only declared synthetic values enter the workload. The returned quotation is a r
 
 [Firecracker](https://github.com/firecracker-microvm/firecracker/blob/main/docs/getting-started.md) requires usable KVM. That has not been demonstrated here; Firecracker is not the selected runtime.
 
-The initial development PATH inventory did not find Docker/runsc. A subsequent inspection found Docker via /snap/bin/docker, with an amd64 daemon and only ordinary runc runtimes registered. This local environment is not the ARM target. The remote A1 now runs checksum-pinned gVisor `release-20261012.0`, installed using Docker reload while preserving all 13 existing containers. Target-host isolation checks pass; service and application recovery acceptance remains in progress.
+The initial development PATH inventory did not find Docker/runsc. A subsequent inspection found Docker via /snap/bin/docker, with an amd64 daemon and only ordinary runc runtimes registered. This local environment is not the ARM target. The remote A1 now runs checksum-pinned gVisor `release-20261012.0`, installed using Docker reload while preserving all 13 existing containers. Target-host isolation, service recovery and deployed-release application acceptance pass. The live node uses the authenticated Unix socket and its durable enable switch is active.
 
 ## Readiness outcome
 
@@ -33,9 +33,9 @@ The initial development PATH inventory did not find Docker/runsc. A subsequent i
 | Operating cost | Existing host; no additional subscription or purchase. Actual billing remains owner-controlled. |
 | Ownership/procedure | Single-owner operating default; shutdown, patch and recovery runbook supplied. |
 | Application control plane | Catalogue, permissions, fixtures/review, immutable bindings, durable runs, leases/fences, result guards, retries/cancellation and PT-BR UX implemented and locally tested. |
-| Host verification | Outstanding: real ARM64 runtime/image, configured limits, denial/cleanup, kill switch and broker/worker recovery on the VPS. |
+| Host verification | Passed on Ubuntu 22.04.5 / kernel 6.8.0-1062-oracle / aarch64: real runsc/image, resource denial, cleanup, emergency shutdown, orphan reconciliation and broker/worker recovery. |
 
-Go for disabled-by-default implementation; no-go for enabling uploaded execution or marking Sprint 08 Done until target-host evidence passes. S08-T03/T05 remain incomplete for that reason.
+Go for the explicitly approved synthetic academic deployment; Sprint 08 is Done. Defaults remain disabled for other deployments. Evidence: [isolation](evidence/sprint08-a1-isolation.json), [broker service/recovery](evidence/sprint08-a1-service.json), [application/lease recovery](evidence/sprint08-a1-application.json), and [live enablement](evidence/sprint08-a1-deployment.json). These targeted checks do not prove absence of escapes, side channels or all host-wide denial of service.
 
 ## Threat model and configured controls
 

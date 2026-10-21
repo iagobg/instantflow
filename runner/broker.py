@@ -242,6 +242,23 @@ def make_server(socket_path=None):
     return server
 
 
+def reconcile_startup():
+    """Do not reset admission counters while earlier broker workloads survive."""
+    listed = subprocess.run([DOCKER, "ps", "-aq", "--filter", "label=instantflow.python=true"],
+                            check=True, capture_output=True, text=True, timeout=5)
+    for container in listed.stdout.split():
+        if not re.fullmatch(r"[0-9a-f]{12,64}", container):
+            raise RuntimeError("unexpected orphan identity")
+        removed = subprocess.run([DOCKER, "rm", "-f", container],
+                                 capture_output=True, text=True, timeout=5)
+        if removed.returncode and "No such" not in removed.stderr:
+            raise RuntimeError("orphan cleanup failed")
+    remaining = subprocess.run([DOCKER, "ps", "-aq", "--filter", "label=instantflow.python=true"],
+                               check=True, capture_output=True, text=True, timeout=5)
+    if remaining.stdout.strip():
+        raise RuntimeError("orphan reconciliation incomplete")
+
+
 def serve():
     token = os.environ["PYTHON_BROKER_TOKEN"]
     image = os.environ["PYTHON_IMAGE"]
@@ -252,6 +269,7 @@ def serve():
                           check=True, capture_output=True, timeout=5)
     if "runsc" not in decode(info.stdout):
         raise RuntimeError("runsc required")
+    reconcile_startup()
     server = make_server(os.environ.get("PYTHON_BROKER_SOCKET"))
     server.token = token
     server.image = image

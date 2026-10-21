@@ -1,11 +1,17 @@
 import Config
 
+broker_socket =
+  case System.get_env("PYTHON_BROKER_SOCKET") do
+    "" -> nil
+    value -> value
+  end
+
 config :instantflow,
   calculation_execution: System.get_env("PYTHON_EXECUTION") == "true",
   calculation_worker: System.get_env("PYTHON_EXECUTION") == "true",
   calculation_broker_url: System.get_env("PYTHON_BROKER_URL", "http://127.0.0.1:4010"),
   calculation_broker_token: System.get_env("PYTHON_BROKER_TOKEN"),
-  calculation_broker_socket: System.get_env("PYTHON_BROKER_SOCKET")
+  calculation_broker_socket: broker_socket
 
 if operator_url = System.get_env("OPERATOR_DATABASE_URL") do
   config :instantflow, Instantflow.OperatorRepo,

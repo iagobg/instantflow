@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "release_image": "ghcr.io/iagobg/instantflow:ae5db319bfb4e74a09f99eea8f306b15a6000734",
+  "runtime_image": "sha256:4b4b8f21f94fd36e53af1ab108ee0871f64594139a4270ae25c11d0313100961",
+  "serving_user": "nobody:nogroup",
+  "health": "healthy",
+  "broker_transport": "authenticated Unix socket, read-only directory mount",
+  "operator_credentials_in_web": false,
+  "docker_socket_in_web": false
+}

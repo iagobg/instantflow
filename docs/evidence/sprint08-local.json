@@ -1,20 +1,19 @@
 {
   "date": "2026-10-21",
   "scope": "Private university demonstration; synthetic data; uploaded scripts; same Oracle A1 VM with gVisor, explicitly approved by user",
-  "sprint_status": "in_progress",
+  "sprint_status": "done",
   "tasks_completed": [
     "S08-T01",
     "S08-T02",
-    "S08-T04"
+    "S08-T03",
+    "S08-T04",
+    "S08-T05"
   ],
-  "tasks_pending": [
-    "S08-T03 target runtime enforcement/cleanup evidence",
-    "S08-T05 actual hostile workload and host recovery evidence"
-  ],
+  "tasks_pending": [],
   "checks": {
     "mix_precommit": {
       "status": "passed",
-      "tests": 157,
+      "tests": 159,
       "failures": 0,
       "checks": [
         "warnings-as-errors compilation",
@@ -26,9 +25,9 @@
     "python_tests": {
       "command": "python3 -m unittest discover -s runner -p 'test_*.py' -v",
       "status": "passed",
-      "tests": 7,
+      "tests": 17,
       "failures": 0,
-      "note": "Six broker controller tests with trusted subprocess stubs; one trusted repository example test. Not hostile-code containment evidence."
+      "note": "Trusted controller/transport/watchdog tests; containment is evidenced separately by the actual A1 reports."
     },
     "assets_build": {
       "command": "mix assets.build",
@@ -59,7 +58,12 @@
       "read-only computed sections; confidentiality and finance-field restrictions",
       "seven-day terminal run payload purge",
       "PT-BR status/retry and source access revocation"
-    ]
+    ],
+    "deployment_tests": {
+      "status": "passed",
+      "tests": 8,
+      "failures": 0
+    }
   },
   "local_isolation_preflight": {
     "status": "refused_as_expected",
@@ -71,20 +75,20 @@
   "target_host": {
     "provider": "Oracle",
     "family": "Ampere A1 ARM",
-    "os": "Ubuntu (version not inspected)",
+    "os": "Ubuntu 22.04.5 LTS",
     "ocpus": 4,
     "ram_gb": 24,
     "application_and_postgres_colocated": true,
-    "source": "user reported",
-    "remotely_inspected": false,
-    "deployed": false,
-    "isolation_verified": false
+    "source": "user scope plus actual SSH inspection and real gVisor acceptance",
+    "remotely_inspected": true,
+    "deployed": true,
+    "isolation_verified": true,
+    "kernel": "6.8.0-1062-oracle"
   },
   "configured_limits": {
     "wall_seconds": 5,
     "cpu_per_attempt": 1,
     "memory_mib_per_attempt": 128,
-    "pids_per_attempt": 16,
     "scratch_mib": 8,
     "stdout_bytes": 16384,
     "combined_output_bytes": 20480,
@@ -92,18 +96,30 @@
     "broker_slots_per_organization": 1,
     "attempts_per_run": 3,
     "pending_runs_per_organization": 20,
-    "script_versions_per_organization": 100
+    "script_versions_per_organization": 100,
+    "host_tasks_per_attempt": 64,
+    "guest_processes_per_attempt": 32,
+    "aggregate_cpu": 2,
+    "aggregate_memory_mib": 512,
+    "aggregate_swap_bytes": 0,
+    "aggregate_tasks": 128
   },
   "enablement": {
     "application_default": false,
     "durable_switch_default": false,
     "operator_marker_required": true,
-    "release_gate": "Run runner/verify.py and operator kill/restart/recovery checks on the actual A1 with pinned runtime/image before enabling execution."
+    "release_gate": "Passed actual A1 isolation, broker recovery and deployed-release application/worker-lease rehearsal; reports in this directory.",
+    "deployed_enabled": true
   },
   "limitations": [
-    "Configured bounds are not measured ARM guarantees.",
-    "Same-host sandbox escape can reach application/database VM; topology accepted for synthetic academic scope.",
-    "No real uploaded/hostile workload containment, ARM enforcement, emergency marker or watchdog recovery measurement completed.",
-    "Local tests and asset build do not certify remote deployment."
+    "Targeted containment checks do not prove absence of escapes, side channels or all host-wide denial of service.",
+    "Same-host sandbox escape can reach application/database VM; topology explicitly accepted for synthetic private academic scope.",
+    "The local amd64 preflight refusal remains historical; actual ARM64 verification is recorded separately."
+  ],
+  "target_evidence": [
+    "sprint08-a1-isolation.json",
+    "sprint08-a1-service.json",
+    "sprint08-a1-application.json",
+    "sprint08-a1-deployment.json"
   ]
 }

@@ -121,12 +121,24 @@ def main():
         started = time.monotonic()
         command("systemctl", "kill", "--kill-who=main", "--signal=SIGKILL", SERVICE)
         orphan.result(timeout=12)
+        # Hold the broker stopped to measure the independent watchdog, not startup cleanup.
+        command("systemctl", "stop", SERVICE)
         wait_for(lambda: not workloads(), 30)
+        command("systemctl", "start", SERVICE)
         wait_for(ready, 10)
         assert sockdir.stat().st_ino == before
         assert call(9002)[1].get("output") == {"total": 1}
         passed("broker_death_watchdog_reaps_orphan_and_recovers",
                seconds=round(time.monotonic() - started, 3), socket_directory_preserved=True)
+        restarting = executor.submit(call, 9001, "def calculate(x):\n while True: pass")
+        wait_for(lambda: len(workloads()) == 1, 3)
+        started = time.monotonic()
+        command("systemctl", "kill", "--kill-who=main", "--signal=SIGKILL", SERVICE)
+        restarting.result(timeout=12)
+        wait_for(ready, 12)
+        assert not workloads()
+        assert call(9002)[1].get("output") == {"total": 1}
+        passed("restart_reconciles_orphans_before_admission", seconds=round(time.monotonic() - started, 3))
     print(json.dumps(report, indent=2))
 
 

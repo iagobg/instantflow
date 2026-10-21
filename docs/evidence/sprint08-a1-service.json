@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-21T15:24:12.153457+00:00",
+  "date": "2026-10-21T15:40:25.524657+00:00",
   "tests": [
     {
       "name": "unix_socket_authentication_required",
@@ -12,7 +12,7 @@
     {
       "name": "other_tenant_progress_during_cpu_loop",
       "passed": true,
-      "seconds": 0.523
+      "seconds": 0.531
     },
     {
       "name": "two_global_slots_and_measured_docker_limits",
@@ -21,13 +21,18 @@
     {
       "name": "emergency_disable_removes_both_workloads",
       "passed": true,
-      "seconds": 0.187
+      "seconds": 0.246
     },
     {
       "name": "broker_death_watchdog_reaps_orphan_and_recovers",
       "passed": true,
-      "seconds": 23.071,
+      "seconds": 17.941,
       "socket_directory_preserved": true
+    },
+    {
+      "name": "restart_reconciles_orphans_before_admission",
+      "passed": true,
+      "seconds": 6.116
     }
   ]
 }

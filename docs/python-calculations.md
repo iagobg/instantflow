@@ -2,7 +2,7 @@
 
 Sprint 08 targets the owner's Oracle Ampere A1 Ubuntu VM (4 OCPUs, 24 GB RAM), shared with Phoenix and PostgreSQL. On 2026-10-21 the owner explicitly approved gVisor on this same VM, revising the original separate-host requirement. Only synthetic data and privately gated application access are in scope.
 
-A successful escape could reach the application/database host. This residual risk is accepted for this academic topology; it is not a claim of equivalent separation or suitability for real clients. Ordinary containers, a Python subprocess, AST restrictions or a venv are not accepted substitutes for gVisor. Execution remains disabled by default. The target VPS now has the reviewed gVisor runtime and an isolated broker; application enablement still requires the acceptance gates below.
+A successful escape could reach the application/database host. This residual risk is accepted for this academic topology; it is not a claim of equivalent separation or suitability for real clients. Ordinary containers, a Python subprocess, AST restrictions or a venv are not accepted substitutes for gVisor. Execution remains disabled by default. The target VPS now has the reviewed gVisor runtime and an isolated broker; the target-host acceptance gates below have passed and the private university deployment is enabled.
 
 ## What is implemented
 
@@ -54,6 +54,38 @@ mix instantflow.python enable
 
 For a production checkout, use `MIX_ENV=prod` and the operator-only database configuration. The serving release need not include Mix: in an operator-only one-off container, use `bin/instantflow eval 'Instantflow.Release.python_switch(true)'` (or `false` to disable). The serving process must never receive the operator URL. Each switch change increments a durable generation and appends an operator-role audit row. The web runtime can read/lock the switch but cannot change it. Activation is contingent on the A1 acceptance evidence; the task does not certify isolation.
 
+## Repeatable host tooling
+
+After reviewing the source, run `runner/install_host.py --source /absolute/reviewed/runner`
+as root on ARM64 Ubuntu. It verifies the pinned official archive checksum, keeps
+the adjacent gVisor sidecars, preserves Docker daemon options, uses reload and
+checks existing container start times. It installs the broker/watchdog without
+enabling application execution. `runner/prepare_image.py /absolute/reviewed/runner`
+resolves an official Python base digest, builds the trusted entrypoint image,
+pins its image ID in the private broker environment and prints public identities.
+
+Run `runner/rehearse_host.py STACK_ROOT /absolute/reviewed/runner/rehearse.exs`
+as operator after the app image is deployed. It creates a randomly named database,
+migrates it without changing the shared runtime password, starts the actual release
+against it with web serving disabled, and removes the container/database afterward.
+The rehearsal exercises real fixtures, two organizations, worker death, real lease
+expiry, late replies, read-only output and durable generation fencing. Failure
+diagnostics are root-only; delete them after investigation.
+
+Save successful `isolation.json`, `service.json` and `application.json` in a
+private evidence directory. `runner/enable_host.py STACK_ROOT REVIEWED_COMPOSE_FRAGMENT
+EVIDENCE_DIRECTORY` requires fresh passing reports matching the current release
+and runtime image. It installs the opt-in fragment and private token file,
+recreates only Instantflow, checks credential/Docker separation and enables the
+durable switch. It fences the switch on failure. Normal image pushes preserve
+this opt-in. Broker/runtime host-file changes require operator application and
+fresh host acceptance; they are not automatically installed by an app image push.
+
+The accepted guest runtime suffix for this deployment is
+`4b4b8f21f94fd36e53af1ab108ee0871f64594139a4270ae25c11d0313100961`.
+Use it when registering the example. Rebuilding the image requires a new suffix
+and new reviewed script/workflow versions.
+
 ## Demonstration walkthrough
 
 In **Equipe e convites**, explicitly grant the owner `python_author`, `python_reviewer`, `python_binder`, `python_execute` and `python_source`. Administration alone grants none of these. A requester also needs its ordinary local workflow profile and current input/output section access.
@@ -67,7 +99,7 @@ Create a request and enter 81 participants, capacity 40, 120 round-trip km, base
 ## Shutdown, recovery and patching
 
 1. Run `mix instantflow.python disable` with operator credentials first. Its durable switch blocks dispatch/finalization and invalidates old generations even after re-enabling. Remove the broker's `ENABLED` marker. Active brokers check it while polling workloads and remove their complete containers.
-2. Verify that no containers labelled `instantflow.python=true` remain. The reaper removes only labelled workloads older than 15 seconds on a 10-second timer. It is a backup for broker death/late daemon creation, not a replacement for synchronous cleanup. Never remove unrelated containers. Check the daemon if removal fails. A cleanup failure latches that broker into refusal until the operator reconciles containers and restarts it.
+2. Verify that no containers labelled `instantflow.python=true` remain. The reaper removes only labelled workloads older than 15 seconds on a 10-second timer. It is a backup for broker death/late daemon creation, not a replacement for synchronous cleanup. Never remove unrelated containers. Check the daemon if removal fails. A cleanup failure latches that broker into refusal until the operator reconciles containers and restarts it. Startup removes existing labelled orphans before opening the socket; failed reconciliation refuses startup, so restarting cannot silently reset admission counters over surviving work.
 3. Inspect only authorized run status and immutable attempt metadata. Source and fixtures require their separate access grant. Do not turn raw source/inputs/stdout into application or reverse-proxy logs.
 4. Patch Ubuntu/gVisor and build a new digest-pinned Python image. Repeat host containment, kill/restart and application recovery checks. Update the broker image configuration, create/review new script versions and publish explicit new workflow versions; existing tickets never resolve a mutable latest script.
 5. Re-enable only after reconciliation. Expired leases use new fences; old replies cannot finalize. Old switch/script generations become stale, requiring the workflow's correction/recalculate path. A broker transport failure can be retried for unchanged inputs at most three times. Cancellation stops application of results immediately; workload removal occurs on completion/timeout or emergency shutdown.
@@ -76,4 +108,4 @@ Create a request and enter 81 participants, capacity 40, 120 round-trip km, base
 
 Application tests use a deterministic protocol adapter, real loopback HTTP tests and independent non-owner database connections for concurrent claiming/finalization. Python controller tests use trusted subprocess stubs; the repository example is tested as trusted source. These are not evidence that uploaded hostile code was contained.
 
-The local Docker daemon is not the ARM target. Actual target-host isolation checks now pass using gVisor `release-20261012.0`; the broader service and application recovery gates are being completed. The [readiness assessment](python-readiness.md) and Sprint 08 remain explicit about this limit. Before enabling execution on the VPS, record the actual Ubuntu/kernel, gVisor and image versions, measured limits, network/resource denial, cleanup, emergency-disablement and broker/worker recovery evidence. Sprint 08 is not Done until those acceptance checks pass.
+The local Docker daemon is not the ARM target. Real target-host checks passed on Ubuntu 22.04.5, kernel 6.8.0-1062-oracle, aarch64, with gVisor `release-20261012.0`. See the [isolation evidence](evidence/sprint08-a1-isolation.json), [service/recovery evidence](evidence/sprint08-a1-service.json), [deployed-release rehearsal](evidence/sprint08-a1-application.json) and [enablement record](evidence/sprint08-a1-deployment.json). The separate synthetic database was removed after the rehearsal. Both organizations produced 402,000 cents; another tenant progressed in 617 ms after a worker died, and the abandoned lease recovered in 20,733 ms with a new fence. Targeted checks retain the shared-host limitations in the [readiness assessment](python-readiness.md). Sprint 08 is Done for this scope.

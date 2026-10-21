@@ -2,7 +2,7 @@
 
 [Design index](../design/index.md)
 
-Status: Sprints 00–07 complete; optional Sprint 08 in progress · Updated: 2026-10-21
+Status: Sprints 00–08 complete · Updated: 2026-10-21
 
 Dependency-ordered increments without duration estimates. Sprints 00 and 01 retain their original single-organization evidence. Sprint 01A has migrated and verified the multi-organization foundation before Sprint 02, preserving existing records.
 
@@ -17,11 +17,11 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 | [05](sprint_05.md) | Budgets, purchasing, field trips | 04; D-07 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [06](sprint_06.md) | Confidential incident collaboration | 05; D-06 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [07](sprint_07.md) | Integrated demonstration and delivery | 06; D-09 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
-| [08](sprint_08.md) | Optional isolated Python calculations | 07; D-16, D-17; host activation gate | In progress | 3/5 | 2026-10-21 / — |
+| [08](sprint_08.md) | Optional isolated Python calculations | 07; D-16, D-17; host activation gate | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 
 ## Tracking
 
-The user reopened Sprint 08 on 2026-10-21, selected the synthetic trip calculator and explicitly approved gVisor sharing their private Oracle ARM VPS with Phoenix/PostgreSQL. The [readiness assessment](../docs/python-readiness.md) records the revised host boundary and operating defaults. Disabled-by-default implementation is in progress; actual execution/completion await host isolation and recovery evidence. Sprint 08 is a post-proof-of-concept extension, not a requirement for completing Sprints 00–07. Do not add Python execution to the completed Sprint 01 or delay Sprint 02 for it.
+The user reopened Sprint 08 on 2026-10-21, selected the synthetic trip calculator and explicitly approved gVisor sharing their private Oracle ARM VPS with Phoenix/PostgreSQL. The [readiness assessment](../docs/python-readiness.md) records the revised host boundary and operating defaults. The actual A1 isolation, service recovery and deployed-release application rehearsal passed; execution is enabled in this private deployment, with disabled defaults elsewhere. Sprint 08 is Done. Sprint 08 is a post-proof-of-concept extension, not a requirement for completing Sprints 00–07. Do not add Python execution to the completed Sprint 01 or delay Sprint 02 for it.
 
 Statuses: Planned → Ready → In progress → Review → Done. Blocked requires a concrete blocker and owner in the sprint file.
 

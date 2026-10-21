@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-21T15:35:39.516267Z",
+  "database": "disposable synthetic database; removed after rehearsal",
+  "broker": "real authenticated Unix socket; real ARM64 gVisor",
+  "tests": [
+    {
+      "name": "two_organizations_field_trip_402000_cents",
+      "passed": true
+    },
+    {
+      "name": "required_result_and_readonly_output",
+      "passed": true
+    },
+    {
+      "name": "wrong_tenant_source_run_and_finalization_denied",
+      "passed": true
+    },
+    {
+      "name": "other_tenant_progress_after_worker_death",
+      "milliseconds": 617,
+      "passed": true
+    },
+    {
+      "name": "real_lease_expiry_new_fence_same_run",
+      "milliseconds": 20733,
+      "attempts": 2,
+      "passed": true
+    },
+    {
+      "name": "late_real_reply_rejected",
+      "passed": true
+    },
+    {
+      "name": "durable_disable_reenable_fences_old_generation",
+      "passed": true
+    }
+  ],
+  "release_image": "ghcr.io/iagobg/instantflow:ae5db319bfb4e74a09f99eea8f306b15a6000734"
+}
