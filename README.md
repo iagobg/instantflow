@@ -4,13 +4,15 @@ PT-BR school workflow demonstration built with Phoenix LiveView and PostgreSQL. 
 
 ## Current delivery
 
-Sprint 01A implements multiple isolated organizations on the existing foundation. Global login, local memberships, organization-bound routes, RLS and composite ownership constraints are in place. Existing Sprint 01 records were preserved by a forward migration. See [operator setup and recovery](docs/organizations-operations.md) and [organization isolation](design/11-organizations.md).
+Sprint 02 adds department-specific local profiles, restricted projections, authorized request tables/counts, independent section drafts, conflict comparison/reapply, advisory editing presence, and safe reconnect/revocation behavior. See [collaboration and permissions](docs/collaboration.md).
+
+Sprint 01A established multiple isolated organizations. Global login, local memberships, organization-bound routes, RLS and composite ownership constraints are in place. Existing Sprint 01 records were preserved by a forward migration. See [operator setup and recovery](docs/organizations-operations.md) and [organization isolation](design/11-organizations.md).
 
 Sprints 00 and 01 are implemented. Sprint 01 adds validated immutable workflow versions, guarded requests, typed section values, safe command retries, correction/rejection/cancellation history, and a durable simulated delivery outbox.
 
 The demonstration includes Escola Horizonte and Escola Aurora. The same `admin@escola.example` account is an administrator in Horizonte and a collaborator in Aurora; `gestao@aurora.example` administers Aurora. Global sessions last 24 hours. Existing-account recipients sign in before accepting local invitations; credentials and other memberships are preserved. Both themes use the supplied tokens and logos. Invitation delivery remains explicitly simulated with one-time 48-hour codes and no outbound email.
 
-Granular/overlapping role grants, the visual editor, parents, confidential records, files and finance belong to later sprints. This foundation is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
+The visual editor, parent portal, school-specific confidential records, files and finance workflows belong to later sprints. This foundation is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
 
 ## Prerequisites and setup
 
@@ -72,4 +74,4 @@ Open **Solicitações** to create a request using the published approval fixture
 
 The backend validates published definitions, required fields, actor scopes, typed guards, reviewed revisions and idempotency keys inside short transactions. Published versions, command receipts, history and delivery attempts have database immutability triggers. Tickets remain pinned when version 2 is published. A durable refresh intent exists for each mutation and simulated delivery result; the polling worker recovers a missing post-commit wakeup. Refresh invalidations contain only a ticket identifier. Delivery is at least once and never calls an external provider.
 
-The current UI exercises the text-based fixture. Directory/file values fail closed pending their owning contexts; the full editor, interchange schema and type-specific authoring controls remain in Sprint 03. The list is capped at 100 recent authorized records. Sprint 01A verifies independent-connection tenant isolation and lifecycle races; detailed grants, simultaneous section editing, presence and broader collaboration remain in Sprint 02. Open a school under `/o/horizonte` or `/o/aurora`; the global organization picker is `/organizacoes`.
+The current UI exercises the text-based fixture. Directory/file values fail closed pending their owning contexts; the full editor, interchange schema and type-specific authoring controls remain in Sprint 03. Requests use 25-row pages with authorized search, stage filters and exact scoped counts. Sprint 02 verifies overlapping independent database connections, per-section drafts, presence, reviewed transitions and grant/membership revocation. Open a school under `/o/horizonte` or `/o/aurora`; the global organization picker is `/organizacoes`.

@@ -133,7 +133,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
 
   defp valid_section?(s) do
     props?(s, ~w(key label classification access fields)) and label?(s["label"]) and
-      s["classification"] == "internal" and
+      s["classification"] in ~w(internal restricted) and
       is_list(s["access"]) and s["access"] != [] and
       Enum.all?(s["access"], fn a ->
         props?(a, ~w(role scope read edit_stages)) and a["scope"] in @scopes and
@@ -155,12 +155,14 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   defp valid_transition?(t) do
     props?(
       t,
-      ~w(key label from to actors required_fields require_reason kind disallow_requester actions guard)
+      ~w(key label from to actors required_fields require_reason kind disallow_requester finance_sensitive history_visibility actions guard)
     ) and label?(t["label"]) and
       is_list(t["actors"]) and t["actors"] != [] and
       Enum.all?(t["actors"], &(props?(&1, ~w(role scope)) and &1["scope"] in @scopes)) and
       is_boolean(t["require_reason"]) and t["kind"] in @kinds and
       (not Map.has_key?(t, "disallow_requester") or is_boolean(t["disallow_requester"])) and
+      (not Map.has_key?(t, "finance_sensitive") or is_boolean(t["finance_sensitive"])) and
+      Map.get(t, "history_visibility", "participants") in ~w(participants actors) and
       (t["kind"] not in ~w(correction rejection cancellation reopening) or t["require_reason"]) and
       is_list(t["required_fields"]) and is_list(t["actions"]) and length(t["actions"]) <= 10 and
       Enum.all?(t["actions"], fn a ->

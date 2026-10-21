@@ -66,7 +66,10 @@ defmodule Instantflow.WorkflowCatalog do
             preload: [:workflow]
         )
         |> Enum.filter(fn v ->
-          Enum.any?(v.definition["creation"]["roles"], &(scope.role in v.bindings["roles"][&1]))
+          Enum.any?(
+            v.definition["creation"]["roles"],
+            &Instantflow.Access.role?(scope, v.bindings["roles"][&1])
+          )
         end)
     end
   end
@@ -80,7 +83,8 @@ defmodule Instantflow.WorkflowCatalog do
     Map.keys(bindings) |> Enum.sort() == ["departments", "roles"] and
       Enum.sort(Map.keys(roles)) == Enum.sort(Enum.map(d["role_requirements"], & &1["key"])) and
       Enum.all?(roles, fn {_, list} ->
-        is_list(list) and list != [] and Enum.all?(list, &(&1 in ~w(admin staff)))
+        is_list(list) and list != [] and
+          Enum.all?(list, &(&1 in Instantflow.Access.binding_roles()))
       end) and
       Enum.sort(Map.keys(departments)) == Enum.sort(Enum.map(d["bindings"], & &1["key"])) and
       Enum.all?(departments, fn {_, id} ->

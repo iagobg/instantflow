@@ -11,7 +11,7 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 | [00](sprint_00.md) | Foundation and PT-BR shell | None | Done | 5/5 | 2026-10-20 / 2026-10-20 |
 | [01](sprint_01.md) | Versioned workflow runtime | 00; D-08, D-14 | Done | 5/5 | 2026-10-20 / 2026-10-20 |
 | [01A](sprint_01a.md) | Multi-organization foundation migration | 01; D-01, D-18–20 | Done | 5/5 | 2026-10-20 / 2026-10-20 |
-| [02](sprint_02.md) | Local permissions and concurrent collaboration | 01A; D-13 | Planned | 0/5 | — / — |
+| [02](sprint_02.md) | Local permissions and concurrent collaboration | 01A; D-13 | Done | 5/5 | 2026-10-20 / 2026-10-20 |
 | [03](sprint_03.md) | Editor, interchange, authoring guide | 02; D-15 | Planned | 0/5 | — / — |
 | [04](sprint_04.md) | Enrollment and parent portal | 03; D-05, D-10–12 | Planned | 0/5 | — / — |
 | [05](sprint_05.md) | Budgets, purchasing, field trips | 04; D-07 | Planned | 0/5 | — / — |

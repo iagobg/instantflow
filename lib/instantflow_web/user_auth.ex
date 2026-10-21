@@ -79,9 +79,23 @@ defmodule InstantflowWeb.UserAuth do
             :revalidate_organization, socket ->
               Process.send_after(self(), :revalidate_organization, 30000)
 
+              if socket.view in [InstantflowWeb.RequestLive, InstantflowWeb.RequestsLive],
+                do: send(self(), :reconcile)
+
               case validate.(socket) do
                 {:halt, socket} -> {:halt, socket}
                 {:cont, socket} -> {:halt, socket}
+              end
+
+            :permissions_changed, socket ->
+              case validate.(socket) do
+                {:halt, socket} ->
+                  {:halt, socket}
+
+                {:cont, socket} ->
+                  if socket.view in [InstantflowWeb.RequestLive, InstantflowWeb.RequestsLive],
+                    do: {:cont, socket},
+                    else: {:halt, socket}
               end
 
             _, socket ->

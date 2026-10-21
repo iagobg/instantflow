@@ -19,6 +19,7 @@ defmodule Instantflow.Application do
         Instantflow.RuntimeDatabase,
         {DNSCluster, query: Application.get_env(:instantflow, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Instantflow.PubSub},
+        Instantflow.Collaboration.Presence,
         # Start to serve requests, typically the last entry
         InstantflowWeb.Endpoint
       ] ++ delivery

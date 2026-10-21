@@ -79,6 +79,10 @@ else:
     INSERT INTO outbox_messages(ticket_id,event_id,key,kind,status,inserted_at,updated_at) VALUES(1,2,'preserved-pending','simulate_notification','pending',now(),now());
     COMMIT;
     """)
+    # Explicit fixture IDs must leave sequences as ordinary legacy inserts would.
+    # Never repair or rewrite sequences in a supplied backup.
+    for table in ("organizations", "users", "departments", "workflows", "workflow_versions", "tickets", "transition_events"):
+        sql(original, f"SELECT setval(pg_get_serial_sequence('{table}','id'), (SELECT max(id) FROM {table}), true)")
 
 # The frozen column list compares every original value, including immutable payloads, IDs, pins and outcomes.
 columns, before = snapshot(original)
@@ -89,6 +93,7 @@ assert snapshot(original, columns)[1] == before, "Forward migration changed exis
 assert sql(original, "SELECT count(*) FROM outbox_messages WHERE organization_id IS NULL") == "0"
 sql(original, "INSERT INTO organizations(slug,name,timezone,status,inserted_at,updated_at) VALUES('second-school','Segunda escola','America/Sao_Paulo','active',now(),now())")
 sql(original, "INSERT INTO departments(organization_id,name,inserted_at,updated_at) SELECT id,'Secretaria',now(),now() FROM organizations WHERE slug='second-school'")
+sql(original, "INSERT INTO membership_grants(organization_id,membership_id,department_id,role,inserted_at,updated_at) SELECT organization_id,id,department_id,'finance',now(),now() FROM memberships ORDER BY id LIMIT 1")
 full_columns, full_before = snapshot(original)
 backup = ROOT / ".local/backups" / ("rehearsed-multiorg-" + suffix + ".dump")
 backup.parent.mkdir(parents=True, exist_ok=True)
@@ -96,7 +101,7 @@ run([binary("pg_dump"), "-Fc", "-d", original, "-f", str(backup)])
 sql("postgres", f"CREATE DATABASE {restored} TEMPLATE template0 ENCODING 'UTF8'")
 run([binary("pg_restore"), "--exit-on-error", "-d", restored, str(backup)])
 assert snapshot(restored, full_columns)[1] == full_before, "Full restore did not preserve every tenant's rows"
-# Rollback must refuse without deleting the second school.
+# The current forward-only rollback must refuse without deleting the second school.
 result = subprocess.run(["mix", "ecto.rollback", "-r", "Instantflow.OperatorRepo"], cwd=ROOT,
                         env={**env, "MIGRATION_DATABASE": restored}, capture_output=True, text=True)
 assert result.returncode != 0 and "forward-only" in result.stdout + result.stderr

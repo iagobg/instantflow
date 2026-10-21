@@ -31,6 +31,9 @@ defmodule Instantflow.Delivery do
 
       if message && message.status == "pending" do
         if message.kind == "refresh",
+          do: WorkflowRuntime.invalidate_lists(organization_id, message.ticket_id)
+
+        if message.kind == "refresh",
           do:
             Phoenix.PubSub.broadcast(
               Instantflow.PubSub,
@@ -89,9 +92,14 @@ defmodule Instantflow.Delivery do
             lock: "FOR UPDATE"
         )
 
-      unless actor.department_id == ticket.assigned_department_id and
-               match?({:ok, _}, WorkflowRuntime.get(actor, ticket.id)),
-             do: Repo.rollback(:forbidden)
+      case WorkflowRuntime.get(actor, ticket.id) do
+        {:ok, data} ->
+          unless data.can_retry && Enum.any?(data.deliveries, &(&1.id == id)),
+            do: Repo.rollback(:forbidden)
+
+        _ ->
+          Repo.rollback(:forbidden)
+      end
 
       message =
         Repo.one!(

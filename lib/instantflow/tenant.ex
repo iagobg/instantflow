@@ -1,11 +1,28 @@
 defmodule Instantflow.Tenant do
-  @moduledoc "Explicit transaction-local tenant access. Lock order: organization, user, membership, business rows."
+  @moduledoc "Lock order: organization, authorization gate, user, membership, business rows."
   import Ecto.Query
   alias Instantflow.Repo
   alias Instantflow.Identity.{Membership, Organization, User}
 
   def transaction(%Membership{organization_id: id} = scope, fun) when is_integer(id) do
+    scoped_transaction(scope, fun, :shared)
+  end
+
+  def transaction(_, _), do: {:error, :forbidden}
+
+  def authorize_change(%Membership{} = scope, fun), do: scoped_transaction(scope, fun, :exclusive)
+  def authorize_change(_, _), do: {:error, :forbidden}
+
+  defp scoped_transaction(%Membership{organization_id: id} = scope, fun, mode) do
     raw(id, fn ->
+      # Shared command/read gates and exclusive permission changes use the same order.
+      function =
+        if mode == :exclusive, do: "pg_advisory_xact_lock", else: "pg_advisory_xact_lock_shared"
+
+      Repo.query!("SELECT #{function}(hashtextextended('access:' || $1::text, 0))", [
+        to_string(id)
+      ])
+
       user = Repo.one(from u in User, where: u.id == ^scope.user_id, lock: "FOR UPDATE")
 
       member =
@@ -16,11 +33,9 @@ defmodule Instantflow.Tenant do
         )
 
       unless user && user.active && member && member.active, do: Repo.rollback(:forbidden)
-      fun.(member)
+      fun.(Instantflow.Access.load(member))
     end)
   end
-
-  def transaction(_, _), do: {:error, :forbidden}
 
   # Infrastructure only: invitations prove a token; jobs carry persisted ownership. Neither accepts browser tenant claims.
   def raw(id, fun) when is_integer(id) and id > 0 do
@@ -54,17 +69,23 @@ defmodule Instantflow.Tenant do
 
   def scope(user_id, organization_id) do
     case raw(organization_id, fn ->
-           Repo.one(
-             from m in Membership,
-               join: u in assoc(m, :user),
-               where:
-                 m.organization_id == ^organization_id and m.user_id == ^user_id and m.active and
-                   u.active,
-               preload: [:user, :department, :organization]
-           )
+           member =
+             Repo.one(
+               from m in Membership,
+                 join: u in assoc(m, :user),
+                 where:
+                   m.organization_id == ^organization_id and m.user_id == ^user_id and m.active and
+                     u.active,
+                 preload: [:user, :department, :organization]
+             )
+
+           if member, do: Instantflow.Access.load(member)
          end) do
-      {:ok, scope} -> scope
-      _ -> nil
+      {:ok, scope} ->
+        scope
+
+      _ ->
+        nil
     end
   end
 end

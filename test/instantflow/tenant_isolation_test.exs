@@ -85,6 +85,35 @@ defmodule Instantflow.TenantIsolationTest do
              Delivery.topic(b.scope.organization_id, 1)
   end
 
+  test "a shared user's finer grants never combine across organizations" do
+    f = Instantflow.CollaborationFixtures.collaborative_fixture()
+    b = second_organization(f)
+
+    {:ok, _} =
+      Instantflow.Access.grant(
+        f.admin,
+        f.admin.id,
+        f.bindings["departments"]["review_department"],
+        "finance"
+      )
+
+    {:ok, result} =
+      WorkflowRuntime.command(b.scope, %{
+        "operation" => "create",
+        "key" => key(),
+        "workflow_id" => b.version.workflow_id
+      })
+
+    forged = %{b.scope | grants: Identity.scope(f.admin.user_id, f.admin.organization_id).grants}
+    {:ok, data} = WorkflowRuntime.get(forged, result["ticket_id"])
+    refute Enum.any?(data.sections, &(&1.key == "finance"))
+
+    assert {:error, :forbidden} =
+             Instantflow.Access.grant(f.admin, b.scope.id, b.department.id, "finance")
+
+    assert {:ok, []} = Tenant.transaction(b.scope, fn _ -> Repo.all(Instantflow.Access.Grant) end)
+  end
+
   test "effective runtime role RLS denies absent/foreign context and pooled scopes reset" do
     f = workflow_fixture()
     b = second_organization(f)

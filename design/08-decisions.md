@@ -16,7 +16,7 @@
 | D-10 | Open | Parent self-registration? | Proposed: invitations only; no anonymous uploads | Sprint 04 |
 | D-11 | Open | Parent-visible status/messages | Proposed: explicit public projection | Sprint 04 |
 | D-12 | Open | File types/sizes/retention | Proposed: bounded private PDFs/images; synthetic data pending retention rules | Sprint 04 |
-| D-13 | Proposed | Self-approval | Prohibit finance-sensitive self-approval | Sprint 02 |
+| D-13 | Adopted for implementation | Self-approval | Prohibit finance-sensitive self-approval, including overlapping local roles; no override in this increment | Sprint 02 |
 | D-14 | Adopted for implementation | Definition changes | Immutable versions; existing tickets pinned | Sprint 01 |
 | D-15 | Proposed following user suggestion | Interchange and LLM guide | Versioned JSON, draft-only imports, local mappings, shared validation; external LLM authorship | Sprint 03 |
 | D-16 | Recommended planning direction | Customer-authored Python | Gated extension after Sprint 07; asynchronous isolated calculations, declared inputs/outputs, no direct side effects; see design 10 | Sprint 08 gate |
@@ -44,3 +44,7 @@ Under the user's authorization to implement and continue the development plan, D
 ## Sprint 01A implementation — 2026-10-20
 
 Following authorization to continue from Sprint 01A, D-18–20 are adopted without deviations: shared-schema RLS with composite ownership constraints, global login/local memberships and route-bound organization selection, and operator-managed provisioning/suspension. The forward migration and isolation/recovery evidence are recorded in Sprint 01A. Python execution remains gated in Sprint 08; no runner or script execution was added.
+
+## Sprint 02 implementation — 2026-10-20
+
+Under the user's authorization to continue the development plan, D-13 adopts the proposed prohibition: a transition explicitly marked finance_sensitive cannot be executed by its requester, regardless of overlapping local profiles. No administrative override is implemented. This is an implementation default following the proposed direction, not a separately supplied product answer. Local grants bind each role to its department; administration never implicitly bypasses record policy. Existing pinned definitions retain their original explicit requester prohibitions. Actor-restricted transition history can exclude confidential reasons and delivery intents from other participants. See the [Sprint 02 evidence](../sprint_plan/sprint_02.md) and [operating notes](../docs/collaboration.md).

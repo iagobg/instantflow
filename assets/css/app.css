@@ -492,6 +492,16 @@ main {
   min-width:145px;
   padding:12px}
 }
+.request-filters { display:flex; flex-wrap:wrap; gap:16px; align-items:end; margin:20px 0; }
+.request-filters > div { flex:1; min-width:180px; }
+.request-filters .btn { margin-bottom:4px; }
+.list-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.pagination { display:flex; gap:12px; margin-top:20px; }
+.conflict-panel { background:#fff7e8; border:1px solid #efd49a; border-radius:12px; padding:16px; margin:16px 0; }
+.conflict-panel .btn { margin:12px 8px 0 0; }
+.presence-note { color:var(--if-purple); font-size:13px; }
+.grant-row { border-top:1px solid var(--if-border); margin-top:12px; padding:12px 0; }
+button:disabled { opacity:.5; cursor:not-allowed; }
 @media(max-width:720px) {
   .app-shell {
   display:block}

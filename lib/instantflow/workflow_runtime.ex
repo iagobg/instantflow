@@ -65,12 +65,34 @@ defmodule Instantflow.WorkflowRuntime do
 
       keys = Enum.map(readable, & &1["key"])
 
+      events =
+        Repo.all(from e in Event, where: e.ticket_id == ^id, order_by: [desc: e.revision])
+        |> Enum.filter(&Policy.history?(scope, ticket, version, &1))
+
+      event_ids = Enum.map(events, & &1.id)
+
+      projected_definition =
+        version.definition
+        |> Map.take(~w(name stages transitions))
+        |> Map.put(
+          "sections",
+          Enum.map(readable, &Map.take(&1, ~w(key label classification fields)))
+        )
+        |> Map.update!("transitions", fn edges ->
+          Enum.filter(edges, fn edge ->
+            Policy.history?(scope, ticket, version, %{operation: edge["key"]})
+          end)
+          |> Enum.map(&Map.take(&1, ~w(key label from to kind)))
+        end)
+
       {:ok,
        %{
          ticket: ticket,
-         version: version,
+         version: %{version | definition: projected_definition, bindings: %{}},
          sections: Enum.filter(sections, &(&1.key in keys)),
-         section_definitions: readable,
+         section_definitions:
+           Enum.map(readable, &Map.take(&1, ~w(key label classification fields))),
+         can_retry: Policy.retry?(scope, ticket, version),
          editable:
            Enum.filter(readable, &Policy.section?(scope, ticket, version, &1, :edit))
            |> Enum.map(& &1["key"]),
@@ -78,12 +100,14 @@ defmodule Instantflow.WorkflowRuntime do
            Enum.filter(
              version.definition["transitions"],
              &Policy.transition?(scope, ticket, version, &1)
-           ),
-         events:
-           Repo.all(from e in Event, where: e.ticket_id == ^id, order_by: [desc: e.revision]),
+           )
+           |> Enum.map(&Map.take(&1, ~w(key label require_reason kind))),
+         events: events,
          deliveries:
            Repo.all(
-             from m in Message, where: m.ticket_id == ^id and m.kind != "refresh", order_by: m.id
+             from m in Message,
+               where: m.ticket_id == ^id and m.kind != "refresh" and m.event_id in ^event_ids,
+               order_by: m.id
            )
        }}
     else
@@ -92,6 +116,74 @@ defmodule Instantflow.WorkflowRuntime do
   end
 
   def list(actor), do: Tenant.read(actor, &list_scoped/1, [])
+
+  def search(actor, filters \\ %{}) do
+    Tenant.read(
+      actor,
+      fn scope ->
+        tickets = list_scoped(scope)
+        counts = Enum.frequencies_by(tickets, & &1.stage)
+
+        stage_labels =
+          tickets
+          |> Enum.flat_map(& &1.workflow_version.definition["stages"])
+          |> Map.new(&{&1["key"], &1["label"]})
+
+        stage = filters["stage"] || ""
+        query = String.slice(to_string(filters["query"] || ""), 0, 100) |> String.downcase()
+
+        filtered =
+          Enum.filter(tickets, fn t ->
+            (stage == "" or t.stage == stage) and
+              (query == "" or
+                 String.contains?(
+                   String.downcase("#{t.id} #{t.workflow_version.definition["name"]}"),
+                   query
+                 ))
+          end)
+
+        page =
+          case Integer.parse(to_string(filters["page"] || "1")) do
+            {n, ""} when n > 0 -> min(n, max(1, ceil(length(filtered) / 25)))
+            _ -> 1
+          end
+
+        %{
+          tickets: Enum.slice(filtered, (page - 1) * 25, 25),
+          total: length(tickets),
+          filtered: length(filtered),
+          counts: counts,
+          stage_labels: stage_labels,
+          page: page,
+          pages: max(1, ceil(length(filtered) / 25))
+        }
+      end,
+      %{tickets: [], total: 0, filtered: 0, counts: %{}, stage_labels: %{}, page: 1, pages: 1}
+    )
+  end
+
+  def list_topic(scope),
+    do: "organization:#{scope.organization_id}:user:#{scope.user_id}:requests"
+
+  # Called by the tenant-bound outbox. Only authorized recipients get an invalidation,
+  # without record IDs or payloads; each recipient independently reauthorizes its query.
+  def invalidate_lists(organization_id, ticket_id) do
+    ticket = Repo.get(Ticket, ticket_id)
+    version = ticket && Repo.get(Version, ticket.workflow_version_id)
+
+    if version do
+      Repo.all(
+        from m in Instantflow.Identity.Membership,
+          where: m.organization_id == ^organization_id and m.active
+      )
+      |> Enum.each(fn member ->
+        scope = Instantflow.Access.load(member)
+
+        if Policy.discover?(scope, ticket, version),
+          do: Phoenix.PubSub.broadcast(Instantflow.PubSub, list_topic(scope), :requests_changed)
+      end)
+    end
+  end
 
   defp list_scoped(actor) do
     case Identity.scope(actor.user_id, actor.organization_id) do
@@ -104,12 +196,26 @@ defmodule Instantflow.WorkflowRuntime do
             where:
               t.organization_id == ^actor.organization_id and
                 (t.requester_id == ^scope.user_id or
-                   t.assigned_department_id == ^scope.department_id),
-            order_by: [desc: t.updated_at, desc: t.id],
-            limit: 100,
+                   t.assigned_department_id in ^Enum.map(
+                     Instantflow.Access.profiles(scope),
+                     & &1.department_id
+                   )),
+            order_by: [desc: t.id],
             preload: [:workflow_version]
         )
         |> Enum.filter(&Policy.discover?(scope, &1, &1.workflow_version))
+        |> Enum.map(fn ticket ->
+          version = ticket.workflow_version
+
+          %{
+            ticket
+            | workflow_version: %{
+                version
+                | bindings: %{},
+                  definition: Map.take(version.definition, ~w(name stages))
+              }
+          }
+        end)
     end
   end
 
@@ -134,7 +240,7 @@ defmodule Instantflow.WorkflowRuntime do
     unless version &&
              Enum.any?(
                version.definition["creation"]["roles"],
-               &(actor.role in version.bindings["roles"][&1])
+               &Instantflow.Access.role?(actor, version.bindings["roles"][&1])
              ),
            do: Repo.rollback(:forbidden)
 
@@ -217,7 +323,13 @@ defmodule Instantflow.WorkflowRuntime do
     unless transition && Policy.transition?(actor, ticket, version, transition),
       do: Repo.rollback(:forbidden)
 
-    revisions = Map.new(sections, &{&1.key, &1.revision})
+    readable_keys =
+      version.definition["sections"]
+      |> Enum.filter(&Policy.section?(actor, ticket, version, &1, :read))
+      |> Enum.map(& &1["key"])
+
+    revisions =
+      sections |> Enum.filter(&(&1.key in readable_keys)) |> Map.new(&{&1.key, &1.revision})
 
     unless ticket.revision == c["expected_revision"] and revisions == c["section_revisions"],
       do: Repo.rollback(:conflict)

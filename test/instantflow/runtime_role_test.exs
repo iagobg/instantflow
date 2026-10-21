@@ -451,6 +451,366 @@ defmodule Instantflow.RuntimeRoleTest do
              )
   end
 
+  test "overlapping same-section saves have one winner and one conflict", c do
+    {:ok, data} = WorkflowRuntime.get(c.a_scope, c.ticket_id)
+
+    first =
+      Instantflow.CollaborationFixtures.section_command(data, "request", %{"summary" => "A"})
+
+    second = %{first | "key" => "competing", "values" => %{"summary" => "B"}}
+    results = race(c, c.ticket_id, [first, second])
+    assert Enum.count(results, &match?({:ok, _}, &1)) == 1
+    assert {:error, :conflict} in results
+    {:ok, final} = WorkflowRuntime.get(c.a_scope, c.ticket_id)
+    assert final.ticket.revision == 2
+    assert hd(final.sections).revision == 2
+    assert length(final.events) == 2
+    assert count_receipts(c.ticket_id) == 2
+  end
+
+  test "local grants enforce RLS and composite ownership under the non-owner login", c do
+    {:ok, {_, _}} =
+      Instantflow.Access.grant(c.a_scope, c.a_scope.id, c.a_scope.department_id, "finance")
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec(
+          {Postgrex,
+           Keyword.drop(c.owner_config, [:username, :password]) ++
+             [
+               database: c.database,
+               username: "instantflow_runtime",
+               password: System.get_env("RUNTIME_DB_PASSWORD", "instantflow-runtime-local-only")
+             ]},
+          id: :grant_rls
+        )
+      )
+
+    assert Postgrex.query!(connection, "SELECT count(*) FROM membership_grants").rows == [[0]]
+    Postgrex.query!(connection, "BEGIN")
+
+    Postgrex.query!(connection, "SELECT set_config('instantflow.organization_id',$1,true)", [
+      to_string(c.b.id)
+    ])
+
+    assert Postgrex.query!(connection, "SELECT count(*) FROM membership_grants").rows == [[0]]
+
+    assert {:error, %Postgrex.Error{postgres: %{code: :foreign_key_violation}}} =
+             Postgrex.query(
+               connection,
+               "INSERT INTO membership_grants(organization_id,membership_id,department_id,role,inserted_at,updated_at) VALUES($1,$2,$3,'finance',now(),now())",
+               [c.b.id, c.a_scope.id, c.b_scope.department_id]
+             )
+
+    Postgrex.query!(connection, "ROLLBACK")
+  end
+
+  test "independent sections both commit through overlapping connections", c do
+    {id, data} = collaborative_ticket(c)
+
+    commands =
+      for key <- ["request", "notes"],
+          do: Instantflow.CollaborationFixtures.section_command(data, key, %{"summary" => key})
+
+    [first, second] = commands
+    peer = reviewer(c, "sections")
+    assert Enum.all?(race(c, id, [first, {peer, second}]), &match?({:ok, _}, &1))
+    {:ok, final} = WorkflowRuntime.get(c.a_scope, id)
+    assert final.ticket.revision == 3
+    assert Enum.all?(final.sections, &(&1.revision == 2))
+    assert length(final.events) == 3
+    assert count_receipts(id) == 3
+  end
+
+  test "overlapping duplicate delivery of the same command creates one effect and receipt", c do
+    {:ok, data} = WorkflowRuntime.get(c.a_scope, c.ticket_id)
+
+    command =
+      Instantflow.CollaborationFixtures.section_command(data, "request", %{"summary" => "Uma vez"})
+
+    [first, second] = race(c, c.ticket_id, [command, command])
+    assert {:ok, _} = first
+    assert first == second
+    {:ok, final} = WorkflowRuntime.get(c.a_scope, c.ticket_id)
+    assert final.ticket.revision == 2
+    assert length(final.events) == 2
+    assert count_receipts(c.ticket_id) == 2
+
+    assert OperatorRepo.aggregate(
+             from(m in Instantflow.Delivery.Message, where: m.ticket_id == ^c.ticket_id),
+             :count
+           ) == 2
+  end
+
+  test "competing transitions commit once and saving reviewed content invalidates a transition",
+       c do
+    {id, _} = collaborative_ticket(c)
+
+    {:ok, _} =
+      Instantflow.WorkflowFixtures.save(c.a_scope, id, Instantflow.WorkflowFixtures.values())
+
+    command = Instantflow.WorkflowFixtures.transition_command(c.a_scope, id, "submit")
+    results = race(c, id, [command, %{command | "key" => "second-transition"}])
+    assert Enum.count(results, &match?({:ok, _}, &1)) == 1
+    {:ok, final} = WorkflowRuntime.get(c.a_scope, id)
+    assert final.ticket.stage == "review"
+    assert length(final.events) == 3
+
+    first_reviewer = reviewer(c, "approval-a")
+    second_reviewer = reviewer(c, "approval-b")
+    approval = Instantflow.WorkflowFixtures.transition_command(first_reviewer, id, "approve")
+
+    approvals =
+      race(c, id, [
+        {first_reviewer, approval},
+        {second_reviewer, %{approval | "key" => "competing-approval"}}
+      ])
+
+    assert Enum.count(approvals, &match?({:ok, _}, &1)) == 1
+    {:ok, approved} = WorkflowRuntime.get(first_reviewer, id)
+    assert Enum.count(approved.events, &(&1.operation == "approve")) == 1
+    assert count_receipts(id) == 4
+
+    {other_id, _} = collaborative_ticket(c, 2)
+
+    {:ok, _} =
+      Instantflow.WorkflowFixtures.save(
+        c.a_scope,
+        other_id,
+        Instantflow.WorkflowFixtures.values()
+      )
+
+    {:ok, data} = WorkflowRuntime.get(c.a_scope, other_id)
+
+    save =
+      Instantflow.CollaborationFixtures.section_command(data, "notes", %{
+        "summary" => "Novo conteúdo"
+      })
+
+    submit = Instantflow.WorkflowFixtures.transition_command(c.a_scope, other_id, "submit")
+    results = race(c, other_id, [{reviewer(c, "reviewed"), save}, submit])
+    assert Enum.count(results, &match?({:ok, _}, &1)) == 1
+    assert {:error, :conflict} in results
+    assert count_receipts(other_id) == 3
+  end
+
+  test "membership revocation holds the exclusive authorization gate until commit", c do
+    parent = self()
+    supervisor = start_supervised!(Task.Supervisor)
+
+    # Use a distinct administrator so the target is not self-revoked.
+    admin_user =
+      OperatorRepo.insert!(
+        User.changeset(%User{email: "gate#{c.a.id}@example.com"}, %{
+          name: "Admin",
+          password: "fictional-password-123"
+        })
+      )
+
+    OperatorRepo.insert!(%Membership{
+      organization_id: c.a.id,
+      user_id: admin_user.id,
+      department_id: c.a_scope.department_id,
+      role: "admin"
+    })
+
+    admin = Identity.scope(admin_user.id, c.a.id)
+
+    revoker =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        Repo.transaction(fn ->
+          result = Identity.revoke(admin, c.a_scope.id)
+          send(parent, :revocation_holds_gate)
+
+          receive do
+            :commit -> result
+          after
+            5000 -> Repo.rollback(:barrier_timeout)
+          end
+        end)
+      end)
+
+    assert_receive :revocation_holds_gate, 5000
+
+    command =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        WorkflowRuntime.command(c.a_scope, %{
+          "operation" => "create",
+          "key" => "revoked",
+          "workflow_id" => c.version.workflow_id
+        })
+      end)
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :gate_observer
+        )
+      )
+
+    assert wait_for_waiters(connection, c.database, 1, 1000)
+    send(revoker.pid, :commit)
+    assert {:ok, {:ok, _}} = Task.await(revoker)
+    assert {:error, :forbidden} = Task.await(command)
+    assert count_receipts(c.ticket_id) == 1
+    assert Identity.scope(c.a_scope.user_id, c.a.id) == nil
+  end
+
+  test "a grant revoked by an overlapping transaction cannot authorize a queued save", c do
+    {id, _} = collaborative_ticket(c)
+
+    {:ok, {_, grant}} =
+      Instantflow.Access.grant(c.a_scope, c.a_scope.id, c.a_scope.department_id, "finance")
+
+    {:ok, data} = WorkflowRuntime.get(c.a_scope, id)
+
+    command =
+      Instantflow.CollaborationFixtures.section_command(data, "finance", %{
+        "summary" => "Revogado"
+      })
+
+    parent = self()
+    supervisor = start_supervised!(Task.Supervisor)
+
+    revoker =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        Repo.transaction(fn ->
+          result = Instantflow.Access.revoke(c.a_scope, grant.id)
+          send(parent, :grant_revocation_holds_gate)
+
+          receive do
+            :commit -> result
+          after
+            5000 -> Repo.rollback(:barrier_timeout)
+          end
+        end)
+      end)
+
+    assert_receive :grant_revocation_holds_gate, 5000
+
+    writer =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+        WorkflowRuntime.command(c.a_scope, command)
+      end)
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :grant_gate_observer
+        )
+      )
+
+    assert wait_for_waiters(connection, c.database, 1, 1000)
+    send(revoker.pid, :commit)
+    assert {:ok, {:ok, _}} = Task.await(revoker)
+    assert {:error, :forbidden} = Task.await(writer)
+    assert count_receipts(id) == 1
+
+    assert OperatorRepo.get_by!(Instantflow.WorkflowRuntime.Section,
+             ticket_id: id,
+             key: "finance"
+           ).values == %{}
+
+    assert OperatorRepo.aggregate(
+             from(e in Instantflow.WorkflowRuntime.Event, where: e.ticket_id == ^id),
+             :count
+           ) == 1
+  end
+
+  defp collaborative_ticket(c, expected_version \\ 1) do
+    bindings = %{
+      "roles" => %{
+        "requester" => ["admin", "staff"],
+        "reviewer" => ["staff"],
+        "finance" => ["finance"]
+      },
+      "departments" => %{"review_department" => c.a_scope.department_id}
+    }
+
+    {:ok, version} =
+      WorkflowCatalog.publish(
+        c.a_scope,
+        Instantflow.CollaborationFixtures.collaborative_definition(),
+        bindings,
+        expected_version
+      )
+
+    {:ok, result} =
+      WorkflowRuntime.command(c.a_scope, %{
+        "operation" => "create",
+        "key" => Ecto.UUID.generate(),
+        "workflow_id" => version.workflow_id
+      })
+
+    {:ok, data} = WorkflowRuntime.get(c.a_scope, result["ticket_id"])
+    {result["ticket_id"], data}
+  end
+
+  defp reviewer(c, suffix) do
+    user =
+      OperatorRepo.insert!(
+        User.changeset(%User{email: "peer#{c.a.id}-#{suffix}@example.com"}, %{
+          name: "Revisor",
+          password: "fictional-password-123"
+        })
+      )
+
+    OperatorRepo.insert!(%Membership{
+      organization_id: c.a.id,
+      user_id: user.id,
+      department_id: c.a_scope.department_id,
+      role: "staff"
+    })
+
+    Identity.scope(user.id, c.a.id)
+  end
+
+  defp count_receipts(id),
+    do:
+      OperatorRepo.aggregate(
+        from(r in Instantflow.WorkflowRuntime.Receipt, where: r.ticket_id == ^id),
+        :count
+      )
+
+  defp race(c, id, commands) do
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: make_ref()
+        )
+      )
+
+    Postgrex.query!(connection, "BEGIN")
+    Postgrex.query!(connection, "SELECT id FROM tickets WHERE id=$1 FOR UPDATE", [id])
+    supervisor = start_supervised!(Supervisor.child_spec(Task.Supervisor, id: make_ref()))
+
+    tasks =
+      Enum.map(commands, fn command ->
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          Repo.put_dynamic_repo(c.runtime)
+
+          {actor, value} =
+            case command do
+              {actor, value} -> {actor, value}
+              value -> {c.a_scope, value}
+            end
+
+          WorkflowRuntime.command(actor, value)
+        end)
+      end)
+
+    assert wait_for_waiters(connection, c.database, length(tasks), 1000)
+    Postgrex.query!(connection, "COMMIT")
+    Enum.map(tasks, &Task.await/1)
+  end
+
   defp wait_for_waiters(_, _, _, 0), do: false
 
   defp wait_for_waiters(connection, database, expected, remaining) do

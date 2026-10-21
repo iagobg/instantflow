@@ -1,26 +1,36 @@
 defmodule InstantflowWeb.RequestLive do
   use InstantflowWeb, :live_view
   alias Instantflow.{Delivery, WorkflowRuntime}
+  alias Instantflow.Collaboration.{Editor, Presence}
   alias InstantflowWeb.RuntimeErrors
 
-  def mount(%{"id" => id}, _session, socket) do
-    case Integer.parse(id) do
+  def mount(%{"id" => raw_id}, _session, socket) do
+    case Integer.parse(raw_id) do
       {id, ""} when id > 0 and id < 9_223_372_036_854_775_807 ->
+        if connected?(socket) do
+          Phoenix.PubSub.subscribe(
+            Instantflow.PubSub,
+            Delivery.topic(socket.assigns.current_scope.organization_id, id)
+          )
+
+          Phoenix.PubSub.subscribe(
+            Instantflow.PubSub,
+            Presence.topic(socket.assigns.current_scope.organization_id, id)
+          )
+        end
+
         case WorkflowRuntime.get(socket.assigns.current_scope, id) do
           {:ok, data} ->
-            if connected?(socket),
-              do:
-                Phoenix.PubSub.subscribe(
-                  Instantflow.PubSub,
-                  Delivery.topic(socket.assigns.current_scope.organization_id, id)
-                )
-
             {:ok,
              socket
              |> assign(
                page_title: "Solicitação ##{id}",
+               editors: %{},
                dirty: false,
                stale: false,
+               active_section: nil,
+               review_revision: data.ticket.revision,
+               action_key: Ecto.UUID.generate(),
                reason: to_form(%{}, as: :action)
              )
              |> load(data)}
@@ -35,131 +45,214 @@ defmodule InstantflowWeb.RequestLive do
   end
 
   def handle_event("draft", %{"section" => values, "key" => key}, socket) do
+    values = form_values(values)
+
     if key in socket.assigns.data.editable do
-      {:noreply,
-       socket
-       |> assign(:dirty, true)
-       |> assign(:forms, Map.put(socket.assigns.forms, key, to_form(values, as: :section)))
-       |> stream_insert(:sections, Enum.find(socket.assigns.data.sections, &(&1.key == key)))}
+      editor = Editor.draft(socket.assigns.editors[key], values)
+      Presence.heartbeat(socket.assigns.current_scope, socket.assigns.data.ticket.id, key)
+      {:noreply, socket |> assign(active_section: key) |> put_editor(key, editor)}
     else
-      {:noreply, put_flash(socket, :error, RuntimeErrors.message(:forbidden))}
+      refresh(socket)
+    end
+  end
+
+  def handle_event(
+        "recover_draft",
+        %{"section" => values, "key" => key, "observed" => observed},
+        socket
+      ) do
+    data = socket.assigns.data
+    values = form_values(values)
+
+    with true <- key in data.editable,
+         {revision, ""} <- Integer.parse(observed["revision"] || ""),
+         {stage_revision, ""} <- Integer.parse(observed["stage_revision"] || ""),
+         command_key when is_binary(command_key) and byte_size(command_key) in 1..128 <-
+           observed["key"] do
+      editor = %{
+        socket.assigns.editors[key]
+        | values: values,
+          revision: revision,
+          stage_revision: stage_revision,
+          key: command_key,
+          dirty: true
+      }
+
+      refresh(put_editor(socket, key, editor))
+    else
+      _ -> refresh(socket)
     end
   end
 
   def handle_event("save", %{"section" => values, "key" => key}, socket) do
     data = socket.assigns.data
-    section = Enum.find(data.sections, &(&1.key == key))
+    values = form_values(values)
 
-    if section && key in data.editable do
+    if key in data.editable do
       definition = Enum.find(data.section_definitions, &(&1["key"] == key))
-      values = cast_values(definition, values)
+      editor = Editor.draft(socket.assigns.editors[key], values)
 
       command = %{
         "operation" => "save_section",
-        "key" => Ecto.UUID.generate(),
+        "key" => editor.key,
         "ticket_id" => data.ticket.id,
         "section" => key,
-        "values" => values,
-        "expected_stage_revision" => data.ticket.stage_revision,
-        "expected_section_revision" => section.revision
+        "values" => cast_values(definition, values),
+        "expected_stage_revision" => editor.stage_revision,
+        "expected_section_revision" => editor.revision
       }
 
-      socket =
-        socket
-        |> assign(:forms, Map.put(socket.assigns.forms, key, to_form(values, as: :section)))
-        |> stream_insert(:sections, section)
+      socket = put_editor(socket, key, editor)
 
-      respond(socket, WorkflowRuntime.command(socket.assigns.current_scope, command))
+      case WorkflowRuntime.command(socket.assigns.current_scope, command) do
+        {:ok, result} ->
+          # A save acknowledges only this section. Other authorized drafts survive.
+          socket =
+            assign(socket,
+              editors: Map.delete(socket.assigns.editors, key),
+              review_revision:
+                if(result["revision"] == data.ticket.revision + 1,
+                  do: result["revision"],
+                  else: socket.assigns.review_revision
+                )
+            )
+
+          refresh(put_flash(socket, :info, "Formulário salvo."))
+
+        {:error, error} ->
+          failure(socket, error)
+      end
     else
-      {:noreply, put_flash(socket, :error, RuntimeErrors.message(:forbidden))}
+      refresh(socket)
     end
   end
 
-  def handle_event("reason", %{"action" => params}, socket),
-    do: {:noreply, assign(socket, reason: to_form(params, as: :action), dirty: true)}
+  def handle_event("compare", %{"key" => key}, socket) do
+    case socket.assigns.editors[key] do
+      %{conflict: true} = editor ->
+        {:noreply, put_editor(socket, key, %{editor | comparing: true})}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("reapply", %{"key" => key}, socket) do
+    editor = socket.assigns.editors[key]
+    section = Enum.find(socket.assigns.data.sections, &(&1.key == key))
+
+    if editor && editor.comparing && section && key in socket.assigns.data.editable do
+      {:noreply,
+       put_editor(socket, key, Editor.reapply(editor, section, socket.assigns.data.ticket))}
+    else
+      refresh(socket)
+    end
+  end
+
+  def handle_event("discard", %{"key" => key}, socket) do
+    refresh(assign(socket, :editors, Map.delete(socket.assigns.editors, key)))
+  end
+
+  def handle_event("reason", %{"action" => params}, socket) do
+    {:noreply,
+     assign(socket, reason: to_form(params, as: :action), action_key: Ecto.UUID.generate())}
+  end
+
+  def handle_event("review", _, socket) do
+    {:noreply,
+     assign(socket,
+       review_revision: socket.assigns.data.ticket.revision,
+       stale: false,
+       action_key: Ecto.UUID.generate()
+     )}
+  end
 
   def handle_event("transition", %{"transition" => edge, "action" => params}, socket) do
     data = socket.assigns.data
-    socket = assign(socket, :reason, to_form(params, as: :action))
 
-    command = %{
-      "operation" => "transition",
-      "key" => Ecto.UUID.generate(),
-      "ticket_id" => data.ticket.id,
-      "transition" => edge,
-      "reason" => params["reason"],
-      "expected_revision" => data.ticket.revision,
-      "section_revisions" => Map.new(data.sections, &{&1.key, &1.revision})
-    }
+    if socket.assigns.dirty or socket.assigns.stale do
+      failure(socket, :conflict)
+    else
+      command = %{
+        "operation" => "transition",
+        "key" => socket.assigns.action_key,
+        "ticket_id" => data.ticket.id,
+        "transition" => edge,
+        "reason" => params["reason"],
+        "expected_revision" => socket.assigns.review_revision,
+        "section_revisions" => Map.new(data.sections, &{&1.key, &1.revision})
+      }
 
-    respond(socket, WorkflowRuntime.command(socket.assigns.current_scope, command))
-  end
+      socket = assign(socket, :reason, to_form(params, as: :action))
 
-  def handle_event("retry", %{"id" => id}, socket) do
-    # Only message IDs in this authorized projection can be proposed; the context checks permissions again.
-    message = Enum.find(socket.assigns.data.deliveries, &(to_string(&1.id) == id))
+      case WorkflowRuntime.command(socket.assigns.current_scope, command) do
+        {:ok, result} ->
+          refresh(
+            assign(socket,
+              reason: to_form(%{}, as: :action),
+              review_revision: result["revision"],
+              action_key: Ecto.UUID.generate()
+            )
+          )
 
-    if message,
-      do: respond(socket, Delivery.retry(socket.assigns.current_scope, message.id)),
-      else: {:noreply, put_flash(socket, :error, RuntimeErrors.message(:forbidden))}
-  end
-
-  def handle_event("refresh", _, socket), do: refresh(socket)
-
-  def handle_info(
-        {:ticket_changed, organization_id, id},
-        %{assigns: %{current_scope: %{organization_id: organization_id}}} = socket
-      ) do
-    case WorkflowRuntime.get(socket.assigns.current_scope, id) do
-      {:ok, data} ->
-        if socket.assigns.dirty do
-          changed = data.ticket.revision != socket.assigns.data.ticket.revision
-          socket = assign(socket, :stale, changed)
-
-          socket =
-            if changed,
-              do: socket,
-              else: stream(socket, :deliveries, data.deliveries, reset: true)
-
-          {:noreply, socket}
-        else
-          {:noreply, load(socket, data)}
-        end
-
-      _ ->
-        {:noreply, push_navigate(socket, to: ~p"/entrar")}
+        {:error, error} ->
+          failure(socket, error)
+      end
     end
   end
 
-  def handle_info({:ticket_changed, _, _}, socket), do: {:noreply, socket}
+  def handle_event("retry", %{"id" => id}, socket) do
+    message = Enum.find(socket.assigns.data.deliveries, &(to_string(&1.id) == id))
 
-  defp respond(socket, {:ok, _}) do
-    socket =
-      assign(socket, dirty: false, reason: to_form(%{}, as: :action))
-      |> clear_flash()
-      |> put_flash(:info, "Ação registrada com sucesso.")
+    case message && Delivery.retry(socket.assigns.current_scope, message.id) do
+      {:ok, _} -> refresh(socket)
+      {:error, error} -> failure(socket, error)
+      _ -> failure(socket, :forbidden)
+    end
+  end
+
+  def handle_event("refresh", _, socket), do: refresh(socket)
+  def handle_event("reconcile", _, socket), do: refresh(socket)
+
+  def handle_event("heartbeat", _, socket) do
+    if socket.assigns.active_section,
+      do:
+        Presence.heartbeat(
+          socket.assigns.current_scope,
+          socket.assigns.data.ticket.id,
+          socket.assigns.active_section
+        )
 
     refresh(socket)
   end
 
-  defp respond(socket, {:error, error}),
-    do:
-      {:noreply,
-       socket
-       |> assign(:dirty, true)
-       |> clear_flash()
-       |> put_flash(:error, RuntimeErrors.message(error))}
+  def handle_info({:ticket_changed, organization_id, id}, socket) do
+    if socket.assigns.current_scope.organization_id == organization_id and
+         socket.assigns.data.ticket.id == id, do: refresh(socket), else: {:noreply, socket}
+  end
+
+  def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket),
+    do: {:noreply, load_presence(socket)}
+
+  def handle_info(:reconcile, socket), do: refresh(socket)
+  def handle_info(:permissions_changed, socket), do: refresh(socket)
+
+  defp failure(socket, error) do
+    {:noreply, updated} = refresh(socket)
+    {:noreply, updated |> clear_flash() |> put_flash(:error, RuntimeErrors.message(error))}
+  end
 
   defp refresh(socket) do
     case WorkflowRuntime.get(socket.assigns.current_scope, socket.assigns.data.ticket.id) do
       {:ok, data} ->
-        {:noreply, socket |> assign(dirty: false, stale: false) |> load(data)}
+        {:noreply, load(socket, data)}
 
       _ ->
+        # Remove protected values and drafts before leaving an unavailable record.
         {:noreply,
-         push_navigate(socket,
-           to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/solicitacoes"
-         )}
+         socket
+         |> assign(data: nil, editors: %{}, forms: %{}, dirty: false)
+         |> redirect(to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/solicitacoes")}
     end
   end
 
@@ -171,14 +264,42 @@ defmodule InstantflowWeb.RequestLive do
        |> push_navigate(to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/solicitacoes")}
 
   defp load(socket, data) do
-    forms = Map.new(data.sections, &{&1.key, to_form(&1.values, as: :section)})
+    editors = Editor.reconcile(socket.assigns.editors, data)
+    forms = Map.new(editors, fn {key, editor} -> {key, to_form(editor.values, as: :section)} end)
 
     socket
-    |> assign(data: data, forms: forms)
+    |> assign(
+      data: data,
+      editors: editors,
+      forms: forms,
+      dirty: Enum.any?(editors, fn {_, e} -> e.dirty end),
+      stale: data.ticket.revision != socket.assigns.review_revision
+    )
     |> stream(:sections, data.sections, reset: true)
     |> stream(:events, data.events, reset: true)
     |> stream(:deliveries, data.deliveries, reset: true)
+    |> load_presence()
   end
+
+  defp load_presence(socket) do
+    assign(socket, :presence, Presence.editors(socket.assigns.current_scope, socket.assigns.data))
+    |> stream(:sections, socket.assigns.data.sections, reset: true)
+  end
+
+  defp put_editor(socket, key, editor) do
+    editors = Map.put(socket.assigns.editors, key, editor)
+
+    socket
+    |> assign(
+      editors: editors,
+      dirty: Enum.any?(editors, fn {_, e} -> e.dirty end),
+      forms: Map.put(socket.assigns.forms, key, to_form(editor.values, as: :section))
+    )
+    |> stream_insert(:sections, Enum.find(socket.assigns.data.sections, &(&1.key == key)))
+  end
+
+  defp form_values(values),
+    do: Map.reject(values, fn {key, _} -> String.starts_with?(key, "_unused_") end)
 
   defp cast_values(definition, values) do
     Map.new(values, fn {key, value} ->
@@ -231,7 +352,11 @@ defmodule InstantflowWeb.RequestLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope} unsaved={@dirty}>
+    <Layouts.app
+      flash={@flash}
+      current_scope={@current_scope}
+      unsaved={@dirty or (@reason.params["reason"] || "") != ""}
+    >
       <.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes"}>← Todas as solicitações</.link>
       <div class="page-heading request-heading">
         <div>
@@ -243,27 +368,87 @@ defmodule InstantflowWeb.RequestLive do
       <div :if={@stale} id="stale-warning" class="flash error" role="alert">
         Esta solicitação foi atualizada. Seu rascunho foi preservado.
       </div>
-      <button id="refresh-request" class="btn" phx-click="refresh">Recarregar dados {if @dirty,
-        do: "(descarta rascunhos)"}</button>
+      <div id="request-connection" phx-hook="Collaboration" phx-update="ignore"></div>
+      <button id="refresh-request" class="btn" phx-click="refresh">Atualizar mantendo rascunhos</button>
+      <button :if={@stale} id="review-request" class="btn" phx-click="review">Confirmei a revisão dos dados atuais</button>
       <div class="request-detail-grid">
         <div id="sections" phx-update="stream">
           <section :for={{id, section} <- @streams.sections} id={id} class="card section-card">
             <% definition = Enum.find(@data.section_definitions, &(&1["key"] == section.key)) %>
-            <h2>{definition["label"]}</h2><p>Revisão do formulário: {section.revision}</p><.form
+            <h2>{definition["label"]}</h2><p>Revisão do formulário: {section.revision}</p>
+            <p :if={@editors[section.key].dirty} class="presence-note">
+              Rascunho não salvo · mantido apenas nesta aba
+            </p>
+            <button
+              :if={@editors[section.key].dirty and not @editors[section.key].conflict}
+              class="btn"
+              phx-click="discard"
+              phx-value-key={section.key}
+            >Descartar meu rascunho</button>
+            <p
+              :for={
+                peer <-
+                  Enum.filter(
+                    @presence,
+                    &(&1.section == section.key and &1.user_id != @current_scope.user_id)
+                  )
+              }
+              class="presence-note"
+            >
+              {peer.name} está editando este formulário.
+            </p>
+            <div
+              :if={@editors[section.key].conflict}
+              id={"conflict-#{section.key}"}
+              class="conflict-panel"
+              role="status"
+            >
+              <strong>Há alterações neste formulário. Seu rascunho foi preservado.</strong>
+              <button class="btn" phx-click="compare" phx-value-key={section.key}>Revisar alterações</button>
+              <div :if={@editors[section.key].comparing} id={"comparison-#{section.key}"}>
+                <h3>Versão salva por outra pessoa</h3>
+                <dl>
+                  <div :for={field <- definition["fields"]}>
+                    <dt>{field["label"]}</dt><dd>{format_value(section.values[field["key"]])}</dd>
+                  </div>
+                </dl>
+                <button
+                  :if={section.key in @data.editable}
+                  class="btn"
+                  phx-click="reapply"
+                  phx-value-key={section.key}
+                >Reaplicar minhas alterações</button>
+              </div>
+              <button class="btn" phx-click="discard" phx-value-key={section.key}>Descartar meu rascunho</button>
+            </div><.form
               :if={section.key in @data.editable}
               for={@forms[section.key]}
               id={"section-form-#{section.key}"}
               phx-change="draft"
+              phx-auto-recover="recover_draft"
               phx-submit="save"
               phx-value-key={section.key}
             >
+              <input type="hidden" name="observed[revision]" value={@editors[section.key].revision} />
+              <input
+                type="hidden"
+                name="observed[stage_revision]"
+                value={@editors[section.key].stage_revision}
+              />
+              <input type="hidden" name="observed[key]" value={@editors[section.key].key} />
               <.input
                 :for={field <- definition["fields"]}
                 field={@forms[section.key][field["key"]]}
+                id={"section-#{section.key}-#{field["key"]}"}
                 label={field["label"]}
                 type={field_type(field["type"])}
                 options={options(field)}
-              /><button class="btn primary" id={"save-#{section.key}"} phx-disable-with="Salvando…">Salvar formulário</button>
+              /><button
+                class="btn primary"
+                id={"save-#{section.key}"}
+                data-authoritative
+                phx-disable-with="Salvando…"
+              >Salvar formulário</button>
             </.form><dl :if={section.key not in @data.editable}>
               <div :for={field <- definition["fields"]}>
                 <dt>{field["label"]}</dt><dd>{format_value(section.values[field["key"]])}</dd>
@@ -288,6 +473,9 @@ defmodule InstantflowWeb.RequestLive do
                   name="transition"
                   value={edge["key"]}
                   class="btn"
+                  data-authoritative
+                  disabled={@dirty or @stale}
+                  data-blocked={to_string(@dirty or @stale)}
                   phx-disable-with="Registrando…"
                 >{edge["label"]}</button>
               </div>
@@ -306,12 +494,10 @@ defmodule InstantflowWeb.RequestLive do
                   else: "Criação de acesso simulada"}</strong><p>
                   {delivery_label(delivery.status)} · {delivery.attempts} tentativa(s)
                 </p><button
-                  :if={
-                    delivery.status == "failed" and
-                      @current_scope.department_id == @data.ticket.assigned_department_id
-                  }
+                  :if={delivery.status == "failed" and @data.can_retry}
                   id={"retry-#{delivery.id}"}
                   class="btn"
+                  data-authoritative
                   phx-click="retry"
                   phx-value-id={delivery.id}
                 >Tentar novamente</button>

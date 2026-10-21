@@ -42,6 +42,24 @@ defmodule InstantflowWeb.TeamLiveTest do
              live(login(conn, staff), ~p"/o/horizonte/equipe")
   end
 
+  test "admin adds and removes a local department grant through the team form", %{conn: conn} do
+    admin = staff_fixture()
+    staff = staff_fixture("staff")
+    {:ok, view, _} = live(login(conn, admin), ~p"/o/horizonte/equipe")
+
+    view
+    |> form("#grant-form",
+      grant: %{membership_id: staff.id, department_id: staff.department_id, role: "finance"}
+    )
+    |> render_submit()
+
+    [grant] = Instantflow.Repo.all(Instantflow.Access.Grant)
+    assert has_element?(view, "#grant-#{grant.id}", "Financeiro")
+    view |> element("#grant-#{grant.id} button") |> render_click()
+    refute has_element?(view, "#grant-#{grant.id}")
+    assert Instantflow.Repo.all(Instantflow.Access.Grant) == []
+  end
+
   test "revoked sessions cannot submit on an already mounted screen", %{conn: conn} do
     admin = staff_fixture()
     token = Instantflow.Identity.create_session(admin.user)

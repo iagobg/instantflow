@@ -41,7 +41,8 @@ defmodule Instantflow.Identity do
                   where: m.organization_id == ^a.organization_id,
                   preload: [:user, :department],
                   order_by: m.id
-              ),
+              )
+              |> Enum.map(&Instantflow.Access.load/1),
             else: []
         end,
         []
@@ -190,7 +191,7 @@ defmodule Instantflow.Identity do
 
   def revoke(actor, member_id) do
     result =
-      Tenant.transaction(actor, fn a ->
+      Tenant.authorize_change(actor, fn a ->
         unless a.role == "admin", do: Repo.rollback(:forbidden)
 
         member =
