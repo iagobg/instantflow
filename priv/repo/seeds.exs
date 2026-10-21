@@ -203,6 +203,81 @@ for {slug, school} <- [
       {:ok, _} = Instantflow.Enrollment.verify(admin, link.id, true)
     end
   end
+
+  # Shared within each school only; the same labels never bind another organization's funds.
+  finance_departments =
+    for {key, name} <- [
+          {"head", "Coordenação"},
+          {"finance", "Financeiro"},
+          {"operations", "Operações"},
+          {"safety", "Direção"}
+        ],
+        into: %{} do
+      department =
+        OperatorRepo.get_by(Department, organization_id: organization.id, name: name) ||
+          OperatorRepo.insert!(%Department{organization_id: organization.id, name: name})
+
+      {key <> "_department", department.id}
+    end
+
+  finance_department = finance_departments["finance_department"]
+  {:ok, _} = Instantflow.Access.grant(admin, admin.id, finance_department, "finance_allocator")
+
+  account =
+    OperatorRepo.get_by(Instantflow.Finance.Account,
+      organization_id: organization.id,
+      department_id: finance_department,
+      name: "Atividades e materiais"
+    ) ||
+      case Instantflow.Finance.create_account(admin, finance_department, "Atividades e materiais") do
+        {:ok, account} -> account
+      end
+
+  {:ok, _} =
+    Instantflow.Finance.allocate(
+      admin,
+      account.id,
+      100_000,
+      "Dotação inicial fictícia",
+      "seed:budget:initial"
+    )
+
+  staff_roles =
+    if slug == "horizonte",
+      do: [
+        {"docente@escola.example", "head", "teacher"},
+        {"coordenacao@escola.example", "head", "head"},
+        {"financeiro@escola.example", "finance", "finance"},
+        {"operacoes@escola.example", "operations", "operations"},
+        {"direcao@escola.example", "safety", "dean"},
+        {"direcao@escola.example", "finance", "finance_reverser"}
+      ],
+      else: [
+        {"admin@escola.example", "head", "teacher"},
+        {"gestao@aurora.example", "head", "head"},
+        {"gestao@aurora.example", "operations", "operations"},
+        {"gestao@aurora.example", "safety", "dean"},
+        {"gestao@aurora.example", "finance", "finance_reverser"},
+        {"financeiro@aurora.example", "finance", "finance"}
+      ]
+
+  for {email, department, role} <- staff_roles do
+    member = Identity.scope(OperatorRepo.get_by!(User, email: email).id, organization.id)
+
+    {:ok, _} =
+      Instantflow.Access.grant(
+        admin,
+        member.id,
+        finance_departments[department <> "_department"],
+        role
+      )
+  end
+
+  for template <- ~w(requisition field_trip) do
+    unless OperatorRepo.get_by(Workflow, organization_id: organization.id, key: template) do
+      {:ok, _} = Instantflow.Finance.install(admin, template, finance_departments, account.id)
+    end
+  end
 end
 
 GenServer.stop(operator_pid)

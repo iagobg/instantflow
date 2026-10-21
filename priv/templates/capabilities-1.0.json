@@ -1,7 +1,8 @@
 {
   "format_version": "1.0",
   "capabilities": [
-    "core"
+    "core",
+    "finance"
   ],
   "supported": {
     "field_types": [
@@ -55,13 +56,26 @@
     ],
     "views": [
       "table",
-      "board"
+      "board",
+      "calendar",
+      "assignments"
     ],
     "section_classifications": [
       "internal",
       "restricted"
     ],
-    "transition_handoff": "department_binding"
+    "transition_handoff": "department_binding",
+    "finance_effects": [
+      "reserve",
+      "post",
+      "release",
+      "reverse",
+      "complete"
+    ],
+    "binding_types": [
+      "department",
+      "budget"
+    ]
   },
   "reserved_fail_closed": {
     "field_types": [

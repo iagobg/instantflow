@@ -29,8 +29,14 @@
       "maxLength": 10000
     },
     "capabilities": {
-      "const": [
-        "core"
+      "enum": [
+        [
+          "core"
+        ],
+        [
+          "core",
+          "finance"
+        ]
       ]
     },
     "role_requirements": {
@@ -165,7 +171,10 @@
           "maxLength": 200
         },
         "type": {
-          "const": "department"
+          "enum": [
+            "department",
+            "budget"
+          ]
         }
       },
       "required": [
@@ -591,7 +600,9 @@
         "type": {
           "enum": [
             "table",
-            "board"
+            "board",
+            "calendar",
+            "assignments"
           ]
         },
         "columns": {
@@ -604,6 +615,9 @@
               },
               {
                 "const": "stage"
+              },
+              {
+                "const": "assigned_department"
               }
             ]
           },
@@ -831,6 +845,45 @@
         "department_binding": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "finance": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "enum": [
+                "reserve",
+                "post",
+                "release",
+                "reverse",
+                "complete"
+              ]
+            },
+            "account_binding": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 130
+            },
+            "amount_field": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 130
+            },
+            "quantity_field": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 130
+            },
+            "received_field": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 130
+            }
+          },
+          "required": [
+            "operation",
+            "account_binding"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

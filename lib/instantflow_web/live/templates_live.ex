@@ -133,6 +133,8 @@ defmodule InstantflowWeb.TemplatesLive do
           "admissions" => "Admissões",
           "head" => "Coordenação",
           "finance" => "Financeiro",
+          "finance_allocator" => "Alocação financeira",
+          "finance_reverser" => "Estorno financeiro",
           "operations" => "Operações",
           "it" => "TI",
           "dean" => "Direção",

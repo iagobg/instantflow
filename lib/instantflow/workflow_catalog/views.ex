@@ -51,9 +51,16 @@ defmodule Instantflow.WorkflowCatalog.Views do
               cells =
                 Enum.map(columns, fn column ->
                   value =
-                    if column.key == "stage",
-                      do: stage_label(version, ticket),
-                      else: get_in(sections, String.split(column.key, "."))
+                    case column.key do
+                      "stage" ->
+                        stage_label(version, ticket)
+
+                      "assigned_department" ->
+                        Repo.get!(Instantflow.Identity.Department, ticket.assigned_department_id).name
+
+                      _ ->
+                        get_in(sections, String.split(column.key, "."))
+                    end
 
                   Map.put(column, :value, value)
                 end)
@@ -67,6 +74,13 @@ defmodule Instantflow.WorkflowCatalog.Views do
                     label: view["label"],
                     stage: ticket.stage,
                     stage_label: stage_label(version, ticket),
+                    date:
+                      Enum.find_value(cells, fn c ->
+                        if get_in(
+                             Instantflow.WorkflowCatalog.Definition.fields(version.definition),
+                             [c.key, "type"]
+                           ) == "date", do: c.value
+                      end),
                     cells: cells
                   }
                 ]
@@ -76,7 +90,7 @@ defmodule Instantflow.WorkflowCatalog.Views do
           end)
 
         %{
-          rows: rows,
+          rows: Enum.sort_by(rows, &{&1.date || "9999-12-31", &1.id}),
           total: result.filtered,
           columns:
             rows
@@ -84,7 +98,11 @@ defmodule Instantflow.WorkflowCatalog.Views do
             |> Enum.uniq_by(& &1.key)
             |> Enum.map(&Map.take(&1, [:key, :label])),
           stages:
-            rows |> Enum.map(&%{id: &1.stage, label: &1.stage_label}) |> Enum.uniq_by(& &1.id)
+            rows
+            |> Enum.map(
+              &%{id: &1.stage, label: &1.stage_label, count: Map.get(result.counts, &1.stage, 0)}
+            )
+            |> Enum.uniq_by(& &1.id)
         }
       end,
       %{rows: [], total: 0, columns: [], stages: []}
@@ -95,6 +113,9 @@ defmodule Instantflow.WorkflowCatalog.Views do
     Enum.flat_map(view["columns"], fn
       "stage" ->
         [%{key: "stage", label: "Etapa"}]
+
+      "assigned_department" ->
+        [%{key: "assigned_department", label: "Departamento atribuído"}]
 
       ref ->
         [section_key, field_key] = String.split(ref, ".")

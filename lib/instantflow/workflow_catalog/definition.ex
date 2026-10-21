@@ -127,7 +127,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
         d["format_version"] in ["1.0", "1.0-draft"] and d["locale"] == "pt-BR" and
         key?(d["template_key"]) and
         label?(d["name"]) and
-        d["capabilities"] == ["core"] and keyed?(d["role_requirements"]) and
+        d["capabilities"] in [["core"], ["core", "finance"]] and keyed?(d["role_requirements"]) and
         length(d["role_requirements"]) in 1..30 and
         keyed?(d["stages"]) and length(d["stages"]) in 1..100 and keyed?(d["sections"]) and
         length(d["sections"]) in 1..100 and
@@ -140,7 +140,8 @@ defmodule Instantflow.WorkflowCatalog.Definition do
           props?(r, ~w(key label)) and label?(r["label"])
         end) and
         Enum.all?(d["bindings"], fn b ->
-          props?(b, ~w(key type label)) and b["type"] == "department" and label?(b["label"])
+          props?(b, ~w(key type label)) and b["type"] in ~w(department budget) and
+            label?(b["label"])
         end) and
         Enum.all?(d["sections"], &valid_section?/1) and map_size(fields(d)) <= 300 and
         Enum.all?(d["transitions"], &valid_transition?/1) and props?(d["creation"], ["roles"]) and
@@ -178,7 +179,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   defp valid_transition?(t) do
     props?(
       t,
-      ~w(key label from to actors required_fields require_reason kind disallow_requester finance_sensitive history_visibility actions guard department_binding)
+      ~w(key label from to actors required_fields require_reason kind disallow_requester finance_sensitive history_visibility actions guard department_binding finance)
     ) and label?(t["label"]) and
       is_list(t["actors"]) and t["actors"] != [] and
       Enum.all?(
@@ -207,7 +208,10 @@ defmodule Instantflow.WorkflowCatalog.Definition do
     valid =
       is_list(d["creation"]["roles"]) and d["creation"]["roles"] != [] and
         Enum.all?(d["creation"]["roles"], &(&1 in roles)) and
-        Enum.any?(d["bindings"], &(&1["key"] == d["assignment"]["department_binding"])) and
+        Enum.any?(
+          d["bindings"],
+          &(&1["type"] == "department" and &1["key"] == d["assignment"]["department_binding"])
+        ) and
         Enum.all?(d["sections"], fn s ->
           Enum.all?(s["access"], fn a ->
             valid_actor?(a, roles, d) and
@@ -216,13 +220,19 @@ defmodule Instantflow.WorkflowCatalog.Definition do
         end) and
         keyed?(d["views"]) and
         Enum.all?(d["views"], fn v ->
-          Enum.all?(v["columns"], &(&1 == "stage" or Map.has_key?(fields, &1)))
+          Enum.all?(
+            v["columns"],
+            &(&1 in ~w(stage assigned_department) or Map.has_key?(fields, &1))
+          )
         end) and
         Enum.all?(d["transitions"], fn t ->
-          t["from"] in stages and t["to"] in stages and
+          finance_spec?(t["finance"], d) and t["from"] in stages and t["to"] in stages and
             Enum.all?(t["actors"], &valid_actor?(&1, roles, d)) and
             (not Map.has_key?(t, "department_binding") or
-               Enum.any?(d["bindings"], &(&1["key"] == t["department_binding"]))) and
+               Enum.any?(
+                 d["bindings"],
+                 &(&1["type"] == "department" and &1["key"] == t["department_binding"])
+               )) and
             Enum.all?(t["required_fields"], &Map.has_key?(fields, &1)) and
             valid_guard?(t["guard"], fields, 0) and valid_resubmission?(t, d)
         end)
@@ -230,10 +240,31 @@ defmodule Instantflow.WorkflowCatalog.Definition do
     if valid, do: :ok, else: error("Há referências, guardas ou caminhos de correção inválidos.")
   end
 
+  defp finance_spec?(nil, _), do: true
+
+  defp finance_spec?(spec, d) do
+    fields = fields(d)
+
+    d["capabilities"] == ["core", "finance"] and
+      Enum.any?(d["bindings"], &(&1["type"] == "budget" and &1["key"] == spec["account_binding"])) and
+      (spec["operation"] not in ~w(reserve post) or
+         (get_in(fields, [spec["amount_field"], "type"]) == "money" and
+            get_in(fields, [spec["amount_field"], "currency"]) == "BRL")) and
+      (spec["operation"] != "complete" or
+         Enum.all?(
+           ~w(quantity_field received_field),
+           &(get_in(fields, [spec[&1], "type"]) == "integer")
+         ))
+  end
+
   defp valid_actor?(a, roles, d) do
     a["role"] in roles and
       if(a["scope"] == "workflow_department",
-        do: Enum.any?(d["bindings"], &(&1["key"] == a["department_binding"])),
+        do:
+          Enum.any?(
+            d["bindings"],
+            &(&1["type"] == "department" and &1["key"] == a["department_binding"])
+          ),
         else: not Map.has_key?(a, "department_binding")
       )
   end

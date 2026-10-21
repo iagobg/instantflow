@@ -1,4 +1,25 @@
 defmodule InstantflowWeb.RuntimeErrors do
+  def message(:account_exists), do: "Já existe uma conta com este nome neste departamento."
+
+  def message(:insufficient_budget), do: "Saldo insuficiente para reservar este valor."
+  def message(:invalid_budget), do: "Orçamento indisponível nesta organização."
+  def message(:invalid_amount), do: "Informe um valor positivo em centavos."
+
+  def message(:renew_finance_review),
+    do: "Revise a proposta e renove as aprovações antes de alterar o custo."
+
+  def message(:explicit_reversal_required),
+    do: "O pedido já foi confirmado; registre um estorno explícito."
+
+  def message(:invalid_delivery),
+    do: "Informe uma quantidade recebida entre zero e o total solicitado."
+
+  def message(:incomplete_delivery),
+    do: "A quantidade total recebida deve corresponder à quantidade solicitada."
+
+  def message(:invalid_finance_state),
+    do: "A situação financeira foi alterada. Atualize e revise a solicitação."
+
   def message(:attachment_not_ready),
     do: "O documento obrigatório ainda não foi liberado pela secretaria."
 

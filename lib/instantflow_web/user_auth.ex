@@ -89,7 +89,8 @@ defmodule InstantflowWeb.UserAuth do
               if socket.view in [
                    InstantflowWeb.RequestLive,
                    InstantflowWeb.RequestsLive,
-                   InstantflowWeb.EnrollmentLive
+                   InstantflowWeb.EnrollmentLive,
+                   InstantflowWeb.BudgetsLive
                  ],
                  do: send(self(), :reconcile)
 
@@ -107,7 +108,8 @@ defmodule InstantflowWeb.UserAuth do
                   if socket.view in [
                        InstantflowWeb.RequestLive,
                        InstantflowWeb.RequestsLive,
-                       InstantflowWeb.EnrollmentLive
+                       InstantflowWeb.EnrollmentLive,
+                       InstantflowWeb.BudgetsLive
                      ],
                      do: {:cont, socket},
                      else: {:halt, socket}

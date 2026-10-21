@@ -44,6 +44,7 @@ defmodule InstantflowWeb.TemplateLive do
          original: nil,
          item_form: to_form(Authoring.form(), as: :item),
          picker: to_form(%{}, as: :picker),
+         budget_options: Instantflow.Finance.binding_options(socket.assigns.current_scope),
          department_options:
            Enum.map(Identity.departments(socket.assigns.current_scope), &{&1.name, &1.id})
        )}
@@ -158,7 +159,13 @@ defmodule InstantflowWeb.TemplateLive do
         p["assignment"]
       )
 
-    persist(socket, d, %{"roles" => roles, "departments" => departments})
+    budgets =
+      Map.new(p["budgets"] || %{}, fn {k, id} -> {k, TemplatesLive.integer(id)} end)
+      |> Map.reject(fn {_, id} -> is_nil(id) end)
+
+    bindings = %{"roles" => roles, "departments" => departments}
+    bindings = if budgets == %{}, do: bindings, else: Map.put(bindings, "budgets", budgets)
+    persist(socket, d, bindings)
   end
 
   def handle_event("advanced", %{"advanced" => p}, socket) do
@@ -379,7 +386,16 @@ defmodule InstantflowWeb.TemplateLive do
   defp prune_bindings(b, d),
     do: %{
       "roles" => Map.take(b["roles"], Enum.map(d["role_requirements"], & &1["key"])),
-      "departments" => Map.take(b["departments"], Enum.map(d["bindings"], & &1["key"]))
+      "departments" =>
+        Map.take(
+          b["departments"],
+          Enum.map(Enum.filter(d["bindings"], &(&1["type"] == "department")), & &1["key"])
+        ),
+      "budgets" =>
+        Map.take(
+          b["budgets"] || %{},
+          Enum.map(Enum.filter(d["bindings"], &(&1["type"] == "budget")), & &1["key"])
+        )
     }
 
   defp denied(socket),
@@ -572,7 +588,9 @@ defmodule InstantflowWeb.TemplateLive do
                 value={@draft.bindings["roles"][role["key"]] || []}
               />
               <.input
-                :for={binding <- @draft.definition["bindings"]}
+                :for={
+                  binding <- Enum.filter(@draft.definition["bindings"], &(&1["type"] == "department"))
+                }
                 name={"mapping[departments][#{binding["key"]}]"}
                 id={"mapping-department-#{binding["key"]}"}
                 type="select"
@@ -582,11 +600,28 @@ defmodule InstantflowWeb.TemplateLive do
                 value={@draft.bindings["departments"][binding["key"]]}
               />
               <.input
+                :for={
+                  binding <- Enum.filter(@draft.definition["bindings"], &(&1["type"] == "budget"))
+                }
+                name={"mapping[budgets][#{binding["key"]}]"}
+                id={"mapping-budget-#{binding["key"]}"}
+                type="select"
+                label={binding["label"]}
+                options={@budget_options}
+                prompt="Selecione um orçamento local"
+                value={get_in(@draft.bindings, ["budgets", binding["key"]])}
+              />
+              <.input
                 name="mapping[assignment]"
                 id="mapping-assignment"
                 type="select"
                 label="Departamento de atribuição inicial"
-                options={Enum.map(@draft.definition["bindings"], &{&1["label"], &1["key"]})}
+                options={
+                  Enum.map(
+                    Enum.filter(@draft.definition["bindings"], &(&1["type"] == "department")),
+                    &{&1["label"], &1["key"]}
+                  )
+                }
                 value={@draft.definition["assignment"]["department_binding"]}
               />
               <button id="save-mappings" class="btn" disabled={@draft.published_version_id != nil}>Salvar mapeamentos</button>
@@ -718,7 +753,12 @@ defmodule InstantflowWeb.TemplateLive do
                   field={@item_form[:type]}
                   type="select"
                   label="Visualização"
-                  options={[{"Tabela", "table"}, {"Quadro por etapa", "board"}]}
+                  options={[
+                    {"Tabela", "table"},
+                    {"Quadro por etapa", "board"},
+                    {"Calendário", "calendar"},
+                    {"Atribuições", "assignments"}
+                  ]}
                 /><.input
                   field={@item_form[:columns]}
                   type="select"

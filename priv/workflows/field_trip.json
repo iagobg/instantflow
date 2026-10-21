@@ -1,0 +1,716 @@
+{
+  "format_version": "1.0",
+  "template_key": "field_trip",
+  "template_version": "1.0.0",
+  "locale": "pt-BR",
+  "name": "Aprovação de passeios",
+  "description": "Demonstração com orçamento em centavos e efeitos auditados.",
+  "capabilities": [
+    "core",
+    "finance"
+  ],
+  "role_requirements": [
+    {
+      "key": "requester",
+      "label": "Solicitante"
+    },
+    {
+      "key": "head",
+      "label": "Coordenação"
+    },
+    {
+      "key": "finance",
+      "label": "Financeiro"
+    },
+    {
+      "key": "operations",
+      "label": "Operações"
+    },
+    {
+      "key": "safety",
+      "label": "Direção"
+    },
+    {
+      "key": "reverser",
+      "label": "Estorno financeiro"
+    }
+  ],
+  "sections": [
+    {
+      "key": "request",
+      "label": "Proposta",
+      "classification": "internal",
+      "access": [
+        {
+          "role": "requester",
+          "scope": "requester",
+          "read": true,
+          "edit_stages": [
+            "draft"
+          ]
+        },
+        {
+          "role": "head",
+          "scope": "workflow_department",
+          "department_binding": "head_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "finance",
+          "scope": "workflow_department",
+          "department_binding": "finance_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "operations",
+          "scope": "workflow_department",
+          "department_binding": "operations_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "safety",
+          "scope": "workflow_department",
+          "department_binding": "safety_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "reverser",
+          "scope": "workflow_department",
+          "department_binding": "finance_department",
+          "read": true,
+          "edit_stages": []
+        }
+      ],
+      "fields": [
+        {
+          "key": "summary",
+          "label": "Descrição / itens e especificações",
+          "type": "long_text"
+        },
+        {
+          "key": "justification",
+          "label": "Justificativa pedagógica",
+          "type": "long_text"
+        },
+        {
+          "key": "quantity",
+          "label": "Quantidade / participantes",
+          "type": "integer"
+        },
+        {
+          "key": "amount",
+          "label": "Custo em centavos (BRL)",
+          "type": "money",
+          "currency": "BRL"
+        },
+        {
+          "key": "date",
+          "label": "Data do passeio",
+          "type": "date"
+        },
+        {
+          "key": "destination",
+          "label": "Destino",
+          "type": "short_text"
+        },
+        {
+          "key": "itinerary",
+          "label": "Roteiro e horários",
+          "type": "long_text"
+        },
+        {
+          "key": "risks",
+          "label": "Riscos e medidas de segurança",
+          "type": "long_text"
+        }
+      ]
+    },
+    {
+      "key": "order",
+      "label": "Transporte",
+      "classification": "internal",
+      "access": [
+        {
+          "role": "requester",
+          "scope": "requester",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "head",
+          "scope": "workflow_department",
+          "department_binding": "head_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "finance",
+          "scope": "workflow_department",
+          "department_binding": "finance_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "operations",
+          "scope": "workflow_department",
+          "department_binding": "operations_department",
+          "read": true,
+          "edit_stages": [
+            "purchase"
+          ]
+        },
+        {
+          "role": "safety",
+          "scope": "workflow_department",
+          "department_binding": "safety_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "reverser",
+          "scope": "workflow_department",
+          "department_binding": "finance_department",
+          "read": true,
+          "edit_stages": []
+        }
+      ],
+      "fields": [
+        {
+          "key": "reference",
+          "label": "Referência fictícia / transporte",
+          "type": "short_text"
+        }
+      ]
+    },
+    {
+      "key": "safety",
+      "label": "Segurança",
+      "classification": "internal",
+      "access": [
+        {
+          "role": "requester",
+          "scope": "requester",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "head",
+          "scope": "workflow_department",
+          "department_binding": "head_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "finance",
+          "scope": "workflow_department",
+          "department_binding": "finance_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "operations",
+          "scope": "workflow_department",
+          "department_binding": "operations_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "safety",
+          "scope": "workflow_department",
+          "department_binding": "safety_department",
+          "read": true,
+          "edit_stages": [
+            "safety"
+          ]
+        },
+        {
+          "role": "reverser",
+          "scope": "workflow_department",
+          "department_binding": "finance_department",
+          "read": true,
+          "edit_stages": []
+        }
+      ],
+      "fields": [
+        {
+          "key": "confirmed",
+          "label": "Medidas de segurança verificadas",
+          "type": "boolean"
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "key": "draft",
+      "label": "Proposta",
+      "initial": true,
+      "terminal": false
+    },
+    {
+      "key": "academic",
+      "label": "Análise pedagógica",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "finance",
+      "label": "Aprovação financeira",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "purchase",
+      "label": "Organização do transporte",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "safety",
+      "label": "Análise de segurança",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "complete",
+      "label": "Aprovado",
+      "initial": false,
+      "terminal": true
+    },
+    {
+      "key": "cancelled",
+      "label": "Cancelada",
+      "initial": false,
+      "terminal": true
+    }
+  ],
+  "creation": {
+    "roles": [
+      "requester"
+    ]
+  },
+  "transitions": [
+    {
+      "key": "submit",
+      "label": "Enviar para análise",
+      "from": "draft",
+      "to": "academic",
+      "actors": [
+        {
+          "role": "requester",
+          "scope": "requester"
+        }
+      ],
+      "required_fields": [
+        "request.summary",
+        "request.justification",
+        "request.quantity",
+        "request.amount",
+        "request.date",
+        "request.destination",
+        "request.itinerary",
+        "request.risks"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [],
+      "guard": {
+        "op": "all",
+        "args": [
+          {
+            "op": "gt",
+            "field": "request.amount",
+            "value": 0
+          },
+          {
+            "op": "gt",
+            "field": "request.quantity",
+            "value": 0
+          }
+        ]
+      },
+      "department_binding": "head_department"
+    },
+    {
+      "key": "academic_approve",
+      "label": "Aprovar proposta",
+      "from": "academic",
+      "to": "finance",
+      "actors": [
+        {
+          "role": "head",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [],
+      "guard": null,
+      "department_binding": "finance_department"
+    },
+    {
+      "key": "reserve",
+      "label": "Reservar orçamento",
+      "from": "finance",
+      "to": "purchase",
+      "actors": [
+        {
+          "role": "finance",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [],
+      "guard": null,
+      "department_binding": "operations_department",
+      "finance": {
+        "operation": "reserve",
+        "account_binding": "shared_budget",
+        "amount_field": "request.amount"
+      },
+      "finance_sensitive": true
+    },
+    {
+      "key": "order",
+      "label": "Confirmar transporte",
+      "from": "purchase",
+      "to": "safety",
+      "actors": [
+        {
+          "role": "operations",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [
+        "order.reference"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [],
+      "guard": null,
+      "department_binding": "safety_department"
+    },
+    {
+      "key": "approve",
+      "label": "Aprovar segurança e passeio",
+      "from": "safety",
+      "to": "complete",
+      "actors": [
+        {
+          "role": "safety",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [
+        "safety.confirmed"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [],
+      "guard": {
+        "op": "eq",
+        "field": "safety.confirmed",
+        "value": true
+      },
+      "finance": {
+        "operation": "post",
+        "account_binding": "shared_budget",
+        "amount_field": "request.amount"
+      }
+    },
+    {
+      "key": "cancel_draft",
+      "label": "Cancelar com motivo",
+      "from": "draft",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "requester",
+          "scope": "requester"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": [],
+      "guard": null,
+      "finance": {
+        "operation": "release",
+        "account_binding": "shared_budget"
+      }
+    },
+    {
+      "key": "cancel_academic",
+      "label": "Cancelar com motivo",
+      "from": "academic",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "head",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": [],
+      "guard": null,
+      "finance": {
+        "operation": "release",
+        "account_binding": "shared_budget"
+      }
+    },
+    {
+      "key": "revise_academic",
+      "label": "Revisar proposta e renovar aprovações",
+      "from": "academic",
+      "to": "draft",
+      "actors": [
+        {
+          "role": "head",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "forward",
+      "actions": [],
+      "guard": null,
+      "department_binding": "head_department",
+      "finance": {
+        "operation": "release",
+        "account_binding": "shared_budget"
+      }
+    },
+    {
+      "key": "cancel_finance",
+      "label": "Cancelar com motivo",
+      "from": "finance",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "finance",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": [],
+      "guard": null,
+      "finance": {
+        "operation": "release",
+        "account_binding": "shared_budget"
+      }
+    },
+    {
+      "key": "revise_finance",
+      "label": "Revisar proposta e renovar aprovações",
+      "from": "finance",
+      "to": "draft",
+      "actors": [
+        {
+          "role": "finance",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "forward",
+      "actions": [],
+      "guard": null,
+      "department_binding": "head_department",
+      "finance": {
+        "operation": "release",
+        "account_binding": "shared_budget"
+      }
+    },
+    {
+      "key": "cancel_purchase",
+      "label": "Cancelar com motivo",
+      "from": "purchase",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "operations",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": [],
+      "guard": null,
+      "finance": {
+        "operation": "release",
+        "account_binding": "shared_budget"
+      }
+    },
+    {
+      "key": "revise_purchase",
+      "label": "Revisar proposta e renovar aprovações",
+      "from": "purchase",
+      "to": "draft",
+      "actors": [
+        {
+          "role": "operations",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "forward",
+      "actions": [],
+      "guard": null,
+      "department_binding": "head_department",
+      "finance": {
+        "operation": "release",
+        "account_binding": "shared_budget"
+      }
+    },
+    {
+      "key": "cancel_safety",
+      "label": "Cancelar com motivo",
+      "from": "safety",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "safety",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": [],
+      "guard": null,
+      "finance": {
+        "operation": "release",
+        "account_binding": "shared_budget"
+      }
+    },
+    {
+      "key": "revise_safety",
+      "label": "Revisar proposta e renovar aprovações",
+      "from": "safety",
+      "to": "draft",
+      "actors": [
+        {
+          "role": "safety",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "forward",
+      "actions": [],
+      "guard": null,
+      "department_binding": "head_department",
+      "finance": {
+        "operation": "release",
+        "account_binding": "shared_budget"
+      }
+    },
+    {
+      "key": "reverse_complete",
+      "label": "Estornar com crédito explícito",
+      "from": "complete",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "reverser",
+          "scope": "workflow_department",
+          "department_binding": "finance_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "reopening",
+      "actions": [],
+      "guard": null,
+      "finance": {
+        "operation": "reverse",
+        "account_binding": "shared_budget"
+      },
+      "finance_sensitive": true
+    }
+  ],
+  "bindings": [
+    {
+      "key": "head_department",
+      "type": "department",
+      "label": "Coordenação"
+    },
+    {
+      "key": "finance_department",
+      "type": "department",
+      "label": "Financeiro"
+    },
+    {
+      "key": "operations_department",
+      "type": "department",
+      "label": "Operações"
+    },
+    {
+      "key": "safety_department",
+      "type": "department",
+      "label": "Direção"
+    },
+    {
+      "key": "shared_budget",
+      "type": "budget",
+      "label": "Orçamento compartilhado"
+    }
+  ],
+  "assignment": {
+    "department_binding": "head_department"
+  },
+  "views": [
+    {
+      "key": "table",
+      "label": "Solicitações por etapa",
+      "type": "table",
+      "columns": [
+        "stage",
+        "request.summary",
+        "request.amount"
+      ]
+    },
+    {
+      "key": "board",
+      "label": "Gargalos por etapa",
+      "type": "board",
+      "columns": [
+        "stage",
+        "request.summary"
+      ]
+    },
+    {
+      "key": "assignments",
+      "label": "Atribuições por departamento",
+      "type": "assignments",
+      "columns": [
+        "assigned_department",
+        "stage",
+        "request.summary"
+      ]
+    },
+    {
+      "key": "calendar",
+      "label": "Calendário de passeios propostos e aprovados",
+      "type": "calendar",
+      "columns": [
+        "request.date",
+        "stage",
+        "request.destination"
+      ]
+    }
+  ]
+}

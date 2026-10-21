@@ -4,6 +4,8 @@ InstantFlow is a general-purpose, multi-organization workflow platform built wit
 
 ## Current delivery
 
+Sprint 05 adds shared-budget reservations, audited purchasing and reversals, partial receiving, field-trip prerequisites, live authorized budgets, calendar agendas and department assignments. Open **Orçamentos** and **Solicitações**. See [finance walkthrough and limits](docs/finance.md).
+
 Sprint 04 adds invitation-only guardian access, a separate parent enrollment projection, quarantined private documents, school-local verification, department handoffs and simulated payment/provisioning retry. Open **Matrículas**. See [enrollment and private documents](docs/enrollment.md) for the demo walkthrough, limits and setup.
 
 Sprint 03 delivers the workflow editor, revision-safe drafts, immutable publication, configured request tables/boards, JSON format 1.0 import/export, and a PT-BR authoring guide. Open **Modelos de fluxo** as a local administrator. See [editor and interchange](docs/template-editor.md) and the [authoring guide](design/workflow_authoring_guide.pt-BR.md).
@@ -16,7 +18,7 @@ Sprints 00 and 01 are implemented. Sprint 01 adds validated immutable workflow v
 
 The demonstration includes Escola Horizonte and Escola Aurora. The same `admin@escola.example` account is an administrator in Horizonte and a collaborator in Aurora; `gestao@aurora.example` administers Aurora. Global sessions last 24 hours. Existing-account recipients sign in before accepting local invitations; credentials and other memberships are preserved. Both themes use the supplied tokens and logos. Invitation delivery remains explicitly simulated with one-time 48-hour codes and no outbound email.
 
-The enrollment parent portal and private files are implemented. School-specific incidents, budgets, purchasing and field trips belong to later sprints. This application is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
+The enrollment parent portal and private files are implemented. Confidential incident workflows belong to Sprint 06. This application is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
 
 ## Prerequisites and setup
 

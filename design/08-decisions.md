@@ -10,7 +10,7 @@
 | D-04 | Confirmed | Language and stack | PT-BR; Elixir/Phoenix LiveView; non-authoritative JS | Foundation |
 | D-05 | Adopted for synthetic demonstration — 2026-10-21 | Guardian verification | Staff invitation and separate manual verification; independent multiple guardians | Sprint 04 |
 | D-06 | Open | Incident/support visibility | Proposed: assigned counselor-private notes; curated parent communication | Sprint 06 |
-| D-07 | Open | Budget/cancellation/price changes | Proposed: reserve at finance approval; commit at order; explicit reversals | Sprint 05 |
+| D-07 | Adopted for synthetic demonstration — 2026-10-21 | Budget/cancellation/price changes | Reserve at finance approval; post at order (trip final approval); full audited reversal; changes restart review | Sprint 05 |
 | D-08 | Adopted for implementation | Parallel branches now? | Sequential stages, independent sections | Sprint 01 |
 | D-09 | Open | Hosting/load/timezone | Proposed: shared deployment; 10 organizations, 50 concurrent staff/10,000 tickets total; per-organization timezone default America/Sao_Paulo | Sprint 07 |
 | D-10 | Adopted for synthetic demonstration — 2026-10-21 | Parent self-registration? | Invitations only; no anonymous uploads | Sprint 04 |
@@ -56,3 +56,9 @@ Under the user's authorization to continue after Sprint 03, D-05 and D-10–12 a
 Files are stored privately in tenant-owned PostgreSQL bytea rows, never the static tree. The default is PDF/PNG/JPEG, 5 MiB per file, 20 ready/quarantined objects per ticket and 30 days of demonstration retention. Magic/structure checks, digest verification and a separate staff release gate are implemented. This is not antivirus scanning, proof of document authenticity, or a production retention policy. Expired objects immediately fail download/guard checks; active-tenant polling clears retained content. Suspended tenants and backups require operator retention handling. Real student data, guardian disputes, production malware scanning and retention ownership still require a separate readiness decision.
 
 The template uses additive validated format-1.0 vocabulary (`guardian`, `workflow_department`, transition `department_binding`, `simulate_payment`). No directory lookup, Python execution or real provider call is introduced. See [Sprint 04 evidence](../sprint_plan/sprint_04.md) and [operating notes](../docs/enrollment.md).
+
+## Sprint 05 implementation — 2026-10-21
+
+Under authorization to develop Sprint 05, D-07 adopts the proposed accounting direction as an implementation default, not a separately supplied product answer. Available BRL cents equal allocation minus reservations minus posted spending. Finance reserves; purchasing posts at order; trips post at final safety approval after transport is recorded. Pre-order cancellation releases once. Revised proposals release and repeat all approvals, clearing downstream work. Post-order cancellation requires a separately privileged, reasoned full reversal attesting a fictional credit. Allocation and reversal permissions are distinct from finance approval; no finance-sensitive self-approval bypass exists.
+
+Each requisition tracks one quantified item or homogeneous group with cumulative receiving; heterogeneous units use separate requests. Partial credits/settlements, tax, stock, provider booking and post-order price amendments remain outside the demonstration. Calendar views are date-only agendas, scoped/paginated with explicit stage labels; assignment views report current department and boards report scoped bottlenecks. See [finance operating notes](../docs/finance.md) and [Sprint 05 evidence](../sprint_plan/sprint_05.md).

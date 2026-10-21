@@ -1055,6 +1055,184 @@ defmodule Instantflow.RuntimeRoleTest do
     Identity.scope(user.id, c.a.id)
   end
 
+  test "shared-budget races across templates serialize on one account with independent finance actors",
+       c do
+    alias Instantflow.{Access, Finance}
+    alias Instantflow.Finance.{Account, Entry}
+    alias Instantflow.WorkflowFixtures, as: W
+    {:ok, _} = Access.grant(c.a_scope, c.a_scope.id, c.a_scope.department_id, "teacher")
+    {:ok, _} = Access.grant(c.a_scope, c.a_scope.id, c.a_scope.department_id, "head")
+    requester = Identity.scope(c.a_scope.user_id, c.a.id)
+    first = reviewer(c, "finance1")
+    second = reviewer(c, "finance2")
+
+    for actor <- [first, second], role <- ~w(finance finance_allocator) do
+      {:ok, _} = Access.grant(c.a_scope, actor.id, actor.department_id, role)
+    end
+
+    {:ok, account} = Finance.create_account(c.a_scope, c.a_scope.department_id, "Orçamento")
+    {:ok, _} = Finance.allocate(first, account.id, 10_000, "Dotação", "allocation")
+
+    deps =
+      Map.new(~w(head finance operations safety), &{&1 <> "_department", c.a_scope.department_id})
+
+    commands =
+      for {template, actor} <- [{"requisition", first}, {"field_trip", second}] do
+        {:ok, version} = Finance.install(c.a_scope, template, deps, account.id)
+        f = %{requester: requester, head: requester, version: version}
+        id = Instantflow.FinanceFixtures.request(f)
+        {actor, W.transition_command(actor, id, "reserve")}
+      end
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: make_ref()
+        )
+      )
+
+    Postgrex.query!(connection, "BEGIN")
+
+    Postgrex.query!(connection, "SELECT id FROM budget_accounts WHERE id=$1 FOR UPDATE", [
+      account.id
+    ])
+
+    supervisor = start_supervised!(Supervisor.child_spec(Task.Supervisor, id: make_ref()))
+
+    tasks =
+      for {actor, command} <- commands do
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          Repo.put_dynamic_repo(c.runtime)
+          WorkflowRuntime.command(actor, command)
+        end)
+      end
+
+    assert wait_for_waiters(connection, c.database, 2, 1000)
+    Postgrex.query!(connection, "COMMIT")
+    results = Enum.map(tasks, &Task.await/1)
+    assert Enum.count(results, &match?({:ok, _}, &1)) == 1
+    assert {:error, :insufficient_budget} in results
+
+    assert %Account{reserved: 6000, spent: 0, allocated: 10_000} =
+             OperatorRepo.get!(Account, account.id)
+
+    assert OperatorRepo.aggregate(
+             from(e in Entry, where: e.account_id == ^account.id and e.operation == "reserve"),
+             :count
+           ) == 1
+
+    winner =
+      Enum.find(commands, fn {_, command} ->
+        OperatorRepo.get!(Instantflow.WorkflowRuntime.Ticket, command["ticket_id"]).stage ==
+          "purchase"
+      end)
+
+    {actor, command} = winner
+    before_count = count_receipts(command["ticket_id"])
+    assert {:ok, _} = WorkflowRuntime.command(actor, command)
+    assert count_receipts(command["ticket_id"]) == before_count
+    assert [%{available: 4000}] = Finance.accounts(first)
+    assert [%{available: 4000}] = Finance.accounts(second)
+  end
+
+  test "shared finance identity cannot bind or charge another tenant account and raw RLS stays closed",
+       c do
+    alias Instantflow.{Access, Finance}
+    alias Instantflow.Finance.{Account, Entry, Hold}
+    {:ok, _} = Access.grant(c.a_scope, c.a_scope.id, c.a_scope.department_id, "finance_allocator")
+    {:ok, account_a} = Finance.create_account(c.a_scope, c.a_scope.department_id, "Orçamento")
+    {:ok, _} = Finance.allocate(c.a_scope, account_a.id, 9000, "Dotação A", "same-key")
+
+    OperatorRepo.get!(Membership, c.b_scope.id)
+    |> Ecto.Changeset.change(role: "admin")
+    |> OperatorRepo.update!()
+
+    b = Identity.scope(c.b_scope.user_id, c.b.id)
+    {:ok, _} = Access.grant(b, b.id, b.department_id, "finance_allocator")
+    {:ok, account_b} = Finance.create_account(b, b.department_id, "Orçamento")
+    {:ok, _} = Finance.allocate(b, account_b.id, 3000, "Dotação B", "same-key")
+    assert [%{allocated: 3000}] = Finance.accounts(b)
+    assert [%{allocated: 9000}] = Finance.accounts(c.a_scope)
+    assert {:error, :invalid_budget} = Finance.allocate(b, account_a.id, 10, "Forjado", "foreign")
+    deps = Map.new(~w(head finance operations safety), &{&1 <> "_department", b.department_id})
+    assert {:error, :invalid_bindings} = Finance.install(b, "requisition", deps, account_a.id)
+    assert Repo.all(Account) == []
+    assert Repo.all(Entry) == []
+    assert Repo.all(Hold) == []
+
+    assert {:ok, []} =
+             Tenant.transaction(b, fn _ ->
+               Repo.all(from e in Entry, where: e.account_id == ^account_a.id)
+             end)
+
+    assert {:ok, []} =
+             Tenant.transaction(b, fn _ ->
+               Repo.all(from a in Account, where: a.id == ^account_a.id)
+             end)
+
+    assert Finance.entries(b, account_a.id) == []
+    {:ok, _} = Access.grant(c.a_scope, c.a_scope.id, c.a_scope.department_id, "finance")
+    {:ok, _} = Access.grant(b, b.id, b.department_id, "finance")
+
+    assert {:error, :invalid_budget} =
+             Finance.allocate(b, account_a.id, 10, "Forjado com ambos os perfis", "foreign2")
+
+    assert_raise Postgrex.Error, fn ->
+      Tenant.transaction(b, fn _ ->
+        Repo.query!(
+          "INSERT INTO budget_holds(organization_id,account_id,ticket_id,amount,status) VALUES($1,$2,$3,1,'reserved')",
+          [b.organization_id, account_a.id, c.ticket_id]
+        )
+      end)
+    end
+
+    assert_raise Postgrex.Error, fn ->
+      Tenant.transaction(c.a_scope, fn _ -> Repo.update_all(Entry, set: [amount: 1]) end)
+    end
+
+    assert {:error, :not_found} = WorkflowRuntime.get(b, c.ticket_id)
+    assert WorkflowRuntime.search(b).total == 0
+
+    for {admin, scope} <- [{c.a_scope, c.a_scope}, {b, b}], role <- ~w(teacher head) do
+      {:ok, _} = Access.grant(admin, scope.id, scope.department_id, role)
+    end
+
+    deps_a =
+      Map.new(~w(head finance operations safety), &{&1 <> "_department", c.a_scope.department_id})
+
+    {:ok, trip_a} = Finance.install(c.a_scope, "field_trip", deps_a, account_a.id)
+    {:ok, trip_b} = Finance.install(b, "field_trip", deps, account_b.id)
+
+    ticket_a =
+      Instantflow.FinanceFixtures.request(%{
+        requester: c.a_scope,
+        head: c.a_scope,
+        version: trip_a
+      })
+
+    ticket_b =
+      Instantflow.FinanceFixtures.request(%{requester: b, head: b, version: trip_b}, 2000)
+
+    assert Instantflow.WorkflowCatalog.Views.search(b, trip_a.workflow_id, "calendar").total == 0
+
+    assert [%{id: ^ticket_b}] =
+             Instantflow.WorkflowCatalog.Views.search(b, trip_b.workflow_id, "calendar").rows
+
+    assert WorkflowRuntime.search(b).counts == %{"finance" => 1}
+    assert {:error, :not_found} = WorkflowRuntime.get(b, ticket_a)
+
+    assert {:error, :not_found} =
+             WorkflowRuntime.command(b, %{
+               "operation" => "transition",
+               "key" => "foreign-ticket",
+               "ticket_id" => ticket_a,
+               "transition" => "reserve",
+               "expected_revision" => 1,
+               "section_revisions" => %{},
+               "reason" => nil
+             })
+  end
+
   defp count_receipts(id),
     do:
       OperatorRepo.aggregate(

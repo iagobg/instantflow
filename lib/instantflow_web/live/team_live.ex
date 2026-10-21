@@ -100,6 +100,8 @@ defmodule InstantflowWeb.TeamLive do
       {"Admissões", "admissions"},
       {"Coordenação", "head"},
       {"Financeiro", "finance"},
+      {"Alocação financeira", "finance_allocator"},
+      {"Estorno financeiro", "finance_reverser"},
       {"Operações", "operations"},
       {"TI", "it"},
       {"Direção", "dean"},

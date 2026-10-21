@@ -121,7 +121,12 @@ defmodule Instantflow.WorkflowRuntime do
     Tenant.read(
       actor,
       fn scope ->
-        tickets = list_scoped(scope)
+        tickets =
+          list_scoped(scope)
+          |> Enum.filter(
+            &(is_nil(filters["workflow_id"]) or &1.workflow_id == filters["workflow_id"])
+          )
+
         counts = Enum.frequencies_by(tickets, & &1.stage)
 
         stage_labels =
@@ -173,6 +178,8 @@ defmodule Instantflow.WorkflowRuntime do
     version = ticket && Repo.get(Version, ticket.workflow_version_id)
 
     if version do
+      Instantflow.Finance.broadcast(organization_id)
+
       Repo.all(
         from m in Instantflow.Identity.Membership,
           where: m.organization_id == ^organization_id and m.active
@@ -313,7 +320,16 @@ defmodule Instantflow.WorkflowRuntime do
       {:error, errors} -> Repo.rollback({:invalid_values, errors})
     end
 
+    if "finance" in version.definition["capabilities"] do
+      hold = Repo.get_by(Instantflow.Finance.Hold, ticket_id: ticket.id)
+      sensitive = Enum.any?(definition["fields"], &(&1["type"] == "money"))
+
+      if hold && hold.status in ~w(reserved posted) && sensitive,
+        do: Repo.rollback(:renew_finance_review)
+    end
+
     Instantflow.PrivateDocuments.validate_values!(actor, ticket, definition, c["values"])
+    Instantflow.Finance.validate_values!(version, sections, section, c["values"])
 
     section
     |> Ecto.Changeset.change(values: c["values"], revision: section.revision + 1)
@@ -385,12 +401,28 @@ defmodule Instantflow.WorkflowRuntime do
     if transition["kind"] == "resubmission" and ticket.return_stage != transition["to"],
       do: Repo.rollback(:invalid_return)
 
+    if transition["finance"] && transition["finance"]["operation"] == "release" &&
+         Enum.any?(
+           version.definition["stages"],
+           &(&1["initial"] && &1["key"] == transition["to"])
+         ) do
+      for section <- sections,
+          definition = Enum.find(version.definition["sections"], &(&1["key"] == section.key)),
+          not Enum.any?(definition["fields"], &(&1["type"] == "money")) do
+        section
+        |> Ecto.Changeset.change(values: %{}, revision: section.revision + 1)
+        |> Repo.update!()
+      end
+    end
+
     return_stage =
       case transition["kind"] do
         "correction" -> ticket.stage
         "resubmission" -> nil
         _ -> ticket.return_stage
       end
+
+    Instantflow.Finance.effect!(actor, ticket, version, transition["finance"], values, reason)
 
     updated =
       ticket

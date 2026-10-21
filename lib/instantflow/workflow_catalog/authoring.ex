@@ -196,7 +196,7 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
     do: Map.merge(base(v), %{"initial" => v.initial, "terminal" => v.terminal})
 
   defp build("roles", v, _, _), do: base(v)
-  defp build("bindings", v, _, _), do: Map.put(base(v), "type", "department")
+  defp build("bindings", v, old, _), do: Map.put(base(v), "type", old["type"] || "department")
 
   defp build("sections", v, old, _),
     do:
@@ -269,6 +269,8 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
         "actions" => old["actions"] || [],
         "guard" => guard(v, d)
       })
+
+    item = if old["finance"], do: Map.put(item, "finance", old["finance"]), else: item
 
     if v.department_binding in [nil, ""],
       do: item,

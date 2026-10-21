@@ -120,6 +120,7 @@ defmodule InstantflowWeb.RequestsLive do
       view_options: Enum.map(options, &{&1.label, &1.id}),
       view_columns: result.columns,
       view_total: result.total,
+      calendar?: Enum.any?(result.rows, &(&1.type == "calendar")),
       board?: Enum.any?(result.rows, &(&1.type == "board")),
       stage_positions: stage_positions,
       view_stage_count: max(length(result.stages), 1)
@@ -254,11 +255,24 @@ defmodule InstantflowWeb.RequestsLive do
             class="configured-board"
             style={"grid-template-columns: repeat(#{@view_stage_count}, minmax(240px, 1fr))"}
           >
-            <h3 :for={{id, stage} <- @streams.view_stages} id={id}>{stage.label}</h3>
+            <h3 :for={{id, stage} <- @streams.view_stages} id={id}>{stage.label} · {stage.count}</h3>
           </div>
         </div>
+        <div :if={@calendar?} id="configured-calendar" phx-update="stream" class="foundation-grid">
+          <article :for={{id, row} <- @streams.configured_rows} id={id} class="card">
+            <h3><time>{row.date || "Sem data"}</time></h3><span class="badge">{row.stage_label}</span>
+            <p>
+              <.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes/#{row.id}"}>Solicitação #{row.id}</.link>
+            </p>
+            <dl>
+              <div :for={c <- row.cells}>
+                <dt>{c.label}</dt><dd>{display(c.value)}</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
         <div class="table-scroll">
-          <table :if={!@board?} id="configured-table">
+          <table :if={!@board? && !@calendar?} id="configured-table">
             <thead>
               <tr>
                 <th>Solicitação</th><th :for={column <- @view_columns} scope="col">{column.label}</th>

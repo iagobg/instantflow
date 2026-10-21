@@ -5,7 +5,7 @@ defmodule Instantflow.Access do
   alias Instantflow.Access.Grant
   alias Instantflow.Identity.{Department, Membership}
 
-  @roles ~w(teacher admissions head finance operations it dean counselor)
+  @roles ~w(teacher admissions head finance finance_allocator finance_reverser operations it dean counselor)
   def roles, do: @roles
   def binding_roles, do: ["admin", "staff", "parent" | @roles]
 

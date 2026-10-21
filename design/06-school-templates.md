@@ -40,14 +40,14 @@ This demonstrates triage; it is not a guaranteed emergency alert service.
 
 **Solicitada → Aprovação da área → Análise orçamentária → Compra → Recebimento → Concluída**.
 
-Teacher supplies lines, quantities, justification, amount, department. Head approves; finance reserves funds; purchasing records simulated order; receiving records deliveries. Partial delivery stays at “Recebimento”; complete delivery enables closure. Price increases beyond reservation return to approval.
+Teacher supplies lines, quantities, justification, amount, department. Head approves; finance reserves funds; purchasing records simulated order; receiving records deliveries. Partial delivery stays at “Recebimento”; complete delivery enables closure. Pre-order price/quantity/specification changes release the reservation and restart academic/finance approval. After ordering, a full explicit reversal and a new request are required. Each request tracks one quantified item or homogeneous group; use separate requests for heterogeneous units.
 
-Proposed accounting, pending D-07:
+Accounting adopted for the synthetic demonstration under D-07:
 
 - Available = allocated − active reservations − committed spend.
 - Finance approval reserves atomically; order confirmation converts reservation to committed spend without double subtraction.
 - Pre-order cancellation releases once. Post-order cancellation requires explicit reversal/credit.
-- Allocation/reversal permissions are distinct and audited.
+- Allocation/reversal permissions are distinct and audited. Trips post at final safety approval; their earlier finance review reserves funds.
 - Trips and requisitions may share accounts; protection applies across templates.
 
 Views: table, Kanban, authorized live budgets. Demo: two individually affordable but jointly unaffordable requests race; only one reserves, and permitted viewers converge on the same balance.

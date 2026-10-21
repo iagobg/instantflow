@@ -83,13 +83,14 @@ defmodule Instantflow.WorkflowCatalog do
         mode
       )
       when is_map(roles) and is_map(departments) do
-    Map.keys(bindings) |> Enum.sort() == ["departments", "roles"] and
+    Enum.all?(Map.keys(bindings), &(&1 in ~w(departments roles budgets))) and
       binding_keys?(roles, d["role_requirements"], mode) and
       Enum.all?(roles, fn {_, list} ->
         is_list(list) and list != [] and
           Enum.all?(list, &(&1 in Instantflow.Access.binding_roles()))
       end) and
-      binding_keys?(departments, d["bindings"], mode) and
+      binding_keys?(departments, Enum.filter(d["bindings"], &(&1["type"] == "department")), mode) and
+      budget_bindings?(d, bindings, organization_id, mode) and
       Enum.all?(departments, fn {_, id} ->
         is_integer(id) and
           Repo.exists?(
@@ -100,6 +101,20 @@ defmodule Instantflow.WorkflowCatalog do
   end
 
   def valid_bindings?(_, _, _, _), do: false
+
+  defp budget_bindings?(d, bindings, organization_id, mode) do
+    budgets = Map.get(bindings, "budgets", %{})
+
+    is_map(budgets) and
+      binding_keys?(budgets, Enum.filter(d["bindings"], &(&1["type"] == "budget")), mode) and
+      Enum.all?(budgets, fn {_, id} ->
+        is_integer(id) and
+          Repo.exists?(
+            from b in Instantflow.Finance.Account,
+              where: b.id == ^id and b.organization_id == ^organization_id
+          )
+      end)
+  end
 
   defp binding_keys?(bindings, requirements, mode) do
     keys = Enum.map(requirements, & &1["key"])
