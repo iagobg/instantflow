@@ -1,6 +1,7 @@
 defmodule InstantflowWeb.RequestsLive do
   use InstantflowWeb, :live_view
   alias Instantflow.{WorkflowCatalog, WorkflowRuntime}
+  alias Instantflow.WorkflowCatalog.Views
 
   def mount(_params, _session, socket) do
     if connected?(socket),
@@ -16,6 +17,8 @@ defmodule InstantflowWeb.RequestsLive do
        page_title: "Solicitações",
        create_key: Ecto.UUID.generate(),
        filters: %{},
+       selected_view: "",
+       view_form: to_form(%{}, as: :view),
        filter_form: to_form(%{}, as: :filter),
        form: to_form(%{}, as: :request)
      )
@@ -32,6 +35,13 @@ defmodule InstantflowWeb.RequestsLive do
   def handle_event("page", %{"page" => page}, socket) do
     {:noreply,
      socket |> assign(:filters, Map.put(socket.assigns.filters, "page", page)) |> load()}
+  end
+
+  def handle_event("configured-view", %{"view" => %{"key" => key}}, socket) do
+    {:noreply,
+     socket
+     |> assign(selected_view: key, view_form: to_form(%{"key" => key}, as: :view))
+     |> load()}
   end
 
   def handle_event(event, _, socket) when event in ["reconcile", "heartbeat"],
@@ -82,7 +92,50 @@ defmodule InstantflowWeb.RequestsLive do
         end)
     )
     |> stream(:tickets, result.tickets, reset: true)
+    |> load_view()
   end
+
+  defp load_view(socket) do
+    options = Views.options(socket.assigns.current_scope)
+    selected = Enum.find(options, &(&1.id == socket.assigns.selected_view))
+
+    result =
+      if selected do
+        [id, key] = String.split(selected.id, ":", parts: 2)
+
+        Views.search(
+          socket.assigns.current_scope,
+          String.to_integer(id),
+          key,
+          socket.assigns.filters
+        )
+      else
+        %{rows: [], total: 0, columns: [], stages: []}
+      end
+
+    stage_positions = result.stages |> Enum.with_index(1) |> Map.new(fn {s, i} -> {s.id, i} end)
+
+    socket
+    |> assign(
+      view_options: Enum.map(options, &{&1.label, &1.id}),
+      view_columns: result.columns,
+      view_total: result.total,
+      board?: Enum.any?(result.rows, &(&1.type == "board")),
+      stage_positions: stage_positions,
+      view_stage_count: max(length(result.stages), 1)
+    )
+    |> stream(:configured_rows, result.rows, reset: true)
+    |> stream(:view_stages, result.stages, reset: true)
+  end
+
+  defp cell(row, key),
+    do: Enum.find_value(row.cells, "—", fn c -> if c.key == key, do: display(c.value) end)
+
+  defp display(nil), do: "—"
+  defp display(true), do: "Sim"
+  defp display(false), do: "Não"
+  defp display(list) when is_list(list), do: Enum.join(list, ", ")
+  defp display(value), do: to_string(value)
 
   def render(assigns) do
     ~H"""
@@ -176,6 +229,71 @@ defmodule InstantflowWeb.RequestsLive do
             phx-value-page={@result.page + 1}
           >Próxima</button>
         </nav>
+      </section>
+      <section id="configured-views" class="card template-section">
+        <h2>Visualizações do processo</h2><p>
+          Colunas e quadros seguem a versão de cada solicitação e suas permissões atuais.
+        </p>
+        <.form for={@view_form} id="configured-view-form" phx-submit="configured-view">
+          <.input
+            field={@view_form[:key]}
+            type="select"
+            label="Visualização"
+            options={@view_options}
+            prompt="Selecione um processo e uma visualização"
+          />
+          <button id="apply-configured-view" class="btn">Abrir visualização</button>
+        </.form>
+        <p id="configured-view-count">
+          {@view_total} resultado(s) autorizados · até 25 por página, conforme os filtros acima.
+        </p>
+        <div :if={@board?} class="table-scroll">
+          <div
+            id="view-stages"
+            phx-update="stream"
+            class="configured-board"
+            style={"grid-template-columns: repeat(#{@view_stage_count}, minmax(240px, 1fr))"}
+          >
+            <h3 :for={{id, stage} <- @streams.view_stages} id={id}>{stage.label}</h3>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table :if={!@board?} id="configured-table">
+            <thead>
+              <tr>
+                <th>Solicitação</th><th :for={column <- @view_columns} scope="col">{column.label}</th>
+              </tr>
+            </thead><tbody id="configured-rows" phx-update="stream">
+              <tr :for={{id, row} <- @streams.configured_rows} id={id}>
+                <td>
+                  <.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes/#{row.id}"}>#{row.id}</.link>
+                </td><td :for={column <- @view_columns}>{cell(row, column.key)}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div
+            :if={@board?}
+            id="configured-board-rows"
+            phx-update="stream"
+            class="configured-board"
+            style={"grid-template-columns: repeat(#{@view_stage_count}, minmax(240px, 1fr))"}
+          >
+            <article
+              :for={{id, row} <- @streams.configured_rows}
+              id={id}
+              class="card configured-card"
+              style={"grid-column: #{@stage_positions[row.stage]}"}
+            >
+              <h3>
+                <.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes/#{row.id}"}>Solicitação #{row.id}</.link>
+              </h3><p>{row.stage_label}</p><dl>
+                <div :for={c <- row.cells}>
+                  <dt>{c.label}</dt><dd>{display(c.value)}</dd>
+                </div>
+              </dl>
+            </article>
+          </div>
+        </div>
       </section>
     </Layouts.app>
     """

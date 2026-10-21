@@ -93,7 +93,22 @@ defmodule Instantflow.Identity do
 
   def invite(actor, attrs) do
     Tenant.transaction(actor, fn a ->
-      unless a.role == "admin", do: Repo.rollback(:forbidden)
+      unless a.role == "admin" or
+               (Instantflow.Access.role?(a, ["admissions"]) and attrs["role"] == "parent"),
+             do: Repo.rollback(:forbidden)
+
+      enrollment_id = attrs["enrollment_id"]
+
+      if attrs["role"] == "parent" do
+        unless is_integer(enrollment_id) and
+                 Repo.get_by(Instantflow.Enrollment.Record,
+                   id: enrollment_id,
+                   organization_id: a.organization_id
+                 ),
+               do: Repo.rollback(:forbidden)
+      else
+        if enrollment_id, do: Repo.rollback(:forbidden)
+      end
 
       department =
         Repo.get_by(Department,
@@ -108,6 +123,7 @@ defmodule Instantflow.Identity do
         organization_id: a.organization_id,
         department_id: department.id,
         invited_by_id: a.user_id,
+        enrollment_id: enrollment_id,
         token_hash: digest(token),
         expires_at: DateTime.add(now(), 172_800)
       }
@@ -177,6 +193,21 @@ defmodule Instantflow.Identity do
           on_conflict: :nothing,
           conflict_target: [:organization_id, :user_id]
         )
+
+        if invitation.enrollment_id do
+          member = Repo.get_by!(Membership, organization_id: id, user_id: user.id)
+          unless member.active, do: Repo.rollback(:forbidden)
+
+          Repo.insert!(
+            %Instantflow.Enrollment.GuardianLink{
+              organization_id: id,
+              enrollment_id: invitation.enrollment_id,
+              membership_id: member.id
+            },
+            on_conflict: :nothing,
+            conflict_target: [:enrollment_id, :membership_id]
+          )
+        end
 
         invitation |> Ecto.Changeset.change(accepted_at: now()) |> Repo.update!()
         audit(id, user.id, "invitation_accepted", "invitation:#{invitation.id}:accepted")

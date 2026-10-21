@@ -112,6 +112,97 @@ for {slug, school} <- [
         }
       })
   end
+
+  # Install independent copies and synthetic families through the same guarded APIs as the UI.
+  enrollment_departments =
+    for {key, name} <- [
+          {"admissions", "Secretaria"},
+          {"academic", "Coordenação"},
+          {"finance", "Financeiro"},
+          {"it", "Tecnologia"}
+        ],
+        into: %{} do
+      department =
+        OperatorRepo.get_by(Department, organization_id: organization.id, name: name) ||
+          OperatorRepo.insert!(%Department{organization_id: organization.id, name: name})
+
+      {key <> "_department", department.id}
+    end
+
+  {:ok, _} =
+    Instantflow.Access.grant(
+      admin,
+      admin.id,
+      enrollment_departments["admissions_department"],
+      "admissions"
+    )
+
+  if slug == "horizonte" do
+    for {email, binding, role} <- [
+          {"secretaria@escola.example", "admissions", "admissions"},
+          {"coordenacao@escola.example", "academic", "head"},
+          {"financeiro@escola.example", "finance", "finance"},
+          {"ti@escola.example", "it", "it"}
+        ] do
+      member = Identity.scope(OperatorRepo.get_by!(User, email: email).id, organization.id)
+
+      {:ok, _} =
+        Instantflow.Access.grant(
+          admin,
+          member.id,
+          enrollment_departments[binding <> "_department"],
+          role
+        )
+    end
+  end
+
+  unless OperatorRepo.get_by(Workflow, organization_id: organization.id, key: "enrollment") do
+    {:ok, _} = Instantflow.Enrollment.install(admin, enrollment_departments)
+  end
+
+  workflow = OperatorRepo.get_by!(Workflow, organization_id: organization.id, key: "enrollment")
+
+  for {key, email} <- [
+        {"a", "responsavel.a@escola.example"},
+        {"b", "responsavel.b@escola.example"}
+      ] do
+    {:ok, enrollment} =
+      Instantflow.Enrollment.create(admin, workflow.id, "seed:enrollment:" <> key)
+
+    existing = OperatorRepo.get_by(User, email: email)
+
+    member =
+      existing &&
+        OperatorRepo.get_by(Membership, user_id: existing.id, organization_id: organization.id)
+
+    link =
+      member &&
+        OperatorRepo.get_by(Instantflow.Enrollment.GuardianLink,
+          enrollment_id: enrollment.id,
+          membership_id: member.id
+        )
+
+    unless link do
+      {:ok, invitation} = Instantflow.Enrollment.invite(admin, enrollment.id, email)
+
+      {:ok, user} =
+        Identity.accept_invitation(
+          invitation.token,
+          %{"name" => "Responsável fictício " <> String.upcase(key), "password" => password},
+          existing
+        )
+
+      parent = Identity.scope(user.id, organization.id)
+
+      link =
+        OperatorRepo.get_by!(Instantflow.Enrollment.GuardianLink,
+          enrollment_id: enrollment.id,
+          membership_id: parent.id
+        )
+
+      {:ok, _} = Instantflow.Enrollment.verify(admin, link.id, true)
+    end
+  end
 end
 
 GenServer.stop(operator_pid)

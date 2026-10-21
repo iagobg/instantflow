@@ -1,8 +1,8 @@
 # InstantFlow design
 
-Status: planning draft · Updated: 2026-10-20
+Status: implementation through Sprint 03 · Updated: 2026-10-20
 
-Build a modular workflow application using Elixir and Phoenix LiveView. Demonstrate reuse through four school processes, internal collaboration, and a restricted parent portal.
+Build a general-purpose, multi-organization workflow platform using Elixir and Phoenix LiveView. Organizations across different sectors configure their own processes, forms, permissions, and live dashboards. Four school workflows provide the initial demonstration, including cross-department collaboration and an external-participant portal illustrated by parent access.
 
 ## Confirmed requirements
 
@@ -13,7 +13,7 @@ Build a modular workflow application using Elixir and Phoenix LiveView. Demonstr
 - Live dashboards, server-authoritative writes, concurrent users, granular permissions, and cross-department transitions are core.
 - Cover enrollment, field trips, incidents, and purchasing.
 
-The user additionally proposed template import/export and LLM-assisted authorship. This draft recommends including them through the same validated model as the editor.
+The user confirmed template import/export and an LLM authoring guide in Sprint 03. They use the same validated model as the editor.
 
 ## Document map
 
@@ -22,7 +22,7 @@ The user additionally proposed template import/export and LLM-assisted authorshi
 3. [Workflow engine](03-workflow-engine.md)
 4. [Permissions](04-permissions.md)
 5. [Concurrency and UX](05-concurrency-ux.md)
-6. [School templates](06-school-templates.md)
+6. [School demonstration templates](06-school-templates.md)
 7. [Verification](07-verification.md)
 8. [Decision register](08-decisions.md)
 9. [Import/export](09-template-interchange.md)
@@ -32,4 +32,6 @@ The user additionally proposed template import/export and LLM-assisted authorshi
 13. [Custom Python automation: judgment and staged scope](10-python-automation.md)
 14. [Organization isolation and migration](11-organizations.md)
 
-Confirmed means explicitly requested or answered. Proposed means a working design choice. Open questions have IDs in the decision register. Sprints 00 and 01 were implemented against the former single-organization scope. The application is not yet multi-organizational: Sprint 01A migrates that foundation before Sprint 02. Consult the sprint index for evidence. Sprints are increments without time commitments. The interchange example remains illustrative until schema/validator implementation. Python is a gated later extension, not an existing capability.
+Confirmed means explicitly requested or answered. Proposed means a working design choice. Open questions have IDs in the decision register. Sprints 00 and 01 were implemented against the former single-organization scope; Sprint 01A migrated the foundation to isolated organizations, followed by Sprint 02 collaboration and Sprint 03 authoring/interchange. Consult the sprint index for evidence. Sprints are increments without time commitments. The delivered schema, catalogue and examples define portable format 1.0. Python is a gated later extension, not an existing capability.
+
+Sprint 04 delivery: [enrollment operations and private documents](../docs/enrollment.md), with verified local guardian links, explicit parent projections and synthetic file limits. [Sprint evidence](../sprint_plan/sprint_04.md).

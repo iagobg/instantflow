@@ -10,6 +10,8 @@ First require an active organization and membership in that organization. All su
 
 Evaluate separately: discover/list, summary, detail, section read/edit, create, comment visibility, assign, transition by edge, attachment/download, history, configure, publish, import, and export. Stage access does not imply transition authority; ticket access does not imply all-field access. Context functions enforce policy independently of hidden controls.
 
+The platform policy model applies to any organization's roles and external participants. The following roles and parent portal illustrate it using the school demonstration; they are not mandatory roles or participant types for other organizations.
+
 | Actor | Proposed scope | Exclusions |
 |---|---|---|
 | Parent | Own enrollment/verified child, corrections, public messages | Other families, internal reviews, incident detail by default |

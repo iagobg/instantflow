@@ -1,0 +1,429 @@
+{
+  "format_version": "1.0",
+  "template_key": "enrollment",
+  "template_version": "1.0.0",
+  "locale": "pt-BR",
+  "name": "Matrícula de estudantes",
+  "description": "Demonstração com documentos fictícios e integrações simuladas.",
+  "capabilities": [
+    "core"
+  ],
+  "role_requirements": [
+    {
+      "key": "guardian",
+      "label": "Responsável"
+    },
+    {
+      "key": "admissions",
+      "label": "Secretaria"
+    },
+    {
+      "key": "academic",
+      "label": "Coordenação"
+    },
+    {
+      "key": "finance",
+      "label": "Financeiro"
+    },
+    {
+      "key": "it",
+      "label": "TI"
+    }
+  ],
+  "sections": [
+    {
+      "key": "application",
+      "label": "Dados da matrícula",
+      "classification": "restricted",
+      "access": [
+        {
+          "role": "guardian",
+          "scope": "guardian",
+          "read": true,
+          "edit_stages": [
+            "draft",
+            "correction"
+          ]
+        },
+        {
+          "role": "admissions",
+          "scope": "workflow_department",
+          "read": true,
+          "edit_stages": [
+            "draft",
+            "correction",
+            "documents"
+          ],
+          "department_binding": "admissions_department"
+        }
+      ],
+      "fields": [
+        {
+          "key": "student_name",
+          "label": "Nome do estudante",
+          "type": "short_text"
+        },
+        {
+          "key": "guardian_name",
+          "label": "Nome do responsável",
+          "type": "short_text"
+        },
+        {
+          "key": "school_year",
+          "label": "Ano/série",
+          "type": "short_text"
+        },
+        {
+          "key": "document",
+          "label": "Documento fictício",
+          "type": "attachment"
+        }
+      ]
+    },
+    {
+      "key": "placement",
+      "label": "Avaliação e enturmação interna",
+      "classification": "restricted",
+      "access": [
+        {
+          "role": "academic",
+          "scope": "workflow_department",
+          "read": true,
+          "edit_stages": [
+            "academic"
+          ],
+          "department_binding": "academic_department"
+        }
+      ],
+      "fields": [
+        {
+          "key": "class",
+          "label": "Turma",
+          "type": "short_text"
+        },
+        {
+          "key": "assessment",
+          "label": "Avaliação interna",
+          "type": "long_text"
+        }
+      ]
+    },
+    {
+      "key": "identity",
+      "label": "Identidade mínima para acesso",
+      "classification": "restricted",
+      "access": [
+        {
+          "role": "admissions",
+          "scope": "workflow_department",
+          "read": true,
+          "edit_stages": [
+            "documents"
+          ],
+          "department_binding": "admissions_department"
+        },
+        {
+          "role": "it",
+          "scope": "workflow_department",
+          "read": true,
+          "edit_stages": [],
+          "department_binding": "it_department"
+        }
+      ],
+      "fields": [
+        {
+          "key": "display_name",
+          "label": "Nome para acesso",
+          "type": "short_text"
+        }
+      ]
+    },
+    {
+      "key": "payment",
+      "label": "Pagamento simulado",
+      "classification": "restricted",
+      "access": [
+        {
+          "role": "finance",
+          "scope": "workflow_department",
+          "read": true,
+          "edit_stages": [
+            "payment"
+          ],
+          "department_binding": "finance_department"
+        }
+      ],
+      "fields": [
+        {
+          "key": "reference",
+          "label": "Referência fictícia",
+          "type": "short_text"
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "key": "draft",
+      "label": "Rascunho",
+      "initial": true,
+      "terminal": false
+    },
+    {
+      "key": "documents",
+      "label": "Verificação de documentos",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "correction",
+      "label": "Correção",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "academic",
+      "label": "Análise acadêmica",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "payment",
+      "label": "Confirmação do pagamento simulado",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "provisioning",
+      "label": "Criação de acesso simulado",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "complete",
+      "label": "Concluída",
+      "initial": false,
+      "terminal": true
+    }
+  ],
+  "creation": {
+    "roles": [
+      "admissions"
+    ]
+  },
+  "transitions": [
+    {
+      "key": "submit",
+      "label": "Enviar matrícula",
+      "from": "draft",
+      "to": "documents",
+      "actors": [
+        {
+          "role": "guardian",
+          "scope": "guardian"
+        }
+      ],
+      "required_fields": [
+        "application.student_name",
+        "application.guardian_name",
+        "application.school_year"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [],
+      "guard": {
+        "op": "present",
+        "field": "application.document"
+      }
+    },
+    {
+      "key": "correct",
+      "label": "Solicitar correção",
+      "from": "documents",
+      "to": "correction",
+      "actors": [
+        {
+          "role": "admissions",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "correction",
+      "actions": [],
+      "guard": null
+    },
+    {
+      "key": "resubmit",
+      "label": "Reenviar matrícula",
+      "from": "correction",
+      "to": "documents",
+      "actors": [
+        {
+          "role": "guardian",
+          "scope": "guardian"
+        }
+      ],
+      "required_fields": [
+        "application.student_name",
+        "application.guardian_name",
+        "application.school_year"
+      ],
+      "require_reason": false,
+      "kind": "resubmission",
+      "actions": [],
+      "guard": {
+        "op": "present",
+        "field": "application.document"
+      }
+    },
+    {
+      "key": "verify",
+      "label": "Verificar documentos",
+      "from": "documents",
+      "to": "academic",
+      "actors": [
+        {
+          "role": "admissions",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [
+        "application.document",
+        "identity.display_name"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [],
+      "guard": {
+        "op": "attachment_ready",
+        "field": "application.document"
+      },
+      "department_binding": "academic_department"
+    },
+    {
+      "key": "place",
+      "label": "Confirmar turma",
+      "from": "academic",
+      "to": "payment",
+      "actors": [
+        {
+          "role": "academic",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [
+        "placement.class"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [
+        {
+          "type": "simulate_payment",
+          "behavior": "success"
+        }
+      ],
+      "guard": null,
+      "department_binding": "finance_department"
+    },
+    {
+      "key": "paid",
+      "label": "Confirmar pagamento simulado",
+      "from": "payment",
+      "to": "provisioning",
+      "actors": [
+        {
+          "role": "finance",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [
+        "payment.reference"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [
+        {
+          "type": "simulate_provisioning",
+          "behavior": "fail_once"
+        }
+      ],
+      "guard": {
+        "op": "delivery_succeeded",
+        "kind": "simulate_payment"
+      },
+      "department_binding": "it_department",
+      "finance_sensitive": true
+    },
+    {
+      "key": "finish",
+      "label": "Concluir criação de acesso simulado",
+      "from": "provisioning",
+      "to": "complete",
+      "actors": [
+        {
+          "role": "it",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [
+        {
+          "type": "simulate_notification",
+          "behavior": "success"
+        }
+      ],
+      "guard": {
+        "op": "delivery_succeeded",
+        "kind": "simulate_provisioning"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "key": "admissions_department",
+      "type": "department",
+      "label": "Secretaria"
+    },
+    {
+      "key": "academic_department",
+      "type": "department",
+      "label": "Coordenação"
+    },
+    {
+      "key": "finance_department",
+      "type": "department",
+      "label": "Financeiro"
+    },
+    {
+      "key": "it_department",
+      "type": "department",
+      "label": "TI"
+    }
+  ],
+  "assignment": {
+    "department_binding": "admissions_department"
+  },
+  "views": [
+    {
+      "key": "incoming",
+      "label": "Matrículas por etapa",
+      "type": "table",
+      "columns": [
+        "stage",
+        "application.student_name",
+        "placement.class"
+      ]
+    },
+    {
+      "key": "board",
+      "label": "Etapas da matrícula",
+      "type": "board",
+      "columns": [
+        "stage"
+      ]
+    }
+  ]
+}

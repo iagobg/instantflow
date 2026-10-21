@@ -1,0 +1,850 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:instantflow:workflow:1.0",
+  "title": "InstantFlow workflow 1.0",
+  "description": "Portable definition only. Local bindings and operational records are excluded. Semantic validation is also required.",
+  "type": "object",
+  "properties": {
+    "format_version": {
+      "const": "1.0"
+    },
+    "template_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "template_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "locale": {
+      "const": "pt-BR"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 10000
+    },
+    "capabilities": {
+      "const": [
+        "core"
+      ]
+    },
+    "role_requirements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/role"
+      },
+      "minItems": 1,
+      "maxItems": 30
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/section"
+      },
+      "minItems": 1,
+      "maxItems": 100
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/stage"
+      },
+      "minItems": 1,
+      "maxItems": 100
+    },
+    "creation": {
+      "type": "object",
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "minItems": 1,
+          "maxItems": 30,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "roles"
+      ],
+      "additionalProperties": false
+    },
+    "transitions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/transition"
+      },
+      "minItems": 0,
+      "maxItems": 500
+    },
+    "bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/binding"
+      },
+      "minItems": 1,
+      "maxItems": 100
+    },
+    "assignment": {
+      "type": "object",
+      "properties": {
+        "department_binding": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        }
+      },
+      "required": [
+        "department_binding"
+      ],
+      "additionalProperties": false
+    },
+    "views": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/view"
+      },
+      "minItems": 0,
+      "maxItems": 20
+    }
+  },
+  "required": [
+    "format_version",
+    "template_key",
+    "template_version",
+    "locale",
+    "name",
+    "description",
+    "capabilities",
+    "role_requirements",
+    "sections",
+    "stages",
+    "creation",
+    "transitions",
+    "bindings",
+    "assignment",
+    "views"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "role": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "key",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "type": {
+          "const": "department"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "stage": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "initial": {
+          "type": "boolean"
+        },
+        "terminal": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "initial",
+        "terminal"
+      ],
+      "additionalProperties": false
+    },
+    "field": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "type": {
+              "enum": [
+                "short_text",
+                "long_text",
+                "integer",
+                "date",
+                "datetime",
+                "boolean",
+                "directory_reference",
+                "attachment"
+              ]
+            }
+          },
+          "required": [
+            "key",
+            "label",
+            "type"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "type": {
+              "const": "money"
+            },
+            "currency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            }
+          },
+          "required": [
+            "key",
+            "label",
+            "type",
+            "currency"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "type": {
+              "enum": [
+                "single_choice",
+                "multiple_choice"
+              ]
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "minItems": 1,
+              "maxItems": 100,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "key",
+            "label",
+            "type",
+            "options"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "access": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "scope": {
+          "enum": [
+            "requester",
+            "assigned_department",
+            "guardian",
+            "workflow_department"
+          ]
+        },
+        "read": {
+          "type": "boolean"
+        },
+        "edit_stages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "minItems": 0,
+          "maxItems": 100,
+          "uniqueItems": true
+        },
+        "department_binding": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        }
+      },
+      "required": [
+        "role",
+        "scope",
+        "read",
+        "edit_stages"
+      ],
+      "additionalProperties": false
+    },
+    "actor": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "scope": {
+          "enum": [
+            "requester",
+            "assigned_department",
+            "guardian",
+            "workflow_department"
+          ]
+        },
+        "department_binding": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        }
+      },
+      "required": [
+        "role",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "simulate_notification",
+            "simulate_provisioning",
+            "simulate_payment"
+          ]
+        },
+        "behavior": {
+          "enum": [
+            "success",
+            "fail_once",
+            "failure"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "behavior"
+      ],
+      "additionalProperties": false
+    },
+    "section": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "classification": {
+          "enum": [
+            "internal",
+            "restricted"
+          ]
+        },
+        "access": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/access"
+          },
+          "minItems": 1,
+          "maxItems": 100
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field"
+          },
+          "minItems": 0,
+          "maxItems": 300
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "classification",
+        "access",
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "guard": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "enum": [
+                "all",
+                "any"
+              ]
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/nonNullGuard"
+              },
+              "minItems": 1,
+              "maxItems": 20
+            }
+          },
+          "required": [
+            "op",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "delivery_succeeded"
+            },
+            "kind": {
+              "enum": [
+                "simulate_notification",
+                "simulate_provisioning",
+                "simulate_payment"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "enum": [
+                "present",
+                "attachment_ready"
+              ]
+            },
+            "field": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}\\.[a-z][a-z0-9_]{0,63}$"
+            }
+          },
+          "required": [
+            "op",
+            "field"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "enum": [
+                "eq",
+                "gt",
+                "gte",
+                "lt",
+                "lte",
+                "in"
+              ]
+            },
+            "field": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}\\.[a-z][a-z0-9_]{0,63}$"
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 10000
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  },
+                  "minItems": 1,
+                  "maxItems": 100
+                }
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "field",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "view": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "type": {
+          "enum": [
+            "table",
+            "board"
+          ]
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}\\.[a-z][a-z0-9_]{0,63}$"
+              },
+              {
+                "const": "stage"
+              }
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "type",
+        "columns"
+      ],
+      "additionalProperties": false
+    },
+    "nonNullGuard": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "enum": [
+                "all",
+                "any"
+              ]
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/nonNullGuard"
+              },
+              "minItems": 1,
+              "maxItems": 20
+            }
+          },
+          "required": [
+            "op",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "delivery_succeeded"
+            },
+            "kind": {
+              "enum": [
+                "simulate_notification",
+                "simulate_provisioning",
+                "simulate_payment"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "enum": [
+                "present",
+                "attachment_ready"
+              ]
+            },
+            "field": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}\\.[a-z][a-z0-9_]{0,63}$"
+            }
+          },
+          "required": [
+            "op",
+            "field"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "enum": [
+                "eq",
+                "gt",
+                "gte",
+                "lt",
+                "lte",
+                "in"
+              ]
+            },
+            "field": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}\\.[a-z][a-z0-9_]{0,63}$"
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 10000
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  },
+                  "minItems": 1,
+                  "maxItems": 100
+                }
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "field",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "transition": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "from": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "actors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/actor"
+          },
+          "minItems": 1,
+          "maxItems": 100
+        },
+        "required_fields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}\\.[a-z][a-z0-9_]{0,63}$"
+          },
+          "minItems": 0,
+          "maxItems": 300,
+          "uniqueItems": true
+        },
+        "require_reason": {
+          "type": "boolean"
+        },
+        "kind": {
+          "enum": [
+            "forward",
+            "correction",
+            "resubmission",
+            "rejection",
+            "cancellation",
+            "reopening"
+          ]
+        },
+        "disallow_requester": {
+          "type": "boolean"
+        },
+        "finance_sensitive": {
+          "type": "boolean"
+        },
+        "history_visibility": {
+          "enum": [
+            "participants",
+            "actors"
+          ]
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          },
+          "minItems": 0,
+          "maxItems": 10
+        },
+        "guard": {
+          "$ref": "#/$defs/guard"
+        },
+        "department_binding": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "from",
+        "to",
+        "actors",
+        "required_fields",
+        "require_reason",
+        "kind",
+        "actions"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

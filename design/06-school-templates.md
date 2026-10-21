@@ -1,6 +1,8 @@
-# School templates
+# School demonstration templates
 
 [Design index](index.md)
+
+These four workflows demonstrate a general-purpose platform through one coherent domain. They exercise reusable approval, routing, confidentiality, external-participation, and financial capabilities. School-specific labels and records belong to these templates and their domain modules; other organizations configure workflows appropriate to their own operations.
 
 Displayed labels are PT-BR and configurable. Each template has authorized correction/rejection/cancellation paths with reasons where appropriate.
 

@@ -2,6 +2,8 @@ defmodule Instantflow.WorkflowRuntime.Policy do
   @moduledoc "Deny-by-default role, department, relationship, stage, and section policies."
   alias Instantflow.Access
 
+  def discover?(%{role: "parent"}, _ticket, _version), do: false
+
   def discover?(actor, ticket, version) do
     Enum.any?(version.definition["sections"], &section?(actor, ticket, version, &1, :read))
   end
@@ -28,14 +30,26 @@ defmodule Instantflow.WorkflowRuntime.Policy do
   end
 
   def actor?(actor, ticket, version, spec) do
-    Enum.any?(Access.profiles(actor), fn profile ->
-      profile.role in Map.get(version.bindings["roles"], spec["role"], []) and
-        case spec["scope"] do
-          "requester" -> actor.user_id == ticket.requester_id
-          "assigned_department" -> profile.department_id == ticket.assigned_department_id
-          _ -> false
-        end
-    end)
+    (actor.role != "parent" or Instantflow.Enrollment.guardian?(actor, ticket.id)) and
+      Enum.any?(Access.profiles(actor), fn profile ->
+        profile.role in Map.get(version.bindings["roles"], spec["role"], []) and
+          case spec["scope"] do
+            "requester" ->
+              actor.user_id == ticket.requester_id
+
+            "guardian" ->
+              Instantflow.Enrollment.guardian?(actor, ticket.id)
+
+            "workflow_department" ->
+              profile.department_id == version.bindings["departments"][spec["department_binding"]]
+
+            "assigned_department" ->
+              profile.department_id == ticket.assigned_department_id
+
+            _ ->
+              false
+          end
+      end)
   end
 
   def retry?(actor, ticket, version) do

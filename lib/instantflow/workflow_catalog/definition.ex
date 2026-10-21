@@ -1,12 +1,13 @@
 defmodule Instantflow.WorkflowCatalog.Definition do
-  @moduledoc "Bounded declarative runtime contract. The interchange schema is delivered in Sprint 03."
+  @moduledoc "Shared structural and semantic validation for editing, interchange and publication."
   @types ~w(short_text long_text integer money date datetime boolean single_choice multiple_choice directory_reference attachment)
-  @scopes ~w(requester assigned_department)
+  @scopes ~w(requester assigned_department guardian workflow_department)
   @kinds ~w(forward correction resubmission rejection cancellation reopening)
-  @actions ~w(simulate_notification simulate_provisioning)
+  @actions ~w(simulate_notification simulate_provisioning simulate_payment)
 
   def validate(definition) when is_map(definition) do
     with :ok <- bounded(definition),
+         :ok <- schema(definition),
          :ok <- shape(definition),
          :ok <- references(definition),
          :ok <- graph(definition) do
@@ -17,6 +18,21 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   end
 
   def validate(_), do: error("A definição deve ser um objeto.")
+
+  # Drafts may have incomplete graphs/references; unsupported structures never enter storage.
+  def validate_draft(definition) when is_map(definition) do
+    with :ok <- bounded(definition), :ok <- schema(definition), :ok <- shape(definition), do: :ok
+  rescue
+    _ -> error("Definição inválida: revise os tipos e as referências.")
+  end
+
+  def validate_draft(_), do: error("A definição deve ser um objeto.")
+
+  # Existing immutable versions use the pre-Sprint-03 spelling of the same contract.
+  defp schema(%{"format_version" => "1.0-draft"} = d),
+    do: Instantflow.WorkflowCatalog.Schema.validate(Map.put(d, "format_version", "1.0"))
+
+  defp schema(d), do: Instantflow.WorkflowCatalog.Schema.validate(d)
 
   def fields(definition) do
     for section <- definition["sections"],
@@ -70,8 +86,11 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   def valid_value?(%{"type" => "multiple_choice", "options" => options}, value),
     do: is_list(value) and Enum.uniq(value) == value and Enum.all?(value, &(&1 in options))
 
-  # Directory and file values require their authorized contexts in later sprints.
-  def valid_value?(%{"type" => type}, _value) when type in ~w(directory_reference attachment),
+  # The owning context additionally proves ticket, field and organization ownership.
+  def valid_value?(%{"type" => "attachment"}, value),
+    do: is_binary(value) and Regex.match?(~r/^[0-9a-f-]{36}$/, value)
+
+  def valid_value?(%{"type" => "directory_reference"}, _value),
     do: false
 
   def valid_value?(_, _), do: false
@@ -105,7 +124,8 @@ defmodule Instantflow.WorkflowCatalog.Definition do
         d,
         ~w(format_version template_key template_version locale name description capabilities role_requirements sections stages creation transitions bindings assignment views)
       ) and
-        d["format_version"] == "1.0-draft" and d["locale"] == "pt-BR" and key?(d["template_key"]) and
+        d["format_version"] in ["1.0", "1.0-draft"] and d["locale"] == "pt-BR" and
+        key?(d["template_key"]) and
         label?(d["name"]) and
         d["capabilities"] == ["core"] and keyed?(d["role_requirements"]) and
         length(d["role_requirements"]) in 1..30 and
@@ -135,8 +155,9 @@ defmodule Instantflow.WorkflowCatalog.Definition do
     props?(s, ~w(key label classification access fields)) and label?(s["label"]) and
       s["classification"] in ~w(internal restricted) and
       is_list(s["access"]) and s["access"] != [] and
+      Enum.uniq_by(s["access"], &{&1["role"], &1["scope"]}) == s["access"] and
       Enum.all?(s["access"], fn a ->
-        props?(a, ~w(role scope read edit_stages)) and a["scope"] in @scopes and
+        props?(a, ~w(role scope department_binding read edit_stages)) and a["scope"] in @scopes and
           is_boolean(a["read"]) and is_list(a["edit_stages"]) and
           (a["edit_stages"] == [] or a["read"])
       end) and
@@ -147,6 +168,8 @@ defmodule Instantflow.WorkflowCatalog.Definition do
           (f["type"] not in ~w(single_choice multiple_choice) or
              (is_list(f["options"]) and length(f["options"]) in 1..100 and
                 Enum.all?(f["options"], &label?/1) and Enum.uniq(f["options"]) == f["options"])) and
+          (not Map.has_key?(f, "options") or f["type"] in ~w(single_choice multiple_choice)) and
+          (not Map.has_key?(f, "currency") or f["type"] == "money") and
           (f["type"] != "money" or
              (is_binary(f["currency"]) and Regex.match?(~r/^[A-Z]{3}$/, f["currency"])))
       end)
@@ -155,16 +178,20 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   defp valid_transition?(t) do
     props?(
       t,
-      ~w(key label from to actors required_fields require_reason kind disallow_requester finance_sensitive history_visibility actions guard)
+      ~w(key label from to actors required_fields require_reason kind disallow_requester finance_sensitive history_visibility actions guard department_binding)
     ) and label?(t["label"]) and
       is_list(t["actors"]) and t["actors"] != [] and
-      Enum.all?(t["actors"], &(props?(&1, ~w(role scope)) and &1["scope"] in @scopes)) and
+      Enum.all?(
+        t["actors"],
+        &(props?(&1, ~w(role scope department_binding)) and &1["scope"] in @scopes)
+      ) and
       is_boolean(t["require_reason"]) and t["kind"] in @kinds and
       (not Map.has_key?(t, "disallow_requester") or is_boolean(t["disallow_requester"])) and
       (not Map.has_key?(t, "finance_sensitive") or is_boolean(t["finance_sensitive"])) and
       Map.get(t, "history_visibility", "participants") in ~w(participants actors) and
       (t["kind"] not in ~w(correction rejection cancellation reopening) or t["require_reason"]) and
       is_list(t["required_fields"]) and is_list(t["actions"]) and length(t["actions"]) <= 10 and
+      Enum.uniq(t["actions"]) == t["actions"] and
       Enum.all?(t["actions"], fn a ->
         props?(a, ~w(type behavior)) and a["type"] in @actions and
           a["behavior"] in ~w(success fail_once failure)
@@ -183,18 +210,32 @@ defmodule Instantflow.WorkflowCatalog.Definition do
         Enum.any?(d["bindings"], &(&1["key"] == d["assignment"]["department_binding"])) and
         Enum.all?(d["sections"], fn s ->
           Enum.all?(s["access"], fn a ->
-            a["role"] in roles and
+            valid_actor?(a, roles, d) and
               Enum.all?(a["edit_stages"], &(&1 in stages and &1 not in terminal))
           end)
         end) and
+        keyed?(d["views"]) and
+        Enum.all?(d["views"], fn v ->
+          Enum.all?(v["columns"], &(&1 == "stage" or Map.has_key?(fields, &1)))
+        end) and
         Enum.all?(d["transitions"], fn t ->
           t["from"] in stages and t["to"] in stages and
-            Enum.all?(t["actors"], &(&1["role"] in roles)) and
+            Enum.all?(t["actors"], &valid_actor?(&1, roles, d)) and
+            (not Map.has_key?(t, "department_binding") or
+               Enum.any?(d["bindings"], &(&1["key"] == t["department_binding"]))) and
             Enum.all?(t["required_fields"], &Map.has_key?(fields, &1)) and
             valid_guard?(t["guard"], fields, 0) and valid_resubmission?(t, d)
         end)
 
     if valid, do: :ok, else: error("Há referências, guardas ou caminhos de correção inválidos.")
+  end
+
+  defp valid_actor?(a, roles, d) do
+    a["role"] in roles and
+      if(a["scope"] == "workflow_department",
+        do: Enum.any?(d["bindings"], &(&1["key"] == a["department_binding"])),
+        else: not Map.has_key?(a, "department_binding")
+      )
   end
 
   defp valid_resubmission?(%{"kind" => "resubmission"} = t, d),
@@ -223,14 +264,16 @@ defmodule Instantflow.WorkflowCatalog.Definition do
     do: props?(g, ~w(op field)) and get_in(fields, [ref, "type"]) == "attachment"
 
   defp valid_guard?(%{"op" => "in", "field" => ref, "value" => values} = g, fields, _) do
-    props?(g, ~w(op field value)) and Map.has_key?(fields, ref) and is_list(values) and
+    props?(g, ~w(op field value)) and Map.has_key?(fields, ref) and
+      fields[ref]["type"] not in ~w(attachment directory_reference) and is_list(values) and
       length(values) in 1..100 and
       Enum.all?(values, &(not is_nil(&1) and valid_value?(fields[ref], &1)))
   end
 
   defp valid_guard?(%{"op" => op, "field" => ref, "value" => value} = g, fields, _)
        when op in ~w(eq gt gte lt lte) do
-    props?(g, ~w(op field value)) and Map.has_key?(fields, ref) and not is_nil(value) and
+    props?(g, ~w(op field value)) and Map.has_key?(fields, ref) and
+      fields[ref]["type"] not in ~w(attachment directory_reference) and not is_nil(value) and
       valid_value?(fields[ref], value) and
       (op == "eq" or fields[ref]["type"] in ~w(integer money date datetime))
   end

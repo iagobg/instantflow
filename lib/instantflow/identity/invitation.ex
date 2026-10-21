@@ -4,6 +4,7 @@ defmodule Instantflow.Identity.Invitation do
 
   schema "invitations" do
     field :email, :string
+    belongs_to :enrollment, Instantflow.Enrollment.Record
     field :role, :string, default: "staff"
     field :token_hash, :binary, redact: true
     field :expires_at, :utc_datetime
@@ -23,6 +24,8 @@ defmodule Instantflow.Identity.Invitation do
       message: "informe um e-mail válido"
     )
     |> validate_length(:email, max: 160, message: "deve ter no máximo 160 caracteres")
-    |> validate_inclusion(:role, ["admin", "staff"], message: "selecione um perfil válido")
+    |> validate_inclusion(:role, ["admin", "staff", "parent"],
+      message: "selecione um perfil válido"
+    )
   end
 end

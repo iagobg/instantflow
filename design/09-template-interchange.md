@@ -2,11 +2,11 @@
 
 [Design index](index.md)
 
-Status: proposed inclusion in Sprint 03 following the user's suggestion.
+Status: confirmed by the user and implemented in Sprint 03. See [delivery and operating details](../docs/template-editor.md).
 
 ## Value and format
 
-A portable contract enables sharing, backup, reviewable diffs, reusable school templates, and external LLM generation. It also requires the visual editor to represent the entire supported definition faithfully.
+A portable contract enables sharing, backup, reviewable diffs, reusable templates across sectors, and external LLM generation. The initial examples use school processes. It also requires the visual editor to represent the entire supported definition faithfully.
 
 Use canonical declarative JSON with a published JSON Schema and semantic validator. Start with JSON only. Editor, importer, and seeded templates all use the same contract and publication checks.
 
@@ -39,7 +39,7 @@ Export a selected immutable version or explicitly marked draft. Canonical orderi
 
 Ship JSON Schema, capability catalogue, examples, and guide for each supported format release. Define complete schemas for every field, guard, action, and view before format 1.0 is final. Migrations are explicit and tested; unsupported versions have actionable PT-BR errors.
 
-The [example](examples/simple_approval.json) is a proposed subset, not an implemented format. Role requirements grant no authority. Sprint 03 must deliver the authoritative schema and fixture validation.
+The [simple example](examples/simple_approval.json) and [typed example](examples/typed_approval.json) validate against the delivered [schema](../priv/templates/workflow-1.0.schema.json) and [capability catalogue](../priv/templates/capabilities-1.0.json). Role requirements grant no authority. Existing immutable `1.0-draft` versions are normalized to `1.0` when cloned/exported; new imports require `1.0`.
 
 ## Acceptance
 

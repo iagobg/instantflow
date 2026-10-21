@@ -6,7 +6,7 @@ Multiple organizations are confirmed scope. The shared-schema persistence, globa
 
 ## Product boundary
 
-An organization is an independent school/company. Departments, workflows, tickets, students, guardians, files, finance, templates, and automation are local to it. There is no organization hierarchy, shared operational record, cross-organization approval, or consolidated customer dashboard in this release.
+An organization is an independent company, institution, nonprofit, or other group using the platform. Departments, workflows, tickets, files, finance, templates, automation, and any domain-specific records are local to it. Students and guardians are examples from the school demonstration. There is no organization hierarchy, shared operational record, cross-organization approval, or consolidated customer dashboard in this release.
 
 One person may have memberships in several organizations with unrelated roles. An administrator in A may be a teacher in B; a parent in two schools has separate verified guardian relationships. Global login does not grant discovery of organizations or users. Tenant administrators manage only local membership/grants, not the person's global password, account, or other memberships.
 

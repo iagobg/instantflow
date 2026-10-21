@@ -23,7 +23,7 @@ defmodule Instantflow.WorkflowRuntime do
         if receipt do
           ticket = Repo.get!(Ticket, receipt.ticket_id)
           version = Repo.get!(Version, ticket.workflow_version_id)
-          unless Policy.discover?(actor, ticket, version), do: Repo.rollback(:forbidden)
+          unless command_access?(actor, ticket, version), do: Repo.rollback(:forbidden)
           unless receipt.digest == digest, do: Repo.rollback(:idempotency_mismatch)
           receipt.result
         else
@@ -134,7 +134,8 @@ defmodule Instantflow.WorkflowRuntime do
 
         filtered =
           Enum.filter(tickets, fn t ->
-            (stage == "" or t.stage == stage) and
+            (is_nil(filters["workflow_id"]) or t.workflow_id == filters["workflow_id"]) and
+              (stage == "" or t.stage == stage) and
               (query == "" or
                  String.contains?(
                    String.downcase("#{t.id} #{t.workflow_version.definition["name"]}"),
@@ -179,6 +180,14 @@ defmodule Instantflow.WorkflowRuntime do
       |> Enum.each(fn member ->
         scope = Instantflow.Access.load(member)
 
+        if scope.role == "parent" and Instantflow.Enrollment.guardian?(scope, ticket.id),
+          do:
+            Phoenix.PubSub.broadcast(
+              Instantflow.PubSub,
+              "organization:#{scope.organization_id}:user:#{scope.user_id}",
+              :enrollments_changed
+            )
+
         if Policy.discover?(scope, ticket, version),
           do: Phoenix.PubSub.broadcast(Instantflow.PubSub, list_topic(scope), :requests_changed)
       end)
@@ -193,13 +202,7 @@ defmodule Instantflow.WorkflowRuntime do
       scope ->
         Repo.all(
           from t in Ticket,
-            where:
-              t.organization_id == ^actor.organization_id and
-                (t.requester_id == ^scope.user_id or
-                   t.assigned_department_id in ^Enum.map(
-                     Instantflow.Access.profiles(scope),
-                     & &1.department_id
-                   )),
+            where: t.organization_id == ^actor.organization_id,
             order_by: [desc: t.id],
             preload: [:workflow_version]
         )
@@ -220,6 +223,8 @@ defmodule Instantflow.WorkflowRuntime do
   end
 
   defp apply_command(actor, %{"operation" => "create"} = command) do
+    if actor.role == "parent", do: Repo.rollback(:forbidden)
+
     workflow =
       Repo.one(
         from w in Workflow,
@@ -279,7 +284,7 @@ defmodule Instantflow.WorkflowRuntime do
 
     unless ticket, do: Repo.rollback(:not_found)
     version = Repo.get!(Version, ticket.workflow_version_id)
-    unless Policy.discover?(actor, ticket, version), do: Repo.rollback(:forbidden)
+    unless command_access?(actor, ticket, version), do: Repo.rollback(:forbidden)
 
     sections =
       Repo.all(
@@ -307,6 +312,8 @@ defmodule Instantflow.WorkflowRuntime do
       :ok -> :ok
       {:error, errors} -> Repo.rollback({:invalid_values, errors})
     end
+
+    Instantflow.PrivateDocuments.validate_values!(actor, ticket, definition, c["values"])
 
     section
     |> Ecto.Changeset.change(values: c["values"], revision: section.revision + 1)
@@ -345,6 +352,15 @@ defmodule Instantflow.WorkflowRuntime do
     values =
       for s <- sections, {key, value} <- s.values, into: %{}, do: {s.key <> "." <> key, value}
 
+    Instantflow.PrivateDocuments.require_ready!(
+      ticket,
+      version,
+      values,
+      transition["required_fields"]
+    )
+
+    values = Instantflow.PrivateDocuments.guard_values(ticket, version, values)
+
     unless Enum.all?(transition["required_fields"], &Definition.present?(values[&1])),
       do: Repo.rollback(:required_fields)
 
@@ -380,6 +396,11 @@ defmodule Instantflow.WorkflowRuntime do
       ticket
       |> Ecto.Changeset.change(
         stage: transition["to"],
+        assigned_department_id:
+          if(transition["department_binding"],
+            do: version.bindings["departments"][transition["department_binding"]],
+            else: ticket.assigned_department_id
+          ),
         return_stage: return_stage,
         revision: ticket.revision + 1,
         stage_revision: ticket.stage_revision + 1
@@ -430,6 +451,11 @@ defmodule Instantflow.WorkflowRuntime do
         behavior: action["behavior"]
       })
     end
+  end
+
+  defp command_access?(actor, ticket, version) do
+    Policy.discover?(actor, ticket, version) or
+      (actor.role == "parent" and Instantflow.Enrollment.guardian?(actor, ticket.id))
   end
 
   defp command_shape(c) do

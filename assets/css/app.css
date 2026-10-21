@@ -1,5 +1,39 @@
 @import "./tokens.css";
 
+.template-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.template-section { margin-top: 24px; }
+.template-items { margin-top: 24px; max-height: 650px; overflow: auto; }
+.template-items .request-row { flex-wrap: wrap; }
+.template-items .request-row > div { min-width: 160px; }
+.template-grid select[multiple] { min-height: 120px; }
+.template-section pre { max-height: 350px; overflow: auto; padding: 12px; background: var(--if-bg); border: 1px solid var(--if-border); white-space: pre-wrap; overflow-wrap: anywhere; }
+.diff-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.role-preview { border-top: 1px solid var(--if-border); padding: 16px 0; }
+.configured-board { display: grid; gap: 16px; min-width: max-content; }
+.configured-card { min-width: 240px; max-width: 380px; margin: 0; }
+.graph-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin: 20px 0 8px; }
+.graph-toolbar form { flex: 1; max-width: 340px; min-width: 220px; }
+.graph-toolbar .form-field { margin-bottom: 0; }
+.graph-legend { display: flex; flex-wrap: wrap; gap: 18px; color: var(--if-text-subtle); font-size: 12px; padding-bottom: 12px; }
+.graph-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.graph-swatch { display: inline-block; width: 24px; border-top: 2px solid var(--if-accent-text); }
+.graph-swatch.secondary { border-top: 2px dashed var(--if-text-subtle); }
+.workflow-graph { max-height: 660px; overflow: auto; }
+.workflow-graph svg { width: 100%; display: block; }
+.graph-node { fill: var(--if-bg); stroke: var(--if-border-strong); stroke-width: 1.5; }
+.graph-stage.focused .graph-node { stroke: var(--if-accent-text); stroke-width: 2.5; }
+.graph-stage.dimmed { opacity: .6; }
+.graph-edge { stroke: var(--if-accent-text); stroke-width: 2; stroke-linejoin: round; }
+.graph-connection.secondary .graph-edge { stroke: var(--if-text-subtle); stroke-width: 1.4; stroke-dasharray: 5 5; }
+.graph-connection.dimmed { opacity: .08; }
+.graph-connection.dimmed .graph-edge-label { visibility: hidden; }
+.workflow-graph marker path { fill: var(--if-text-subtle); }
+.workflow-graph text { fill: var(--if-text); font-size: 15px; }
+.workflow-graph .graph-edge-label { fill: var(--if-accent-text); font-size: 12px; paint-order: stroke; stroke: var(--if-bg); stroke-width: 5px; stroke-linejoin: round; }
+.workflow-graph .secondary .graph-edge-label { fill: var(--if-text-subtle); }
+.workflow-graph .graph-note { font-size: 11px; fill: var(--if-text-subtle); }
+@media (max-width: 800px) { .template-grid, .diff-pair { grid-template-columns: 1fr; } }
+
 .requests-list, .request-heading, .history-card { margin-top: 24px; }
 .create-request form { display: flex; align-items: end; gap: 16px; }
 .create-request form .form-field { flex: 1; margin-bottom: 0; }
@@ -561,3 +595,7 @@ footer {
 .team-grid .card {
   padding:18px}
 }
+
+/* Empty state for streamed collections without a CSS utility build. */
+.stream-empty { display: none; }
+.stream-empty:only-child { display: block; }

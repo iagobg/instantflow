@@ -1,8 +1,12 @@
 # InstantFlow
 
-PT-BR school workflow demonstration built with Phoenix LiveView and PostgreSQL. The visual identity comes from `design/visual-identity`; its example screens are visual references only.
+InstantFlow is a general-purpose, multi-organization workflow platform built with Phoenix LiveView and PostgreSQL, with a PT-BR interface. Organizations customize processes, forms, permissions, and live dashboards for their own operations. School workflows provide the initial demonstration of the platform's versatility. The visual identity comes from `design/visual-identity`; its example screens are visual references only.
 
 ## Current delivery
+
+Sprint 04 adds invitation-only guardian access, a separate parent enrollment projection, quarantined private documents, school-local verification, department handoffs and simulated payment/provisioning retry. Open **Matrículas**. See [enrollment and private documents](docs/enrollment.md) for the demo walkthrough, limits and setup.
+
+Sprint 03 delivers the workflow editor, revision-safe drafts, immutable publication, configured request tables/boards, JSON format 1.0 import/export, and a PT-BR authoring guide. Open **Modelos de fluxo** as a local administrator. See [editor and interchange](docs/template-editor.md) and the [authoring guide](design/workflow_authoring_guide.pt-BR.md).
 
 Sprint 02 adds department-specific local profiles, restricted projections, authorized request tables/counts, independent section drafts, conflict comparison/reapply, advisory editing presence, and safe reconnect/revocation behavior. See [collaboration and permissions](docs/collaboration.md).
 
@@ -12,7 +16,7 @@ Sprints 00 and 01 are implemented. Sprint 01 adds validated immutable workflow v
 
 The demonstration includes Escola Horizonte and Escola Aurora. The same `admin@escola.example` account is an administrator in Horizonte and a collaborator in Aurora; `gestao@aurora.example` administers Aurora. Global sessions last 24 hours. Existing-account recipients sign in before accepting local invitations; credentials and other memberships are preserved. Both themes use the supplied tokens and logos. Invitation delivery remains explicitly simulated with one-time 48-hour codes and no outbound email.
 
-The visual editor, parent portal, school-specific confidential records, files and finance workflows belong to later sprints. This foundation is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
+The enrollment parent portal and private files are implemented. School-specific incidents, budgets, purchasing and field trips belong to later sprints. This application is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
 
 ## Prerequisites and setup
 
@@ -30,7 +34,7 @@ mix setup
 mix phx.server
 ```
 
-Open http://localhost:4000. Sign in as `admin@escola.example` with the password you supplied. Other fictional staff addresses are `secretaria`, `docente`, `coordenacao`, `financeiro`, `operacoes`, `ti`, `direcao`, and `orientacao`, each at `escola.example`. They share the seed password and have the staff profile. Parent accounts will be added with the parent portal in Sprint 04.
+Open http://localhost:4000. Sign in as `admin@escola.example` with the password you supplied. Other fictional staff addresses are `secretaria`, `docente`, `coordenacao`, `financeiro`, `operacoes`, `ti`, `direcao`, and `orientacao`, each at `escola.example`. They share the seed password and have the staff profile. The seed adds fictional `responsavel.a@escola.example` and `responsavel.b@escola.example` accounts with independent verified enrollment links in each school. New accounts use the supplied seed password; existing passwords are preserved.
 
 See `.env.example` for the separate runtime and migration credentials. The server uses `PGUSER=instantflow_runtime` and `RUNTIME_DB_PASSWORD`; operators use `MIGRATION_PGUSER`/`MIGRATION_PGPASSWORD`. `PGHOST` and `PGPORT` select the local server. Mix does not automatically load `.env`: export variables in your shell. Production requires a non-owner runtime `DATABASE_URL`, `SECRET_KEY_BASE` and `PHX_HOST`; `PHX_SERVER=true` enables the endpoint. Only operator commands receive `OPERATOR_DATABASE_URL`. Production cookies require HTTPS and seeds refuse to run in production.
 
@@ -74,4 +78,4 @@ Open **Solicitações** to create a request using the published approval fixture
 
 The backend validates published definitions, required fields, actor scopes, typed guards, reviewed revisions and idempotency keys inside short transactions. Published versions, command receipts, history and delivery attempts have database immutability triggers. Tickets remain pinned when version 2 is published. A durable refresh intent exists for each mutation and simulated delivery result; the polling worker recovers a missing post-commit wakeup. Refresh invalidations contain only a ticket identifier. Delivery is at least once and never calls an external provider.
 
-The current UI exercises the text-based fixture. Directory/file values fail closed pending their owning contexts; the full editor, interchange schema and type-specific authoring controls remain in Sprint 03. Requests use 25-row pages with authorized search, stage filters and exact scoped counts. Sprint 02 verifies overlapping independent database connections, per-section drafts, presence, reviewed transitions and grant/membership revocation. Open a school under `/o/horizonte` or `/o/aurora`; the global organization picker is `/organizacoes`.
+The current UI supports text, integer money, dates/instants, booleans and choices in authored templates. Directory values remain blocked. Private attachment values are proved against their organization, request, section and field; parent uploads are available through the enrollment portal. Requests use 25-row pages with authorized search, stage filters, exact scoped counts and configured views that hide unreadable fields. Sprint 03 verifies draft races and explicit publication using independent runtime-role connections; Sprint 02 covers section collaboration and permission revocation. Open an organization under `/o/horizonte` or `/o/aurora`; the global organization picker is `/organizacoes`.

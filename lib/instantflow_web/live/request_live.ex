@@ -302,11 +302,19 @@ defmodule InstantflowWeb.RequestLive do
     do: Map.reject(values, fn {key, _} -> String.starts_with?(key, "_unused_") end)
 
   defp cast_values(definition, values) do
+    values =
+      Enum.reduce(definition["fields"], values, fn field, acc ->
+        if field["type"] == "multiple_choice", do: Map.put_new(acc, field["key"], []), else: acc
+      end)
+
     Map.new(values, fn {key, value} ->
       field = Enum.find(definition["fields"], &(&1["key"] == key))
 
       cast =
         case {field && field["type"], value} do
+          {"multiple_choice", ""} ->
+            []
+
           {type, ""} when type not in ["short_text", "long_text"] ->
             nil
 
@@ -322,6 +330,9 @@ defmodule InstantflowWeb.RequestLive do
           {"boolean", "false"} ->
             false
 
+          {"multiple_choice", values} when is_list(values) ->
+            Enum.reject(values, &(&1 == ""))
+
           _ ->
             value
         end
@@ -336,7 +347,7 @@ defmodule InstantflowWeb.RequestLive do
   defp field_type("long_text"), do: "textarea"
   defp field_type(type) when type in ["money", "integer"], do: "number"
   defp field_type("date"), do: "date"
-  defp field_type(type) when type in ["boolean", "single_choice"], do: "select"
+  defp field_type(type) when type in ["boolean", "single_choice", "multiple_choice"], do: "select"
   defp field_type(_), do: "text"
 
   defp options(%{"type" => "boolean"}),
@@ -346,6 +357,9 @@ defmodule InstantflowWeb.RequestLive do
   defp delivery_label("failed"), do: "Falhou"
   defp delivery_label("succeeded"), do: "Concluída"
   defp delivery_label(_), do: "Pendente"
+  defp delivery_kind("simulate_payment"), do: "Pagamento simulado"
+  defp delivery_kind("simulate_notification"), do: "Notificação simulada"
+  defp delivery_kind(_), do: "Criação de acesso simulada"
   defp operation_label("create"), do: "Solicitação criada"
   defp operation_label("save:" <> _), do: "Formulário salvo"
   defp operation_label(operation), do: operation
@@ -442,6 +456,11 @@ defmodule InstantflowWeb.RequestLive do
                 id={"section-#{section.key}-#{field["key"]}"}
                 label={field["label"]}
                 type={field_type(field["type"])}
+                multiple={field["type"] == "multiple_choice"}
+                disabled={field["type"] in ~w(directory_reference attachment)}
+                min={if field["type"] == "money", do: 0}
+                step={if field["type"] in ~w(integer money), do: 1}
+                placeholder={if field["type"] == "datetime", do: "2026-10-20T14:00:00-03:00"}
                 options={options(field)}
               /><button
                 class="btn primary"
@@ -489,9 +508,7 @@ defmodule InstantflowWeb.RequestLive do
               phx-update="stream"
             >
               <div :for={{id, delivery} <- @streams.deliveries} id={id} class="delivery-row">
-                <strong>{if delivery.kind == "simulate_notification",
-                  do: "Notificação simulada",
-                  else: "Criação de acesso simulada"}</strong><p>
+                <strong>{delivery_kind(delivery.kind)}</strong><p>
                   {delivery_label(delivery.status)} · {delivery.attempts} tentativa(s)
                 </p><button
                   :if={delivery.status == "failed" and @data.can_retry}

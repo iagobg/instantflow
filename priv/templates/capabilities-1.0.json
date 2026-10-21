@@ -1,0 +1,95 @@
+{
+  "format_version": "1.0",
+  "capabilities": [
+    "core"
+  ],
+  "supported": {
+    "field_types": [
+      "short_text",
+      "long_text",
+      "integer",
+      "money",
+      "date",
+      "datetime",
+      "boolean",
+      "single_choice",
+      "multiple_choice",
+      "attachment"
+    ],
+    "scopes": [
+      "requester",
+      "assigned_department",
+      "guardian",
+      "workflow_department"
+    ],
+    "transition_kinds": [
+      "forward",
+      "correction",
+      "resubmission",
+      "rejection",
+      "cancellation",
+      "reopening"
+    ],
+    "guard_operators": [
+      "all",
+      "any",
+      "present",
+      "eq",
+      "in",
+      "gt",
+      "gte",
+      "lt",
+      "lte",
+      "delivery_succeeded",
+      "attachment_ready"
+    ],
+    "actions": [
+      "simulate_notification",
+      "simulate_provisioning",
+      "simulate_payment"
+    ],
+    "action_behaviors": [
+      "success",
+      "fail_once",
+      "failure"
+    ],
+    "views": [
+      "table",
+      "board"
+    ],
+    "section_classifications": [
+      "internal",
+      "restricted"
+    ],
+    "transition_handoff": "department_binding"
+  },
+  "reserved_fail_closed": {
+    "field_types": [
+      "directory_reference"
+    ],
+    "guard_operators": [],
+    "reason": "Directory references remain blocked. Attachments require a private owning context; guardian scope requires a verified local link."
+  },
+  "unsupported": [
+    "python",
+    "inline_code",
+    "scripts",
+    "webhooks",
+    "parallel_branches",
+    "real_payments",
+    "real_notifications"
+  ],
+  "limits": {
+    "bytes": 1048576,
+    "json_depth": 20,
+    "roles": 30,
+    "sections": 100,
+    "stages": 100,
+    "transitions": 500,
+    "fields_total": 300,
+    "views": 20,
+    "guard_depth": 8,
+    "guard_arguments": 20,
+    "actions_per_transition": 10
+  }
+}

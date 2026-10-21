@@ -35,7 +35,22 @@ defmodule InstantflowWeb.Layouts do
           }
         >Trocar organização</.link>
         <nav aria-label="Navegação principal">
-          <.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes"} class="nav-link"><.icon name="hero-squares-2x2" />Solicitações</.link>
+          <.link
+            :if={@current_scope.role == "admin"}
+            id="workflow-templates-link"
+            navigate={~p"/o/#{@current_scope.organization.slug}/modelos"}
+            class="nav-link"
+          ><.icon name="hero-share" />Modelos de fluxo</.link>
+          <.link
+            id="enrollment-link"
+            navigate={~p"/o/#{@current_scope.organization.slug}/matriculas"}
+            class="nav-link"
+          ><.icon name="hero-users" />Matrículas</.link>
+          <.link
+            :if={@current_scope.role != "parent"}
+            navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes"}
+            class="nav-link"
+          ><.icon name="hero-squares-2x2" />Solicitações</.link>
           <.link navigate={~p"/o/#{@current_scope.organization.slug}"} class="nav-link"><.icon name="hero-squares-2x2" />Visão geral</.link><.link
             :if={@current_scope.role == "admin"}
             navigate={~p"/o/#{@current_scope.organization.slug}/equipe"}

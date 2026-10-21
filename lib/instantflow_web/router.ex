@@ -43,9 +43,15 @@ defmodule InstantflowWeb.Router do
   scope "/o/:organization_slug", InstantflowWeb do
     pipe_through [:browser, :authenticated, :organization]
 
+    get "/documentos/:key", DocumentController, :download
+
     live_session :internal, on_mount: [{InstantflowWeb.UserAuth, :authenticated}] do
       live "/", HomeLive, :index
       live "/equipe", TeamLive, :index
+      live "/modelos", TemplatesLive, :index
+      live "/modelos/:id", TemplateLive, :show
+      live "/matriculas", EnrollmentLive, :index
+      live "/matriculas/:id", EnrollmentLive, :show
       live "/solicitacoes", RequestsLive, :index
       live "/solicitacoes/:id", RequestLive, :show
     end

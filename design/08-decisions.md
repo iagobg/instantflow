@@ -8,17 +8,17 @@
 | D-02 | Confirmed | Customization | Administrator constrained visual editor | Editor |
 | D-03 | Confirmed | Integrations | Explicit demo payments/notifications/provisioning | First slice |
 | D-04 | Confirmed | Language and stack | PT-BR; Elixir/Phoenix LiveView; non-authoritative JS | Foundation |
-| D-05 | Open | Guardian verification | Proposed: staff invitation and manual verification; multiple guardians | Sprint 04 |
+| D-05 | Adopted for synthetic demonstration — 2026-10-21 | Guardian verification | Staff invitation and separate manual verification; independent multiple guardians | Sprint 04 |
 | D-06 | Open | Incident/support visibility | Proposed: assigned counselor-private notes; curated parent communication | Sprint 06 |
 | D-07 | Open | Budget/cancellation/price changes | Proposed: reserve at finance approval; commit at order; explicit reversals | Sprint 05 |
 | D-08 | Adopted for implementation | Parallel branches now? | Sequential stages, independent sections | Sprint 01 |
 | D-09 | Open | Hosting/load/timezone | Proposed: shared deployment; 10 organizations, 50 concurrent staff/10,000 tickets total; per-organization timezone default America/Sao_Paulo | Sprint 07 |
-| D-10 | Open | Parent self-registration? | Proposed: invitations only; no anonymous uploads | Sprint 04 |
-| D-11 | Open | Parent-visible status/messages | Proposed: explicit public projection | Sprint 04 |
-| D-12 | Open | File types/sizes/retention | Proposed: bounded private PDFs/images; synthetic data pending retention rules | Sprint 04 |
+| D-10 | Adopted for synthetic demonstration — 2026-10-21 | Parent self-registration? | Invitations only; no anonymous uploads | Sprint 04 |
+| D-11 | Adopted for synthetic demonstration — 2026-10-21 | Parent-visible status/messages | Explicit allowlisted public projection; no internal runtime/history access | Sprint 04 |
+| D-12 | Adopted for synthetic demonstration — 2026-10-21 | File types/sizes/retention | Private PDF/PNG/JPEG ≤ 5 MiB, 20 active files/ticket; quarantine/manual release, 30-day synthetic retention | Sprint 04 |
 | D-13 | Adopted for implementation | Self-approval | Prohibit finance-sensitive self-approval, including overlapping local roles; no override in this increment | Sprint 02 |
 | D-14 | Adopted for implementation | Definition changes | Immutable versions; existing tickets pinned | Sprint 01 |
-| D-15 | Proposed following user suggestion | Interchange and LLM guide | Versioned JSON, draft-only imports, local mappings, shared validation; external LLM authorship | Sprint 03 |
+| D-15 | Confirmed — 2026-10-20 | Interchange and LLM guide | Versioned JSON, draft-only imports, local mappings, shared validation; external LLM authorship | Sprint 03 |
 | D-16 | Recommended planning direction | Customer-authored Python | Gated extension after Sprint 07; asynchronous isolated calculations, declared inputs/outputs, no direct side effects; see design 10 | Sprint 08 gate |
 | D-17 | Open | First real scripting need and hosting boundary | Select one calculation that bounded guards cannot express; establish runner isolation, operating cost, and security ownership | Before Sprint 08 implementation |
 | D-18 | Adopted for implementation | Tenant persistence/isolation | Shared schema, mandatory tenant scopes, composite ownership FKs, runtime-role RLS; no cross-organization records | Sprint 01A |
@@ -27,7 +27,7 @@
 
 ## Recorded answers — 2026-10-20
 
-The user initially chose one organization, a visual editor, and explicit simulations. The later explicit request for a multi-organizational platform supersedes the first choice only. The visual editor and simulations remain confirmed. The design recommends import/export and an LLM guide, with D-15 kept Proposed.
+The user initially chose one organization, a visual editor, and explicit simulations. The later explicit request for a multi-organizational platform supersedes the first choice only. The visual editor and simulations remain confirmed. During Sprint 03 implementation, the user explicitly confirmed: “Include import/export and the guide.” D-15 is confirmed.
 
 ## Scope revision — multiple organizations, 2026-10-20
 
@@ -48,3 +48,11 @@ Following authorization to continue from Sprint 01A, D-18–20 are adopted witho
 ## Sprint 02 implementation — 2026-10-20
 
 Under the user's authorization to continue the development plan, D-13 adopts the proposed prohibition: a transition explicitly marked finance_sensitive cannot be executed by its requester, regardless of overlapping local profiles. No administrative override is implemented. This is an implementation default following the proposed direction, not a separately supplied product answer. Local grants bind each role to its department; administration never implicitly bypasses record policy. Existing pinned definitions retain their original explicit requester prohibitions. Actor-restricted transition history can exclude confidential reasons and delivery intents from other participants. See the [Sprint 02 evidence](../sprint_plan/sprint_02.md) and [operating notes](../docs/collaboration.md).
+
+## Sprint 04 implementation — 2026-10-21
+
+Under the user's authorization to continue after Sprint 03, D-05 and D-10–12 adopt the proposed direction for synthetic demonstration data. These are implementation defaults, not separately supplied product answers. Staff invite an account to a specific local enrollment, then manually verify each guardian link. Existing-account acceptance proves the same logged-in identity and never upgrades an existing membership. Parents receive only the dedicated enrollment projection, curated public text and authorized application documents; matching names or school membership cannot create a family relationship.
+
+Files are stored privately in tenant-owned PostgreSQL bytea rows, never the static tree. The default is PDF/PNG/JPEG, 5 MiB per file, 20 ready/quarantined objects per ticket and 30 days of demonstration retention. Magic/structure checks, digest verification and a separate staff release gate are implemented. This is not antivirus scanning, proof of document authenticity, or a production retention policy. Expired objects immediately fail download/guard checks; active-tenant polling clears retained content. Suspended tenants and backups require operator retention handling. Real student data, guardian disputes, production malware scanning and retention ownership still require a separate readiness decision.
+
+The template uses additive validated format-1.0 vocabulary (`guardian`, `workflow_department`, transition `department_binding`, `simulate_payment`). No directory lookup, Python execution or real provider call is introduced. See [Sprint 04 evidence](../sprint_plan/sprint_04.md) and [operating notes](../docs/enrollment.md).

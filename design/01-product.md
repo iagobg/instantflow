@@ -4,13 +4,13 @@
 
 ## Outcome
 
-Administrators compose and publish workflows; permitted staff and parents submit requests; departments collaborate through live views; the server enforces mutations; history explains who did what.
+InstantFlow serves organizations across sectors that need configurable workflows and live collaboration. Administrators compose and publish workflows; authorized staff and external participants submit requests; departments collaborate through live views; the server enforces mutations; history explains who did what. Processes such as purchasing, onboarding, service requests, and approvals are examples of its intended applicability, not additional required demo templates.
 
-All four school templates must use the same definitions, forms, policies, transitions, and dashboard infrastructure. Financial reservations and restricted support notes are explicit domain capabilities, not arbitrary scripts in templates.
+The initial demonstration uses four school templates to exercise the same reusable definitions, forms, policies, transitions, and dashboard infrastructure. Schools are an example domain, not a platform restriction. Financial reservations and restricted support notes are explicit domain capabilities, not arbitrary scripts in templates. School-specific records and terminology belong to demonstration templates or domain modules rather than requirements imposed on every organization.
 
 ## Proposed boundaries
 
-- Multiple isolated organizations with invitation-based local memberships, departments, overlapping roles, and separate student/guardian directories. One login may belong to several organizations; roles never carry between them.
+- Multiple isolated organizations with invitation-based local memberships, departments, and overlapping roles. The school demonstration adds local student/guardian directories; other organizations need not use that domain module. One login may belong to several organizations; roles never carry between them.
 - Versioned workflows, typed fields, conditional transitions, stage permissions, assignments, attachments, comments, and history.
 - Live tables for all processes; reusable Kanban/calendar where meaningful; responsive, keyboard-accessible flows.
 - Visual editor plus portable JSON, validation, preview, and explicit publication. LLM generation happens outside the application; no AI account integration is needed.

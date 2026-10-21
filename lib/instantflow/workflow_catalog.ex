@@ -74,19 +74,22 @@ defmodule Instantflow.WorkflowCatalog do
     end
   end
 
-  defp valid_bindings?(
-         d,
-         %{"roles" => roles, "departments" => departments} = bindings,
-         organization_id
-       )
-       when is_map(roles) and is_map(departments) do
+  def valid_bindings?(d, bindings, organization_id, mode \\ :complete)
+
+  def valid_bindings?(
+        d,
+        %{"roles" => roles, "departments" => departments} = bindings,
+        organization_id,
+        mode
+      )
+      when is_map(roles) and is_map(departments) do
     Map.keys(bindings) |> Enum.sort() == ["departments", "roles"] and
-      Enum.sort(Map.keys(roles)) == Enum.sort(Enum.map(d["role_requirements"], & &1["key"])) and
+      binding_keys?(roles, d["role_requirements"], mode) and
       Enum.all?(roles, fn {_, list} ->
         is_list(list) and list != [] and
           Enum.all?(list, &(&1 in Instantflow.Access.binding_roles()))
       end) and
-      Enum.sort(Map.keys(departments)) == Enum.sort(Enum.map(d["bindings"], & &1["key"])) and
+      binding_keys?(departments, d["bindings"], mode) and
       Enum.all?(departments, fn {_, id} ->
         is_integer(id) and
           Repo.exists?(
@@ -96,5 +99,12 @@ defmodule Instantflow.WorkflowCatalog do
       end)
   end
 
-  defp valid_bindings?(_, _, _), do: false
+  def valid_bindings?(_, _, _, _), do: false
+
+  defp binding_keys?(bindings, requirements, mode) do
+    keys = Enum.map(requirements, & &1["key"])
+
+    Enum.all?(Map.keys(bindings), &(&1 in keys)) and
+      (mode == :partial or Enum.sort(Map.keys(bindings)) == Enum.sort(keys))
+  end
 end

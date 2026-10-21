@@ -4,13 +4,13 @@
 
 ## Proposed architecture
 
-A modular Phoenix monolith using LiveView, Ecto, and PostgreSQL. Context functions own authorization and business rules. LiveViews render authorized projections and call commands. JavaScript may manage focus, panel expansion, draft warnings, and pending indicators; it cannot authoritatively approve, spend, change stages, or grant access.
+A modular Phoenix monolith using LiveView, Ecto, and PostgreSQL. The workflow core is sector-independent; domain modules and templates supply specialized records and terminology. Context functions own authorization and business rules. LiveViews render authorized projections and call commands. JavaScript may manage focus, panel expansion, draft warnings, and pending indicators; it cannot authoritatively approve, spend, change stages, or grant access.
 
 | Context | Responsibility |
 |---|---|
 | Organizations | Tenant lifecycle, settings, membership selection, isolation boundary |
 | Identity | Accounts, sessions, invitations, departments, grants, revocation |
-| Directory | Minimal students and verified guardian relationships |
+| Directory (school demonstration module) | Minimal students and verified guardian relationships; not required by the workflow core |
 | WorkflowCatalog | Definitions, validation, publication, import/export |
 | WorkflowRuntime | Tickets, sections, assignments, guarded transitions |
 | Access | Record, field, action, file, and history policies |
@@ -33,7 +33,7 @@ The optional [Python extension](10-python-automation.md) is an exception requiri
 | Organization | Independent tenant with stable ID/slug, name, timezone, active/suspended status |
 | User, session | Global authentication identity; does not carry organization-wide authority |
 | Membership, department, role grant | Tenant-owned; one membership per user/organization with organization-local grants and department associations |
-| Student, guardian link | Explicit verified relationship |
+| Student, guardian link (school demonstration) | Explicit verified relationship in the school domain module |
 | Workflow, workflow version | Stable identity; editable draft; immutable published version |
 | Stage, transition, section, field definitions | Stable keys within a version |
 | Ticket | Pinned version, stage, requester, subject, assignment, state revision |

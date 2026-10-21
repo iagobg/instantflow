@@ -1,4 +1,17 @@
 defmodule InstantflowWeb.RuntimeErrors do
+  def message(:attachment_not_ready),
+    do: "O documento obrigatório ainda não foi liberado pela secretaria."
+
+  def message(:invalid_attachment),
+    do: "Documento indisponível para este formulário e esta escola."
+
+  def message(:invalid_file), do: "Envie um PDF, PNG ou JPEG fictício de até 5 MB."
+
+  def message(:quota),
+    do: "Limite de documentos desta matrícula atingido. Exclua um documento antes de reenviar."
+
+  def message(:invalid_state), do: "O documento já foi revisado ou expirou. Atualize a página."
+
   def message(:queue_full),
     do:
       "A fila desta organização atingiu o limite. Aguarde as entregas pendentes antes de tentar novamente."

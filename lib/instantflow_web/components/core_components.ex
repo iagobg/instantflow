@@ -9,8 +9,12 @@ defmodule InstantflowWeb.CoreComponents do
   attr :label, :string, required: true
   attr :options, :list, default: []
   attr :prompt, :string, default: nil
+  attr :multiple, :boolean, default: false
   attr :errors, :list, default: []
-  attr :rest, :global, include: ~w(required autocomplete minlength maxlength placeholder)
+
+  attr :rest, :global,
+    include:
+      ~w(required autocomplete minlength maxlength placeholder pattern readonly disabled min max step)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors =
@@ -22,8 +26,8 @@ defmodule InstantflowWeb.CoreComponents do
     |> assign(
       field: nil,
       id: assigns.id || field.id,
-      name: field.name,
-      value: field.value,
+      name: if(assigns.multiple, do: field.name <> "[]", else: field.name),
+      value: if(is_nil(assigns.value), do: field.value, else: assigns.value),
       errors: errors
     )
     |> input()
@@ -33,10 +37,13 @@ defmodule InstantflowWeb.CoreComponents do
     ~H"""
     <div class="form-field">
       <label for={@id}>{@label}</label>
+      <input :if={@type == "checkbox"} type="hidden" name={@name} value="false" />
+      <input :if={@type == "select" and @multiple} type="hidden" name={@name} value="" />
       <select
         :if={@type == "select"}
         id={@id}
         name={@name}
+        multiple={@multiple}
         aria-invalid={@errors != []}
         aria-describedby={if @errors != [], do: "#{@id}-errors"}
         {@rest}
@@ -57,7 +64,14 @@ defmodule InstantflowWeb.CoreComponents do
         type={@type}
         id={@id}
         name={@name}
-        value={if @type == "password", do: nil, else: @value}
+        value={
+          cond do
+            @type == "password" -> nil
+            @type == "checkbox" -> "true"
+            true -> @value
+          end
+        }
+        checked={@type == "checkbox" and Phoenix.HTML.Form.normalize_value("checkbox", @value)}
         aria-invalid={@errors != []}
         aria-describedby={if @errors != [], do: "#{@id}-errors"}
         {@rest}
@@ -89,7 +103,9 @@ defmodule InstantflowWeb.CoreComponents do
       "hero-information-circle" =>
         "M12 8h.01M11 12h1v5h1M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0",
       "hero-arrow-right-on-rectangle" => "M9 5H4v14h5M10 12h12m-5-5 5 5-5 5",
-      "hero-moon" => "M21 13A9 9 0 0 1 11 3 9 9 0 1 0 21 13"
+      "hero-moon" => "M21 13A9 9 0 0 1 11 3 9 9 0 1 0 21 13",
+      "hero-share" =>
+        "M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm12 7a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM9 11l6-5M9 13l6 5"
     }
 
     assigns = assign(assigns, :path, Map.fetch!(paths, assigns.name))

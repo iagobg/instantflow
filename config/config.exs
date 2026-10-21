@@ -12,7 +12,19 @@ config :instantflow,
   ecto_repos: [Instantflow.Repo],
   generators: [timestamp_type: :utc_datetime]
 
-config :phoenix, :filter_parameters, ["password", "token", "code", "password_hash"]
+config :phoenix, :filter_parameters, [
+  "password",
+  "token",
+  "code",
+  "password_hash",
+  "application",
+  "section",
+  "values",
+  "message",
+  "content",
+  "filename"
+]
+
 config :instantflow, Instantflow.Repo, log: false
 
 # Configure the endpoint

@@ -724,6 +724,289 @@ defmodule Instantflow.RuntimeRoleTest do
            ) == 1
   end
 
+  test "overlapping draft saves and publication use real non-owner connections and compare revisions",
+       c do
+    alias Instantflow.WorkflowCatalog.{Draft, Templates, TemplateEvent}
+    {:ok, draft} = Templates.clone(c.a_scope, c.version.id)
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :draft_barrier
+        )
+      )
+
+    Postgrex.query!(connection, "BEGIN")
+
+    Postgrex.query!(connection, "SELECT id FROM workflow_drafts WHERE id=$1 FOR UPDATE", [
+      draft.id
+    ])
+
+    supervisor = start_supervised!(Task.Supervisor)
+
+    tasks =
+      for name <- ["Edição A", "Edição B"] do
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          Repo.put_dynamic_repo(c.runtime)
+
+          Templates.save(
+            c.a_scope,
+            draft.id,
+            1,
+            Map.put(draft.definition, "name", name),
+            draft.bindings
+          )
+        end)
+      end
+
+    assert wait_for_waiters(connection, c.database, 2, 1000)
+    Postgrex.query!(connection, "COMMIT")
+    results = Enum.map(tasks, &Task.await/1)
+    assert Enum.count(results, &match?({:ok, %Draft{revision: 2}}, &1)) == 1
+    assert Enum.count(results, &(&1 == {:error, :conflict})) == 1
+    assert {:ok, %{revision: 2} = saved} = Templates.get(c.a_scope, draft.id)
+
+    assert OperatorRepo.aggregate(
+             from(e in TemplateEvent, where: e.draft_id == ^draft.id),
+             :count
+           ) == 2
+
+    assert {:error, :forbidden} = Templates.get(c.b_scope, draft.id)
+
+    OperatorRepo.update_all(from(m in Membership, where: m.id == ^c.b_scope.id),
+      set: [role: "admin"]
+    )
+
+    b_admin = Identity.scope(c.b_scope.user_id, c.b_scope.organization_id)
+    assert {:error, :not_found} = Templates.get(b_admin, draft.id)
+    assert Repo.all(Draft) == []
+    assert Repo.all(TemplateEvent) == []
+
+    assert_raise Ecto.ConstraintError, fn ->
+      Tenant.transaction(b_admin, fn _ ->
+        Repo.insert!(%Draft{
+          organization_id: b_admin.organization_id,
+          workflow_id: draft.workflow_id,
+          base_version_id: draft.base_version_id,
+          definition: draft.definition,
+          bindings: draft.bindings,
+          created_by_id: b_admin.user_id,
+          updated_by_id: b_admin.user_id
+        })
+      end)
+    end
+
+    assert {:ok, []} =
+             Tenant.transaction(c.b_scope, fn _ ->
+               Repo.all(from d in Draft, where: d.id == ^draft.id)
+             end)
+
+    Postgrex.query!(connection, "BEGIN")
+
+    Postgrex.query!(connection, "SELECT id FROM workflow_drafts WHERE id=$1 FOR UPDATE", [
+      draft.id
+    ])
+
+    tasks =
+      for _ <- 1..2 do
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          Repo.put_dynamic_repo(c.runtime)
+          Templates.publish(c.a_scope, saved.id, saved.revision)
+        end)
+      end
+
+    assert wait_for_waiters(connection, c.database, 2, 1000)
+    Postgrex.query!(connection, "COMMIT")
+    results = Enum.map(tasks, &Task.await/1)
+
+    assert Enum.count(
+             results,
+             &match?({:ok, %Instantflow.WorkflowCatalog.Version{number: 2}}, &1)
+           ) == 1
+
+    assert Enum.count(results, &(&1 == {:error, :already_published})) == 1
+
+    assert OperatorRepo.aggregate(
+             from(e in TemplateEvent,
+               where: e.draft_id == ^draft.id and e.operation == "published"
+             ),
+             :count
+           ) == 1
+
+    assert OperatorRepo.get!(Instantflow.WorkflowRuntime.Ticket, c.ticket_id).workflow_version_id ==
+             c.version.id
+
+    assert_raise Postgrex.Error, fn ->
+      Tenant.transaction(c.a_scope, fn _ ->
+        Repo.query!("UPDATE workflow_drafts SET revision=revision+1 WHERE id=$1", [draft.id])
+      end)
+    end
+
+    assert_raise Postgrex.Error, fn ->
+      Tenant.transaction(c.a_scope, fn _ ->
+        Repo.query!("DELETE FROM template_events WHERE draft_id=$1", [draft.id])
+      end)
+    end
+  end
+
+  test "guardian, enrollment and private object tables enforce tenant RLS under the real runtime role",
+       c do
+    f = enrollment_runtime(c)
+
+    {:ok, document} =
+      Instantflow.Enrollment.upload(
+        f.parent,
+        f.enrollment.id,
+        "documento.pdf",
+        Instantflow.EnrollmentFixtures.pdf()
+      )
+
+    for table <- [
+          Instantflow.Enrollment.Record,
+          Instantflow.Enrollment.GuardianLink,
+          Instantflow.Enrollment.Document
+        ] do
+      assert Repo.aggregate(table, :count) == 0
+      assert {:ok, 0} = Tenant.raw(c.b.id, fn -> Repo.aggregate(table, :count) end)
+      assert {:ok, count} = Tenant.raw(c.a.id, fn -> Repo.aggregate(table, :count) end)
+      assert count > 0
+    end
+
+    assert_raise Ecto.ConstraintError, fn ->
+      Tenant.raw(c.b.id, fn ->
+        Repo.insert!(%Instantflow.Enrollment.GuardianLink{
+          organization_id: c.b.id,
+          enrollment_id: f.enrollment.id,
+          membership_id: c.b_scope.id
+        })
+      end)
+    end
+
+    assert {:error, :not_found} =
+             Instantflow.PrivateDocuments.download(c.b_scope, document.object_key)
+  end
+
+  test "two verified guardians overlap on one section and preserve one winning revision", c do
+    f = enrollment_runtime(c)
+
+    {:ok, invitation} =
+      Instantflow.Enrollment.invite(
+        c.a_scope,
+        f.enrollment.id,
+        "second-parent#{c.a.id}@example.test"
+      )
+
+    {:ok, user} =
+      Identity.accept_invitation(invitation.token, %{
+        "name" => "Segundo responsável",
+        "password" => "fictional-password-123"
+      })
+
+    other = Identity.scope(user.id, c.a.id)
+
+    [link] =
+      OperatorRepo.all(
+        from g in Instantflow.Enrollment.GuardianLink, where: g.membership_id == ^other.id
+      )
+
+    {:ok, _} = Instantflow.Enrollment.verify(c.a_scope, link.id, true)
+    {:ok, data} = WorkflowRuntime.get(c.a_scope, f.enrollment.ticket_id)
+
+    first =
+      Instantflow.CollaborationFixtures.section_command(data, "application", %{
+        "student_name" => "Primeiro"
+      })
+
+    second = %{first | "key" => "other-guardian", "values" => %{"student_name" => "Segundo"}}
+    results = race(c, data.ticket.id, [{f.parent, first}, {other, second}])
+    assert Enum.count(results, &match?({:ok, _}, &1)) == 1
+    assert {:error, :conflict} in results
+    assert {:ok, final} = Instantflow.Enrollment.get(f.parent, f.enrollment.id)
+    assert final.section_revision == 2
+    assert count_receipts(data.ticket.id) == 2
+  end
+
+  test "guardian-link revocation commits before a queued parent mutation reauthorizes", c do
+    f = enrollment_runtime(c)
+    observer = self()
+    supervisor = start_supervised!(Task.Supervisor)
+
+    revoker =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        Repo.transaction(fn ->
+          result = Instantflow.Enrollment.verify(c.a_scope, f.link.id, false)
+          send(observer, :guardian_gate_held)
+
+          receive do
+            :commit -> result
+          after
+            5000 -> Repo.rollback(:barrier_timeout)
+          end
+        end)
+      end)
+
+    assert_receive :guardian_gate_held, 5000
+
+    command =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        Instantflow.Enrollment.save(
+          f.parent,
+          f.enrollment.id,
+          %{"student_name" => "Não deve salvar"},
+          1,
+          1,
+          "revoked-guardian"
+        )
+      end)
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :guardian_observer
+        )
+      )
+
+    assert wait_for_waiters(connection, c.database, 1, 1000)
+    send(revoker.pid, :commit)
+    assert {:ok, {:ok, _}} = Task.await(revoker)
+    assert {:error, :not_found} = Task.await(command)
+    assert count_receipts(f.enrollment.ticket_id) == 1
+    assert Instantflow.Enrollment.list(f.parent) == []
+  end
+
+  defp enrollment_runtime(c) do
+    departments =
+      Map.new(~w(admissions academic finance it), &{&1 <> "_department", c.a_scope.department_id})
+
+    {:ok, version} = Instantflow.Enrollment.install(c.a_scope, departments)
+
+    {:ok, enrollment} =
+      Instantflow.Enrollment.create(c.a_scope, version.workflow_id, Ecto.UUID.generate())
+
+    {:ok, invitation} =
+      Instantflow.Enrollment.invite(c.a_scope, enrollment.id, "parent#{c.a.id}@example.test")
+
+    {:ok, user} =
+      Identity.accept_invitation(invitation.token, %{
+        "name" => "Responsável fictício",
+        "password" => "fictional-password-123"
+      })
+
+    parent = Identity.scope(user.id, c.a.id)
+
+    [link] =
+      OperatorRepo.all(
+        from g in Instantflow.Enrollment.GuardianLink, where: g.membership_id == ^parent.id
+      )
+
+    {:ok, _} = Instantflow.Enrollment.verify(c.a_scope, link.id, true)
+    %{enrollment: enrollment, parent: parent, link: link}
+  end
+
   defp collaborative_ticket(c, expected_version \\ 1) do
     bindings = %{
       "roles" => %{

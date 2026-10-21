@@ -77,7 +77,10 @@ defmodule Instantflow.Delivery do
     %{rows: rows} = Repo.query!("SELECT id FROM dispatch_organizations()")
 
     # Each organization receives one bounded batch each pass, irrespective of the preceding tenant's backlog.
-    Enum.map(rows, fn [id] -> {id, Enum.map(pending_ids(id), &process(id, &1))} end)
+    Enum.map(rows, fn [id] ->
+      Instantflow.PrivateDocuments.purge_expired(id)
+      {id, Enum.map(pending_ids(id), &process(id, &1))}
+    end)
   end
 
   def retry(actor, id) do

@@ -1,0 +1,337 @@
+{
+  "format_version": "1.0",
+  "template_key": "typed_approval",
+  "template_version": "0.1.0",
+  "locale": "pt-BR",
+  "name": "Aprovação administrativa com campos tipados",
+  "description": "Exemplo fictício de configuração reutilizável entre organizações.",
+  "capabilities": [
+    "core"
+  ],
+  "role_requirements": [
+    {
+      "key": "requester",
+      "label": "Solicitante"
+    },
+    {
+      "key": "reviewer",
+      "label": "Responsável pela análise"
+    }
+  ],
+  "sections": [
+    {
+      "key": "request",
+      "label": "Solicitação",
+      "classification": "internal",
+      "access": [
+        {
+          "role": "requester",
+          "scope": "requester",
+          "read": true,
+          "edit_stages": [
+            "draft",
+            "correction"
+          ]
+        },
+        {
+          "role": "reviewer",
+          "scope": "assigned_department",
+          "read": true,
+          "edit_stages": []
+        }
+      ],
+      "fields": [
+        {
+          "key": "summary",
+          "label": "Resumo",
+          "type": "short_text"
+        },
+        {
+          "key": "justification",
+          "label": "Justificativa",
+          "type": "long_text"
+        },
+        {
+          "key": "amount",
+          "label": "Valor em centavos",
+          "type": "money",
+          "currency": "BRL"
+        },
+        {
+          "key": "quantity",
+          "label": "Quantidade",
+          "type": "integer"
+        },
+        {
+          "key": "deadline",
+          "label": "Prazo",
+          "type": "date"
+        },
+        {
+          "key": "meeting",
+          "label": "Reunião (instante ISO com fuso)",
+          "type": "datetime"
+        },
+        {
+          "key": "confirmed",
+          "label": "Informações confirmadas",
+          "type": "boolean"
+        },
+        {
+          "key": "category",
+          "label": "Categoria",
+          "type": "single_choice",
+          "options": [
+            "Material",
+            "Serviço"
+          ]
+        },
+        {
+          "key": "tags",
+          "label": "Marcadores",
+          "type": "multiple_choice",
+          "options": [
+            "Urgente",
+            "Planejado"
+          ]
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "key": "draft",
+      "label": "Rascunho",
+      "initial": true,
+      "terminal": false
+    },
+    {
+      "key": "review",
+      "label": "Em análise",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "correction",
+      "label": "Aguardando correção",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "approved",
+      "label": "Aprovada",
+      "initial": false,
+      "terminal": true
+    },
+    {
+      "key": "rejected",
+      "label": "Rejeitada",
+      "initial": false,
+      "terminal": true
+    },
+    {
+      "key": "cancelled",
+      "label": "Cancelada",
+      "initial": false,
+      "terminal": true
+    }
+  ],
+  "creation": {
+    "roles": [
+      "requester"
+    ]
+  },
+  "transitions": [
+    {
+      "key": "submit",
+      "label": "Enviar para análise",
+      "from": "draft",
+      "to": "review",
+      "actors": [
+        {
+          "role": "requester",
+          "scope": "requester"
+        }
+      ],
+      "required_fields": [
+        "request.summary",
+        "request.justification",
+        "request.amount",
+        "request.confirmed"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [
+        {
+          "type": "simulate_notification",
+          "behavior": "success"
+        }
+      ],
+      "guard": {
+        "op": "all",
+        "args": [
+          {
+            "op": "gte",
+            "field": "request.amount",
+            "value": 0
+          },
+          {
+            "op": "eq",
+            "field": "request.confirmed",
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "key": "request_correction",
+      "label": "Solicitar correção",
+      "from": "review",
+      "to": "correction",
+      "actors": [
+        {
+          "role": "reviewer",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "correction",
+      "actions": []
+    },
+    {
+      "key": "resubmit",
+      "label": "Reenviar para análise",
+      "from": "correction",
+      "to": "review",
+      "actors": [
+        {
+          "role": "requester",
+          "scope": "requester"
+        }
+      ],
+      "required_fields": [
+        "request.summary",
+        "request.justification"
+      ],
+      "require_reason": false,
+      "kind": "resubmission",
+      "actions": []
+    },
+    {
+      "key": "approve",
+      "label": "Aprovar",
+      "from": "review",
+      "to": "approved",
+      "actors": [
+        {
+          "role": "reviewer",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [
+        "request.summary",
+        "request.justification"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "disallow_requester": true,
+      "actions": []
+    },
+    {
+      "key": "reject",
+      "label": "Rejeitar",
+      "from": "review",
+      "to": "rejected",
+      "actors": [
+        {
+          "role": "reviewer",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "rejection",
+      "actions": []
+    },
+    {
+      "key": "cancel_draft",
+      "label": "Cancelar",
+      "from": "draft",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "requester",
+          "scope": "requester"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": []
+    },
+    {
+      "key": "cancel_review",
+      "label": "Cancelar",
+      "from": "review",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "requester",
+          "scope": "requester"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": []
+    },
+    {
+      "key": "cancel_correction",
+      "label": "Cancelar",
+      "from": "correction",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "requester",
+          "scope": "requester"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": []
+    }
+  ],
+  "bindings": [
+    {
+      "key": "review_department",
+      "type": "department",
+      "label": "Departamento responsável pela análise"
+    }
+  ],
+  "assignment": {
+    "department_binding": "review_department"
+  },
+  "views": [
+    {
+      "key": "requests",
+      "label": "Solicitações",
+      "type": "table",
+      "columns": [
+        "request.summary",
+        "stage"
+      ]
+    },
+    {
+      "key": "by_stage",
+      "label": "Quadro por etapa",
+      "type": "board",
+      "columns": [
+        "stage",
+        "request.summary",
+        "request.amount"
+      ]
+    }
+  ]
+}

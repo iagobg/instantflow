@@ -25,12 +25,13 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/instantflow"
 import topbar from "../vendor/topbar"
 import {Collaboration} from "./collaboration"
+import {WorkflowGraph} from "./workflow_graph"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, Collaboration},
+  hooks: {...colocatedHooks, Collaboration, WorkflowGraph},
 })
 
 // Show progress bar on live navigation and form submits

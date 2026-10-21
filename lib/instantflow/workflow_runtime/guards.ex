@@ -13,7 +13,8 @@ defmodule Instantflow.WorkflowRuntime.Guards do
   def pass?(%{"op" => "delivery_succeeded", "kind" => kind}, _, _, deliveries),
     do: kind in deliveries
 
-  def pass?(%{"op" => "attachment_ready"}, _, _, _), do: false
+  def pass?(%{"op" => "attachment_ready", "field" => ref}, values, _, _),
+    do: values[ref] == :attachment_ready
 
   def pass?(%{"op" => "in", "field" => ref, "value" => list}, values, _, _),
     do: values[ref] in list

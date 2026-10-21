@@ -53,8 +53,15 @@ defmodule InstantflowWeb.UserAuth do
 
         validate = fn socket ->
           case Identity.scope_for_token(session["user_token"], scope.organization_id) do
-            nil -> {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
-            fresh -> {:cont, Phoenix.Component.assign(socket, :current_scope, fresh)}
+            nil ->
+              {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
+
+            fresh ->
+              if socket.view in [InstantflowWeb.TemplateLive, InstantflowWeb.TemplatesLive] and
+                   fresh.role != "admin",
+                 do:
+                   {:halt, Phoenix.LiveView.redirect(socket, to: "/o/#{fresh.organization.slug}")},
+                 else: {:cont, Phoenix.Component.assign(socket, :current_scope, fresh)}
           end
         end
 
@@ -79,8 +86,12 @@ defmodule InstantflowWeb.UserAuth do
             :revalidate_organization, socket ->
               Process.send_after(self(), :revalidate_organization, 30000)
 
-              if socket.view in [InstantflowWeb.RequestLive, InstantflowWeb.RequestsLive],
-                do: send(self(), :reconcile)
+              if socket.view in [
+                   InstantflowWeb.RequestLive,
+                   InstantflowWeb.RequestsLive,
+                   InstantflowWeb.EnrollmentLive
+                 ],
+                 do: send(self(), :reconcile)
 
               case validate.(socket) do
                 {:halt, socket} -> {:halt, socket}
@@ -93,9 +104,13 @@ defmodule InstantflowWeb.UserAuth do
                   {:halt, socket}
 
                 {:cont, socket} ->
-                  if socket.view in [InstantflowWeb.RequestLive, InstantflowWeb.RequestsLive],
-                    do: {:cont, socket},
-                    else: {:halt, socket}
+                  if socket.view in [
+                       InstantflowWeb.RequestLive,
+                       InstantflowWeb.RequestsLive,
+                       InstantflowWeb.EnrollmentLive
+                     ],
+                     do: {:cont, socket},
+                     else: {:halt, socket}
               end
 
             _, socket ->
