@@ -2,7 +2,7 @@
 
 Sprint 08 targets the owner's Oracle Ampere A1 Ubuntu VM (4 OCPUs, 24 GB RAM), shared with Phoenix and PostgreSQL. On 2026-10-21 the owner explicitly approved gVisor on this same VM, revising the original separate-host requirement. Only synthetic data and privately gated application access are in scope.
 
-A successful escape could reach the application/database host. This residual risk is accepted for this academic topology; it is not a claim of equivalent separation or suitability for real clients. Ordinary containers, a Python subprocess, AST restrictions or a venv are not accepted substitutes for gVisor. The local implementation remains disabled by default, and no VPS changes have been made.
+A successful escape could reach the application/database host. This residual risk is accepted for this academic topology; it is not a claim of equivalent separation or suitability for real clients. Ordinary containers, a Python subprocess, AST restrictions or a venv are not accepted substitutes for gVisor. Execution remains disabled by default. The target VPS now has the reviewed gVisor runtime and an isolated broker; application enablement still requires the acceptance gates below.
 
 ## What is implemented
 
@@ -14,7 +14,7 @@ The transition commits a waiting stage and a durable intent. Dedicated workers c
 
 Computed sections are read-only. Output readership cannot exceed input readership, and outputs cannot target fields used by finance effects. The supplied trip workflow records a reviewed quotation, without reserving or spending funds. Calculation execution is separate from refresh delivery; statuses, generic failure guidance, retry and cancellation are in PT-BR.
 
-Each organization has at most 20 outstanding runs and 100 immutable script versions; the catalogue shows the latest 100 versions. The worker rotates organizations, with one running attempt per organization and two in total per node. The broker independently limits concurrency to two, one per organization. Per-attempt limits are 1 CPU, 128 MiB RAM/swap cap, 16 processes, 5-second wall time, 8 MiB scratch, 16 KiB stdout and 20 KiB combined stdout/stderr. The aggregate slice targets 2 CPUs, 512 MiB memory, no swap and 64 tasks. These are configured bounds pending measurement on the A1 host, including runtime overhead.
+Each organization has at most 20 outstanding runs and 100 immutable script versions; the catalogue shows the latest 100 versions. The worker rotates organizations, with one running attempt per organization and two in total per node. The broker independently limits concurrency to two, one per organization. Per-attempt limits are 1 CPU, 128 MiB RAM/swap cap, 64 host tasks plus a 32-process guest limit, 5-second wall time, 8 MiB scratch, 16 KiB stdout and 20 KiB combined stdout/stderr. The aggregate slice targets 2 CPUs, 512 MiB memory, no swap and 128 tasks. Real ARM64 tests found that a 16-task ceiling prevented gVisor startup; the current allowance includes runtime overhead.
 
 Only declared integers enter workloads. No run/tenant identity, broker token, database credentials, attachments or record-fetching capability is passed into Python. Raw stdout/stderr is discarded; ticket diagnostics contain fixed messages. Terminal run snapshots, retained result JSON and diagnostics are cleared after seven days by the ordinary delivery poller, marking the run stale. Queue/running records await recovery; approved source/fixtures and data-free attempt metadata remain for reproducibility. Derived ticket fields remain under the ticket's own retention policy. Backups need a separate operator retention policy.
 
@@ -34,7 +34,7 @@ docker image inspect instantflow-python:reviewed --format '{{.Id}}'
 
 Use the returned immutable `sha256:...` image ID for `PYTHON_IMAGE`; a locally available registry manifest digest also works. Nothing automatically pulls an image at execution. Script registration uses its 64-character hex suffix as `runtime`. A rebuilt/patched image needs new script versions and review.
 
-5. Create root-owned `/etc/instantflow-python/`. Store a newly generated token of at least 32 random bytes and the pinned image in `broker.env`, readable only by root and the runner service group. Required settings are `PYTHON_BROKER_TOKEN` and `PYTHON_IMAGE`. The broker binds only `127.0.0.1:4010`; do not expose it through the reverse proxy or OCI ingress rules. Protect loopback access from unrelated local users.
+5. Create root-owned `/etc/instantflow-python/`. Store a newly generated token of at least 32 random bytes and the pinned image in `broker.env`, readable only by root and the runner service group. Required settings are `PYTHON_BROKER_TOKEN` and `PYTHON_IMAGE`. For container deployments, use `PYTHON_BROKER_SOCKET=/run/instantflow-python/broker.sock` and `PYTHON_BROKER_SOCKET_GID=65534`. The broker creates a 0660 Unix socket, with a stable runtime directory across restarts. Bind only that directory read-only into Phoenix using the opt-in Compose fragment. Do not expose broker TCP or mount Docker into Phoenix. Local development may use loopback instead.
 6. Create the root-owned `/etc/instantflow-python/ENABLED` marker for the isolated synthetic rehearsal. Start the broker. It refuses startup without `runsc` and never falls back to `runc`. No application execution is enabled by this marker alone.
 7. Run the host acceptance harness with the reviewed image and save its JSON evidence:
 
@@ -44,13 +44,15 @@ PYTHON_IMAGE="$PYTHON_IMAGE" python3 runner/verify.py > a1-python-isolation.json
 
 Run it with the operator's Docker authority on a synthetic deployment. It performs real resource-exhaustion attempts, network/host-resource denial probes, fresh-scratch checks across two synthetic organizations, post-failure recovery and leftover-container checks. Run it without concurrent legitimate calculation jobs, because its final cleanup check expects no labelled containers. It does not prove absence of escapes or all side channels. Exercise the emergency marker removal during an active workload and measure the external watchdog separately.
 
+Run `runner/verify_service.py` with the same operator environment to exercise authenticated Unix transport, per-tenant/global admission, healthy progress beside a CPU loop, emergency removal, forced broker death, watchdog cleanup and socket-directory stability. These checks require no legitimate calculations in flight.
+
 8. Apply both forward migrations using OperatorRepo. Give only the serving process `PYTHON_EXECUTION=true`, `PYTHON_BROKER_URL=http://127.0.0.1:4010` and `PYTHON_BROKER_TOKEN`. Never give Phoenix the operator database URL, image-building privilege or Docker access. The operator then uses:
 
 ~~~sh
 mix instantflow.python enable
 ~~~
 
-For a production checkout, use `MIX_ENV=prod` and the operator-only database configuration. The serving release need not include Mix: run this task from the controlled operator checkout. Each switch change increments a durable generation and appends an operator-role audit row. The web runtime can read/lock the switch but cannot change it. Activation is contingent on the A1 acceptance evidence; the task does not certify isolation.
+For a production checkout, use `MIX_ENV=prod` and the operator-only database configuration. The serving release need not include Mix: in an operator-only one-off container, use `bin/instantflow eval 'Instantflow.Release.python_switch(true)'` (or `false` to disable). The serving process must never receive the operator URL. Each switch change increments a durable generation and appends an operator-role audit row. The web runtime can read/lock the switch but cannot change it. Activation is contingent on the A1 acceptance evidence; the task does not certify isolation.
 
 ## Demonstration walkthrough
 
@@ -74,4 +76,4 @@ Create a request and enter 81 participants, capacity 40, 120 round-trip km, base
 
 Application tests use a deterministic protocol adapter, real loopback HTTP tests and independent non-owner database connections for concurrent claiming/finalization. Python controller tests use trusted subprocess stubs; the repository example is tested as trusted source. These are not evidence that uploaded hostile code was contained.
 
-The inspected local Docker daemon has no registered `runsc`. No customer-uploaded source was executed locally, no hostile containment run completed, and the remote ARM host was not inspected or changed. The [readiness assessment](python-readiness.md) and Sprint 08 remain explicit about this limit. Before enabling execution on the VPS, record the actual Ubuntu/kernel, gVisor and image versions, measured limits, network/resource denial, cleanup, emergency-disablement and broker/worker recovery evidence. Sprint 08 is not Done until those acceptance checks pass.
+The local Docker daemon is not the ARM target. Actual target-host isolation checks now pass using gVisor `release-20261012.0`; the broader service and application recovery gates are being completed. The [readiness assessment](python-readiness.md) and Sprint 08 remain explicit about this limit. Before enabling execution on the VPS, record the actual Ubuntu/kernel, gVisor and image versions, measured limits, network/resource denial, cleanup, emergency-disablement and broker/worker recovery evidence. Sprint 08 is not Done until those acceptance checks pass.

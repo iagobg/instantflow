@@ -1,10 +1,12 @@
-"""Loopback-only authenticated gVisor broker. Never run this as the Phoenix OS user."""
+"""Local authenticated gVisor broker, via Unix socket or loopback. Separate from Phoenix."""
 import hmac
 import http.server
 import json
 import os
 import re
 import selectors
+import socketserver
+import stat
 import signal
 import subprocess
 import threading
@@ -66,8 +68,8 @@ def docker_args(image, name):
             "--pull", "never", "--runtime", "runsc", "--network", "none", "--ipc", "none",
             "--read-only", "--user", "65532:65532", "--cap-drop", "ALL",
             "--security-opt", "no-new-privileges", "--cpus", "1",
-            "--memory", "128m", "--memory-swap", "128m", "--pids-limit", "16",
-            "--ulimit", "nofile=64:64", "--ulimit", "core=0:0",
+            "--memory", "128m", "--memory-swap", "128m", "--pids-limit", "64",
+            "--ulimit", "nproc=32:32", "--ulimit", "nofile=64:64", "--ulimit", "core=0:0",
             "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=8m,mode=1777",
             "--cgroup-parent", "instantflow-python.slice", "--log-driver", "none",
             "-i", "--entrypoint", "/usr/local/bin/python3", image, "-I", "-B", "/opt/runner.py"]
@@ -219,6 +221,27 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 SLOTS.release()
 
 
+class UnixHTTPServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
+    daemon_threads = True
+
+
+def make_server(socket_path=None):
+    if not socket_path:
+        return http.server.ThreadingHTTPServer(("127.0.0.1", 4010), Handler)
+    if not os.path.isabs(socket_path):
+        raise ValueError("broker socket path must be absolute")
+    if os.path.lexists(socket_path):
+        info = os.lstat(socket_path)
+        if not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.getuid():
+            raise ValueError("refusing to replace a foreign socket or regular file")
+        os.unlink(socket_path)
+    server = UnixHTTPServer(socket_path, Handler)
+    group = int(os.environ.get("PYTHON_BROKER_SOCKET_GID", str(os.getgid())))
+    os.chown(socket_path, -1, group)
+    os.chmod(socket_path, 0o660)
+    return server
+
+
 def serve():
     token = os.environ["PYTHON_BROKER_TOKEN"]
     image = os.environ["PYTHON_IMAGE"]
@@ -229,7 +252,7 @@ def serve():
                           check=True, capture_output=True, timeout=5)
     if "runsc" not in decode(info.stdout):
         raise RuntimeError("runsc required")
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", 4010), Handler)
+    server = make_server(os.environ.get("PYTHON_BROKER_SOCKET"))
     server.token = token
     server.image = image
     server.enabled_file = os.environ.get("PYTHON_ENABLED_FILE", "/etc/instantflow-python/ENABLED")

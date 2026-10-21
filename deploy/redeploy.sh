@@ -16,6 +16,12 @@ test -s instantflow.db.env
 test -s projects/instantflow.compose.yml
 # sudo resets the caller's environment; set the selected image after sudo.
 compose=(sudo -n env "INSTANTFLOW_IMAGE=$image" docker compose -f compose.yml -f projects/instantflow.compose.yml)
+# This root/operator-installed fragment is absent until real-host acceptance passes.
+if test -f projects/instantflow-python.compose.yml; then
+  test -s instantflow.python.env
+  test -S /run/instantflow-python/broker.sock
+  compose+=(-f projects/instantflow-python.compose.yml)
+fi
 # Pull first so a registry failure causes no downtime.
 "${compose[@]}" --profile tools pull instantflow instantflow-migrate instantflow-db < /dev/null
 "${compose[@]}" up -d --wait --wait-timeout 120 instantflow-db < /dev/null

@@ -23,7 +23,7 @@ def main():
         raise SystemExit("Refused: operator ENABLED marker is absent")
     report = {"date": datetime.datetime.now(datetime.timezone.utc).isoformat(),
               "architecture": platform.machine(), "kernel": platform.release(), "image": image,
-              "limits": {"wall_seconds": 5, "cpu": 1, "memory_mib": 128, "pids": 16,
+              "limits": {"wall_seconds": 5, "cpu": 1, "memory_mib": 128, "host_tasks": 64, "guest_processes": 32,
                          "scratch_mib": 8, "stdout_bytes": 16384, "combined_output_bytes": 20480},
               "tests": []}
 

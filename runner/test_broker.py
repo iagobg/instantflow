@@ -27,6 +27,18 @@ class BrokerTest(unittest.TestCase):
         return patch("broker.docker_args", return_value=[sys.executable, "-c",
                      "import sys; sys.stdin.read(); " + code])
 
+    def test_unix_socket_is_private_and_replaces_only_owned_socket(self):
+        path = str(pathlib.Path(self.temp.name) / "broker.sock")
+        with broker.make_server(path):
+            self.assertEqual(os.stat(path).st_mode & 0o777, 0o660)
+        with broker.make_server(path):
+            self.assertTrue(pathlib.Path(path).exists())
+        os.unlink(path)
+        pathlib.Path(path).write_text("do not replace")
+        with self.assertRaises(ValueError):
+            broker.make_server(path)
+        self.assertEqual(pathlib.Path(path).read_text(), "do not replace")
+
     def test_duplicate_json_nonfinite_and_unpinned_runtime_are_rejected(self):
         for raw in ('{"x":1,"x":2}', '{"x":NaN}', '{"x":Infinity}'):
             with self.assertRaises(ValueError):
@@ -42,7 +54,7 @@ class BrokerTest(unittest.TestCase):
         args = broker.docker_args(self.image, "test")
         for flag, value in (("--runtime", "runsc"), ("--network", "none"),
                             ("--memory", "128m"), ("--memory-swap", "128m"),
-                            ("--pids-limit", "16"), ("--user", "65532:65532"),
+                            ("--pids-limit", "64"), ("--user", "65532:65532"),
                             ("--pull", "never"), ("--log-driver", "none")):
             self.assertEqual(args[args.index(flag) + 1], value)
         for prohibited in ("--privileged", "--volume", "-v", "--env", "-e", "--env-file"):

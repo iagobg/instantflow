@@ -101,6 +101,12 @@ if "pg_dump" in " ".join(args):
                 if failure == "run":
                     self.assertFalse(any("up -d --no-deps" in c for c in self.commands()))
 
+    def test_python_opt_in_refuses_missing_private_environment_before_downtime(self):
+        (self.root / "projects/instantflow-python.compose.yml").write_text("opt-in")
+        result = self.run_deploy()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.root / "commands").exists())
+
     def test_rejects_mutable_or_injected_image_before_docker(self):
         for image in ("ghcr.io/iagobg/instantflow:latest", IMAGE + ";echo bad"):
             with self.subTest(image=image):

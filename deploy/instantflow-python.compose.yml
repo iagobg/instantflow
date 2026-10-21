@@ -1,0 +1,11 @@
+# Opt-in fragment: copy to VPS projects/ only after runner host acceptance.
+# Paths are relative to the shared stack's compose.yml, not this fragment.
+services:
+  instantflow:
+    env_file:
+      - ./instantflow.python.env
+    environment:
+      PYTHON_EXECUTION: "true"
+      PYTHON_BROKER_SOCKET: /run/instantflow-python/broker.sock
+    volumes:
+      - /run/instantflow-python:/run/instantflow-python:ro

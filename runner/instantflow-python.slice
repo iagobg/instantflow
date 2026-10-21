@@ -5,4 +5,4 @@ Description=Aggregate limits for InstantFlow Python demonstration workloads
 CPUQuota=200%
 MemoryMax=512M
 MemorySwapMax=0
-TasksMax=64
+TasksMax=128

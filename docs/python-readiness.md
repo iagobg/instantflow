@@ -22,7 +22,7 @@ Only declared synthetic values enter the workload. The returned quotation is a r
 
 [Firecracker](https://github.com/firecracker-microvm/firecracker/blob/main/docs/getting-started.md) requires usable KVM. That has not been demonstrated here; Firecracker is not the selected runtime.
 
-The initial development PATH inventory did not find Docker/runsc. A subsequent inspection found Docker via /snap/bin/docker, with an amd64 daemon and only ordinary runc runtimes registered. No gVisor runtime is registered. This local environment is not the ARM target; no remote changes or containment certification are claimed.
+The initial development PATH inventory did not find Docker/runsc. A subsequent inspection found Docker via /snap/bin/docker, with an amd64 daemon and only ordinary runc runtimes registered. This local environment is not the ARM target. The remote A1 now runs checksum-pinned gVisor `release-20261012.0`, installed using Docker reload while preserving all 13 existing containers. Target-host isolation checks pass; service and application recovery acceptance remains in progress.
 
 ## Readiness outcome
 

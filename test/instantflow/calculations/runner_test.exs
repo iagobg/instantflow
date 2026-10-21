@@ -4,11 +4,17 @@ defmodule Instantflow.Calculations.RunnerTest do
 
   setup do
     previous =
-      for key <- [:calculation_runner, :calculation_broker_url, :calculation_broker_token],
+      for key <- [
+            :calculation_runner,
+            :calculation_broker_url,
+            :calculation_broker_token,
+            :calculation_broker_socket
+          ],
           into: %{},
           do: {key, Application.fetch_env(:instantflow, key)}
 
     Application.delete_env(:instantflow, :calculation_runner)
+    Application.delete_env(:instantflow, :calculation_broker_socket)
     Application.put_env(:instantflow, :calculation_broker_token, String.duplicate("t", 32))
 
     on_exit(fn ->
@@ -72,6 +78,30 @@ defmodule Instantflow.Calculations.RunnerTest do
     after
       Ecto.Adapters.SQL.Sandbox.checkin(Instantflow.Repo)
     end
+  end
+
+  test "container transport uses only the configured Unix socket" do
+    path = Path.join(System.tmp_dir!(), "iflow-broker-#{System.unique_integer([:positive])}.sock")
+    on_exit(fn -> File.rm(path) end)
+    start_supervised!({Instantflow.UnixCalculationBroker, path: path, observer: self()})
+    Application.put_env(:instantflow, :calculation_broker_socket, path)
+    Application.put_env(:instantflow, :calculation_broker_url, "http://127.0.0.1:4010")
+    request = request()
+    assert {:ok, %{"output" => %{"total" => 1}}} = Runner.execute(request)
+    assert_receive {:unix_request, ^request}
+  end
+
+  test "missing Unix socket cannot fall back to TCP" do
+    broker(:ok)
+
+    Application.put_env(
+      :instantflow,
+      :calculation_broker_socket,
+      "/tmp/instantflow-nonexistent-broker.sock"
+    )
+
+    assert {:error, :runner_unavailable} = Runner.execute(request())
+    refute_receive {:broker_request, _, _}
   end
 
   test "streaming enforces the response byte cap" do

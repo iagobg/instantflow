@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-21T15:25:50.803081+00:00",
+  "architecture": "aarch64",
+  "kernel": "6.8.0-1062-oracle",
+  "image": "sha256:4b4b8f21f94fd36e53af1ab108ee0871f64594139a4270ae25c11d0313100961",
+  "limits": {
+    "wall_seconds": 5,
+    "cpu": 1,
+    "memory_mib": 128,
+    "host_tasks": 64,
+    "guest_processes": 32,
+    "scratch_mib": 8,
+    "stdout_bytes": 16384,
+    "combined_output_bytes": 20480
+  },
+  "tests": [
+    {
+      "name": "valid_calculation",
+      "passed": true,
+      "status": "succeeded",
+      "seconds": 0.516
+    },
+    {
+      "name": "host_files_credentials_denied",
+      "passed": true,
+      "status": "succeeded",
+      "seconds": 0.454
+    },
+    {
+      "name": "ipv4_ipv6_dns_denied",
+      "passed": true,
+      "status": "succeeded",
+      "seconds": 0.526
+    },
+    {
+      "name": "readonly_root",
+      "passed": true,
+      "status": "succeeded",
+      "seconds": 0.491
+    },
+    {
+      "name": "scratch_first_tenant",
+      "passed": true,
+      "status": "succeeded",
+      "seconds": 0.488
+    },
+    {
+      "name": "fresh_scratch_other_tenant",
+      "passed": true,
+      "status": "succeeded",
+      "seconds": 0.484
+    },
+    {
+      "name": "cpu_timeout",
+      "passed": true,
+      "status": "timed_out",
+      "seconds": 5.179
+    },
+    {
+      "name": "memory_exhaustion",
+      "passed": true,
+      "status": "failed",
+      "seconds": 0.563
+    },
+    {
+      "name": "stdout_exhaustion",
+      "passed": true,
+      "status": "failed",
+      "seconds": 0.524
+    },
+    {
+      "name": "scratch_exhaustion",
+      "passed": true,
+      "status": "failed",
+      "seconds": 0.536
+    },
+    {
+      "name": "process_limit",
+      "passed": true,
+      "status": "succeeded",
+      "seconds": 0.75
+    },
+    {
+      "name": "healthy_after_exhaustion",
+      "passed": true,
+      "status": "succeeded",
+      "seconds": 0.481
+    }
+  ],
+  "cleanup": "no labelled containers remain",
+  "limitations": "Targeted tests do not prove absence of escapes, side channels or host-wide DoS. Concurrency and application recovery must also pass."
+}
