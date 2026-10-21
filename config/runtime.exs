@@ -35,7 +35,7 @@ if config_env() == :dev do
   # Reload browser tabs when matching files change.
   config :instantflow, InstantflowWeb.Endpoint,
     live_reload: [
-      web_console_logger: true,
+      web_console_logger: false,
       patterns: [
         # Static assets, except user uploads
         ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$"E,

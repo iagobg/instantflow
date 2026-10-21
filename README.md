@@ -4,6 +4,8 @@ InstantFlow is a general-purpose, multi-organization workflow platform built wit
 
 ## Current delivery
 
+Sprint 07 completes integrated verification and local delivery: [reproducible demo](docs/demo.md), [release gates](docs/release-gates.md), [performance evidence](docs/performance.md), and [deployment/limits](docs/deployment.md). All 136 tests pass. Populated backup recovery and production release smoke passed. Sprint 08 remains gated by explicit user decision.
+
 Sprint 06 adds confidential incidents, a restricted urgency dashboard, named counselor assignments, separate disciplinary/support work, confined private uploads and curated simulated guardian communication. Open **Ocorrências**. See [incident operations](docs/incidents.md).
 
 Sprint 05 adds shared-budget reservations, audited purchasing and reversals, partial receiving, field-trip prerequisites, live authorized budgets, calendar agendas and department assignments. Open **Orçamentos** and **Solicitações**. See [finance walkthrough and limits](docs/finance.md).
@@ -20,7 +22,7 @@ Sprints 00 and 01 are implemented. Sprint 01 adds validated immutable workflow v
 
 The demonstration includes Escola Horizonte and Escola Aurora. The same `admin@escola.example` account is an administrator in Horizonte and a collaborator in Aurora; `gestao@aurora.example` administers Aurora. Global sessions last 24 hours. Existing-account recipients sign in before accepting local invitations; credentials and other memberships are preserved. Both themes use the supplied tokens and logos. Invitation delivery remains explicitly simulated with one-time 48-hour codes and no outbound email.
 
-The enrollment parent portal and private files are implemented. All four school reference workflows are implemented; integrated verification and delivery are Sprint 07. This application is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
+The enrollment parent portal and private files are implemented. All four school reference workflows are implemented; integrated verification and delivery are complete in Sprint 07. This application is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
 
 ## Prerequisites and setup
 
@@ -62,7 +64,7 @@ python3 scripts/rehearse_01a.py
 ```
 
 
-The seed is repeatable and preserves existing users/passwords. Sprint 01A is forward-only: never reset or remove another school to accommodate singleton rollback. Follow the [operator recovery procedure](docs/organizations-operations.md). `mix precommit` checks compilation warnings, unused lock entries, formatting and tests. CI also checks a legacy forward migration, multitenant backup/restore, rollback refusal, asset builds and seeds. Ordinary regression fixtures use the SQL sandbox; dedicated runtime-role tests additionally use independent connections and real non-owner credentials.
+The seed is repeatable and preserves existing users/passwords. Sprint 01A is forward-only: never reset or remove another school to accommodate singleton rollback. Follow the [operator recovery procedure](docs/organizations-operations.md). `mix precommit` checks compilation warnings, unused lock entries, formatting and tests. CI also runs legacy forward migration, populated integrated backup/restore, rollback refusal, mixed load, production asset build and seeds. Ordinary regression fixtures use the SQL sandbox; dedicated runtime-role tests additionally use independent connections and real non-owner credentials.
 
 ## Conventions
 

@@ -24,3 +24,10 @@ jobs:
       - run: mix run priv/repo/seeds.exs
         env:
           DEMO_PASSWORD: ci-fictional-accounts-only
+      - run: mix run --no-start scripts/rehearse_delivery.exs
+      - run: mix run --no-start scripts/benchmark.exs
+        env:
+          BENCHMARK_MIXED: "true"
+      - run: mix assets.deploy
+        env:
+          MIX_ENV: prod

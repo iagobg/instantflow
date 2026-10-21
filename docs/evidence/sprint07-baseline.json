@@ -1,0 +1,93 @@
+{
+  "environment": {
+    "os": "{:unix, :linux}",
+    "otp": "28",
+    "schedulers": 24,
+    "elixir": "1.19.5",
+    "postgres": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+    "runtime_pool": 50
+  },
+  "database": "instantflow_benchmark_387219cfcd",
+  "organizations": 10,
+  "samples": 500,
+  "per_organization": {
+    "1": {
+      "command_p95_ms": 54.391,
+      "command_p50_ms": 9.373,
+      "search_p95_ms": 78.742,
+      "visibility_p95_ms": 1320
+    },
+    "10": {
+      "command_p95_ms": 55.139,
+      "command_p50_ms": 6.756,
+      "search_p95_ms": 83.264,
+      "visibility_p95_ms": 1307
+    },
+    "2": {
+      "command_p95_ms": 54.744,
+      "command_p50_ms": 8.544,
+      "search_p95_ms": 82.574,
+      "visibility_p95_ms": 1319
+    },
+    "3": {
+      "command_p95_ms": 51.668,
+      "command_p50_ms": 8.587,
+      "search_p95_ms": 78.769,
+      "visibility_p95_ms": 1319
+    },
+    "4": {
+      "command_p95_ms": 53.826,
+      "command_p50_ms": 8.441,
+      "search_p95_ms": 82.385,
+      "visibility_p95_ms": 1314
+    },
+    "5": {
+      "command_p95_ms": 56.074,
+      "command_p50_ms": 8.162,
+      "search_p95_ms": 87.869,
+      "visibility_p95_ms": 1314
+    },
+    "6": {
+      "command_p95_ms": 55.893,
+      "command_p50_ms": 7.997,
+      "search_p95_ms": 84.146,
+      "visibility_p95_ms": 1309
+    },
+    "7": {
+      "command_p95_ms": 52.801,
+      "command_p50_ms": 7.956,
+      "search_p95_ms": 83.396,
+      "visibility_p95_ms": 1310
+    },
+    "8": {
+      "command_p95_ms": 53.814,
+      "command_p50_ms": 8.465,
+      "search_p95_ms": 81.915,
+      "visibility_p95_ms": 1308
+    },
+    "9": {
+      "command_p95_ms": 54.273,
+      "command_p50_ms": 8.467,
+      "search_p95_ms": 84.716,
+      "visibility_p95_ms": 1308
+    }
+  },
+  "records": 10000,
+  "concurrent_staff": 50,
+  "elapsed_ms": 13112,
+  "poll_interval_ms": 1000,
+  "dataset": "Per school: 700 requisitions, 100 trips, 100 enrollments, 100 incidents; 5 local actors. Synthetic bulk fixture stages; runtime writes use guarded commands.",
+  "totals": {
+    "command_p95_ms": 54.273,
+    "command_p50_ms": 8.297,
+    "search_p95_ms": 82.615,
+    "visibility_p95_ms": 1312
+  },
+  "thresholds": {
+    "command_p95_ms": 500,
+    "committed_visibility_p95_ms": 1000
+  },
+  "accepted_command_target": true,
+  "visibility_target": false,
+  "limitations": "Local WSL backend and PubSub/requery benchmark. Includes pool wait. Excludes browser rendering/network, real providers and production-host certification. Generated database retained; no serving database altered."
+}

@@ -6,7 +6,13 @@ defmodule Instantflow.Delivery.Worker do
 
   def init(opts) do
     send(self(), :poll)
-    {:ok, Keyword.get(opts, :interval, 1000)}
+
+    {:ok,
+     Keyword.get(
+       opts,
+       :interval,
+       Application.get_env(:instantflow, :delivery_poll_interval_ms, 250)
+     )}
   end
 
   def handle_info(:poll, interval) do

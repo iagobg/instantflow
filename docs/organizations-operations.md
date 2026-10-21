@@ -78,3 +78,7 @@ The implementation inventory covered: the singleton organization constraint and 
 - Browser smoke: shared `admin@escola.example` sees both schools, has administration in Horizonte and only collaboration in Aurora; the Horizonte team tab remained bound while Aurora was open separately.
 
 Detailed department/section grants, broad simultaneous editing races and the full school templates remain in their planned sprints. No real student data, provider calls, billing, self-service onboarding, support impersonation or Python execution is introduced.
+
+## Sprint 07 delivery update — 2026-10-21
+
+The current dispatcher polls every 250 ms and processes at most 20 intents per organization per pass, preserving each immutable attempt while coalescing business invalidations by ticket revision. Private file retention remains organization-scoped; suspended organizations and backup retention require operator handling. See [current deployment and recovery](deployment.md), [populated recovery evidence](evidence/sprint07-recovery.json) and [measured per-school load](performance.md). Earlier Sprint 01A results above remain historical evidence.

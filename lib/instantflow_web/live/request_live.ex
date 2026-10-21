@@ -627,7 +627,15 @@ defmodule InstantflowWeb.RequestLive do
                 label="Campo do documento"
                 options={@attachment_options}
               />
+              <label for={@uploads.private_document.ref}>Escolher documento fictício</label>
               <.live_file_input upload={@uploads.private_document} />
+              <div :for={entry <- @uploads.private_document.entries}>
+                <span>{entry.client_name}</span><p :for={
+                  _ <- upload_errors(@uploads.private_document, entry)
+                }>
+                  Arquivo não aceito: confirme o formato e o limite de 5 MiB.
+                </p>
+              </div>
               <p :for={error <- upload_errors(@uploads.private_document)}>
                 Arquivo recusado: {error}
               </p>

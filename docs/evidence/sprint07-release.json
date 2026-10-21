@@ -1,0 +1,10 @@
+{
+  "release_build": "passed",
+  "production_assets": "passed",
+  "http_login_status": 200,
+  "digested_assets_http_200": 2,
+  "non_owner_runtime_startup_check": "passed",
+  "isolated_database": "instantflow_benchmark_99f292cfc4",
+  "listener": "127.0.0.1:4011",
+  "limitations": "Local production release smoke; no external deployment, reverse proxy, TLS termination or off-host database test."
+}

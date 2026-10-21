@@ -1,0 +1,8 @@
+{
+  "forward_preservation": "passed",
+  "multitenant_restore": "passed",
+  "rollback_refusal": "passed",
+  "migration_database": "instantflow_rehearsal_old_548d32cb571a",
+  "restore_database": "instantflow_rehearsal_restore_548d32cb571a",
+  "backup": "/home/iago/workspace/instantflow/.local/backups/rehearsed-multiorg-548d32cb571a.dump"
+}

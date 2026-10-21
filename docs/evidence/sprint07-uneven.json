@@ -1,0 +1,96 @@
+{
+  "environment": {
+    "cpu": "model name\t: 13th Gen Intel(R) Core(TM) i7-13700KF",
+    "memory": "MemTotal:       32768996 kB",
+    "os": "{:unix, :linux}",
+    "otp": "28",
+    "schedulers": 24,
+    "elixir": "1.19.5",
+    "runtime_pool": 10,
+    "postgres": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)"
+  },
+  "database": "instantflow_benchmark_82097a7ae7",
+  "organizations": 10,
+  "samples": 650,
+  "per_organization": {
+    "1": {
+      "command_p95_ms": 10.37,
+      "visibility_p95_ms": 523,
+      "command_p50_ms": 7.251,
+      "search_p95_ms": 15.245
+    },
+    "10": {
+      "command_p95_ms": 51.514,
+      "visibility_p95_ms": 559,
+      "command_p50_ms": 6.241,
+      "search_p95_ms": 71.809
+    },
+    "2": {
+      "command_p95_ms": 50.27,
+      "visibility_p95_ms": 560,
+      "command_p50_ms": 7.516,
+      "search_p95_ms": 38.132
+    },
+    "3": {
+      "command_p95_ms": 50.664,
+      "visibility_p95_ms": 565,
+      "command_p50_ms": 7.456,
+      "search_p95_ms": 72.574
+    },
+    "4": {
+      "command_p95_ms": 47.311,
+      "visibility_p95_ms": 570,
+      "command_p50_ms": 7.891,
+      "search_p95_ms": 40.148
+    },
+    "5": {
+      "command_p95_ms": 48.707,
+      "visibility_p95_ms": 564,
+      "command_p50_ms": 7.813,
+      "search_p95_ms": 64.7
+    },
+    "6": {
+      "command_p95_ms": 50.37,
+      "visibility_p95_ms": 554,
+      "command_p50_ms": 7.741,
+      "search_p95_ms": 22.12
+    },
+    "7": {
+      "command_p95_ms": 48.942,
+      "visibility_p95_ms": 547,
+      "command_p50_ms": 7.911,
+      "search_p95_ms": 39.335
+    },
+    "8": {
+      "command_p95_ms": 50.678,
+      "visibility_p95_ms": 545,
+      "command_p50_ms": 8.095,
+      "search_p95_ms": 56.977
+    },
+    "9": {
+      "command_p95_ms": 51.423,
+      "visibility_p95_ms": 551,
+      "command_p50_ms": 7.712,
+      "search_p95_ms": 71.667
+    }
+  },
+  "records": 10000,
+  "concurrent_staff": 50,
+  "load_shape": "School 1 performs four times as many updates per staff member",
+  "elapsed_ms": 15150,
+  "poll_interval_ms": 250,
+  "dataset": "Per school: 700 requisitions, 100 trips, 100 enrollments, 100 incidents; 5 local actors. Synthetic bulk fixture stages; runtime writes use guarded commands.",
+  "totals": {
+    "command_p95_ms": 49.017,
+    "visibility_p95_ms": 554,
+    "command_p50_ms": 7.547,
+    "search_p95_ms": 39.33
+  },
+  "thresholds": {
+    "command_p95_ms": 500,
+    "committed_visibility_p95_ms": 1000
+  },
+  "accepted_command_target": true,
+  "visibility_target": true,
+  "limitations": "Local WSL backend and PubSub/requery benchmark. Includes pool wait. Excludes browser rendering/network, real providers and production-host certification. Generated database retained; no serving database altered."
+}

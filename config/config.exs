@@ -9,6 +9,7 @@ import Config
 
 config :instantflow,
   environment: config_env(),
+  delivery_poll_interval_ms: 250,
   ecto_repos: [Instantflow.Repo],
   generators: [timestamp_type: :utc_datetime]
 

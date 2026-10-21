@@ -43,11 +43,11 @@ Importar cria somente um rascunho. Validação estrutural não comprova regras d
 
 ## Contrato 1.0
 
-- Use `format_version: "1.0"`, `locale: "pt-BR"`, `capabilities: ["core"]` e uma `template_version` no formato `1.0.0`. A versão publicada é controlada pelo servidor e não é essa versão do autor.
+- Use `format_version: "1.0"`, `locale: "pt-BR"`, `capabilities: ["core"]` (ou `["core", "finance"]` quando usar efeitos financeiros) e uma `template_version` no formato `1.0.0`. A versão publicada é controlada pelo servidor e não é essa versão do autor.
 - Inclua todos os campos obrigatórios do esquema, inclusive `description`, `views`, `bindings`, `creation` e `assignment`. Não inclua propriedades adicionais.
 - Chaves seguem `[a-z][a-z0-9_]{0,63}`. Referências a campos usam `secao.campo`. Chaves de cada coleção são únicas; mantenha-as estáveis ao revisar versões.
 - `role_requirements` descreve papéis simbólicos. `creation.roles` informa quais podem iniciar solicitações. O mapeamento local para perfis já existentes não concede acesso a pessoas por si só.
-- `bindings` declara vínculos simbólicos do tipo `department`. `assignment.department_binding` aponta para um deles. O departamento real é escolhido dentro da organização, fora do JSON.
+- `bindings` declara vínculos simbólicos dos tipos `department` e `budget`. `assignment.department_binding` aponta para um deles. O departamento e a conta orçamentária reais são escolhidos dentro da organização, fora do JSON; cada tipo usa seu grupo de mapeamento local.
 - Cada seção declara `classification` (`internal` ou `restricted`), campos e regras de `access`. Cada regra combina papel, `scope`, `read` e `edit_stages`. Uma seção restrita continua exigindo regras explícitas; a classificação sozinha não concede nem nega acesso.
 - Em cada seção, use no máximo uma regra por par papel/escopo; reúna as etapas de edição nessa regra. Em uma transição, não repita ações idênticas de mesmo tipo e comportamento.
 - `requester` limita a regra ao próprio solicitante. `assigned_department` exige o perfil mapeado no departamento atribuído. Um perfil recebido em outra organização nunca vale aqui.
@@ -67,11 +67,17 @@ Condições são árvores declarativas em `guard`. Use `present` com `field`; `e
 
 As ações atuais são `simulate_notification`, `simulate_provisioning` e `simulate_payment`. Cada uma usa `behavior` igual a `success`, `fail_once` ou `failure`. São entregas fictícias pela fila durável. Não inclua endpoints, credenciais, código, SQL ou Python. Recursos de Python estão planejados para uma extensão separada e ainda são rejeitados.
 
-`directory_reference` permanece reservado: valores não nulos são rejeitados. `attachment` aceita somente a chave opaca de um arquivo privado enviado pelo contexto autorizado, vinculado à mesma organização, solicitação, seção e campo. Nunca inclua chaves reais de arquivos em modelos. `attachment_ready` verifica a liberação e a validade no servidor; arquivos obrigatórios em `required_fields` também precisam estar prontos. O portal de matrícula oferece envio e revisão manual de documentos fictícios. Pagamentos reais continuam fora do contrato.
+`directory_reference` permanece reservado: valores não nulos são rejeitados. `attachment` aceita somente a chave opaca de um arquivo privado enviado pelo contexto autorizado, vinculado à mesma organização, solicitação, seção e campo. Nunca inclua chaves reais de arquivos em modelos. `attachment_ready` verifica a liberação e a validade no servidor; arquivos obrigatórios em `required_fields` também precisam estar prontos. O portal de matrícula e as seções privadas com atribuição nominal oferecem envio e revisão manual de documentos fictícios. Pagamentos reais continuam fora do contrato.
+
+## Atribuição nominal e orçamento
+
+O escopo assigned_user exige assignment_key, a chave de uma seção com configuração assignment. Essa configuração declara managers (atores autorizados), role, department_binding e stages para atribuição. Uma atribuição operacional identifica uma pessoa ativa da própria organização com o perfil/departamento exigidos; não é exportada. Mudanças usam revisão esperada e motivo, são auditadas e revogam o acesso anterior. Revogar é possível após o encerramento; atribuir novas pessoas exige uma das etapas configuradas. O editor avançado configura a estrutura; os controles tipados preservam sua semântica. Nunca exporte IDs de pessoas ou conteúdo de acompanhamento.
+
+Com a capacidade finance, uma transição pode declarar finance com operation (reserve, post, release, reverse ou complete) e account_binding apontando para um vínculo budget. Reserve/post exigem amount_field de tipo money/BRL; complete exige quantity_field e received_field inteiros. Os efeitos ocorrem na mesma transação da etapa, fora da fila de integrações. Reserva exige perfil financeiro local e proíbe autoaprovação; alocação e estorno exigem permissões separadas. Não confunda os efeitos auditados com pagamento ou crédito real. Veja os modelos de requisição/passeio e as operações financeiras para os limites da demonstração.
 
 ## Visualizações
 
-Cada item de `views` tem `key`, `label`, `type` (`table` ou `board`) e `columns`. Colunas referenciam campos por chave ou a coluna especial `stage`. A tela de solicitações oferece essas visualizações. Cada linha respeita a versão fixada na solicitação e projeta somente os campos que a pessoa pode ler; mapear uma coluna restrita nunca a torna pública.
+Cada item de `views` tem `key`, `label`, `type` (`table`, `board`, `calendar` ou `assignments`) e `columns`. Colunas referenciam campos por chave ou as colunas especiais `stage` e `assigned_department`. A tela de solicitações oferece essas visualizações. O calendário é uma agenda ordenada por campo date legível, com rótulo da etapa; a atribuição mostra o departamento atual. Quadros apresentam contagens autorizadas do fluxo. Cada linha respeita a versão fixada na solicitação e projeta somente os campos que a pessoa pode ler; mapear uma coluna restrita nunca a torna pública.
 
 ## Importação e revisão no produto
 

@@ -369,6 +369,7 @@ defmodule InstantflowWeb.EnrollmentLive do
             phx-change="upload_change"
             phx-submit="upload"
           >
+            <label for={@uploads.document.ref}>Escolher documento fictício</label>
             <.live_file_input upload={@uploads.document} />
             <p :for={error <- upload_errors(@uploads.document)}>Arquivo não aceito: {error}</p>
             <div :for={entry <- @uploads.document.entries}>

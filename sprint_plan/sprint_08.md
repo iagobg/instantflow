@@ -34,7 +34,7 @@ Resolve the concrete use case, isolated hosting feasibility, operating cost, dat
 ## Progress
 
 Actual start / finish: — / —  
-Evidence: design judgment only; no runtime implemented.  
+Evidence: explicit user decision on 2026-10-21: “Keep Sprint 8 gated.” Design judgment only; no runtime implemented or customer Python executed.  
 Gate owner: product owner with implementation/security operator (to be assigned).  
 Outstanding: D-17 and readiness gate.  
 Handoff: limited calculation capability; arbitrary integrations/packages, inline guards, auto-advancement, and per-ticket source editing remain outside scope.

@@ -5,6 +5,7 @@ defmodule Instantflow.WorkflowRuntime.Ticket do
     field :stage, :string
     field :return_stage, :string
     field :revision, :integer, default: 1
+    field :refreshed_revision, :integer, default: 0
     field :stage_revision, :integer, default: 1
     belongs_to :organization, Instantflow.Identity.Organization
     belongs_to :workflow, Instantflow.WorkflowCatalog.Workflow

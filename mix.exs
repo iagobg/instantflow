@@ -82,6 +82,7 @@ defmodule Instantflow.MixProject do
       "assets.setup": ["esbuild.install --if-missing"],
       "assets.build": ["compile", "esbuild instantflow"],
       "assets.deploy": [
+        "compile",
         "esbuild instantflow --minify",
         "phx.digest"
       ],

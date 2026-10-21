@@ -12,7 +12,7 @@
 | D-06 | Adopted for synthetic demonstration — 2026-10-21 | Incident/support visibility | Named counselor-private notes; dean-only discipline and curated simulated guardian communication | Sprint 06 |
 | D-07 | Adopted for synthetic demonstration — 2026-10-21 | Budget/cancellation/price changes | Reserve at finance approval; post at order (trip final approval); full audited reversal; changes restart review | Sprint 05 |
 | D-08 | Adopted for implementation | Parallel branches now? | Sequential stages, independent sections | Sprint 01 |
-| D-09 | Open | Hosting/load/timezone | Proposed: shared deployment; 10 organizations, 50 concurrent staff/10,000 tickets total; per-organization timezone default America/Sao_Paulo | Sprint 07 |
+| D-09 | Adopted for synthetic demonstration — 2026-10-21 | Hosting/load/timezone | Local shared deployment; 10 organizations, 50 concurrent staff/10,000 tickets; per-organization timezone default America/Sao_Paulo; production host remains separate | Sprint 07 |
 | D-10 | Adopted for synthetic demonstration — 2026-10-21 | Parent self-registration? | Invitations only; no anonymous uploads | Sprint 04 |
 | D-11 | Adopted for synthetic demonstration — 2026-10-21 | Parent-visible status/messages | Explicit allowlisted public projection; no internal runtime/history access | Sprint 04 |
 | D-12 | Adopted for synthetic demonstration — 2026-10-21 | File types/sizes/retention | Private PDF/PNG/JPEG ≤ 5 MiB, 20 active files/ticket; quarantine/manual release, 30-day synthetic retention | Sprint 04 |
@@ -66,3 +66,9 @@ Each requisition tracks one quantified item or homogeneous group with cumulative
 ## Sprint 06 implementation — 2026-10-21
 
 Under authorization to continue the sprint plans, D-06 adopts the proposed confidentiality direction as an implementation default. Support access requires a named local counselor assignment plus current role/department grants; administration and dean privileges alone cannot read support notes/files. The dean edits separate disciplinary and curated communication sections. Parents receive no internal incident projection; the guardian contact/message and delivery remain explicit simulations, with no copied notes or outbound provider call. Named assignment changes/revocations serialize against reads/saves through the exclusive authorization gate. See [incident operating notes](../docs/incidents.md) and [Sprint 06 evidence](../sprint_plan/sprint_06.md).
+
+## Sprint 07 delivery and Sprint 08 hold — 2026-10-21
+
+Under authorization to continue the sprint plan, D-09 adopts the proposed scale/timezone and shared architecture for local synthetic measurement. Equal and uneven full-lifecycle runs meet the local command/visibility targets per organization after measured polling and refresh batching fixes. Production infrastructure and recovery objectives remain operator decisions; these measurements do not confirm them. See [performance evidence](../docs/performance.md) and [release gates](../docs/release-gates.md).
+
+The user explicitly answered “Keep Sprint 8 gated” when asked for its concrete calculation, isolated host and operating/security owner. D-17 remains open. No runner is selected or customer Python executed. Sprint 08 stays Proposed / gated with 0/5 implementation tasks; readiness requires the use case, host, cost/data boundary, patch/security owner and recovery/kill-switch procedure. The completed Sprints 00–07 do not depend on that optional extension.

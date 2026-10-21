@@ -1,16 +1,16 @@
 # Sprint 07 — Integrated demonstration and delivery
 
-[Sprint index](sprint_index.md) · Status: Planned · Dependencies: Sprint 06; D-09
+[Sprint index](sprint_index.md) · Status: Done · Dependencies: Sprint 06; D-09
 
 Goal: reproducible, verified proof of concept.
 
 ## Tasks
 
-- [ ] S07-T01 Assemble two-school seeds and multi-role demo covering four templates, tenant switching, independent customization, and isolation; generate the agreed multi-organization load dataset.
-- [ ] S07-T02 Run authorization, concurrency, idempotency, interchange, and fault-injection gates.
-- [ ] S07-T03 Measure agreed performance targets and address observed bottlenecks.
-- [ ] S07-T04 Review PT-BR coverage, mobile layout, focus, keyboard access, failure states.
-- [ ] S07-T05 Document deployment/limitations, exercise backup/restore, update progression evidence.
+- [x] S07-T01 Assemble two-school seeds and multi-role demo covering four templates, tenant switching, independent customization, and isolation; generate the agreed multi-organization load dataset.
+- [x] S07-T02 Run authorization, concurrency, idempotency, interchange, and fault-injection gates.
+- [x] S07-T03 Measure agreed performance targets and address observed bottlenecks.
+- [x] S07-T04 Review PT-BR coverage, mobile layout, focus, keyboard access, failure states.
+- [x] S07-T05 Document deployment/limitations, exercise backup/restore, update progression evidence.
 
 ## Acceptance criteria
 
@@ -24,7 +24,10 @@ Goal: reproducible, verified proof of concept.
 
 ## Progress
 
-Actual start / finish: — / —  
-Evidence: none yet.  
-Blockers: D-09 hosting/load and earlier sprints; decision owner: product owner.  
-Handoff: demonstrable platform; further production/parallel-workflow work needs new scope.
+Actual start / finish: 2026-10-21 / 2026-10-21  
+Evidence: [release-gate matrix](../docs/release-gates.md), [reproducible four-template/fifth-workflow demo](../docs/demo.md), [performance measurements](../docs/performance.md), [deployment and limits](../docs/deployment.md).  
+Verification: mix precommit passed 136 tests; production assets and release build passed; runtime-role release startup/login/two digested assets returned HTTP 200. Populated isolated whole-database recovery and legacy forward migration/rollback refusal passed with the final schema.  
+Load: verified 10 schools, 10,000 tickets and 50 concurrent staff. Equal mixed lifecycle: 4,000 commands, p95 39.522 ms command / 830 ms final-state visibility. Uneven mixed lifecycle: 5,200 commands, p95 40.481 ms / 817 ms; each school and measured operation met the local targets. Polling and durable refresh batching fixed observed visibility failures while preserving attempts/retry semantics. Backend timings exclude browser/network latency; raw reports and baseline failures are linked in the measurement report.  
+UX: targeted desktop/mobile PT-BR and keyboard smoke; skip link, support-save persistence, private-section visibility, shared-identity switching and direct-ID denial verified. File controls gained explicit PT-BR labels. Professional accessibility/device certification remains outside local evidence.  
+Blockers: none for the synthetic demonstration. D-09 defaults adopted for local measurements; production hosting, real data, off-host backups and operating objectives remain separately documented readiness work.  
+Handoff: Sprints 00–07 complete; Sprint 08 remains Proposed / gated by the user's explicit 2026-10-21 decision. No customer Python execution was added.

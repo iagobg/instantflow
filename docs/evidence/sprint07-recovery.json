@@ -1,0 +1,126 @@
+{
+  "organizations": 2,
+  "backup": "/home/iago/workspace/instantflow/.local/backups/delivery-populated-14dcfa220f.dump",
+  "serving_database_read_only": "instantflow_dev",
+  "fixture_database": "instantflow_delivery_source_14dcfa220f",
+  "restored_database": "instantflow_delivery_restore_14dcfa220f",
+  "source_rows_equal_restored_rows": true,
+  "private_bytes_downloaded_after_restore": true,
+  "runtime_rls_absent_context_denied": true,
+  "rollback_refused_without_data_change": true,
+  "integrated_walkthrough": {
+    "enrollment_complete_with_retry_and_replay": true,
+    "requisition_partial_gate_and_completion": true,
+    "trip_all_prerequisites_complete": true,
+    "incident_curated_simulation_and_closure": true,
+    "fifth_authored_and_imported": true,
+    "independent_customization_and_shared_identity_denial": true
+  },
+  "tables": {
+    "budget_accounts": {
+      "count": 2,
+      "sha256": "d3aa24465c19422c3c610bb62b97a09bb576ff006c1da30ce99c85dcb4f235f9"
+    },
+    "budget_entries": {
+      "count": 7,
+      "sha256": "05bb7006f8c84f5491dd51ef00243751ac6cfe7090cf1b5fc7226c2e82d24e1e"
+    },
+    "budget_holds": {
+      "count": 2,
+      "sha256": "32fa1ca93cff5e12d7b4d707bf860bf956ae334fd0089cf0de4eda040bece67a"
+    },
+    "command_receipts": {
+      "count": 54,
+      "sha256": "45e41a8e556cf93d2d184bde1ed0afd011714558550866f747d4d04b58e8834d"
+    },
+    "delivery_attempts": {
+      "count": 64,
+      "sha256": "fecd73255fc3fa7ba68eef04e8a95b1a64814175bfadb8aaacf1cf171b966e5c"
+    },
+    "departments": {
+      "count": 18,
+      "sha256": "b9dd7671eddfd549e27ec5af248434b1eaff034387192153535a32d2e9ebb8aa"
+    },
+    "enrollments": {
+      "count": 5,
+      "sha256": "8caa57d920f5c797fc05f116dbfdc228910ede53f93fd9ebc09c6c593c972fbd"
+    },
+    "guardian_links": {
+      "count": 5,
+      "sha256": "a3a6813768a41ee1592cdfeda2993b1832a8397307c74902f5db4d7a5e9030a7"
+    },
+    "invitations": {
+      "count": 5,
+      "sha256": "a3405206e21ee987b0ba605175f04be7c24fd48a3c7e6bf8c6e902fd8720e6df"
+    },
+    "membership_grants": {
+      "count": 20,
+      "sha256": "582f78e3c8c59ef57ba9298d88661a2f54869b6a11481908839427de9a02538d"
+    },
+    "memberships": {
+      "count": 16,
+      "sha256": "462dc12858b1c5a97219a75637c8aa1cdba39995197e1eb9ed4e4932878487f0"
+    },
+    "organization_events": {
+      "count": 115,
+      "sha256": "eab98e7235cca469b5971db154bdcea4fae99f93460b3df351ab73b6e923a879"
+    },
+    "organizations": {
+      "count": 2,
+      "sha256": "593f11755a8f0e7077f528e4c58bb716811c6ce5796eec264779f4ce6fcf828d"
+    },
+    "outbox_messages": {
+      "count": 66,
+      "sha256": "80c6190ec56f1d9db04e3ea65982100a111a6a5a4558fad4dba8c7a482213f61"
+    },
+    "private_documents": {
+      "count": 2,
+      "sha256": "53f9d3982638f34777418b05e4e9540e3c80af8206370a04a23bd259d64c43b5"
+    },
+    "schema_migrations": {
+      "count": 10,
+      "sha256": "c58cc3b16cfb680bcedc0e0ffbfdd3c9e1c783923fb0c923e8caaa89f62110c1"
+    },
+    "section_assignments": {
+      "count": 1,
+      "sha256": "9e8bd8fce4de760ac435f19c1d109cf05dae4d9a3740d101cb3019176b9d829a"
+    },
+    "sessions": {
+      "count": 1,
+      "sha256": "fd35a215fcff8d1753932a66cbe3f669f2e38cc273253454e46e0bd80cf4bfa2"
+    },
+    "template_events": {
+      "count": 12,
+      "sha256": "5a2030ce980c7197cf4879e8370f9be9aa48d3be31ff81d8d315baf7e13cad4c"
+    },
+    "ticket_sections": {
+      "count": 33,
+      "sha256": "3af56121cf91544b13d508a686281e7355daf3bfca71be305fdf4e7558a076f8"
+    },
+    "tickets": {
+      "count": 11,
+      "sha256": "aebf331ae148e4e4745f705082e4857453657bd2d23ebd5791739bd5168ac5cc"
+    },
+    "transition_events": {
+      "count": 54,
+      "sha256": "a6ef0220a599f14e5dbfef70b1b6d92e03446e4aa1d9cbb920e8901af12cc9d4"
+    },
+    "users": {
+      "count": 13,
+      "sha256": "18352324b114665e810ddd767592ee302b0c7dcf337cc94f5eff75cdcaddb536"
+    },
+    "workflow_drafts": {
+      "count": 4,
+      "sha256": "ea1f0f27a559bbfd052826d532ede916beb6eb957a1c16765030847f7a5faadf"
+    },
+    "workflow_versions": {
+      "count": 13,
+      "sha256": "5792ac5af15e02df8f721812b8f8dcf5e1cfe3be4e072b8e46319e50d6b132ff"
+    },
+    "workflows": {
+      "count": 13,
+      "sha256": "b50d83e5d992e8dd61b48e6358fdb97e9182502691fb9b0e37839e55502fe343"
+    }
+  },
+  "limitations": "Whole-database recovery of synthetic records. Does not demonstrate tenant-selective restore, encrypted/off-host backups or production recovery objectives."
+}

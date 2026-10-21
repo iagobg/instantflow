@@ -2,7 +2,7 @@
 
 [Design index](../design/index.md)
 
-Status: implementation in progress · Updated: 2026-10-21
+Status: Sprints 00–07 complete; optional Sprint 08 gated · Updated: 2026-10-21
 
 Dependency-ordered increments without duration estimates. Sprints 00 and 01 retain their original single-organization evidence. Sprint 01A has migrated and verified the multi-organization foundation before Sprint 02, preserving existing records.
 
@@ -16,12 +16,12 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 | [04](sprint_04.md) | Enrollment and parent portal | 03; D-05, D-10–12 | Done | 5/5 | 2026-10-20 / 2026-10-21 |
 | [05](sprint_05.md) | Budgets, purchasing, field trips | 04; D-07 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [06](sprint_06.md) | Confidential incident collaboration | 05; D-06 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
-| [07](sprint_07.md) | Integrated demonstration and delivery | 06; D-09 | Planned | 0/5 | — / — |
+| [07](sprint_07.md) | Integrated demonstration and delivery | 06; D-09 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [08](sprint_08.md) | Optional isolated Python calculations | 07; D-16, D-17; readiness gate | Proposed / gated | 0/5 | — / — |
 
 ## Tracking
 
-Sprint 08 is a post-proof-of-concept extension, not a requirement for completing Sprints 00–07. Keep it Proposed / gated until its use case, isolated hosting, and operating/security ownership are resolved. Do not add Python execution to the completed Sprint 01 or delay Sprint 02 for it.
+The user explicitly requested on 2026-10-21 that Sprint 08 remain gated. Sprint 08 is a post-proof-of-concept extension, not a requirement for completing Sprints 00–07. Keep it Proposed / gated until its use case, isolated hosting, and operating/security ownership are resolved. Do not add Python execution to the completed Sprint 01 or delay Sprint 02 for it.
 
 Statuses: Planned → Ready → In progress → Review → Done. Blocked requires a concrete blocker and owner in the sprint file.
 

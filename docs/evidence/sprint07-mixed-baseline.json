@@ -1,0 +1,471 @@
+{
+  "environment": {
+    "cpu": "model name\t: 13th Gen Intel(R) Core(TM) i7-13700KF",
+    "memory": "MemTotal:       32768996 kB",
+    "os": "{:unix, :linux}",
+    "otp": "28",
+    "schedulers": 24,
+    "elixir": "1.19.5",
+    "runtime_pool": 10,
+    "postgres": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)"
+  },
+  "database": "instantflow_benchmark_cb69b4da90",
+  "organizations": 10,
+  "samples": 4000,
+  "per_organization": {
+    "1": {
+      "command_p95_ms": 35.448,
+      "visibility_p95_ms": 2301,
+      "operations": {
+        "academic_approve": {
+          "count": 50,
+          "p95_ms": 34.141
+        },
+        "finish": {
+          "count": 50,
+          "p95_ms": 33.931
+        },
+        "order": {
+          "count": 50,
+          "p95_ms": 37.205
+        },
+        "receive": {
+          "count": 50,
+          "p95_ms": 30.827
+        },
+        "reserve": {
+          "count": 50,
+          "p95_ms": 37.704
+        },
+        "save_order": {
+          "count": 50,
+          "p95_ms": 34.925
+        },
+        "save_proposal": {
+          "count": 50,
+          "p95_ms": 44.605
+        },
+        "submit": {
+          "count": 50,
+          "p95_ms": 36.936
+        }
+      },
+      "command_p50_ms": 9.193,
+      "search_p95_ms": 25.683
+    },
+    "10": {
+      "command_p95_ms": 43.119,
+      "visibility_p95_ms": 2222,
+      "operations": {
+        "academic_approve": {
+          "count": 50,
+          "p95_ms": 39.881
+        },
+        "finish": {
+          "count": 50,
+          "p95_ms": 42.428
+        },
+        "order": {
+          "count": 50,
+          "p95_ms": 46.878
+        },
+        "receive": {
+          "count": 50,
+          "p95_ms": 39.793
+        },
+        "reserve": {
+          "count": 50,
+          "p95_ms": 48.901
+        },
+        "save_order": {
+          "count": 50,
+          "p95_ms": 40.949
+        },
+        "save_proposal": {
+          "count": 50,
+          "p95_ms": 57.649
+        },
+        "submit": {
+          "count": 50,
+          "p95_ms": 43.119
+        }
+      },
+      "command_p50_ms": 8.272,
+      "search_p95_ms": 81.0
+    },
+    "2": {
+      "command_p95_ms": 35.719,
+      "visibility_p95_ms": 2281,
+      "operations": {
+        "academic_approve": {
+          "count": 50,
+          "p95_ms": 33.965
+        },
+        "finish": {
+          "count": 50,
+          "p95_ms": 33.701
+        },
+        "order": {
+          "count": 50,
+          "p95_ms": 34.018
+        },
+        "receive": {
+          "count": 50,
+          "p95_ms": 34.144
+        },
+        "reserve": {
+          "count": 50,
+          "p95_ms": 41.499
+        },
+        "save_order": {
+          "count": 50,
+          "p95_ms": 35.718
+        },
+        "save_proposal": {
+          "count": 50,
+          "p95_ms": 45.211
+        },
+        "submit": {
+          "count": 50,
+          "p95_ms": 36.123
+        }
+      },
+      "command_p50_ms": 9.696,
+      "search_p95_ms": 24.879
+    },
+    "3": {
+      "command_p95_ms": 34.958,
+      "visibility_p95_ms": 2279,
+      "operations": {
+        "academic_approve": {
+          "count": 50,
+          "p95_ms": 33.91
+        },
+        "finish": {
+          "count": 50,
+          "p95_ms": 34.898
+        },
+        "order": {
+          "count": 50,
+          "p95_ms": 34.958
+        },
+        "receive": {
+          "count": 50,
+          "p95_ms": 32.603
+        },
+        "reserve": {
+          "count": 50,
+          "p95_ms": 38.97
+        },
+        "save_order": {
+          "count": 50,
+          "p95_ms": 35.763
+        },
+        "save_proposal": {
+          "count": 50,
+          "p95_ms": 44.443
+        },
+        "submit": {
+          "count": 50,
+          "p95_ms": 33.886
+        }
+      },
+      "command_p50_ms": 8.954,
+      "search_p95_ms": 43.547
+    },
+    "4": {
+      "command_p95_ms": 38.12,
+      "visibility_p95_ms": 2260,
+      "operations": {
+        "academic_approve": {
+          "count": 50,
+          "p95_ms": 36.505
+        },
+        "finish": {
+          "count": 50,
+          "p95_ms": 38.12
+        },
+        "order": {
+          "count": 50,
+          "p95_ms": 40.318
+        },
+        "receive": {
+          "count": 50,
+          "p95_ms": 36.247
+        },
+        "reserve": {
+          "count": 50,
+          "p95_ms": 45.506
+        },
+        "save_order": {
+          "count": 50,
+          "p95_ms": 36.578
+        },
+        "save_proposal": {
+          "count": 50,
+          "p95_ms": 47.298
+        },
+        "submit": {
+          "count": 50,
+          "p95_ms": 37.772
+        }
+      },
+      "command_p50_ms": 8.93,
+      "search_p95_ms": 43.651
+    },
+    "5": {
+      "command_p95_ms": 36.482,
+      "visibility_p95_ms": 2258,
+      "operations": {
+        "academic_approve": {
+          "count": 50,
+          "p95_ms": 34.98
+        },
+        "finish": {
+          "count": 50,
+          "p95_ms": 36.344
+        },
+        "order": {
+          "count": 50,
+          "p95_ms": 37.952
+        },
+        "receive": {
+          "count": 50,
+          "p95_ms": 35.377
+        },
+        "reserve": {
+          "count": 50,
+          "p95_ms": 43.088
+        },
+        "save_order": {
+          "count": 50,
+          "p95_ms": 36.482
+        },
+        "save_proposal": {
+          "count": 50,
+          "p95_ms": 46.92
+        },
+        "submit": {
+          "count": 50,
+          "p95_ms": 37.597
+        }
+      },
+      "command_p50_ms": 9.403,
+      "search_p95_ms": 53.773
+    },
+    "6": {
+      "command_p95_ms": 41.062,
+      "visibility_p95_ms": 2251,
+      "operations": {
+        "academic_approve": {
+          "count": 50,
+          "p95_ms": 36.279
+        },
+        "finish": {
+          "count": 50,
+          "p95_ms": 42.88
+        },
+        "order": {
+          "count": 50,
+          "p95_ms": 41.671
+        },
+        "receive": {
+          "count": 50,
+          "p95_ms": 35.626
+        },
+        "reserve": {
+          "count": 50,
+          "p95_ms": 46.047
+        },
+        "save_order": {
+          "count": 50,
+          "p95_ms": 38.688
+        },
+        "save_proposal": {
+          "count": 50,
+          "p95_ms": 50.653
+        },
+        "submit": {
+          "count": 50,
+          "p95_ms": 41.791
+        }
+      },
+      "command_p50_ms": 8.643,
+      "search_p95_ms": 56.184
+    },
+    "7": {
+      "command_p95_ms": 40.038,
+      "visibility_p95_ms": 2227,
+      "operations": {
+        "academic_approve": {
+          "count": 50,
+          "p95_ms": 36.832
+        },
+        "finish": {
+          "count": 50,
+          "p95_ms": 39.579
+        },
+        "order": {
+          "count": 50,
+          "p95_ms": 43.444
+        },
+        "receive": {
+          "count": 50,
+          "p95_ms": 37.243
+        },
+        "reserve": {
+          "count": 50,
+          "p95_ms": 47.689
+        },
+        "save_order": {
+          "count": 50,
+          "p95_ms": 37.538
+        },
+        "save_proposal": {
+          "count": 50,
+          "p95_ms": 52.723
+        },
+        "submit": {
+          "count": 50,
+          "p95_ms": 40.508
+        }
+      },
+      "command_p50_ms": 9.129,
+      "search_p95_ms": 66.878
+    },
+    "8": {
+      "command_p95_ms": 42.642,
+      "visibility_p95_ms": 2208,
+      "operations": {
+        "academic_approve": {
+          "count": 50,
+          "p95_ms": 37.01
+        },
+        "finish": {
+          "count": 50,
+          "p95_ms": 43.134
+        },
+        "order": {
+          "count": 50,
+          "p95_ms": 47.146
+        },
+        "receive": {
+          "count": 50,
+          "p95_ms": 38.443
+        },
+        "reserve": {
+          "count": 50,
+          "p95_ms": 48.586
+        },
+        "save_order": {
+          "count": 50,
+          "p95_ms": 40.389
+        },
+        "save_proposal": {
+          "count": 50,
+          "p95_ms": 52.921
+        },
+        "submit": {
+          "count": 50,
+          "p95_ms": 41.645
+        }
+      },
+      "command_p50_ms": 9.716,
+      "search_p95_ms": 69.253
+    },
+    "9": {
+      "command_p95_ms": 41.454,
+      "visibility_p95_ms": 2225,
+      "operations": {
+        "academic_approve": {
+          "count": 50,
+          "p95_ms": 38.643
+        },
+        "finish": {
+          "count": 50,
+          "p95_ms": 39.871
+        },
+        "order": {
+          "count": 50,
+          "p95_ms": 43.818
+        },
+        "receive": {
+          "count": 50,
+          "p95_ms": 37.884
+        },
+        "reserve": {
+          "count": 50,
+          "p95_ms": 49.736
+        },
+        "save_order": {
+          "count": 50,
+          "p95_ms": 39.381
+        },
+        "save_proposal": {
+          "count": 50,
+          "p95_ms": 54.11
+        },
+        "submit": {
+          "count": 50,
+          "p95_ms": 43.282
+        }
+      },
+      "command_p50_ms": 9.031,
+      "search_p95_ms": 81.289
+    }
+  },
+  "records": 10000,
+  "concurrent_staff": 50,
+  "command_mix": "proposal saves, submission, academic approval, finance reservation, order, posting, receiving and completion",
+  "load_shape": "Equal iterations per school",
+  "elapsed_ms": 22218,
+  "poll_interval_ms": 250,
+  "dataset": "Per school: 700 requisitions, 100 trips, 100 enrollments, 100 incidents; 5 local actors. Synthetic bulk fixture stages; runtime writes use guarded commands.",
+  "totals": {
+    "command_p95_ms": 38.913,
+    "visibility_p95_ms": 2258,
+    "operations": {
+      "academic_approve": {
+        "count": 500,
+        "p95_ms": 35.943
+      },
+      "finish": {
+        "count": 500,
+        "p95_ms": 38.321
+      },
+      "order": {
+        "count": 500,
+        "p95_ms": 40.147
+      },
+      "receive": {
+        "count": 500,
+        "p95_ms": 35.539
+      },
+      "reserve": {
+        "count": 500,
+        "p95_ms": 44.463
+      },
+      "save_order": {
+        "count": 500,
+        "p95_ms": 37.115
+      },
+      "save_proposal": {
+        "count": 500,
+        "p95_ms": 48.378
+      },
+      "submit": {
+        "count": 500,
+        "p95_ms": 38.611
+      }
+    },
+    "command_p50_ms": 9.128,
+    "search_p95_ms": 55.196
+  },
+  "thresholds": {
+    "command_p95_ms": 500,
+    "committed_visibility_p95_ms": 1000
+  },
+  "accepted_command_target": true,
+  "visibility_target": false,
+  "limitations": "Local WSL backend and PubSub/requery benchmark. Includes pool wait. Excludes browser rendering/network, real providers and production-host certification. Generated database retained; no serving database altered."
+}

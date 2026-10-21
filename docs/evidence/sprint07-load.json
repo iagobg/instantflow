@@ -1,0 +1,93 @@
+{
+  "environment": {
+    "os": "{:unix, :linux}",
+    "otp": "28",
+    "schedulers": 24,
+    "elixir": "1.19.5",
+    "postgres": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+    "runtime_pool": 10
+  },
+  "database": "instantflow_benchmark_c2a6a9fb94",
+  "organizations": 10,
+  "samples": 500,
+  "per_organization": {
+    "1": {
+      "command_p95_ms": 48.035,
+      "command_p50_ms": 7.617,
+      "search_p95_ms": 35.765,
+      "visibility_p95_ms": 553
+    },
+    "10": {
+      "command_p95_ms": 48.169,
+      "command_p50_ms": 6.572,
+      "search_p95_ms": 19.219,
+      "visibility_p95_ms": 550
+    },
+    "2": {
+      "command_p95_ms": 43.782,
+      "command_p50_ms": 7.757,
+      "search_p95_ms": 35.609,
+      "visibility_p95_ms": 552
+    },
+    "3": {
+      "command_p95_ms": 49.947,
+      "command_p50_ms": 8.208,
+      "search_p95_ms": 63.935,
+      "visibility_p95_ms": 552
+    },
+    "4": {
+      "command_p95_ms": 53.162,
+      "command_p50_ms": 7.636,
+      "search_p95_ms": 49.486,
+      "visibility_p95_ms": 553
+    },
+    "5": {
+      "command_p95_ms": 45.343,
+      "command_p50_ms": 7.712,
+      "search_p95_ms": 47.508,
+      "visibility_p95_ms": 551
+    },
+    "6": {
+      "command_p95_ms": 51.98,
+      "command_p50_ms": 7.736,
+      "search_p95_ms": 77.748,
+      "visibility_p95_ms": 544
+    },
+    "7": {
+      "command_p95_ms": 52.234,
+      "command_p50_ms": 7.727,
+      "search_p95_ms": 76.791,
+      "visibility_p95_ms": 544
+    },
+    "8": {
+      "command_p95_ms": 52.308,
+      "command_p50_ms": 7.954,
+      "search_p95_ms": 65.128,
+      "visibility_p95_ms": 545
+    },
+    "9": {
+      "command_p95_ms": 48.307,
+      "command_p50_ms": 7.725,
+      "search_p95_ms": 48.505,
+      "visibility_p95_ms": 548
+    }
+  },
+  "records": 10000,
+  "concurrent_staff": 50,
+  "elapsed_ms": 5409,
+  "poll_interval_ms": 250,
+  "dataset": "Per school: 700 requisitions, 100 trips, 100 enrollments, 100 incidents; 5 local actors. Synthetic bulk fixture stages; runtime writes use guarded commands.",
+  "totals": {
+    "command_p95_ms": 48.975,
+    "command_p50_ms": 7.705,
+    "search_p95_ms": 49.476,
+    "visibility_p95_ms": 550
+  },
+  "thresholds": {
+    "command_p95_ms": 500,
+    "committed_visibility_p95_ms": 1000
+  },
+  "accepted_command_target": true,
+  "visibility_target": true,
+  "limitations": "Local WSL backend and PubSub/requery benchmark. Includes pool wait. Excludes browser rendering/network, real providers and production-host certification. Generated database retained; no serving database altered."
+}
