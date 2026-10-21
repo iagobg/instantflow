@@ -211,6 +211,17 @@ defmodule InstantflowWeb.RequestLive do
     end
   end
 
+  def handle_event("calculation-control", %{"id" => id, "operation" => operation}, socket) do
+    run = Enum.find(socket.assigns.data.calculations, &(to_string(&1.id) == id))
+
+    case run && operation in ~w(retry cancel) &&
+           Instantflow.Calculations.control(socket.assigns.current_scope, run.id, operation) do
+      {:ok, _} -> refresh(socket)
+      {:error, error} -> failure(socket, error)
+      _ -> failure(socket, :forbidden)
+    end
+  end
+
   def handle_event("retry", %{"id" => id}, socket) do
     message = Enum.find(socket.assigns.data.deliveries, &(to_string(&1.id) == id))
 
@@ -397,6 +408,7 @@ defmodule InstantflowWeb.RequestLive do
     |> stream(:sections, data.sections, reset: true)
     |> stream(:events, data.events, reset: true)
     |> stream(:deliveries, data.deliveries, reset: true)
+    |> stream(:calculations, data.calculations, reset: true)
     |> load_presence()
   end
 
@@ -610,6 +622,38 @@ defmodule InstantflowWeb.RequestLive do
           </section>
         </div>
         <aside class="request-actions">
+          <section
+            :if={@data.calculations != []}
+            id="calculation-status"
+            class="card"
+            aria-live="polite"
+          >
+            <h2>Cálculos Python</h2>
+            <p>O cálculo preenche apenas a cotação. Revise o resultado antes de avançar.</p>
+            <div id="calculation-runs" phx-update="stream">
+              <article :for={{id, run} <- @streams.calculations} id={id}>
+                <strong>{Instantflow.Calculations.label(run.status)}</strong>
+                <p>{run.attempts} tentativa(s)</p>
+                <p :if={run.diagnostic}>{run.diagnostic}</p>
+                <button
+                  :if={run.controllable and run.status in ~w(failed timed_out) and run.attempts < 3}
+                  id={"retry-calculation-#{run.id}"}
+                  class="btn"
+                  phx-click="calculation-control"
+                  phx-value-id={run.id}
+                  phx-value-operation="retry"
+                >Tentar novamente</button>
+                <button
+                  :if={run.controllable and run.status in ~w(queued running failed timed_out)}
+                  id={"cancel-calculation-#{run.id}"}
+                  class="btn"
+                  phx-click="calculation-control"
+                  phx-value-id={run.id}
+                  phx-value-operation="cancel"
+                >Cancelar cálculo</button>
+              </article>
+            </div>
+          </section>
           <section :if={@attachment_options != [] or @document_count > 0} class="card">
             <h2>Documentos privados fictícios</h2><p>
               PDF, PNG ou JPEG até 5 MiB. Quarentena e liberação manual; verificação limitada, sem antivírus.

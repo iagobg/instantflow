@@ -1,5 +1,9 @@
 # Deployment and operating boundaries
 
+The push-to-deploy setup for the shared Oracle VPS uses ARM64 release images, CI gates, isolated database credentials, pre-migration backups and health checks. This prepares the deployment path; a live production rollout must be verified separately.
+
+GitHub setup follows the other workspace projects: configure repository Actions secrets, with no GitHub Environment required. The workflow uses `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PATH`, and `DEPLOY_SSH_KEY`, plus `DEPLOY_KNOWN_HOSTS` to verify the VPS SSH identity. Pushes to `main` deploy after the Checks foundation job passes. The database migration and backup steps are application-specific; they do not require environment-scoped GitHub secrets or approval gates.
+
 The demonstrated architecture is one Phoenix service and shared PostgreSQL with mandatory organization scopes/RLS, organization-local profiles, immutable published versions and durable simulated delivery. The local verification used PostgreSQL 16.15 and the pinned OTP 28 / Elixir 1.19.5 runtime. No external deployment was performed.
 
 ## Build and start
@@ -37,4 +41,8 @@ Keep whole-database backups private and outside Git. The populated [delivery reh
 
 This demonstration has no real payment/order/message/provisioning integrations, real student records, clinical/emergency guarantee or automatic customer code execution. Password recovery, login throttling, MFA, session cleanup, professional accessibility/device review, malware scanning/document authenticity, guardian disputes, production finance controls and operating/support ownership remain separate work. Private files use bounded structural checks and staff attestation, not antivirus. Incident parents receive no internal record projection; only an explicit curated simulated contact/message is recorded.
 
-The ordinary deployment must not receive operator credentials or Python-execution privileges. Optional Sprint 08 remains gated until a concrete calculation, isolated execution hosting, cost/data boundaries, patch/security owner and kill-switch/recovery procedure are established. A subprocess or ordinary shared-host container is not accepted as that readiness evidence.
+The serving Phoenix OS account must not receive operator credentials, Docker access or runtime-administration privileges. Sprint 08 uses a constrained authenticated loopback broker; application execution remains disabled by default pending actual host verification. A subprocess or ordinary container is not accepted as the uploaded-code boundary.
+
+The intended future deployment is a private university demonstration on the user's VPS, with access credentials held only by the user and synthetic data rather than real clients. Uploaded scripts remain in scope. The user explicitly approved same-VM gVisor execution, revising the original separate-host requirement; see the [readiness assessment](python-readiness.md) and [operator guide](python-calculations.md).
+
+The user reports Oracle Ampere A1 ARM running Ubuntu with 4 OCPUs and 24 GB RAM, colocating Phoenix and PostgreSQL. This is now the approved topology for a separately permissioned gVisor broker process and bounded workloads. A sandbox escape could reach the application host. No remote capacity, Ubuntu/kernel version or containment has been verified; local controller/application tests do not certify that deployment.

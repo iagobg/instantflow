@@ -1,0 +1,24 @@
+[Unit]
+Description=InstantFlow gVisor calculation broker
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=instantflow-runner
+Group=instantflow-runner
+SupplementaryGroups=docker
+EnvironmentFile=/etc/instantflow-python/broker.env
+ExecStart=/usr/bin/python3 /opt/instantflow/runner/broker.py
+WorkingDirectory=/opt/instantflow/runner
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+LimitCORE=0
+
+[Install]
+WantedBy=multi-user.target

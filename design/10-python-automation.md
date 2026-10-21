@@ -2,6 +2,14 @@
 
 [Design index](index.md) · Decision: D-16 · Updated: 2026-10-20
 
+## Approved university scope — 2026-10-21
+
+The user selected the synthetic trip calculator and retained uploaded Python scripts. Their Oracle Ampere A1 ARM Ubuntu VM has 4 OCPUs and 24 GB RAM and will also run Phoenix/PostgreSQL. They explicitly approved gVisor on that same VPS, revising the separate-host requirement below for this private university demonstration. Synthetic data only; access credentials remain with the user.
+
+The implementation now uses a separate trusted loopback broker process/OS account, with unprivileged digest-pinned runsc workloads, no workload network/host mounts/credentials, external limits, cleanup and emergency controls. The app OS account has no Docker access. A successful escape could nevertheless reach the app/database VM; this limitation is accepted for the academic topology. It does not establish safety for real clients. See the [implementation and operating contract](../docs/python-calculations.md).
+
+Go for disabled-by-default implementation. Enabling uploaded execution and marking Sprint 08 complete require real A1 isolation/resource/cleanup/recovery evidence. The rest of this document is the original design basis; its separate-infrastructure clause is superseded only for this approved scope. No real-host verification is claimed.
+
 ## Judgment
 
 Worth designing for now; not worth adding arbitrary execution to the current proof of concept. Complex customer calculations fit the platform's customization goal, and Sprint 01 already provides immutable workflow versions, action validation, transactional outbox intents, and idempotent commands. No foundational rewrite is required. Operating a hostile-code runner, however, is a substantial additional security and reliability responsibility.

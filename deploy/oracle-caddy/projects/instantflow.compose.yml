@@ -1,0 +1,59 @@
+# Install in the private oracle-caddy/projects directory.
+# Paths resolve from the shared root compose.yml.
+services:
+  instantflow-db:
+    image: postgres:16.15-bookworm
+    restart: unless-stopped
+    env_file: [./instantflow.db.env]
+    volumes: [instantflow-data:/var/lib/postgresql/data]
+    networks: [instantflow-db]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    logging: &logging
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  instantflow:
+    image: ${INSTANTFLOW_IMAGE:?Set INSTANTFLOW_IMAGE to a published commit image}
+    restart: unless-stopped
+    init: true
+    env_file: [./instantflow.env]
+    environment:
+      PHX_SERVER: "true"
+      PORT: "4000"
+      PYTHON_EXECUTION: "false"
+    expose: ["4000"]
+    networks: [web, instantflow-db]
+    depends_on:
+      instantflow-db:
+        condition: service_healthy
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, --max-time, "5", "http://127.0.0.1:4000/entrar"]
+      interval: 10s
+      timeout: 6s
+      retries: 6
+      start_period: 30s
+    logging: *logging
+  instantflow-migrate:
+    image: ${INSTANTFLOW_IMAGE:?Set INSTANTFLOW_IMAGE to a published commit image}
+    profiles: [tools]
+    restart: "no"
+    init: true
+    env_file: [./instantflow.operator.env]
+    environment:
+      PHX_SERVER: ""
+      PYTHON_EXECUTION: "false"
+    command: [/app/bin/instantflow, eval, "Instantflow.Release.migrate()"]
+    networks: [instantflow-db]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    logging: *logging
+networks:
+  instantflow-db:
+    internal: true
+volumes:
+  instantflow-data:

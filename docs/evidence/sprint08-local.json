@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-21",
+  "scope": "Private university demonstration; synthetic data; uploaded scripts; same Oracle A1 VM with gVisor, explicitly approved by user",
+  "sprint_status": "in_progress",
+  "tasks_completed": [
+    "S08-T01",
+    "S08-T02",
+    "S08-T04"
+  ],
+  "tasks_pending": [
+    "S08-T03 target runtime enforcement/cleanup evidence",
+    "S08-T05 actual hostile workload and host recovery evidence"
+  ],
+  "checks": {
+    "mix_precommit": {
+      "status": "passed",
+      "tests": 157,
+      "failures": 0,
+      "checks": [
+        "warnings-as-errors compilation",
+        "unused lock check",
+        "format verification",
+        "ExUnit"
+      ]
+    },
+    "python_tests": {
+      "command": "python3 -m unittest discover -s runner -p 'test_*.py' -v",
+      "status": "passed",
+      "tests": 7,
+      "failures": 0,
+      "note": "Six broker controller tests with trusted subprocess stubs; one trusted repository example test. Not hostile-code containment evidence."
+    },
+    "assets_build": {
+      "command": "mix assets.build",
+      "status": "passed"
+    },
+    "migrations": {
+      "status": "applied locally and exercised in fresh independent runtime-role test database",
+      "files": [
+        "20261021123137_add_python_calculations.exs",
+        "20261021124325_harden_calculation_control_plane.exs"
+      ]
+    },
+    "independent_connections": [
+      "one concurrent claimant wins",
+      "duplicate finalization applies once",
+      "cross-tenant rows/claims denied",
+      "runtime cannot change global switch or immutable source",
+      "blocked fake runner holds no database transaction/ticket lock and refresh delivery proceeds"
+    ],
+    "protocol_and_domain": [
+      "authenticated real loopback HTTP",
+      "response identity/byte bounds",
+      "HTTP dispatch refused inside database transactions",
+      "current input/stage/actor/script/global generation guards",
+      "permission revocation and organization suspension",
+      "leases/fencing, retries capped at three, cancellation",
+      "symbolic-only draft import; no source activation",
+      "read-only computed sections; confidentiality and finance-field restrictions",
+      "seven-day terminal run payload purge",
+      "PT-BR status/retry and source access revocation"
+    ]
+  },
+  "local_isolation_preflight": {
+    "status": "refused_as_expected",
+    "docker_architecture": "amd64",
+    "runsc_registered": false,
+    "message": "Refused: real runsc runtime is not registered",
+    "uploaded_source_executed": false
+  },
+  "target_host": {
+    "provider": "Oracle",
+    "family": "Ampere A1 ARM",
+    "os": "Ubuntu (version not inspected)",
+    "ocpus": 4,
+    "ram_gb": 24,
+    "application_and_postgres_colocated": true,
+    "source": "user reported",
+    "remotely_inspected": false,
+    "deployed": false,
+    "isolation_verified": false
+  },
+  "configured_limits": {
+    "wall_seconds": 5,
+    "cpu_per_attempt": 1,
+    "memory_mib_per_attempt": 128,
+    "pids_per_attempt": 16,
+    "scratch_mib": 8,
+    "stdout_bytes": 16384,
+    "combined_output_bytes": 20480,
+    "broker_global_slots": 2,
+    "broker_slots_per_organization": 1,
+    "attempts_per_run": 3,
+    "pending_runs_per_organization": 20,
+    "script_versions_per_organization": 100
+  },
+  "enablement": {
+    "application_default": false,
+    "durable_switch_default": false,
+    "operator_marker_required": true,
+    "release_gate": "Run runner/verify.py and operator kill/restart/recovery checks on the actual A1 with pinned runtime/image before enabling execution."
+  },
+  "limitations": [
+    "Configured bounds are not measured ARM guarantees.",
+    "Same-host sandbox escape can reach application/database VM; topology accepted for synthetic academic scope.",
+    "No real uploaded/hostile workload containment, ARM enforcement, emergency marker or watchdog recovery measurement completed.",
+    "Local tests and asset build do not certify remote deployment."
+  ]
+}

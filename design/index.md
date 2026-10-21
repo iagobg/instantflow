@@ -1,6 +1,6 @@
 # InstantFlow design
 
-Status: implementation through Sprint 07; Sprint 08 gated · Updated: 2026-10-21
+Status: Sprints 00–07 complete; Sprint 08 implementation in progress, host activation gated · Updated: 2026-10-21
 
 Build a general-purpose, multi-organization workflow platform using Elixir and Phoenix LiveView. Organizations across different sectors configure their own processes, forms, permissions, and live dashboards. Four school workflows provide the initial demonstration, including cross-department collaboration and an external-participant portal illustrated by parent access.
 

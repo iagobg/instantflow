@@ -1,5 +1,11 @@
 import Config
 
+config :instantflow,
+  calculation_execution: System.get_env("PYTHON_EXECUTION") == "true",
+  calculation_worker: System.get_env("PYTHON_EXECUTION") == "true",
+  calculation_broker_url: System.get_env("PYTHON_BROKER_URL", "http://127.0.0.1:4010"),
+  calculation_broker_token: System.get_env("PYTHON_BROKER_TOKEN")
+
 if operator_url = System.get_env("OPERATOR_DATABASE_URL") do
   config :instantflow, Instantflow.OperatorRepo,
     url: operator_url,

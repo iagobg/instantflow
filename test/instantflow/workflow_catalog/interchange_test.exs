@@ -76,14 +76,20 @@ defmodule Instantflow.WorkflowCatalog.InterchangeTest do
 
   defp visit_schema(schema) do
     supported =
-      ~w($schema $id title description $defs type properties required additionalProperties items minItems maxItems uniqueItems minLength maxLength minimum maximum pattern enum const anyOf $ref)
+      ~w($schema $id title description $defs type properties required additionalProperties minProperties maxProperties items minItems maxItems uniqueItems minLength maxLength minimum maximum pattern enum const anyOf $ref)
 
     assert Enum.all?(Map.keys(schema), &(&1 in supported))
 
     if schema["type"] == "object" do
-      assert schema["additionalProperties"] == false
-      assert is_list(schema["required"])
-      assert Enum.all?(schema["required"], &Map.has_key?(schema["properties"], &1))
+      if is_map(schema["additionalProperties"]) do
+        assert schema["minProperties"] == 1
+        assert schema["maxProperties"] == 16
+        visit_schema(schema["additionalProperties"])
+      else
+        assert schema["additionalProperties"] == false
+        assert is_list(schema["required"])
+        assert Enum.all?(schema["required"], &Map.has_key?(schema["properties"], &1))
+      end
     end
 
     if schema["$ref"], do: assert(String.starts_with?(schema["$ref"], "#/$defs/"))

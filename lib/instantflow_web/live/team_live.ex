@@ -105,7 +105,12 @@ defmodule InstantflowWeb.TeamLive do
       {"Operações", "operations"},
       {"TI", "it"},
       {"Direção", "dean"},
-      {"Orientação", "counselor"}
+      {"Orientação", "counselor"},
+      {"Python: autoria", "python_author"},
+      {"Python: revisão e ativação", "python_reviewer"},
+      {"Python: vincular ao fluxo", "python_binder"},
+      {"Python: executar", "python_execute"},
+      {"Python: consultar código", "python_source"}
     ]
 
   defp role_label(role),

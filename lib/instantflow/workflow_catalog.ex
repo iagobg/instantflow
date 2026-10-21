@@ -15,6 +15,8 @@ defmodule Instantflow.WorkflowCatalog do
         {:error, errors} -> Repo.rollback({:invalid_definition, errors})
       end
 
+      Instantflow.Calculations.Catalogue.validate_bindings!(actor, definition)
+
       unless valid_bindings?(definition, bindings, actor.organization_id),
         do: Repo.rollback(:invalid_bindings)
 

@@ -52,6 +52,7 @@ defmodule InstantflowWeb.Router do
       live "/modelos/:id", TemplateLive, :show
       live "/ocorrencias", IncidentsLive, :index
       live "/orcamentos", BudgetsLive, :index
+      live "/calculos", CalculationsLive, :index
       live "/matriculas", EnrollmentLive, :index
       live "/matriculas/:id", EnrollmentLive, :show
       live "/solicitacoes", RequestsLive, :index

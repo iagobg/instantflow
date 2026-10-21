@@ -39,6 +39,20 @@ defmodule Instantflow.WorkflowCatalog.Schema do
   defp type?(v, "null"), do: is_nil(v)
   defp type?(v, "integer"), do: is_integer(v)
 
+  defp constraints(value, %{"type" => "object", "additionalProperties" => item} = s, path)
+       when is_map(item) do
+    if map_size(value) >= s["minProperties"] and map_size(value) <= s["maxProperties"] do
+      Enum.reduce_while(value, :ok, fn {k, v}, _ ->
+        case check(v, item, path <> "." <> k) do
+          :ok -> {:cont, :ok}
+          error -> {:halt, error}
+        end
+      end)
+    else
+      {:error, path}
+    end
+  end
+
   defp constraints(value, %{"type" => "object"} = s, path) do
     props = s["properties"]
 

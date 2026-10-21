@@ -1,5 +1,5 @@
 name: Checks
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 jobs:
   foundation:
     runs-on: ubuntu-24.04
@@ -18,6 +18,8 @@ jobs:
           elixir-version: "1.19.5"
       - run: mix deps.get --check-locked
       - run: mix precommit
+      - run: python3 -m unittest discover -s runner -p 'test_*.py' -v
+      - run: python3 -m unittest discover -s deploy -p 'test_*.py' -v
       - run: mix assets.setup && mix assets.build
       - run: mix ecto.create -r Instantflow.OperatorRepo && mix ecto.migrate -r Instantflow.OperatorRepo && mix instantflow.db_roles
       - run: python3 scripts/rehearse_01a.py
@@ -31,3 +33,12 @@ jobs:
       - run: mix assets.deploy
         env:
           MIX_ENV: prod
+
+  deploy:
+    needs: foundation
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit

@@ -928,6 +928,50 @@
             "account_binding"
           ],
           "additionalProperties": false
+        },
+        "calculation": {
+          "additionalProperties": false,
+          "properties": {
+            "digest": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "inputs": {
+              "additionalProperties": {
+                "maxLength": 129,
+                "pattern": "^[a-z][a-z0-9_]{0,63}\\.[a-z][a-z0-9_]{0,63}$",
+                "type": "string"
+              },
+              "maxProperties": 16,
+              "minProperties": 1,
+              "type": "object"
+            },
+            "outputs": {
+              "additionalProperties": {
+                "maxLength": 129,
+                "pattern": "^[a-z][a-z0-9_]{0,63}\\.[a-z][a-z0-9_]{0,63}$",
+                "type": "string"
+              },
+              "maxProperties": 16,
+              "minProperties": 1,
+              "type": "object"
+            },
+            "script": {
+              "pattern": "^[a-z][a-z0-9_]{0,63}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "script",
+            "digest",
+            "inputs",
+            "outputs"
+          ],
+          "type": "object"
+        },
+        "requires_calculation": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "type": "string"
         }
       },
       "required": [

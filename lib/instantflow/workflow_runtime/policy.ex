@@ -13,10 +13,11 @@ defmodule Instantflow.WorkflowRuntime.Policy do
 
   def section?(actor, ticket, version, section, :edit),
     do:
-      Enum.any?(
-        section["access"],
-        &(ticket.stage in &1["edit_stages"] and actor?(actor, ticket, version, &1))
-      )
+      not Instantflow.Calculations.Contract.computed?(version.definition, section["key"]) and
+        Enum.any?(
+          section["access"],
+          &(ticket.stage in &1["edit_stages"] and actor?(actor, ticket, version, &1))
+        )
 
   def transition?(actor, ticket, version, transition) do
     transition["from"] == ticket.stage and transition_actor?(actor, ticket, version, transition)

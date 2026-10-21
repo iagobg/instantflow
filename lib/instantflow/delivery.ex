@@ -165,6 +165,7 @@ defmodule Instantflow.Delivery do
     # Each organization receives one bounded batch each pass, irrespective of the preceding tenant's backlog.
     Enum.map(rows, fn [id] ->
       Instantflow.PrivateDocuments.purge_expired(id)
+      Instantflow.Calculations.purge_expired(id)
       {id, process_batch(id, pending_ids(id))}
     end)
   end

@@ -1,0 +1,4 @@
+instantflow.iagobussoletti.com.br {
+	encode zstd gzip
+	reverse_proxy instantflow:4000
+}

@@ -1390,6 +1390,143 @@ defmodule Instantflow.RuntimeRoleTest do
            ).values == %{}
   end
 
+  test "calculation leases and duplicate finalization use real runtime connections and preserve tenant boundaries",
+       c do
+    alias Instantflow.Calculations.{Catalogue, Demo, Runner, Run}
+    alias Instantflow.Calculations
+    Application.put_env(:instantflow, :calculation_execution, true)
+    Application.put_env(:instantflow, :calculation_runner, Instantflow.CalculationFixtures)
+
+    on_exit(fn ->
+      Application.delete_env(:instantflow, :calculation_execution)
+      Application.delete_env(:instantflow, :calculation_runner)
+      Application.delete_env(:instantflow, :calculation_test_observer)
+    end)
+
+    OperatorRepo.query!(
+      "UPDATE calculation_switch SET enabled = true, generation = generation + 1"
+    )
+
+    for role <- ~w(python_author python_reviewer python_source python_binder python_execute) do
+      assert {:ok, _} =
+               Instantflow.Access.grant(c.a_scope, c.a_scope.id, c.a_scope.department_id, role)
+    end
+
+    attrs = Demo.attributes(String.duplicate("a", 64))
+    {:ok, script} = Catalogue.register(c.a_scope, attrs)
+    assert {:ok, :verified} = Catalogue.verify(c.a_scope, script.id)
+    assert {:ok, :ok} = Catalogue.activate(c.a_scope, script.id, true)
+    definition = Demo.definition(script.key, script.digest)
+
+    bindings = %{
+      "roles" => %{"requester" => ["admin"], "reviewer" => ["admin"]},
+      "departments" => %{"responsible" => c.a_scope.department_id}
+    }
+
+    {:ok, version} = WorkflowCatalog.publish(c.a_scope, definition, bindings)
+
+    {:ok, created} =
+      WorkflowRuntime.command(c.a_scope, %{
+        "operation" => "create",
+        "key" => Ecto.UUID.generate(),
+        "workflow_id" => version.workflow_id
+      })
+
+    id = created["ticket_id"]
+    {:ok, _} = Instantflow.WorkflowFixtures.save(c.a_scope, id, hd(attrs["fixtures"])["input"])
+    {:ok, _} = Instantflow.WorkflowFixtures.transition(c.a_scope, id, "calculate")
+    assert {:ok, []} = Tenant.raw(c.b.id, fn -> Repo.all(Run) end)
+    assert {:error, :empty} = Calculations.claim(c.b.id)
+    assert {:error, :forbidden} = Catalogue.source(c.b_scope, script.id)
+    supervisor = start_supervised!(Supervisor.child_spec(Task.Supervisor, id: make_ref()))
+
+    tasks =
+      for _ <- 1..2 do
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          Repo.put_dynamic_repo(c.runtime)
+          Calculations.claim(c.a.id)
+        end)
+      end
+
+    claims = Enum.map(tasks, &Task.await/1)
+    assert [{:ok, {run, actual_script}}] = Enum.filter(claims, &match?({:ok, {%Run{}, _}}, &1))
+    assert Enum.count(claims, &match?({:error, _}, &1)) == 1
+    request = Runner.request(actual_script, run.snapshot, run.id, run.fence)
+    {:ok, response} = Instantflow.CalculationFixtures.execute(request)
+    # Hold the ticket lock so both independent finalizers queue before either can commit.
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: make_ref()
+        )
+      )
+
+    Postgrex.query!(connection, "BEGIN")
+    Postgrex.query!(connection, "SELECT id FROM tickets WHERE id=$1 FOR UPDATE", [id])
+
+    finalizers =
+      for _ <- 1..2 do
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          Repo.put_dynamic_repo(c.runtime)
+          Calculations.finalize(c.a.id, run.id, run.fence, request, {:ok, response})
+        end)
+      end
+
+    assert wait_for_waiters(connection, c.database, 2, 1000)
+    Postgrex.query!(connection, "COMMIT")
+    results = Enum.map(finalizers, &Task.await/1)
+    assert Enum.sort(results) == Enum.sort([{:ok, "succeeded"}, {:error, :stale_attempt}])
+
+    assert OperatorRepo.get_by!(Instantflow.WorkflowRuntime.Section,
+             ticket_id: id,
+             key: "quotation"
+           ).values["total_cents"] == 402_000
+
+    assert OperatorRepo.aggregate(
+             from(a in Instantflow.Calculations.Attempt, where: a.run_id == ^run.id),
+             :count
+           ) == 1
+
+    # A slow external runner holds no transaction or ticket lock and cannot block refresh delivery.
+    {:ok, second} =
+      WorkflowRuntime.command(c.a_scope, %{
+        "operation" => "create",
+        "key" => Ecto.UUID.generate(),
+        "workflow_id" => version.workflow_id
+      })
+
+    second_id = second["ticket_id"]
+
+    {:ok, _} =
+      Instantflow.WorkflowFixtures.save(c.a_scope, second_id, hd(attrs["fixtures"])["input"])
+
+    {:ok, _} = Instantflow.WorkflowFixtures.transition(c.a_scope, second_id, "calculate")
+    Application.put_env(:instantflow, :calculation_runner, Instantflow.BlockingCalculationRunner)
+    Application.put_env(:instantflow, :calculation_test_observer, self())
+
+    slow =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+        Calculations.process(c.a.id)
+      end)
+
+    assert_receive {:runner_waiting, runner_pid, false}, 5000
+    assert {:ok, _} = WorkflowRuntime.get(c.a_scope, second_id)
+    assert is_list(Delivery.drain())
+    send(runner_pid, :release)
+    assert {:ok, "succeeded"} = Task.await(slow)
+
+    assert_raise Postgrex.Error, fn ->
+      Tenant.raw(c.a.id, fn ->
+        Repo.query!("UPDATE calculation_scripts SET source = 'changed' WHERE id = $1", [script.id])
+      end)
+    end
+
+    # The runtime can lock the control row, but can never enable it.
+    assert {:error, %Postgrex.Error{postgres: %{code: :insufficient_privilege}}} =
+             Repo.query("UPDATE calculation_switch SET enabled = true")
+  end
+
   defp count_receipts(id),
     do:
       OperatorRepo.aggregate(

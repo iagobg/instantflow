@@ -42,6 +42,17 @@ defmodule InstantflowWeb.Layouts do
             class="nav-link"
           ><.icon name="hero-share" />Modelos de fluxo</.link>
           <.link
+            :if={
+              Instantflow.Access.role?(
+                @current_scope,
+                ~w(python_author python_reviewer python_binder python_source)
+              )
+            }
+            id="calculations-link"
+            navigate={~p"/o/#{@current_scope.organization.slug}/calculos"}
+            class="nav-link"
+          ><.icon name="hero-squares-2x2" />Cálculos Python</.link>
+          <.link
             id="enrollment-link"
             navigate={~p"/o/#{@current_scope.organization.slug}/matriculas"}
             class="nav-link"

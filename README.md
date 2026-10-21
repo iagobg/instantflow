@@ -4,7 +4,9 @@ InstantFlow is a general-purpose, multi-organization workflow platform built wit
 
 ## Current delivery
 
-Sprint 07 completes integrated verification and local delivery: [reproducible demo](docs/demo.md), [release gates](docs/release-gates.md), [performance evidence](docs/performance.md), and [deployment/limits](docs/deployment.md). All 136 tests pass. Populated backup recovery and production release smoke passed. Sprint 08 remains gated by explicit user decision.
+Sprint 07 completes integrated verification and local delivery: [reproducible demo](docs/demo.md), [release gates](docs/release-gates.md), [performance evidence](docs/performance.md), and [deployment/limits](docs/deployment.md). All 136 tests pass. Populated backup recovery and production release smoke passed.
+
+Sprint 08 adds an immutable Python script catalogue, separate review/activation permissions, reference-only workflow bindings, durable asynchronous calculation runs and PT-BR status/retry controls. The synthetic trip example targets gVisor on the owner's private Oracle ARM VPS. Execution is disabled by default pending real-host isolation/recovery verification; see the [walkthrough and operator guide](docs/python-calculations.md).
 
 Sprint 06 adds confidential incidents, a restricted urgency dashboard, named counselor assignments, separate disciplinary/support work, confined private uploads and curated simulated guardian communication. Open **Ocorrências**. See [incident operations](docs/incidents.md).
 

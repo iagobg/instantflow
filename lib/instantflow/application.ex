@@ -12,6 +12,14 @@ defmodule Instantflow.Application do
         do: [Instantflow.Delivery.Worker],
         else: []
 
+    calculations =
+      if Application.get_env(:instantflow, :calculation_worker, false),
+        do: [
+          {Task.Supervisor, name: Instantflow.Calculations.Tasks},
+          Instantflow.Calculations.Worker
+        ],
+        else: []
+
     children =
       [
         InstantflowWeb.Telemetry,
@@ -22,7 +30,7 @@ defmodule Instantflow.Application do
         Instantflow.Collaboration.Presence,
         # Start to serve requests, typically the last entry
         InstantflowWeb.Endpoint
-      ] ++ delivery
+      ] ++ delivery ++ calculations
 
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options

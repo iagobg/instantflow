@@ -277,6 +277,7 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
         "guard" => guard(v, d)
       })
 
+    item = Map.merge(Map.take(old, ~w(calculation requires_calculation)), item)
     item = if old["finance"], do: Map.put(item, "finance", old["finance"]), else: item
 
     if v.department_binding in [nil, ""],

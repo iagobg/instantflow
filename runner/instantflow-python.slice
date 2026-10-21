@@ -1,0 +1,8 @@
+[Unit]
+Description=Aggregate limits for InstantFlow Python demonstration workloads
+
+[Slice]
+CPUQuota=200%
+MemoryMax=512M
+MemorySwapMax=0
+TasksMax=64

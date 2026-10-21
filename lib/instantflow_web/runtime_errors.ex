@@ -1,4 +1,18 @@
 defmodule InstantflowWeb.RuntimeErrors do
+  def message(:execution_disabled), do: "Os cálculos Python estão desativados pelo operador."
+
+  def message(:calculation_required),
+    do: "Aguarde um cálculo válido para os dados atuais antes de avançar."
+
+  def message(:invalid_calculation),
+    do: "Revise o cálculo, os mapeamentos e as permissões locais."
+
+  def message(:invalid_script),
+    do: "Informe código, esquemas inteiros, versão do executor e exemplos sintéticos válidos."
+
+  def message(:fixture_failed),
+    do: "Os exemplos sintéticos não passaram. Revise o código e a disponibilidade do executor."
+
   def message(:invalid_assignee),
     do: "Escolha uma pessoa ativa com o perfil e departamento locais exigidos."
 

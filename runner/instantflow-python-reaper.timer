@@ -1,0 +1,8 @@
+[Unit]
+Description=Watch for orphan InstantFlow Python workloads
+[Timer]
+OnBootSec=15s
+OnUnitActiveSec=10s
+AccuracySec=1s
+[Install]
+WantedBy=timers.target

@@ -180,7 +180,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   defp valid_transition?(t) do
     props?(
       t,
-      ~w(key label from to actors required_fields require_reason kind disallow_requester finance_sensitive history_visibility actions guard department_binding finance)
+      ~w(key label from to actors required_fields require_reason kind disallow_requester finance_sensitive history_visibility actions guard department_binding finance calculation requires_calculation)
     ) and label?(t["label"]) and
       is_list(t["actors"]) and t["actors"] != [] and
       Enum.all?(
@@ -228,7 +228,8 @@ defmodule Instantflow.WorkflowCatalog.Definition do
           )
         end) and
         Enum.all?(d["transitions"], fn t ->
-          finance_spec?(t["finance"], d) and t["from"] in stages and t["to"] in stages and
+          Instantflow.Calculations.Contract.spec?(t["calculation"], d) and calculation_flow?(t, d) and
+            finance_spec?(t["finance"], d) and t["from"] in stages and t["to"] in stages and
             Enum.all?(t["actors"], &valid_actor?(&1, roles, d)) and
             (not Map.has_key?(t, "department_binding") or
                Enum.any?(
@@ -240,6 +241,23 @@ defmodule Instantflow.WorkflowCatalog.Definition do
         end)
 
     if valid, do: :ok, else: error("Há referências, guardas ou caminhos de correção inválidos.")
+  end
+
+  defp calculation_flow?(t, d) do
+    needs = t["requires_calculation"]
+
+    (is_nil(needs) or
+       Enum.any?(d["transitions"], fn edge ->
+         edge["key"] == needs and edge["calculation"] != nil and edge["to"] == t["from"]
+       end)) and
+      (is_nil(t["calculation"]) or
+         (t["from"] != t["to"] and
+            not Enum.any?(d["stages"], &(&1["key"] == t["to"] and &1["terminal"])) and
+            Enum.count(d["transitions"], &(&1["calculation"] != nil and &1["to"] == t["to"])) == 1 and
+            Enum.all?(Enum.filter(d["transitions"], &(&1["from"] == t["to"])), fn edge ->
+              edge["kind"] in ~w(correction rejection cancellation) or
+                edge["requires_calculation"] == t["key"]
+            end)))
   end
 
   defp finance_spec?(nil, _), do: true

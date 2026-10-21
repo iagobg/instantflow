@@ -7,6 +7,8 @@
 # General application configuration
 import Config
 
+config :mime, :types, %{"text/x-python" => ["py"]}
+
 config :instantflow,
   environment: config_env(),
   delivery_poll_interval_ms: 250,

@@ -35,6 +35,10 @@ instantflow-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Python runner bytecode
+__pycache__/
+*.pyc
+
 # Workspace-local tooling, credentials and database state
 /.local/
 /.env
@@ -44,3 +48,7 @@ npm-debug.log
 # Static digest and compression outputs from production asset builds
 /priv/static/**/*-????????????????????????????????.*
 /priv/static/**/*.gz
+
+# Private deployment material (only .example files belong in Git)
+/deploy/oracle-caddy/*.env
+/deploy/oracle-caddy/backups/

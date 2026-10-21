@@ -119,6 +119,7 @@ defmodule Instantflow.WorkflowRuntime do
              &Policy.transition?(scope, ticket, version, &1)
            )
            |> Enum.map(&Map.take(&1, ~w(key label require_reason kind))),
+         calculations: Instantflow.Calculations.statuses(scope, ticket, version),
          events: events,
          deliveries:
            Repo.all(
@@ -335,6 +336,9 @@ defmodule Instantflow.WorkflowRuntime do
     section = Enum.find(sections, &(&1.key == c["section"]))
     definition = Enum.find(version.definition["sections"], &(&1["key"] == c["section"]))
 
+    if Instantflow.Calculations.Contract.computed?(version.definition, c["section"]),
+      do: Repo.rollback(:forbidden)
+
     unless section && definition && Policy.section?(actor, ticket, version, definition, :edit),
       do: Repo.rollback(:forbidden)
 
@@ -363,6 +367,10 @@ defmodule Instantflow.WorkflowRuntime do
     |> Repo.update!()
 
     updated = ticket |> Ecto.Changeset.change(revision: ticket.revision + 1) |> Repo.update!()
+
+    if Instantflow.Calculations.Contract.calculations?(version.definition),
+      do: Instantflow.Calculations.invalidate!(updated, section.key)
+
     record(updated, actor, "save:" <> section.key, ticket.stage, nil, [])
     updated
   end
@@ -442,6 +450,8 @@ defmodule Instantflow.WorkflowRuntime do
       end
     end
 
+    Instantflow.Calculations.require!(ticket, sections, transition["requires_calculation"])
+
     return_stage =
       case transition["kind"] do
         "correction" -> ticket.stage
@@ -466,11 +476,16 @@ defmodule Instantflow.WorkflowRuntime do
       )
       |> Repo.update!()
 
+    if Instantflow.Calculations.Contract.calculations?(version.definition),
+      do: Instantflow.Calculations.invalidate!(updated)
+
+    Instantflow.Calculations.enqueue!(actor, updated, version, sections, transition)
     record(updated, actor, transition["key"], ticket.stage, reason, transition["actions"])
     updated
   end
 
-  defp record(ticket, actor, operation, from_stage, reason, actions) do
+  @doc false
+  def record(ticket, actor, operation, from_stage, reason, actions) do
     Repo.query!("SELECT pg_advisory_xact_lock(hashtextextended('outbox:' || $1::text, 0))", [
       to_string(actor.organization_id)
     ])
