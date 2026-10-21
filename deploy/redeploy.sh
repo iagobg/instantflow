@@ -14,21 +14,21 @@ test -s instantflow.env
 test -s instantflow.operator.env
 test -s instantflow.db.env
 test -s projects/instantflow.compose.yml
-export INSTANTFLOW_IMAGE="$image"
-compose=(sudo -n docker compose -f compose.yml -f projects/instantflow.compose.yml)
+# sudo resets the caller's environment; set the selected image after sudo.
+compose=(sudo -n env "INSTANTFLOW_IMAGE=$image" docker compose -f compose.yml -f projects/instantflow.compose.yml)
 # Pull first so a registry failure causes no downtime.
-"${compose[@]}" --profile tools pull instantflow instantflow-migrate instantflow-db
-"${compose[@]}" up -d --wait --wait-timeout 120 instantflow-db
+"${compose[@]}" --profile tools pull instantflow instantflow-migrate instantflow-db < /dev/null
+"${compose[@]}" up -d --wait --wait-timeout 120 instantflow-db < /dev/null
 mkdir -p backups/instantflow
 backup="backups/instantflow/$(date -u +%Y%m%dT%H%M%SZ)-${image##*:}.dump"
 "${compose[@]}" exec -T instantflow-db sh -c \
-  'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > "$backup"
+  'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > "$backup" < /dev/null
 test -s "$backup"
 # Forward-only migrations require maintenance downtime. On failure, leave the
 # app stopped rather than serve old code against a partially changed schema.
-"${compose[@]}" stop instantflow
-"${compose[@]}" --profile tools run --rm --no-deps instantflow-migrate
-"${compose[@]}" up -d --no-deps --wait --wait-timeout 120 instantflow
+"${compose[@]}" stop instantflow < /dev/null
+"${compose[@]}" --profile tools run --rm --no-deps -T instantflow-migrate < /dev/null
+"${compose[@]}" up -d --no-deps --wait --wait-timeout 120 instantflow < /dev/null
 # Keep the shared .env untouched; record the last healthy image separately.
 printf 'INSTANTFLOW_IMAGE=%s\n' "$image" > instantflow.image.env.tmp
 mv instantflow.image.env.tmp instantflow.image.env

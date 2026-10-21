@@ -24,6 +24,12 @@ Generate independent passwords with `openssl rand -hex 32` and the Phoenix secre
 
 The dedicated database has no published port. The database's initialization account is privileged because existing migrations create roles and security-definer functions; only the migration container receives it. PostgreSQL initialization environment variables apply only when the volume is empty. Changing a password in a file alone does not rotate an existing database login.
 
+On this VPS, the shared backup directory is owned by root. Create Instantflow's private subdirectory once so the deployment SSH user can write its snapshots:
+
+```sh
+ssh portfolio-server 'sudo install -d -m 700 -o ubuntu -g ubuntu /home/ubuntu/apps/oracle-caddy/backups/instantflow'
+```
+
 In GitHub repository `iagobg/instantflow`, open **Settings → Secrets and variables → Actions**, select **New repository secret**, and add the following secrets. This uses repository Actions secrets like the other workspace projects; no GitHub Environment or environment approval gate is required.
 
 | Secret | Value |

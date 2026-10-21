@@ -24,7 +24,22 @@ class RedeployTest(unittest.TestCase):
         sudo = self.bin / "sudo"
         sudo.write_text("""#!/usr/bin/env python3
 import os, sys
+command = sys.argv[1:]
+if command[0] == "-n":
+    command.pop(0)
+# Emulate sudo's env_reset: the image exported by the SSH shell is removed.
+clean = {key: os.environ[key] for key in
+         ("PATH", "COMMAND_LOG", "EXPECTED_IMAGE", "FAIL_AT") if key in os.environ}
+os.execvpe(command[0], command, clean)
+""")
+        docker = self.bin / "docker"
+        docker.write_text("""#!/usr/bin/env python3
+import os, sys
 args = sys.argv[1:]
+# Docker must not consume the remaining deployment script streamed over SSH.
+sys.stdin.buffer.read()
+if os.environ.get("INSTANTFLOW_IMAGE") != os.environ["EXPECTED_IMAGE"]:
+    sys.exit("Compose did not receive the selected image after sudo")
 with open(os.environ["COMMAND_LOG"], "a") as log:
     log.write(" ".join(args) + "\\n")
 if (os.environ.get("FAIL_AT") in args or
@@ -33,13 +48,15 @@ if (os.environ.get("FAIL_AT") in args or
 if "pg_dump" in " ".join(args):
     sys.stdout.buffer.write(b"PGDMP-test-snapshot")
 """)
+        docker.chmod(0o755)
         sudo.chmod(0o755)
         self.env = dict(os.environ, PATH=str(self.bin) + os.pathsep + os.environ["PATH"],
-                        COMMAND_LOG=str(self.root / "commands"))
+                        COMMAND_LOG=str(self.root / "commands"), EXPECTED_IMAGE=IMAGE)
 
     def run_deploy(self, image=IMAGE):
-        return subprocess.run(["bash", str(SCRIPT), str(self.root), image],
-                              env=self.env, capture_output=True, text=True)
+        return subprocess.run(["bash", "-s", "--", str(self.root), image],
+                              input=SCRIPT.read_text(), env=self.env,
+                              capture_output=True, text=True)
 
     def commands(self):
         return (self.root / "commands").read_text().splitlines()

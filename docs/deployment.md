@@ -1,10 +1,14 @@
 # Deployment and operating boundaries
 
-The push-to-deploy setup for the shared Oracle VPS uses ARM64 release images, CI gates, isolated database credentials, pre-migration backups and health checks. This prepares the deployment path; a live production rollout must be verified separately.
+The push-to-deploy setup for the shared Oracle VPS uses ARM64 release images, CI gates, isolated database credentials, pre-migration backups and health checks. Setup and operating instructions are in [deploy/README.md](../deploy/README.md).
 
 GitHub setup follows the other workspace projects: configure repository Actions secrets, with no GitHub Environment required. The workflow uses `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PATH`, and `DEPLOY_SSH_KEY`, plus `DEPLOY_KNOWN_HOSTS` to verify the VPS SSH identity. Pushes to `main` deploy after the Checks foundation job passes. The database migration and backup steps are application-specific; they do not require environment-scoped GitHub secrets or approval gates.
 
-The demonstrated architecture is one Phoenix service and shared PostgreSQL with mandatory organization scopes/RLS, organization-local profiles, immutable published versions and durable simulated delivery. The local verification used PostgreSQL 16.15 and the pinned OTP 28 / Elixir 1.19.5 runtime. No external deployment was performed.
+The demonstrated architecture is one Phoenix service and shared PostgreSQL with mandatory organization scopes/RLS, organization-local profiles, immutable published versions and durable simulated delivery. The local verification used PostgreSQL 16.15 and the pinned OTP 28 / Elixir 1.19.5 runtime.
+
+## VPS verification
+
+On 2026-10-21, the ARM64 image for commit `31e5f48080bf1ab80a09e8e2b3cad470c759adf3` passed hosted foundation checks and image publication. The first VPS startup was then verified using the corrected deployment script: a private database backup completed, all migrations ran through OperatorRepo, and the non-owner web service became healthy. Caddy obtained a Let's Encrypt certificate and the public [login page](https://instantflow.iagobussoletti.com.br/entrar) returned HTTP 200. PostgreSQL has no published host port and uses an internal Docker network. Python execution remains disabled. No accounts or demonstration seeds were installed in the new database.
 
 ## Build and start
 
