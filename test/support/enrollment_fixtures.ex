@@ -94,8 +94,11 @@ defmodule Instantflow.EnrollmentFixtures do
   end
 
   def second_school(f) do
+    # The shared school reserves ID 1 without advancing PostgreSQL's sequence.
+    # Match the other multi-school fixtures instead of depending on prior tests.
     org =
       Repo.insert!(%Instantflow.Identity.Organization{
+        id: System.unique_integer([:positive]) + 1000,
         slug: "other-#{System.unique_integer([:positive])}",
         name: "Outra escola"
       })
