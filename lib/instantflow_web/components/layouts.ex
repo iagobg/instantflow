@@ -53,6 +53,12 @@ defmodule InstantflowWeb.Layouts do
           ><.icon name="hero-squares-2x2" />Solicitações</.link>
           <.link
             :if={@current_scope.role != "parent"}
+            id="incidents-link"
+            navigate={~p"/o/#{@current_scope.organization.slug}/ocorrencias"}
+            class="nav-link"
+          ><.icon name="hero-information-circle" />Ocorrências</.link>
+          <.link
+            :if={@current_scope.role != "parent"}
             id="budgets-link"
             navigate={~p"/o/#{@current_scope.organization.slug}/orcamentos"}
             class="nav-link"

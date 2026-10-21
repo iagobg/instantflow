@@ -50,6 +50,7 @@ defmodule InstantflowWeb.Router do
       live "/equipe", TeamLive, :index
       live "/modelos", TemplatesLive, :index
       live "/modelos/:id", TemplateLive, :show
+      live "/ocorrencias", IncidentsLive, :index
       live "/orcamentos", BudgetsLive, :index
       live "/matriculas", EnrollmentLive, :index
       live "/matriculas/:id", EnrollmentLive, :show

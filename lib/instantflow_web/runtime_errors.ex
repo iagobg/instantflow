@@ -1,4 +1,7 @@
 defmodule InstantflowWeb.RuntimeErrors do
+  def message(:invalid_assignee),
+    do: "Escolha uma pessoa ativa com o perfil e departamento locais exigidos."
+
   def message(:account_exists), do: "Já existe uma conta com este nome neste departamento."
 
   def message(:insufficient_budget), do: "Saldo insuficiente para reservar este valor."

@@ -8,41 +8,57 @@ defmodule Instantflow.WorkflowRuntime do
 
   def command(actor, command) when is_map(command) do
     with :ok <- command_shape(command) do
-      Tenant.transaction(actor, fn actor ->
-        actor = Identity.lock_scope!(actor)
-        digest = :crypto.hash(:sha256, :erlang.term_to_binary(command, [:deterministic]))
+      transaction =
+        if command["operation"] == "assign",
+          do: &Tenant.authorize_change/2,
+          else: &Tenant.transaction/2
 
-        receipt =
-          Repo.get_by(Receipt,
-            organization_id: actor.organization_id,
-            actor_id: actor.user_id,
-            operation: command["operation"],
-            key: command["key"]
+      result =
+        transaction.(actor, fn actor ->
+          actor = Identity.lock_scope!(actor)
+          digest = :crypto.hash(:sha256, :erlang.term_to_binary(command, [:deterministic]))
+
+          receipt =
+            Repo.get_by(Receipt,
+              organization_id: actor.organization_id,
+              actor_id: actor.user_id,
+              operation: command["operation"],
+              key: command["key"]
+            )
+
+          if receipt do
+            ticket = Repo.get!(Ticket, receipt.ticket_id)
+            version = Repo.get!(Version, ticket.workflow_version_id)
+            unless command_access?(actor, ticket, version), do: Repo.rollback(:forbidden)
+            unless receipt.digest == digest, do: Repo.rollback(:idempotency_mismatch)
+            receipt.result
+          else
+            ticket = apply_command(actor, command)
+            result = %{"ticket_id" => ticket.id, "revision" => ticket.revision}
+
+            Repo.insert!(%Receipt{
+              organization_id: actor.organization_id,
+              operation: command["operation"],
+              actor_id: actor.user_id,
+              key: command["key"],
+              digest: digest,
+              ticket_id: ticket.id,
+              result: result
+            })
+
+            result
+          end
+        end)
+
+      if command["operation"] == "assign" and match?({:ok, _}, result),
+        do:
+          Phoenix.PubSub.broadcast(
+            Instantflow.PubSub,
+            "organization:#{actor.organization_id}",
+            :permissions_changed
           )
 
-        if receipt do
-          ticket = Repo.get!(Ticket, receipt.ticket_id)
-          version = Repo.get!(Version, ticket.workflow_version_id)
-          unless command_access?(actor, ticket, version), do: Repo.rollback(:forbidden)
-          unless receipt.digest == digest, do: Repo.rollback(:idempotency_mismatch)
-          receipt.result
-        else
-          ticket = apply_command(actor, command)
-          result = %{"ticket_id" => ticket.id, "revision" => ticket.revision}
-
-          Repo.insert!(%Receipt{
-            organization_id: actor.organization_id,
-            operation: command["operation"],
-            actor_id: actor.user_id,
-            key: command["key"],
-            digest: digest,
-            ticket_id: ticket.id,
-            result: result
-          })
-
-          result
-        end
-      end)
+      result
     end
   end
 
@@ -92,6 +108,7 @@ defmodule Instantflow.WorkflowRuntime do
          sections: Enum.filter(sections, &(&1.key in keys)),
          section_definitions:
            Enum.map(readable, &Map.take(&1, ~w(key label classification fields))),
+         assignments: Instantflow.Collaboration.Assignments.controls(scope, ticket, version),
          can_retry: Policy.retry?(scope, ticket, version),
          editable:
            Enum.filter(readable, &Policy.section?(scope, ticket, version, &1, :edit))
@@ -299,8 +316,18 @@ defmodule Instantflow.WorkflowRuntime do
       )
 
     case command["operation"] do
-      "save_section" -> save_section(actor, ticket, version, sections, command)
-      "transition" -> transition(actor, ticket, version, sections, command)
+      "save_section" ->
+        save_section(actor, ticket, version, sections, command)
+
+      "transition" ->
+        transition(actor, ticket, version, sections, command)
+
+      "assign" ->
+        {updated, audit_reason} =
+          Instantflow.Collaboration.Assignments.apply!(actor, ticket, version, command)
+
+        record(updated, actor, "assign:" <> command["section"], ticket.stage, audit_reason, [])
+        updated
     end
   end
 
@@ -502,6 +529,9 @@ defmodule Instantflow.WorkflowRuntime do
         "transition" ->
           ~w(operation key ticket_id transition expected_revision section_revisions reason)
 
+        "assign" ->
+          ~w(operation key ticket_id section membership_id expected_revision reason)
+
         _ ->
           []
       end
@@ -511,6 +541,8 @@ defmodule Instantflow.WorkflowRuntime do
     valid =
       allowed != [] and Enum.all?(Map.keys(c), &(&1 in allowed)) and
         Enum.all?(required, &Map.has_key?(c, &1)) and
+        (c["operation"] != "assign" or is_nil(c["membership_id"]) or
+           (is_integer(c["membership_id"]) and c["membership_id"] > 0)) and
         is_binary(c["key"]) and byte_size(c["key"]) in 1..128 and
         Enum.all?(
           Enum.filter(

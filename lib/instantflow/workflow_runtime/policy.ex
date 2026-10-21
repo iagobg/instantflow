@@ -34,6 +34,14 @@ defmodule Instantflow.WorkflowRuntime.Policy do
       Enum.any?(Access.profiles(actor), fn profile ->
         profile.role in Map.get(version.bindings["roles"], spec["role"], []) and
           case spec["scope"] do
+            "assigned_user" ->
+              Instantflow.Collaboration.Assignments.assigned?(
+                actor,
+                ticket,
+                version,
+                spec["assignment_key"]
+              )
+
             "requester" ->
               actor.user_id == ticket.requester_id
 
@@ -56,7 +64,8 @@ defmodule Instantflow.WorkflowRuntime.Policy do
     Enum.any?(version.definition["transitions"], fn edge ->
       Enum.any?(
         edge["actors"],
-        &(&1["scope"] == "assigned_department" and actor?(actor, ticket, version, &1))
+        &(&1["scope"] in ~w(assigned_department workflow_department) and
+            actor?(actor, ticket, version, &1))
       )
     end)
   end
@@ -66,6 +75,11 @@ defmodule Instantflow.WorkflowRuntime.Policy do
       nil -> false
       section -> section?(actor, ticket, version, section, :read)
     end
+  end
+
+  def history?(actor, ticket, version, %{operation: "assign:" <> key}) do
+    section = Enum.find(version.definition["sections"], &(&1["key"] == key))
+    section && Instantflow.Collaboration.Assignments.manager?(actor, ticket, version, section)
   end
 
   def history?(_actor, _ticket, _version, %{operation: "create"}), do: true

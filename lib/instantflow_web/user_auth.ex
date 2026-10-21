@@ -90,7 +90,8 @@ defmodule InstantflowWeb.UserAuth do
                    InstantflowWeb.RequestLive,
                    InstantflowWeb.RequestsLive,
                    InstantflowWeb.EnrollmentLive,
-                   InstantflowWeb.BudgetsLive
+                   InstantflowWeb.BudgetsLive,
+                   InstantflowWeb.IncidentsLive
                  ],
                  do: send(self(), :reconcile)
 
@@ -109,7 +110,8 @@ defmodule InstantflowWeb.UserAuth do
                        InstantflowWeb.RequestLive,
                        InstantflowWeb.RequestsLive,
                        InstantflowWeb.EnrollmentLive,
-                       InstantflowWeb.BudgetsLive
+                       InstantflowWeb.BudgetsLive,
+                       InstantflowWeb.IncidentsLive
                      ],
                      do: {:cont, socket},
                      else: {:halt, socket}

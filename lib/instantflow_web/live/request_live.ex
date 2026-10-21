@@ -31,7 +31,14 @@ defmodule InstantflowWeb.RequestLive do
                active_section: nil,
                review_revision: data.ticket.revision,
                action_key: Ecto.UUID.generate(),
-               reason: to_form(%{}, as: :action)
+               reason: to_form(%{}, as: :action),
+               assignment_form: to_form(%{}, as: :assignment),
+               upload_form: to_form(%{}, as: :upload)
+             )
+             |> allow_upload(:private_document,
+               accept: ~w(.pdf .png .jpg .jpeg),
+               max_entries: 1,
+               max_file_size: 5_242_880
              )
              |> load(data)}
 
@@ -48,6 +55,8 @@ defmodule InstantflowWeb.RequestLive do
     values = form_values(values)
 
     if key in socket.assigns.data.editable do
+      definition = Enum.find(socket.assigns.data.section_definitions, &(&1["key"] == key))
+      values = preserve_attachments(definition, socket.assigns.editors[key], values)
       editor = Editor.draft(socket.assigns.editors[key], values)
       Presence.heartbeat(socket.assigns.current_scope, socket.assigns.data.ticket.id, key)
       {:noreply, socket |> assign(active_section: key) |> put_editor(key, editor)}
@@ -90,6 +99,7 @@ defmodule InstantflowWeb.RequestLive do
 
     if key in data.editable do
       definition = Enum.find(data.section_definitions, &(&1["key"] == key))
+      values = preserve_attachments(definition, socket.assigns.editors[key], values)
       editor = Editor.draft(socket.assigns.editors[key], values)
 
       command = %{
@@ -211,6 +221,84 @@ defmodule InstantflowWeb.RequestLive do
     end
   end
 
+  def handle_event("private-upload-change", _, socket), do: {:noreply, socket}
+
+  def handle_event("private-upload", %{"upload" => %{"target" => target}}, socket) do
+    if Enum.any?(socket.assigns.attachment_options, fn {_, ref} -> ref == target end) do
+      [section, field] = String.split(target, ".")
+
+      results =
+        consume_uploaded_entries(socket, :private_document, fn %{path: path}, entry ->
+          {:ok,
+           Instantflow.PrivateDocuments.upload(
+             socket.assigns.current_scope,
+             socket.assigns.data.ticket.id,
+             section,
+             field,
+             entry.client_name,
+             File.read!(path)
+           )}
+        end)
+
+      case results do
+        [{:ok, document}] ->
+          editor = socket.assigns.editors[section]
+          editor = Editor.draft(editor, Map.put(editor.values, field, document.object_key))
+          refresh(put_editor(socket, section, editor))
+
+        [{:error, error}] ->
+          failure(socket, error)
+
+        _ ->
+          failure(socket, :invalid_file)
+      end
+    else
+      failure(socket, :forbidden)
+    end
+  end
+
+  def handle_event("review-private-document", %{"key" => key, "accept" => accept}, socket) do
+    case Instantflow.PrivateDocuments.review(socket.assigns.current_scope, key, accept == "true") do
+      {:ok, _} -> refresh(socket)
+      {:error, error} -> failure(socket, error)
+    end
+  end
+
+  def handle_event("delete-private-document", %{"key" => key}, socket) do
+    case Instantflow.PrivateDocuments.delete(socket.assigns.current_scope, key) do
+      {:ok, _} -> refresh(socket)
+      {:error, error} -> failure(socket, error)
+    end
+  end
+
+  def handle_event("assign-section", %{"assignment" => p}, socket) do
+    member_id =
+      case Integer.parse(p["membership_id"] || "") do
+        {id, ""} when id > 0 -> id
+        _ -> nil
+      end
+
+    data = socket.assigns.data
+
+    case WorkflowRuntime.command(socket.assigns.current_scope, %{
+           "operation" => "assign",
+           "key" => socket.assigns.action_key,
+           "ticket_id" => data.ticket.id,
+           "section" => p["section"],
+           "membership_id" => member_id,
+           "expected_revision" => socket.assigns.review_revision,
+           "reason" => p["reason"]
+         }) do
+      {:ok, result} ->
+        refresh(
+          assign(socket, action_key: Ecto.UUID.generate(), review_revision: result["revision"])
+        )
+
+      {:error, error} ->
+        failure(socket, error)
+    end
+  end
+
   def handle_event("refresh", _, socket), do: refresh(socket)
   def handle_event("reconcile", _, socket), do: refresh(socket)
 
@@ -249,6 +337,13 @@ defmodule InstantflowWeb.RequestLive do
 
       _ ->
         # Remove protected values and drafts before leaving an unavailable record.
+        socket =
+          Enum.reduce(
+            socket.assigns.uploads.private_document.entries,
+            socket,
+            &cancel_upload(&2, :private_document, &1.ref)
+          )
+
         {:noreply,
          socket
          |> assign(data: nil, editors: %{}, forms: %{}, dirty: false)
@@ -267,14 +362,38 @@ defmodule InstantflowWeb.RequestLive do
     editors = Editor.reconcile(socket.assigns.editors, data)
     forms = Map.new(editors, fn {key, editor} -> {key, to_form(editor.values, as: :section)} end)
 
+    attachment_options =
+      for section <- data.section_definitions,
+          section["key"] in data.editable,
+          field <- section["fields"],
+          field["type"] == "attachment",
+          do: {section["label"] <> " · " <> field["label"], section["key"] <> "." <> field["key"]}
+
+    socket =
+      if attachment_options == [] do
+        Enum.reduce(
+          socket.assigns.uploads.private_document.entries,
+          socket,
+          &cancel_upload(&2, :private_document, &1.ref)
+        )
+      else
+        socket
+      end
+
+    documents = Instantflow.PrivateDocuments.list(socket.assigns.current_scope, data.ticket.id)
+
     socket
     |> assign(
+      attachment_options: attachment_options,
+      document_count: length(documents),
       data: data,
       editors: editors,
       forms: forms,
       dirty: Enum.any?(editors, fn {_, e} -> e.dirty end),
       stale: data.ticket.revision != socket.assigns.review_revision
     )
+    |> stream(:private_documents, documents, reset: true)
+    |> stream(:assignments, data.assignments, reset: true)
     |> stream(:sections, data.sections, reset: true)
     |> stream(:events, data.events, reset: true)
     |> stream(:deliveries, data.deliveries, reset: true)
@@ -297,6 +416,20 @@ defmodule InstantflowWeb.RequestLive do
     )
     |> stream_insert(:sections, Enum.find(socket.assigns.data.sections, &(&1.key == key)))
   end
+
+  defp preserve_attachments(definition, editor, values) do
+    Enum.reduce(definition["fields"], values, fn field, acc ->
+      if field["type"] == "attachment",
+        do: Map.put(acc, field["key"], editor.values[field["key"]]),
+        else: acc
+    end)
+  end
+
+  defp document_status("quarantined"), do: "Em quarentena"
+  defp document_status("ready"), do: "Liberado"
+  defp document_status("rejected"), do: "Recusado"
+  defp document_status("deleted"), do: "Excluído"
+  defp document_status(_), do: "Expirado"
 
   defp form_values(values),
     do: Map.reject(values, fn {key, _} -> String.starts_with?(key, "_unused_") end)
@@ -360,6 +493,7 @@ defmodule InstantflowWeb.RequestLive do
   defp delivery_kind("simulate_payment"), do: "Pagamento simulado"
   defp delivery_kind("simulate_notification"), do: "Notificação simulada"
   defp delivery_kind(_), do: "Criação de acesso simulada"
+  defp operation_label("assign:" <> _), do: "Atribuição de responsável atualizada"
   defp operation_label("create"), do: "Solicitação criada"
   defp operation_label("save:" <> _), do: "Formulário salvo"
   defp operation_label(operation), do: operation
@@ -476,6 +610,100 @@ defmodule InstantflowWeb.RequestLive do
           </section>
         </div>
         <aside class="request-actions">
+          <section :if={@attachment_options != [] or @document_count > 0} class="card">
+            <h2>Documentos privados fictícios</h2><p>
+              PDF, PNG ou JPEG até 5 MiB. Quarentena e liberação manual; verificação limitada, sem antivírus.
+            </p>
+            <.form
+              :if={@attachment_options != []}
+              for={@upload_form}
+              id="private-upload-form"
+              phx-change="private-upload-change"
+              phx-submit="private-upload"
+            >
+              <.input
+                field={@upload_form[:target]}
+                type="select"
+                label="Campo do documento"
+                options={@attachment_options}
+              />
+              <.live_file_input upload={@uploads.private_document} />
+              <p :for={error <- upload_errors(@uploads.private_document)}>
+                Arquivo recusado: {error}
+              </p>
+              <button
+                id="upload-private-document"
+                class="btn"
+                disabled={@uploads.private_document.entries == []}
+              >Enviar para quarentena</button>
+            </.form>
+            <div id="private-documents" phx-update="stream">
+              <article :for={{id, doc} <- @streams.private_documents} id={id}>
+                <strong>{doc.filename}</strong><p>{document_status(doc.status)}</p>
+                <.link
+                  :if={doc.status == "ready"}
+                  id={"download-private-#{doc.id}"}
+                  href={~p"/o/#{@current_scope.organization.slug}/documentos/#{doc.object_key}"}
+                >Baixar documento privado</.link>
+                <button
+                  :if={doc.status == "quarantined" and doc.section_key in @data.editable}
+                  id={"release-private-#{doc.id}"}
+                  class="btn"
+                  phx-click="review-private-document"
+                  phx-value-key={doc.object_key}
+                  phx-value-accept="true"
+                >Revisei: liberar documento fictício</button>
+                <button
+                  :if={doc.status == "quarantined" and doc.section_key in @data.editable}
+                  id={"reject-private-#{doc.id}"}
+                  class="btn"
+                  phx-click="review-private-document"
+                  phx-value-key={doc.object_key}
+                  phx-value-accept="false"
+                >Recusar documento</button>
+                <button
+                  :if={doc.section_key in @data.editable and doc.status in ~w(quarantined ready)}
+                  id={"delete-private-#{doc.id}"}
+                  class="btn"
+                  phx-click="delete-private-document"
+                  phx-value-key={doc.object_key}
+                >Excluir conteúdo</button>
+              </article>
+            </div>
+          </section>
+          <div id="section-assignments" phx-update="stream">
+            <section :for={{id, assignment} <- @streams.assignments} id={id} class="card">
+              <h2>Atribuir: {assignment.label}</h2>
+              <.form
+                for={@assignment_form}
+                id={"assignment-form-#{assignment.id}"}
+                phx-submit="assign-section"
+              >
+                <input type="hidden" name="assignment[section]" value={assignment.id} />
+                <.input
+                  name="assignment[membership_id]"
+                  id={"assignment-member-#{assignment.id}"}
+                  label="Responsável local"
+                  type="select"
+                  options={assignment.options}
+                  prompt="Sem responsável / revogar"
+                  value={assignment.membership_id}
+                />
+                <.input
+                  field={@assignment_form[:reason]}
+                  id={"assignment-reason-#{assignment.id}"}
+                  label="Motivo da atribuição ou revogação"
+                  required
+                  maxlength="2000"
+                />
+                <button
+                  id={"assign-#{assignment.id}"}
+                  class="btn"
+                  disabled={@dirty or @stale or not (assignment.editable? or assignment.revocable?)}
+                >Salvar atribuição</button>
+              </.form>
+            </section>
+          </div>
           <section class="card">
             <h2>Próximos passos</h2><p>
               Salve o formulário antes de avançar. Cada ação respeita as permissões e condições do fluxo.

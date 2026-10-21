@@ -15,7 +15,7 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 | [03](sprint_03.md) | Editor, interchange, authoring guide | 02; D-15 | Done | 5/5 | 2026-10-20 / 2026-10-20 |
 | [04](sprint_04.md) | Enrollment and parent portal | 03; D-05, D-10–12 | Done | 5/5 | 2026-10-20 / 2026-10-21 |
 | [05](sprint_05.md) | Budgets, purchasing, field trips | 04; D-07 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
-| [06](sprint_06.md) | Confidential incident collaboration | 05; D-06 | Planned | 0/5 | — / — |
+| [06](sprint_06.md) | Confidential incident collaboration | 05; D-06 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [07](sprint_07.md) | Integrated demonstration and delivery | 06; D-09 | Planned | 0/5 | — / — |
 | [08](sprint_08.md) | Optional isolated Python calculations | 07; D-16, D-17; readiness gate | Proposed / gated | 0/5 | — / — |
 

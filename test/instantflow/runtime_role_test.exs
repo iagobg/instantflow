@@ -1233,6 +1233,163 @@ defmodule Instantflow.RuntimeRoleTest do
              })
   end
 
+  defp incident_runtime(c) do
+    for role <- ~w(teacher dean) do
+      {:ok, _} = Instantflow.Access.grant(c.a_scope, c.a_scope.id, c.a_scope.department_id, role)
+    end
+
+    counselor = reviewer(c, "incident-counselor")
+
+    {:ok, _} =
+      Instantflow.Access.grant(c.a_scope, counselor.id, counselor.department_id, "counselor")
+
+    dean = Identity.scope(c.a_scope.user_id, c.a.id)
+    counselor = Identity.scope(counselor.user_id, c.a.id)
+
+    {:ok, version} =
+      Instantflow.Incidents.install(c.a_scope, %{
+        "dean_department" => dean.department_id,
+        "support_department" => dean.department_id
+      })
+
+    f = %{teacher: dean, dean: dean, counselor: counselor, version: version}
+    id = Instantflow.IncidentFixtures.report(f)
+    Instantflow.IncidentFixtures.followup(f, id)
+    {f, id}
+  end
+
+  defp incident_save(actor, id, key, values) do
+    {:ok, data} = WorkflowRuntime.get(actor, id)
+    section = Enum.find(data.sections, &(&1.key == key))
+
+    %{
+      "operation" => "save_section",
+      "key" => Ecto.UUID.generate(),
+      "ticket_id" => id,
+      "section" => key,
+      "values" => values,
+      "expected_stage_revision" => data.ticket.stage_revision,
+      "expected_section_revision" => section.revision
+    }
+  end
+
+  test "incident dean and named counselor overlap separate writes; support conflicts are isolated",
+       c do
+    {f, id} = incident_runtime(c)
+
+    commands = [
+      {f.dean,
+       incident_save(f.dean, id, "discipline", %{
+         "triage" => "Triagem",
+         "resolution" => "Resolução"
+       })},
+      {f.counselor, incident_save(f.counselor, id, "support", %{"notes" => "CONFIDENCIAL"})}
+    ]
+
+    assert Enum.all?(race(c, id, commands), &match?({:ok, _}, &1))
+    {:ok, data} = WorkflowRuntime.get(f.dean, id)
+    refute inspect(data) =~ "CONFIDENCIAL"
+    first = incident_save(f.counselor, id, "support", %{"notes" => "Primeiro"})
+    second = %{first | "key" => Ecto.UUID.generate(), "values" => %{"notes" => "Segundo"}}
+    results = race(c, id, [{f.counselor, first}, {f.counselor, second}])
+    assert Enum.count(results, &match?({:ok, _}, &1)) == 1
+    assert {:error, :conflict} in results
+
+    member_b =
+      OperatorRepo.insert!(%Membership{
+        organization_id: c.b.id,
+        user_id: f.counselor.user_id,
+        department_id: c.b_scope.department_id,
+        role: "staff"
+      })
+
+    OperatorRepo.insert!(%Instantflow.Access.Grant{
+      organization_id: c.b.id,
+      membership_id: member_b.id,
+      department_id: member_b.department_id,
+      role: "counselor"
+    })
+
+    counselor_b = Identity.scope(f.counselor.user_id, c.b.id)
+    assert {:error, :not_found} = WorkflowRuntime.get(counselor_b, id)
+    assert Instantflow.Incidents.list(counselor_b, %{}).total == 0
+
+    assert {:error, :invalid_assignee} =
+             Instantflow.IncidentFixtures.assign(f.dean, id, counselor_b.id, "Outro colégio")
+
+    assert Repo.all(Instantflow.Collaboration.Assignment) == []
+
+    assert {:ok, file} =
+             Instantflow.PrivateDocuments.upload(
+               f.counselor,
+               id,
+               "support",
+               "attachment",
+               "apoio.pdf",
+               "%PDF-1.4 FICTICIO %%EOF"
+             )
+
+    assert {:ok, _} = Instantflow.PrivateDocuments.review(f.counselor, file.object_key, true)
+
+    assert {:error, :not_found} =
+             Instantflow.PrivateDocuments.download(counselor_b, file.object_key)
+
+    assert {:ok, data} = WorkflowRuntime.get(f.counselor, id)
+    assert Instantflow.Collaboration.Presence.editors(counselor_b, data) == []
+  end
+
+  test "exclusive assignment revocation commits before queued counselor save", c do
+    {f, id} = incident_runtime(c)
+    command = incident_save(f.counselor, id, "support", %{"notes" => "NÃO DEVE SALVAR"})
+    receipts = count_receipts(id)
+    observer = self()
+    supervisor = start_supervised!(Task.Supervisor)
+
+    revoker =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        Repo.transaction(fn ->
+          result =
+            Instantflow.IncidentFixtures.assign(f.dean, id, nil, "Revogação antes da gravação")
+
+          send(observer, :assignment_gate_held)
+
+          receive do
+            :commit -> result
+          after
+            5000 -> Repo.rollback(:barrier_timeout)
+          end
+        end)
+      end)
+
+    assert_receive :assignment_gate_held, 5000
+
+    writer =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+        WorkflowRuntime.command(f.counselor, command)
+      end)
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: make_ref()
+        )
+      )
+
+    assert wait_for_waiters(connection, c.database, 1, 1000)
+    send(revoker.pid, :commit)
+    assert {:ok, {:ok, _}} = Task.await(revoker)
+    assert {:error, :forbidden} = Task.await(writer)
+    assert count_receipts(id) == receipts + 1
+
+    assert OperatorRepo.get_by!(Instantflow.WorkflowRuntime.Section,
+             ticket_id: id,
+             key: "support"
+           ).values == %{}
+  end
+
   defp count_receipts(id),
     do:
       OperatorRepo.aggregate(

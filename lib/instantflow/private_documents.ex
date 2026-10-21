@@ -60,7 +60,12 @@ defmodule Instantflow.PrivateDocuments do
       d = document!(a, key)
       section = section!(version, d.section_key, d.field_key)
 
-      unless Enrollment.staff?(a) and allowed?(a, ticket, version, section, d.field_key, :read),
+      reviewer? =
+        Enrollment.staff?(a) or
+          (Instantflow.Collaboration.Assignments.assigned?(a, ticket, version, section["key"]) &&
+             Policy.section?(a, ticket, version, section, :edit))
+
+      unless reviewer? and allowed?(a, ticket, version, section, d.field_key, :read),
         do: Repo.rollback(:forbidden)
 
       unless d.status == "quarantined" and DateTime.compare(d.expires_at, now()) == :gt,

@@ -12,6 +12,7 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
     role: :string,
     scope: :string,
     department_binding: :string,
+    assignment_key: :string,
     guardian_roles: {:array, :string},
     read: :boolean,
     edit_stages: {:array, :string},
@@ -54,6 +55,7 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
       role: item["role"],
       scope: item["scope"] || "requester",
       department_binding: item["department_binding"],
+      assignment_key: item["assignment_key"],
       guardian_roles: for(a <- item["actors"] || [], a["scope"] == "guardian", do: a["role"]),
       read: Map.get(item, "read", true),
       edit_stages: item["edit_stages"] || [],
@@ -200,20 +202,23 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
 
   defp build("sections", v, old, _),
     do:
-      Map.merge(base(v), %{
-        "classification" => v.classification,
-        "fields" => old["fields"] || [],
-        "access" =>
-          old["access"] ||
-            [
-              %{
-                "role" => "requester",
-                "scope" => "requester",
-                "read" => true,
-                "edit_stages" => []
-              }
-            ]
-      })
+      Map.merge(
+        Map.take(old, ["assignment"]),
+        Map.merge(base(v), %{
+          "classification" => v.classification,
+          "fields" => old["fields"] || [],
+          "access" =>
+            old["access"] ||
+              [
+                %{
+                  "role" => "requester",
+                  "scope" => "requester",
+                  "read" => true,
+                  "edit_stages" => []
+                }
+              ]
+        })
+      )
 
   defp build("fields", v, _, _) do
     field = Map.put(base(v), "type", v.type)
@@ -238,9 +243,11 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
       "edit_stages" => v.edit_stages
     }
 
-    if v.scope == "workflow_department",
-      do: Map.put(item, "department_binding", v.department_binding),
-      else: item
+    case v.scope do
+      "workflow_department" -> Map.put(item, "department_binding", v.department_binding)
+      "assigned_user" -> Map.put(item, "assignment_key", v.assignment_key)
+      _ -> item
+    end
   end
 
   defp build("actions", v, _, _), do: %{"type" => v.type, "behavior" => v.behavior}
@@ -253,7 +260,7 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
       Enum.map(v.requester_roles, &%{"role" => &1, "scope" => "requester"}) ++
         Enum.map(v.department_roles, &%{"role" => &1, "scope" => "assigned_department"}) ++
         Enum.map(v.guardian_roles, &%{"role" => &1, "scope" => "guardian"}) ++
-        Enum.filter(old["actors"] || [], &(&1["scope"] == "workflow_department"))
+        Enum.filter(old["actors"] || [], &(&1["scope"] in ~w(workflow_department assigned_user)))
 
     item =
       Map.merge(base(v), %{

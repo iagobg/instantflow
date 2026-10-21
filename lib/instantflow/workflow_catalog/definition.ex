@@ -1,7 +1,7 @@
 defmodule Instantflow.WorkflowCatalog.Definition do
   @moduledoc "Shared structural and semantic validation for editing, interchange and publication."
   @types ~w(short_text long_text integer money date datetime boolean single_choice multiple_choice directory_reference attachment)
-  @scopes ~w(requester assigned_department guardian workflow_department)
+  @scopes ~w(requester assigned_department guardian workflow_department assigned_user)
   @kinds ~w(forward correction resubmission rejection cancellation reopening)
   @actions ~w(simulate_notification simulate_provisioning simulate_payment)
 
@@ -153,12 +153,13 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   end
 
   defp valid_section?(s) do
-    props?(s, ~w(key label classification access fields)) and label?(s["label"]) and
+    props?(s, ~w(key label classification access fields assignment)) and label?(s["label"]) and
       s["classification"] in ~w(internal restricted) and
       is_list(s["access"]) and s["access"] != [] and
       Enum.uniq_by(s["access"], &{&1["role"], &1["scope"]}) == s["access"] and
       Enum.all?(s["access"], fn a ->
-        props?(a, ~w(role scope department_binding read edit_stages)) and a["scope"] in @scopes and
+        props?(a, ~w(role scope department_binding assignment_key read edit_stages)) and
+          a["scope"] in @scopes and
           is_boolean(a["read"]) and is_list(a["edit_stages"]) and
           (a["edit_stages"] == [] or a["read"])
       end) and
@@ -184,7 +185,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
       is_list(t["actors"]) and t["actors"] != [] and
       Enum.all?(
         t["actors"],
-        &(props?(&1, ~w(role scope department_binding)) and &1["scope"] in @scopes)
+        &(props?(&1, ~w(role scope department_binding assignment_key)) and &1["scope"] in @scopes)
       ) and
       is_boolean(t["require_reason"]) and t["kind"] in @kinds and
       (not Map.has_key?(t, "disallow_requester") or is_boolean(t["disallow_requester"])) and
@@ -213,10 +214,11 @@ defmodule Instantflow.WorkflowCatalog.Definition do
           &(&1["type"] == "department" and &1["key"] == d["assignment"]["department_binding"])
         ) and
         Enum.all?(d["sections"], fn s ->
-          Enum.all?(s["access"], fn a ->
-            valid_actor?(a, roles, d) and
-              Enum.all?(a["edit_stages"], &(&1 in stages and &1 not in terminal))
-          end)
+          valid_assignment?(s["assignment"], d, roles, stages) and
+            Enum.all?(s["access"], fn a ->
+              valid_actor?(a, roles, d) and
+                Enum.all?(a["edit_stages"], &(&1 in stages and &1 not in terminal))
+            end)
         end) and
         keyed?(d["views"]) and
         Enum.all?(d["views"], fn v ->
@@ -257,16 +259,40 @@ defmodule Instantflow.WorkflowCatalog.Definition do
          ))
   end
 
+  defp valid_assignment?(nil, _, _, _), do: true
+
+  defp valid_assignment?(spec, d, roles, stages) do
+    spec["role"] in roles and Enum.all?(spec["stages"], &(&1 in stages)) and
+      Enum.any?(
+        d["bindings"],
+        &(&1["type"] == "department" and &1["key"] == spec["department_binding"])
+      ) and
+      Enum.all?(
+        spec["managers"],
+        &(&1["scope"] != "assigned_user" and valid_actor?(&1, roles, d))
+      )
+  end
+
   defp valid_actor?(a, roles, d) do
     a["role"] in roles and
-      if(a["scope"] == "workflow_department",
-        do:
-          Enum.any?(
-            d["bindings"],
-            &(&1["type"] == "department" and &1["key"] == a["department_binding"])
-          ),
-        else: not Map.has_key?(a, "department_binding")
-      )
+      case a["scope"] do
+        "workflow_department" ->
+          not Map.has_key?(a, "assignment_key") and
+            Enum.any?(
+              d["bindings"],
+              &(&1["type"] == "department" and &1["key"] == a["department_binding"])
+            )
+
+        "assigned_user" ->
+          not Map.has_key?(a, "department_binding") and
+            Enum.any?(
+              d["sections"],
+              &(&1["key"] == a["assignment_key"] and not is_nil(&1["assignment"]))
+            )
+
+        _ ->
+          not Map.has_key?(a, "department_binding") and not Map.has_key?(a, "assignment_key")
+      end
   end
 
   defp valid_resubmission?(%{"kind" => "resubmission"} = t, d),

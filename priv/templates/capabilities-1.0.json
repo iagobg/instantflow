@@ -21,7 +21,8 @@
       "requester",
       "assigned_department",
       "guardian",
-      "workflow_department"
+      "workflow_department",
+      "assigned_user"
     ],
     "transition_kinds": [
       "forward",
@@ -75,7 +76,8 @@
     "binding_types": [
       "department",
       "budget"
-    ]
+    ],
+    "section_assignment": "Named local membership, fixed role/department, explicit manager actors and stages"
   },
   "reserved_fail_closed": {
     "field_types": [

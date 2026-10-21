@@ -278,6 +278,30 @@ for {slug, school} <- [
       {:ok, _} = Instantflow.Finance.install(admin, template, finance_departments, account.id)
     end
   end
+
+  support_department =
+    OperatorRepo.get_by(Department, organization_id: organization.id, name: "Orientação") ||
+      OperatorRepo.insert!(%Department{organization_id: organization.id, name: "Orientação"})
+
+  unless OperatorRepo.get_by(Workflow, organization_id: organization.id, key: "incident") do
+    {:ok, _} =
+      Instantflow.Incidents.install(admin, %{
+        "dean_department" => finance_departments["safety_department"],
+        "support_department" => support_department.id
+      })
+  end
+
+  if slug == "horizonte" do
+    counselor =
+      Identity.scope(
+        OperatorRepo.get_by!(User, email: "orientacao@escola.example").id,
+        organization.id
+      )
+
+    {:ok, _} = Instantflow.Access.grant(admin, counselor.id, support_department.id, "counselor")
+  else
+    {:ok, _} = Instantflow.Access.grant(admin, admin.id, support_department.id, "counselor")
+  end
 end
 
 GenServer.stop(operator_pid)

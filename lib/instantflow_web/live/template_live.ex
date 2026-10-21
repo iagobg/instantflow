@@ -407,6 +407,7 @@ defmodule InstantflowWeb.TemplateLive do
   defp json(value), do: Interchange.encode(value)
   defp classification_label("restricted"), do: "Restrita"
   defp classification_label(_), do: "Interna"
+  defp scope_label("assigned_user"), do: "Pessoa atribuída ao formulário"
   defp scope_label("guardian"), do: "Responsável verificado"
   defp scope_label("workflow_department"), do: "Departamento fixo do fluxo"
   defp scope_label("requester"), do: "Próprio solicitante"
@@ -725,6 +726,7 @@ defmodule InstantflowWeb.TemplateLive do
                     {"Próprio solicitante", "requester"},
                     {"Departamento atribuído", "assigned_department"},
                     {"Responsável verificado", "guardian"},
+                    {"Pessoa atribuída", "assigned_user"},
                     {"Departamento fixo do fluxo", "workflow_department"}
                   ]}
                 /><.input field={@item_form[:read]} type="checkbox" label="Pode ler a seção" /><.input

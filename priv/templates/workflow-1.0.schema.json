@@ -325,7 +325,8 @@
             "requester",
             "assigned_department",
             "guardian",
-            "workflow_department"
+            "workflow_department",
+            "assigned_user"
           ]
         },
         "read": {
@@ -342,6 +343,10 @@
           "uniqueItems": true
         },
         "department_binding": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "assignment_key": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9_]{0,63}$"
         }
@@ -366,10 +371,15 @@
             "requester",
             "assigned_department",
             "guardian",
-            "workflow_department"
+            "workflow_department",
+            "assigned_user"
           ]
         },
         "department_binding": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "assignment_key": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9_]{0,63}$"
         }
@@ -437,6 +447,40 @@
           },
           "minItems": 0,
           "maxItems": 300
+        },
+        "assignment": {
+          "type": "object",
+          "properties": {
+            "managers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/actor"
+              },
+              "minItems": 1,
+              "maxItems": 20
+            },
+            "role": {
+              "type": "string"
+            },
+            "department_binding": {
+              "type": "string"
+            },
+            "stages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 100
+            }
+          },
+          "required": [
+            "managers",
+            "role",
+            "department_binding",
+            "stages"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
