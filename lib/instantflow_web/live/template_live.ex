@@ -186,6 +186,31 @@ defmodule InstantflowWeb.TemplateLive do
       "blocks" => List.wrap(params["blocks"]) |> Enum.reject(&(&1 == ""))
     }
 
+    page =
+      if params["participant_enabled"] == "true" do
+        audience =
+          for value <- List.wrap(params["participant_audience"]), value != "" do
+            case Jason.decode(value) do
+              {:ok, actor} when is_map(actor) -> actor
+              _ -> %{}
+            end
+          end
+
+        projection = %{
+          "visibility_roles" => selections(params["participant_visibility"]),
+          "audience" => audience,
+          "fields" => selections(params["participant_fields"]),
+          "documents" => selections(params["participant_documents"]),
+          "actions" => selections(params["participant_actions"]),
+          "status" => params["participant_status"] == "true",
+          "history" => params["participant_history"] == "true"
+        }
+
+        Map.put(page, "participant", projection)
+      else
+        page
+      end
+
     pages =
       if Enum.any?(interface["pages"], &(&1["key"] == page["key"])),
         do:
@@ -405,6 +430,7 @@ defmodule InstantflowWeb.TemplateLive do
       interface_page_form:
         to_form(interface_page(d, socket.assigns.selected_page_key), as: :interface_page),
       interface_blocks: Instantflow.WorkflowCatalog.Workspaces.blocks(),
+      participant_audience_options: participant_audience_options(d),
       close_options: Enum.map(d["transitions"], &{&1["label"], &1["key"]}),
       workspace_form: to_form(Instantflow.WorkflowCatalog.Workspaces.labels(d), as: :workspace),
       metadata_form: to_form(Map.take(d, ~w(name description template_version)), as: :metadata),
@@ -534,6 +560,20 @@ defmodule InstantflowWeb.TemplateLive do
       Enum.find(Instantflow.WorkflowCatalog.Workspaces.pages(definition), &(&1["key"] == key)) ||
         hd(Instantflow.WorkflowCatalog.Workspaces.pages(definition))
 
+    projection = page["participant"] || %{}
+
+    page =
+      Map.merge(page, %{
+        "participant_enabled" => Map.has_key?(page, "participant"),
+        "participant_visibility" => projection["visibility_roles"] || [],
+        "participant_audience" => Enum.map(projection["audience"] || [], &Jason.encode!/1),
+        "participant_fields" => projection["fields"] || [],
+        "participant_documents" => projection["documents"] || [],
+        "participant_actions" => projection["actions"] || [],
+        "participant_status" => Map.get(projection, "status", true),
+        "participant_history" => Map.get(projection, "history", false)
+      })
+
     params =
       Enum.reduce(~w(view configure operate), page, fn action, values ->
         Map.put(
@@ -548,6 +588,38 @@ defmodule InstantflowWeb.TemplateLive do
       "close_transition",
       Instantflow.WorkflowCatalog.Workspaces.close_transition(definition)
     )
+  end
+
+  defp selections(value), do: List.wrap(value) |> Enum.reject(&(&1 == ""))
+
+  defp participant_audience_options(definition) do
+    options =
+      for role <- definition["role_requirements"],
+          spec <-
+            [%{"scope" => "requester"}, %{"scope" => "assigned_department"}] ++
+              for(
+                participant <- Map.get(definition, "participants", []),
+                do: %{"scope" => "participant", "relationship" => participant["key"]}
+              ) ++
+              for(
+                binding <- definition["bindings"],
+                binding["type"] == "department",
+                do: %{"scope" => "workflow_department", "department_binding" => binding["key"]}
+              ) do
+        actor = Map.put(spec, "role", role["key"])
+
+        {role["label"] <>
+           " · " <>
+           spec["scope"] <> " " <> (spec["relationship"] || spec["department_binding"] || ""),
+         Jason.encode!(actor)}
+      end
+
+    imported =
+      for page <- Instantflow.WorkflowCatalog.ParticipantPages.pages(definition),
+          actor <- page["participant"]["audience"],
+          do: {actor["role"] <> " · " <> actor["scope"], Jason.encode!(actor)}
+
+    Enum.uniq_by(options ++ imported, &elem(&1, 1))
   end
 
   defp prune_bindings(b, d),
@@ -690,6 +762,59 @@ defmodule InstantflowWeb.TemplateLive do
               options={@role_options}
               value={@interface_page_form.params["access_" <> key] || []}
             />
+            <fieldset id="participant-page-authoring">
+              <legend>Projeção para participantes</legend>
+              <.input
+                field={@interface_page_form[:participant_enabled]}
+                type="checkbox"
+                label="Página de participação declarada"
+              />
+              <.input
+                field={@interface_page_form[:participant_visibility]}
+                type="select"
+                multiple
+                label="Papéis que veem a página"
+                options={@role_options}
+              />
+              <.input
+                field={@interface_page_form[:participant_audience]}
+                type="select"
+                multiple
+                label="Audiência da projeção (exige acesso ao registro)"
+                options={@participant_audience_options}
+              />
+              <.input
+                field={@interface_page_form[:participant_fields]}
+                type="select"
+                multiple
+                label="Campos liberados"
+                options={@field_options}
+              />
+              <.input
+                field={@interface_page_form[:participant_documents]}
+                type="select"
+                multiple
+                label="Documentos liberados"
+                options={@field_options}
+              />
+              <.input
+                field={@interface_page_form[:participant_actions]}
+                type="select"
+                multiple
+                label="Ações solicitadas"
+                options={@transition_options}
+              />
+              <.input
+                field={@interface_page_form[:participant_status]}
+                type="checkbox"
+                label="Mostrar situação atual"
+              />
+              <.input
+                field={@interface_page_form[:participant_history]}
+                type="checkbox"
+                label="Mostrar histórico das ações selecionadas"
+              />
+            </fieldset>
             <button id="save-interface-page" class="btn" disabled={@draft.published_version_id != nil}>Salvar página</button>
           </.form>
           <ol id="interface-block-order">

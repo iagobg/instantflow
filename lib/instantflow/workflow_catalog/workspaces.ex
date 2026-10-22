@@ -32,13 +32,35 @@ defmodule Instantflow.WorkflowCatalog.Workspaces do
     )
   end
 
-  def installed(scope),
-    do: Tenant.read(scope, fn fresh -> Enum.filter(latest(), &accessible?(fresh, &1)) end, [])
+  def installed(scope) do
+    Tenant.read(
+      scope,
+      fn fresh ->
+        participant_workflows =
+          Repo.all(
+            from v in Version,
+              where:
+                fragment("jsonb_path_exists(?, '$.interface.pages[*].participant')", v.definition),
+              distinct: v.workflow_id,
+              select: v.workflow_id
+          )
+
+        Enum.filter(latest(), fn version ->
+          if version.workflow_id in participant_workflows do
+            # Participation gets its own authorized discovery. Candidate eligibility
+            # alone must not reveal the staff workspace, even after republication.
+            Instantflow.WorkflowRuntime.ParticipantPolicy.staff_workspace?(fresh, version)
+          else
+            accessible?(fresh, version)
+          end
+        end)
+      end,
+      []
+    )
+  end
 
   def get(scope, id) do
-    Tenant.read(scope, fn fresh ->
-      Enum.find(latest(), &(&1.workflow_id == id and accessible?(fresh, &1)))
-    end)
+    Enum.find(installed(scope), &(&1.workflow_id == id))
   end
 
   defp accessible?(scope, version) do

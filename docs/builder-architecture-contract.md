@@ -1,7 +1,9 @@
 # Builder architecture contract
 
 Reviewed 2026-10-21. This is the acceptance contract for Sprints 09–11. Sprint 09
-has [completion evidence](participants-and-documents.md); Sprints 10–11 remain pending.
+has [completion evidence](participants-and-documents.md); Sprint 10 is in progress
+with the [bounded query checkpoint](bounded-projections.md) and the reviewed
+[participant correction/document slice](participant-pages.md); Sprint 11 remains pending.
 
 ## Review outcome
 

@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-22",
+  "scope": "Sprint 10 execution-order checkpoint 2: independently configured participant correction/document experience and architecture review",
+  "status": "in_progress_checkpoint_verified",
+  "tasks_complete": [],
+  "tasks_in_progress": [
+    "S10-T01",
+    "S10-T02"
+  ],
+  "task_count": "0/4",
+  "base_revision": "a155283dadafdeea25bb5701d6f4dc539e3b371a",
+  "working_tree_dirty": true,
+  "identity_note": "The prior bounded-query increment is preserved. Hashes identify the combined uncommitted tree; no commit or deployment is claimed.",
+  "prior_checkpoint": "docs/evidence/sprint10-query-checkpoint.json",
+  "environment": {
+    "host": "WSL Ubuntu",
+    "elixir": "1.19.5-otp-28",
+    "database": "isolated instantflow_test on localhost:55432 plus existing disposable runtime/migration test databases"
+  },
+  "checks": [
+    {
+      "name": "mix precommit",
+      "status": "passed",
+      "result": "243 tests, 0 failures; seed 4931; compile warnings-as-errors, dependency check and formatting passed",
+      "log": ".local/sprint10-participant-final-precommit.log",
+      "log_sha256": "e2f02b21b66311f61ad793a4419ff4a79a18e410fb2b3617dd05105206c10539"
+    },
+    {
+      "name": "final LiveView and architecture guard checks",
+      "status": "passed",
+      "result": "2 tests, 0 failures; seed 465067",
+      "log": ".local/sprint10-participant-final-focused.log",
+      "log_sha256": "a6a44535e4cd5bd90daa99aca458cb1cdd0ddead1e19464fb57d28a5f8344a3a"
+    },
+    {
+      "name": "mix assets.build",
+      "status": "passed",
+      "result": "exit 0",
+      "log": ".local/sprint10-participant-assets.log",
+      "log_sha256": "1982a28d2b9d6afda737994ade2f4b8a24bf3aa56b8fd8a5a70baf08440be8b5"
+    },
+    {
+      "name": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "fixture": "test/support/builder_fixtures.ex: participant_page_definition/0; repair_authorization",
+  "acceptance_tests": [
+    "test/instantflow/workflow_runtime/participant_pages_test.exs",
+    "test/instantflow_web/live/participant_live_test.exs",
+    "test/instantflow/workflow_catalog/participant_boundary_test.exs"
+  ],
+  "verified_scenarios": [
+    "Editor-authored participant audience, visibility, selected fields/documents/actions, local role/department mappings and publication through LiveView.",
+    "Invitation-based participants with verified record-scoped relationships; two unrelated participants isolated; verified subject produces no records, counts, entry links or staff workspace.",
+    "Bounded SQL discovery/list pages using pinned admission before counts/pagination; bounded document/history projections omit unselected values, actor identities and internal reasons.",
+    "Field correction preserves unselected values; stale section/stage revisions reject writes; unselected fields/actions reject forged commands.",
+    "Guarded upload with atomic attachment association, duplicate upload replay, quarantine/readiness rejection, independent document release, resubmission and another correction.",
+    "Parent identity with explicitly mapped teacher grant can read the declared page; grant removal and relationship revocation deny subsequent reads/commands/downloads.",
+    "LiveView revocation with retained draft and completed pending upload; denied reconnect and cleared list rows; no new anonymous access.",
+    "Second publication removes the page and renames fields/stages/actions; old record reconnect uses the pinned page and actions; unknown page canonicalizes to an authorized pinned fallback.",
+    "Generic request lists/views are unavailable to projection-only participants; older generic record URLs redirect to the pinned participant projection.",
+    "All corrected Sprint 09, existing school, confidentiality, runtime authorization-race, migration/restore and capability composition regressions remain green."
+  ],
+  "architecture_review": {
+    "status": "reviewed_with_findings_resolved",
+    "resolved": [
+      "Generic list/view projection bypass closed; staff workspace authority is explicit and independent of base membership role.",
+      "Catalog runtime-policy coupling removed; catalog validation is pure, runtime admission owns policy queries.",
+      "Cross-record route patches remount instead of retaining another record’s forms and subscriptions."
+    ],
+    "dependency_guard": "test/instantflow/workflow_catalog/participant_boundary_test.exs",
+    "legacy_allowlist": [
+      "Instantflow.Enrollment.Document remains a storage-schema alias; the new generated path calls no Enrollment or Incidents service."
+    ]
+  },
+  "remaining_work": [
+    "S10-T01 dedicated synthetic participant draft-preview UI and curated message integration; full task remains open.",
+    "S10-T02 typed filter/sort/calendar/undated/urgency/assignment surfaces and incident dashboard migration.",
+    "S10-T03 explicit validated reset/invalidation rules and reusable finance account setup/summary surfaces.",
+    "S10-T04 curated outbox release/revalidation and full school/equipment recreation matrix.",
+    "Sprint 11 residual legacy reads, load measurement and full preservation/replacement acceptance."
+  ],
+  "source_sha256": {
+    "docs/bounded-projections.md": "f1a027890cdecde9d21c6f250d90eaffe24a5fde6e68d436eb64f6b02f4e4463",
+    "docs/builder-architecture-contract.md": "882924960ce7d2741c94fcdf635c594099ab4c0f188195875010758a429f8225",
+    "docs/builder-execution.md": "061adde33cbcc02fce831daee668bc3edb5fa4b4cbde3f76b7f888b1803f4d95",
+    "docs/evidence/sprint10-query-checkpoint.json": "58d7e6b677f00165295c9ac42078f3cabc43cd11616aa56d4b3064502b057104",
+    "docs/participant-pages.md": "80498d03ba7959426bb98eae93dffa3a9e61305d82a1b275e7b5f5e48b497c4a",
+    "lib/instantflow/workflow_catalog/definition.ex": "8be7e51fc08184fc8df06ae1b07457662146acf905245f65e17831875bb3119d",
+    "lib/instantflow/workflow_catalog/participant_pages.ex": "d7293b49ece7897295be894f5b71bc579228e49d3d871327c9f0826c2f34798b",
+    "lib/instantflow/workflow_catalog/views.ex": "569ba47aff93207aa1c32cd071294fafe5c1d2d555927f3842615927124226b0",
+    "lib/instantflow/workflow_catalog/workspaces.ex": "b4ec2936e24eeab0794a75765cdc6f137d3eb7c95bd35a6f665ebdf9ab228f19",
+    "lib/instantflow/workflow_runtime.ex": "587d9c379f7a50c773eb30236e40173ae2218b67de70bfc54612272c4fb955f3",
+    "lib/instantflow/workflow_runtime/participant_pages.ex": "d46230dfb409fec12c41f4e4e2e1bdcecba65d66b87701c5d054464ee7fcba6f",
+    "lib/instantflow/workflow_runtime/participant_policy.ex": "9e11307655c69b91f24bce2f5de872e1685ee4565058a08b25832576966531f6",
+    "lib/instantflow/workflow_runtime/policy_query.ex": "7c1558744ef456536383418ec3c1dfb7c9d53639246e78a6aba0f2a7533d494f",
+    "lib/instantflow/workflow_runtime/projections.ex": "2673ff634ed1f3ee9cf125835bb3943da17adbfe8eaf3bd7c366d6c96009c66f",
+    "lib/instantflow_web/components/process_components.ex": "e51da820c28cb61f6532aa165ace3349abb88bc63fd255310e1d058e977e710a",
+    "lib/instantflow_web/live/participant_live.ex": "b543b1a30406176fd96f6f468a2c134ee624c14caf676fbc5f9425bbfbaf4573",
+    "lib/instantflow_web/live/process_live.ex": "54e5c7c2cbc6b4b4ed8b8b0e230b7759015d5e8fb6cf640a39254d6b049580bb",
+    "lib/instantflow_web/live/processes_live.ex": "fc81304c3d65c3bdc6329b24fbfbb7e4b3da201805a6c82c0837216990b2abe0",
+    "lib/instantflow_web/live/request_live.ex": "67d970778a47594f0fdb2bab65fe80592097da3935062d05e3e021c37e429da9",
+    "lib/instantflow_web/live/template_live.ex": "94461af218c8f00efb03cad2547c9096349a6e6ee17a9a31efc4be5d1d478342",
+    "lib/instantflow_web/router.ex": "7e006539eb39474d6c9a672396fbeade0d4be356e086d155259b38866dadc2b0",
+    "lib/instantflow_web/user_auth.ex": "cef21b4421773716726d1baeff52f80a9caa993b583d384ce688dabeaaa102fb",
+    "priv/templates/workflow-1.0.schema.json": "609ae92cece1c8b6866a6118305edd03a8bd2de578d63c6db468ac5789aaed23",
+    "sprint_plan/sprint_10.md": "3310fc9a1472ee1ec6e7dd38eca81663af9dc3ca1414a10f224f79a14769705f",
+    "sprint_plan/sprint_index.md": "2373465b85a51c63828a477778a23d94cede7b734231dd1ab42848fdfe0a762c",
+    "test/instantflow/tenant_isolation_test.exs": "1bc7c7c3c6a2de0baf54bec226a4a0a2e61f484c63965f3eebf7298fd1af6ce9",
+    "test/instantflow/workflow_catalog/participant_boundary_test.exs": "87b87f42a380cf3cc61deeaeadd5e914f768ef9e4ea69dba12dc9ee411c5e748",
+    "test/instantflow/workflow_runtime/participant_pages_test.exs": "3cdc4d717a3471c8faad1139abb5adbbbc8e413e030385f3323aa4f5bff99c5d",
+    "test/instantflow/workflow_runtime/projections_test.exs": "d4ad3a61b54ab631a34f156444b64aaf7bddf9d93117cb6e446a524516162e8b",
+    "test/instantflow_web/live/generated_projection_live_test.exs": "eeadcf9132250eeccb181eec7b59d7c58d7968af1db877b3bfc0e8f49971f9e6",
+    "test/instantflow_web/live/participant_live_test.exs": "e8651a682c8ba727d70d384a80c76b4e3b4dade82977c0240523e4d5b4efa700",
+    "test/support/builder_fixtures.ex": "8b1d3ef8e84997e961eebea517f5ec740ca02ae91bc0341a21eec1b7f4a1b860"
+  }
+}

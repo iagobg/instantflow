@@ -156,56 +156,7 @@ defmodule Instantflow.WorkflowRuntime do
 
   def list(actor), do: Tenant.read(actor, &list_scoped/1, [])
 
-  def search(actor, filters \\ %{}) do
-    Tenant.read(
-      actor,
-      fn scope ->
-        tickets =
-          list_scoped(scope)
-          |> Enum.filter(
-            &(is_nil(filters["workflow_id"]) or &1.workflow_id == filters["workflow_id"])
-          )
-
-        counts = Enum.frequencies_by(tickets, & &1.stage)
-
-        stage_labels =
-          tickets
-          |> Enum.flat_map(& &1.workflow_version.definition["stages"])
-          |> Map.new(&{&1["key"], &1["label"]})
-
-        stage = filters["stage"] || ""
-        query = String.slice(to_string(filters["query"] || ""), 0, 100) |> String.downcase()
-
-        filtered =
-          Enum.filter(tickets, fn t ->
-            (is_nil(filters["workflow_id"]) or t.workflow_id == filters["workflow_id"]) and
-              (stage == "" or t.stage == stage) and
-              (query == "" or
-                 String.contains?(
-                   String.downcase("#{t.id} #{t.workflow_version.definition["name"]}"),
-                   query
-                 ))
-          end)
-
-        page =
-          case Integer.parse(to_string(filters["page"] || "1")) do
-            {n, ""} when n > 0 -> min(n, max(1, ceil(length(filtered) / 25)))
-            _ -> 1
-          end
-
-        %{
-          tickets: Enum.slice(filtered, (page - 1) * 25, 25),
-          total: length(tickets),
-          filtered: length(filtered),
-          counts: counts,
-          stage_labels: stage_labels,
-          page: page,
-          pages: max(1, ceil(length(filtered) / 25))
-        }
-      end,
-      %{tickets: [], total: 0, filtered: 0, counts: %{}, stage_labels: %{}, page: 1, pages: 1}
-    )
-  end
+  defdelegate search(actor, filters \\ %{}), to: Instantflow.WorkflowRuntime.Projections
 
   def list_topic(scope),
     do: "organization:#{scope.organization_id}:user:#{scope.user_id}:requests"
@@ -253,7 +204,14 @@ defmodule Instantflow.WorkflowRuntime do
             order_by: [desc: t.id],
             preload: [:workflow_version]
         )
-        |> Enum.filter(&Policy.discover?(scope, &1, &1.workflow_version))
+        |> Enum.filter(fn ticket ->
+          contract = Instantflow.WorkflowCatalog.ParticipantPages
+          version = ticket.workflow_version
+
+          Policy.discover?(scope, ticket, version) and
+            (contract.pages(version.definition) == [] or
+               Instantflow.WorkflowRuntime.ParticipantPolicy.staff_workspace?(scope, version))
+        end)
         |> Enum.map(fn ticket ->
           version = ticket.workflow_version
 

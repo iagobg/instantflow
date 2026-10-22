@@ -113,6 +113,7 @@ defmodule InstantflowWeb.UserAuth do
 
               if socket.view in [
                    InstantflowWeb.RequestLive,
+                   InstantflowWeb.ParticipantLive,
                    InstantflowWeb.RequestsLive,
                    InstantflowWeb.EnrollmentLive,
                    InstantflowWeb.BudgetsLive,
@@ -136,6 +137,7 @@ defmodule InstantflowWeb.UserAuth do
                 {:cont, socket} ->
                   if socket.view in [
                        InstantflowWeb.RequestLive,
+                       InstantflowWeb.ParticipantLive,
                        InstantflowWeb.RequestsLive,
                        InstantflowWeb.EnrollmentLive,
                        InstantflowWeb.BudgetsLive,

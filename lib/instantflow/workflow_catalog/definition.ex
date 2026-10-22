@@ -14,7 +14,8 @@ defmodule Instantflow.WorkflowCatalog.Definition do
          :ok <- Diagnostics.validate(definition),
          :ok <- references(definition),
          :ok <- graph(definition),
-         :ok <- Interface.validate(definition) do
+         :ok <- Interface.validate(definition),
+         :ok <- Instantflow.WorkflowCatalog.ParticipantPages.validate(definition) do
       :ok
     end
   rescue
@@ -314,7 +315,8 @@ defmodule Instantflow.WorkflowCatalog.Definition do
       )
   end
 
-  defp valid_actor?(a, roles, d) do
+  @doc false
+  def valid_actor?(a, roles, d) do
     a["role"] in roles and
       (a["scope"] == "participant" or not Map.has_key?(a, "relationship")) and
       case a["scope"] do

@@ -10,7 +10,14 @@ defmodule InstantflowWeb.ProcessesLive do
 
   defp load(socket) do
     processes = Workspaces.installed(socket.assigns.current_scope)
-    socket |> assign(empty?: processes == []) |> stream(:processes, processes, reset: true)
+
+    participant_pages =
+      Instantflow.WorkflowRuntime.Projections.participant_options(socket.assigns.current_scope)
+
+    socket
+    |> assign(empty?: processes == [] and participant_pages == [])
+    |> stream(:processes, processes, reset: true)
+    |> stream(:participant_pages, participant_pages, reset: true)
   end
 
   def render(assigns) do
@@ -42,6 +49,17 @@ defmodule InstantflowWeb.ProcessesLive do
             navigate={~p"/o/#{@current_scope.organization.slug}/processos/#{version.workflow_id}"}
             class="btn primary"
           >Abrir processo</.link>
+        </section>
+      </div>
+      <div id="participant-entry-pages" phx-update="stream" class="foundation-grid">
+        <section :for={{id, page} <- @streams.participant_pages} id={id} class="card">
+          <h2>{page.label}</h2>
+          <.link
+            id={"participant-entry-#{page.workflow_id}-#{page.key}"}
+            navigate={
+              ~p"/o/#{@current_scope.organization.slug}/processos/#{page.workflow_id}/participacao/#{page.key}"
+            }
+          >Abrir participação</.link>
         </section>
       </div>
     </Layouts.app>

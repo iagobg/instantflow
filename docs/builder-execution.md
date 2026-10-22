@@ -164,6 +164,8 @@ Full school portal replacement and richer generated experiences remain Sprints
 | Core + finance | BuilderTransactionTest; late-effect rollback, replay, revocation | Explicit resets and complete composed matrix |
 | Non-owner runtime login | RuntimeRoleTest and GuardianMigrationTest; independent queued write/reference/download races, RLS, populated backfill and pg_dump/restore | Full mixed-capability result matrix in Sprint 11 |
 | Typed authoring | TemplatesLiveTest and declared-document LiveView test; field/relationship authoring, local mappings, generic participant management, upload/release/revocation | Rich projections and complete school replacement |
+| Bounded configured projections | ProjectionsTest and GeneratedProjectionLiveTest; authorized SQL paging/counts, batched readable sections, non-creator participant work, removed-view pinning and hidden metadata denial; [contract and evidence](bounded-projections.md) | Configured dashboard expansion and Sprint 11 scale acceptance |
+| Declared participant correction/document page | ParticipantPagesTest and ParticipantLiveTest; editor → local mappings → publication → generated entry/list/detail → correction/upload/release/resubmission; unrelated/subject denial, parent staff grant, revocation/reconnect and changed publication; [contract and architecture review](participant-pages.md) | Curated messages, synthetic draft-preview UI and complete school/equipment recreation |
 
 [Local evidence](evidence/sprint09-local.json) identifies the working-tree base,
 changed-source hashes and checks. All data is synthetic and databases are isolated.

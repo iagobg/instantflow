@@ -1,6 +1,6 @@
 # Sprint 10 — Generated participant experiences and reusable projections
 
-[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Planned · Dependencies: corrected Sprint 09; D-06–07, D-11, D-25–29
+[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: In progress · Dependencies: corrected Sprint 09; D-06–07, D-11, D-25–29
 
 Goal: recreate the school examples' authorized participant experiences through configured pages and bounded reusable capabilities, removing their dependence on process-key-selected screens. Completion enables the cross-domain acceptance gate in Sprint 11; it does not enable customer launch.
 
@@ -74,9 +74,33 @@ Sprint 09 regressions are prerequisites throughout: explicit candidate_roles dis
 
 ## Progress
 
-Actual start / finish: not started / not finished  
-Tasks: 0/4. Status: Planned. Existing generated staff pages and capability tests are baseline evidence only.  
+Actual start / finish: 2026-10-22 / not finished  
+Tasks: 0/4. Status: In progress. S10-T02's bounded query foundation and S10-T01's first correction/document checkpoint are implemented; all four tasks remain open pending their full acceptance.  
 Planning date: 2026-10-21. Record dated evidence and remaining defects before changing status.  
 Priority: architecture prerequisite before pilot onboarding. Handoff: common participant/view/finance/communication surfaces for Sprint 11 acceptance.
 
 Pre-execution review: 2026-10-22. Sequencing, corrected Sprint 09 invariants, bounded read ownership, curated release semantics and incremental acceptance were clarified under D-29. No task has been started or completed by this planning revision.
+
+Implementation increment: 2026-10-22. [Bounded projection contract and evidence](../docs/bounded-projections.md).
+`WorkflowRuntime.search` and configured views now apply pinned authorization in SQL
+before counts and paging, with batched readable-section projection. Generated
+process pages expose authorized pinned view choices and page controls, including
+non-creator participation and a view removed by a second publication. Tests cover
+uneven hidden/visible records, query-count stability, subject-only denial, named
+assignments, current revocation and cross-tenant isolation. This is execution-order
+step 1, not completion of T02 or the T01 slice. Next checkpoint: the independently
+configured participant correction/document page, editor and full policy matrix;
+finance/communications and broader dashboard expansion have not started.
+
+Participant checkpoint: 2026-10-22. [Declared page contract, setup, evidence and
+architecture review](../docs/participant-pages.md). The independent repair
+authorization fixture now has editor-authored projection audiences, mappings,
+generated entry/list/detail pages, field correction and declared documents. The
+acceptance matrix covers unrelated participants, subject-only denial, explicit
+parent staff grants, revocation with retained drafts/pending uploads, reconnect,
+generic-route privacy and a publication removing/renaming page/field/stage/action
+declarations. Catalog/runtime ownership and generic-list bypass findings were
+corrected during review. This completes execution-order checkpoint 2; it does not
+complete all T01 work. Curated messages, dedicated synthetic draft-preview UI and
+the broader recreation matrix remain open. Next: configured T02 surfaces and T03
+explicit resets before T04 communications/recreation.

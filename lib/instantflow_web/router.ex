@@ -48,6 +48,8 @@ defmodule InstantflowWeb.Router do
     live_session :internal, on_mount: [{InstantflowWeb.UserAuth, :authenticated}] do
       live "/", HomeLive, :index
       live "/processos", ProcessesLive, :index
+      live "/processos/:workflow_id/participacao/:page_key", ParticipantLive, :index
+      live "/processos/:workflow_id/participacao/:page_key/registros/:id", ParticipantLive, :show
       live "/processos/:workflow_id", ProcessLive, :index
       live "/processos/:workflow_id/p/:page_key", ProcessLive, :index
       live "/processos/:workflow_id/p/:page_key/atendimentos/:id", ProcessLive, :show

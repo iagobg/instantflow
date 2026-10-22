@@ -63,6 +63,23 @@ defmodule InstantflowWeb.ProcessComponents do
           >Abrir registro</.link>
         </article>
       </div>
+      <nav :if={@record_pages > 1} id="process-record-pagination" aria-label="Páginas de registros">
+        <button
+          id="process-record-previous"
+          class="btn"
+          phx-click="record-page"
+          phx-value-page={@record_page - 1}
+          disabled={@record_page <= 1}
+        >Anterior</button>
+        <span id="process-record-page">{@record_page} / {@record_pages}</span>
+        <button
+          id="process-record-next"
+          class="btn"
+          phx-click="record-page"
+          phx-value-page={@record_page + 1}
+          disabled={@record_page >= @record_pages}
+        >Próxima</button>
+      </nav>
     </section>
     """
   end

@@ -45,7 +45,9 @@
     },
     "participants": {
       "type": "array",
-      "items": {"$ref": "#/$defs/participant"},
+      "items": {
+        "$ref": "#/$defs/participant"
+      },
       "minItems": 1,
       "maxItems": 30
     },
@@ -164,6 +166,9 @@
                     "daily_summary"
                   ]
                 }
+              },
+              "participant": {
+                "$ref": "#/$defs/participant_page"
               }
             },
             "required": [
@@ -285,24 +290,47 @@
     "participant": {
       "type": "object",
       "properties": {
-        "key": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$"},
-        "label": {"type": "string", "minLength": 1, "maxLength": 200},
-        "kind": {"enum": ["requester", "subject", "external"]},
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "kind": {
+          "enum": [
+            "requester",
+            "subject",
+            "external"
+          ]
+        },
         "candidate_roles": {
           "type": "array",
-          "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$"},
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
           "minItems": 0,
           "maxItems": 30,
           "uniqueItems": true
         },
         "managers": {
           "type": "array",
-          "items": {"$ref": "#/$defs/actor"},
+          "items": {
+            "$ref": "#/$defs/actor"
+          },
           "minItems": 1,
           "maxItems": 30
         }
       },
-      "required": ["key", "label", "kind", "managers"],
+      "required": [
+        "key",
+        "label",
+        "kind",
+        "managers"
+      ],
       "additionalProperties": false
     },
     "role": {
@@ -394,21 +422,62 @@
             "document_policy": {
               "type": "object",
               "properties": {
-                "reviewers": {"type": "array", "items": {"$ref": "#/$defs/actor"}, "minItems": 1, "maxItems": 30},
-                "max_bytes": {"type": "integer", "minimum": 1, "maximum": 5242880},
-                "media_types": {"type": "array", "items": {"enum": ["application/pdf", "image/png", "image/jpeg"]}, "minItems": 1, "maxItems": 3, "uniqueItems": true}
+                "reviewers": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/actor"
+                  },
+                  "minItems": 1,
+                  "maxItems": 30
+                },
+                "max_bytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5242880
+                },
+                "media_types": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "application/pdf",
+                      "image/png",
+                      "image/jpeg"
+                    ]
+                  },
+                  "minItems": 1,
+                  "maxItems": 3,
+                  "uniqueItems": true
+                }
               },
-              "required": ["reviewers", "max_bytes", "media_types"],
+              "required": [
+                "reviewers",
+                "max_bytes",
+                "media_types"
+              ],
               "additionalProperties": false
             },
             "reference": {
               "type": "object",
               "properties": {
-                "target": {"enum": ["participant", "subject"]},
-                "relationship": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$"},
-                "cardinality": {"const": "one"}
+                "target": {
+                  "enum": [
+                    "participant",
+                    "subject"
+                  ]
+                },
+                "relationship": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{0,63}$"
+                },
+                "cardinality": {
+                  "const": "one"
+                }
               },
-              "required": ["target", "relationship", "cardinality"],
+              "required": [
+                "target",
+                "relationship",
+                "cardinality"
+              ],
               "additionalProperties": false
             },
             "type": {
@@ -1180,6 +1249,75 @@
         "require_reason",
         "kind",
         "actions"
+      ],
+      "additionalProperties": false
+    },
+    "participant_page": {
+      "type": "object",
+      "properties": {
+        "visibility_roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "minItems": 1,
+          "maxItems": 30,
+          "uniqueItems": true
+        },
+        "audience": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/actor"
+          },
+          "minItems": 1,
+          "maxItems": 30
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}[.][a-z][a-z0-9_]{0,63}$"
+          },
+          "minItems": 0,
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}[.][a-z][a-z0-9_]{0,63}$"
+          },
+          "minItems": 0,
+          "maxItems": 20,
+          "uniqueItems": true
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "minItems": 0,
+          "maxItems": 30,
+          "uniqueItems": true
+        },
+        "status": {
+          "type": "boolean"
+        },
+        "history": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "visibility_roles",
+        "audience",
+        "fields",
+        "documents",
+        "actions",
+        "status",
+        "history"
       ],
       "additionalProperties": false
     }

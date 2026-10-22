@@ -151,6 +151,118 @@ defmodule Instantflow.BuilderFixtures do
     )
   end
 
+  # Independent participant workflow configured through the shared contracts.
+  def participant_page_definition do
+    visitor = %{"role" => "visitor", "scope" => "participant", "relationship" => "claimant"}
+
+    reviewer = %{
+      "role" => "reviewer",
+      "scope" => "workflow_department",
+      "department_binding" => "responsible"
+    }
+
+    document_definition("repair_authorization")
+    |> update_in(
+      ["sections", Access.at(1), "fields"],
+      &(&1 ++
+          [
+            %{
+              "key" => "private_marker",
+              "label" => "Controle fora da projeção",
+              "type" => "short_text"
+            }
+          ])
+    )
+    |> Map.update!(
+      "participants",
+      &(&1 ++
+          [
+            %{
+              "key" => "observer",
+              "label" => "Pessoa referenciada",
+              "kind" => "subject",
+              "candidate_roles" => ["visitor"],
+              "managers" => [reviewer]
+            }
+          ])
+    )
+    |> Map.put("stages", [
+      %{
+        "key" => "draft",
+        "label" => "Documentação solicitada",
+        "initial" => false,
+        "terminal" => false
+      },
+      %{
+        "key" => "inspection",
+        "label" => "Em conferência",
+        "initial" => true,
+        "terminal" => false
+      },
+      %{
+        "key" => "closed",
+        "label" => "Autorização concluída",
+        "initial" => false,
+        "terminal" => true
+      }
+    ])
+    |> Map.put("transitions", [
+      %{
+        "key" => "send_packet",
+        "label" => "Enviar documentação",
+        "from" => "draft",
+        "to" => "inspection",
+        "actors" => [visitor],
+        "required_fields" => ["customer_details.description", "customer_details.evidence"],
+        "require_reason" => false,
+        "kind" => "resubmission",
+        "actions" => []
+      },
+      %{
+        "key" => "request_changes",
+        "label" => "Solicitar correção",
+        "from" => "inspection",
+        "to" => "draft",
+        "actors" => [reviewer],
+        "required_fields" => [],
+        "require_reason" => true,
+        "kind" => "correction",
+        "actions" => []
+      },
+      %{
+        "key" => "complete",
+        "label" => "Concluir autorização",
+        "from" => "inspection",
+        "to" => "closed",
+        "actors" => [reviewer],
+        "required_fields" => [],
+        "require_reason" => false,
+        "kind" => "forward",
+        "actions" => []
+      }
+    ])
+    |> Map.put("interface", %{
+      "access" => %{"view" => ["requester", "reviewer"]},
+      "pages" => [
+        %{"key" => "staff", "label" => "Atendimento interno", "blocks" => ["records"]},
+        %{
+          "key" => "my_packet",
+          "label" => "Minha documentação",
+          "blocks" => ["records"],
+          "participant" => %{
+            "visibility_roles" => ["visitor", "reviewer"],
+            "audience" => [visitor, reviewer],
+            "fields" => ["customer_details.description"],
+            "documents" => ["customer_details.evidence"],
+            "actions" => ["send_packet", "request_changes"],
+            "status" => true,
+            "history" => true
+          }
+        }
+      ]
+    })
+  end
+
   # Deliberately configured from a blank form, without a school/restaurant starter.
   # Participant correction, attachments and parts are added by their owning sprints.
   def equipment_definition do

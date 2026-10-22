@@ -79,30 +79,40 @@ defmodule InstantflowWeb.ProcessLive do
           Enum.find(pages, &(&1["key"] == params["page_key"])) ||
             if(is_nil(params["page_key"]), do: hd(pages))
 
-        if page do
-          {:noreply,
-           socket
-           |> assign(
-             visit_id: id,
-             workflow_id: workflow_id,
-             page_key: page["key"],
-             cart:
-               if(socket.assigns.workflow_id == workflow_id and socket.assigns.visit_id == id,
-                 do: socket.assigns.cart,
-                 else: %{}
-               ),
-             print_ticket: nil,
-             batch_form: to_form(%{}, as: :batch)
-           )
-           |> then(fn state ->
-             stream(state, :cart_items, Map.values(state.assigns.cart), reset: true)
-           end)
-           |> load()}
-        else
-          {:noreply,
-           push_navigate(socket,
-             to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/processos/#{workflow_id}"
-           )}
+        cond do
+          page && Map.has_key?(page, "participant") ->
+            {:noreply,
+             push_navigate(socket,
+               to:
+                 ~p"/o/#{socket.assigns.current_scope.organization.slug}/processos/#{workflow_id}/participacao/#{page["key"]}"
+             )}
+
+          page ->
+            {:noreply,
+             socket
+             |> assign(
+               visit_id: id,
+               workflow_id: workflow_id,
+               page_key: page["key"],
+               cart:
+                 if(socket.assigns.workflow_id == workflow_id and socket.assigns.visit_id == id,
+                   do: socket.assigns.cart,
+                   else: %{}
+                 ),
+               print_ticket: nil,
+               batch_form: to_form(%{}, as: :batch)
+             )
+             |> then(fn state ->
+               stream(state, :cart_items, Map.values(state.assigns.cart), reset: true)
+             end)
+             |> load()}
+
+          true ->
+            {:noreply,
+             push_navigate(socket,
+               to:
+                 ~p"/o/#{socket.assigns.current_scope.organization.slug}/processos/#{workflow_id}"
+             )}
         end
     end
   end
@@ -115,6 +125,13 @@ defmodule InstantflowWeb.ProcessLive do
        record_view: params["view"],
        record_form: to_form(params, as: :record_filter)
      )
+     |> load()}
+  end
+
+  def handle_event("record-page", %{"page" => page}, socket) do
+    {:noreply,
+     socket
+     |> assign(:record_filters, Map.put(socket.assigns.record_filters, "page", page))
      |> load()}
   end
 
@@ -519,28 +536,30 @@ defmodule InstantflowWeb.ProcessLive do
   end
 
   defp load_records(socket, version) do
-    views = version.definition["views"]
-    selected = Enum.find(views, &(&1["key"] == socket.assigns.record_view)) || List.first(views)
+    views = Views.options(socket.assigns.current_scope, %{"workflow_id" => version.workflow_id})
+    selected = Enum.find(views, &(&1.key == socket.assigns.record_view)) || List.first(views)
 
     result =
       if selected && "records" in socket.assigns.blocks do
         Views.search(
           socket.assigns.current_scope,
           version.workflow_id,
-          selected["key"],
+          selected.key,
           socket.assigns.record_filters
         )
       else
-        %{columns: [], total: 0, stages: [], rows: []}
+        %{columns: [], total: 0, stages: [], rows: [], page: 1, pages: 1}
       end
 
     socket
     |> assign(
       record_columns: result.columns,
       record_total: result.total,
-      record_view_options: Enum.map(views, &{&1["label"], &1["key"]}),
+      record_page: result.page,
+      record_pages: result.pages,
+      record_view_options: Enum.map(views, &{&1.view_label, &1.key}),
       record_stage_options: Enum.map(result.stages, &{&1.label, &1.id}),
-      record_view_type: if(selected, do: selected["type"], else: "table"),
+      record_view_type: if(selected, do: selected.type, else: "table"),
       can_create_record:
         !Workspaces.operational?(version.definition) &&
           Enum.any?(

@@ -1,0 +1,459 @@
+defmodule Instantflow.WorkflowRuntime.Projections do
+  @moduledoc """
+  Shared bounded authorized record selection and configured view projection.
+
+  SQL applies pinned policies before counts, filters, ordering and LIMIT/OFFSET.
+  Counts are pre-user-filter within the authorized workflow/view; `filtered`
+  is post stage/query filter. Search covers only ID and pinned process name.
+  Ordering is descending ticket ID, including across versions. Page size is 25.
+  Only readable section rows for the selected page are fetched, in one batch.
+  Catalog definitions are compiled once per version, never once per ticket.
+  All operations hold the shared authorization gate, so revocation fences the
+  whole projection. No configured view grants underlying record authority.
+  """
+  import Ecto.Query
+  alias Instantflow.{Repo, Tenant}
+  alias Instantflow.WorkflowCatalog.Version
+  alias Instantflow.WorkflowRuntime.{PolicyQuery, Section, Ticket}
+
+  @page_size 25
+
+  def participant_search(actor, workflow_id, page_key, filters \\ %{}) do
+    Tenant.read(
+      actor,
+      fn scope ->
+        result =
+          fetch_page(
+            scope,
+            Map.put(filters, "workflow_id", positive_integer(workflow_id, 0)),
+            {:participant, page_key}
+          )
+
+        rows =
+          Enum.map(result.tickets, fn ticket ->
+            version = result.versions[ticket.workflow_version_id]
+            page = Instantflow.WorkflowCatalog.ParticipantPages.find(version.definition, page_key)
+
+            %{
+              id: ticket.id,
+              label: page["label"],
+              status: if(page["participant"]["status"], do: stage_label(version, ticket.stage))
+            }
+          end)
+
+        %{rows: rows, total: result.filtered, page: result.page, pages: result.pages}
+      end,
+      %{rows: [], total: 0, page: 1, pages: 1}
+    )
+  end
+
+  def participant_options(actor) do
+    Tenant.read(
+      actor,
+      fn scope ->
+        versions = versions(%{})
+
+        predicate =
+          Enum.reduce(versions, dynamic(false), fn version, acc ->
+            Enum.reduce(
+              Instantflow.WorkflowCatalog.ParticipantPages.pages(version.definition),
+              acc,
+              fn page, acc ->
+                rule = participant_policy(scope, version, page)
+                key = page["key"]
+
+                dynamic(
+                  [ticket: t, page: p],
+                  ^acc or
+                    (t.workflow_version_id == ^version.id and
+                       fragment("?->>'key'", p.value) == ^key and ^rule)
+                )
+              end
+            )
+          end)
+
+        ids =
+          Repo.all(
+            from t in Ticket,
+              as: :ticket,
+              join: v in Version,
+              on: v.id == t.workflow_version_id,
+              join: p in fragment("jsonb_array_elements(?->'interface'->'pages')", v.definition),
+              as: :page,
+              on: true,
+              where: t.organization_id == ^scope.organization_id,
+              where: ^predicate,
+              distinct: true,
+              select: {t.workflow_version_id, fragment("?->>'key'", p.value)}
+          )
+
+        Enum.flat_map(versions, fn version ->
+          for page <- Instantflow.WorkflowCatalog.ParticipantPages.pages(version.definition),
+              {version.id, page["key"]} in ids do
+            %{
+              id: "#{version.workflow_id}:#{page["key"]}",
+              workflow_id: version.workflow_id,
+              key: page["key"],
+              label: page["label"]
+            }
+          end
+        end)
+        |> Enum.uniq_by(& &1.id)
+      end,
+      []
+    )
+  end
+
+  def participant_policy(scope, version, page) do
+    contract = Instantflow.WorkflowRuntime.ParticipantPolicy
+
+    if page && contract.visible?(scope, version, page) do
+      audience =
+        Enum.reduce(page["participant"]["audience"], dynamic(false), fn spec, acc ->
+          actor = PolicyQuery.actor(scope, version, spec)
+          dynamic(^acc or ^actor)
+        end)
+
+      discover = PolicyQuery.discover(scope, version)
+      dynamic(^discover and ^audience)
+    else
+      dynamic(false)
+    end
+  end
+
+  def search(actor, filters \\ %{}) do
+    Tenant.read(actor, &(fetch_page(&1, filters, nil) |> Map.delete(:versions)), empty())
+  end
+
+  def view(actor, workflow_id, key, filters \\ %{}) do
+    Tenant.read(
+      actor,
+      fn scope ->
+        result = fetch_page(scope, Map.put(filters, "workflow_id", workflow_id), key)
+        project(scope, result, key)
+      end,
+      empty_view()
+    )
+  end
+
+  def options(actor, filters \\ %{}) do
+    Tenant.read(
+      actor,
+      fn scope ->
+        versions = versions(filters)
+
+        predicate =
+          Enum.reduce(versions, dynamic(false), fn version, acc ->
+            Enum.reduce(version.definition["views"], acc, fn view, acc ->
+              rule = view_policy(scope, version, view["key"])
+              key = view["key"]
+
+              dynamic(
+                [ticket: t, declared_view: v],
+                ^acc or
+                  (t.workflow_version_id == ^version.id and fragment("?->>'key'", v.value) == ^key and
+                     ^rule)
+              )
+            end)
+          end)
+
+        ids =
+          Repo.all(
+            from t in Ticket,
+              as: :ticket,
+              join: version in Version,
+              on: version.id == t.workflow_version_id,
+              join: view in fragment("jsonb_array_elements(?->'views')", version.definition),
+              as: :declared_view,
+              on: true,
+              where: t.organization_id == ^scope.organization_id,
+              where: ^predicate,
+              distinct: true,
+              select: {t.workflow_version_id, fragment("?->>'key'", view.value)}
+          )
+
+        versions
+        |> Enum.flat_map(fn version ->
+          version.definition["views"]
+          |> Enum.filter(&({version.id, &1["key"]} in ids))
+          |> Enum.map(fn view ->
+            %{
+              id: "#{version.workflow_id}:#{view["key"]}",
+              workflow_id: version.workflow_id,
+              key: view["key"],
+              type: view["type"],
+              view_label: view["label"],
+              label: "#{version.definition["name"]} · #{view["label"]}"
+            }
+          end)
+        end)
+        |> Enum.uniq_by(& &1.id)
+      end,
+      []
+    )
+  end
+
+  defp fetch_page(scope, filters, view_key) do
+    versions = versions(filters)
+    by_id = Map.new(versions, &{&1.id, &1})
+
+    predicate =
+      Enum.reduce(versions, dynamic(false), fn version, acc ->
+        rule = view_policy(scope, version, view_key)
+        dynamic([ticket: t], ^acc or (t.workflow_version_id == ^version.id and ^rule))
+      end)
+
+    base =
+      from t in Ticket,
+        as: :ticket,
+        where: t.organization_id == ^scope.organization_id,
+        where: ^predicate
+
+    groups =
+      Repo.all(
+        from t in base,
+          group_by: [t.workflow_version_id, t.stage],
+          select: {t.workflow_version_id, t.stage, count(t.id)}
+      )
+
+    counts =
+      Enum.reduce(groups, %{}, fn {_, stage, count}, acc ->
+        Map.update(acc, stage, count, &(&1 + count))
+      end)
+
+    labels =
+      Enum.group_by(groups, fn {_, stage, _} -> stage end)
+      |> Map.new(fn {stage, groups} ->
+        labels =
+          Enum.map(groups, fn {version_id, _, _} ->
+            stage_label(Map.fetch!(by_id, version_id), stage)
+          end)
+
+        {stage, labels |> Enum.uniq() |> Enum.sort() |> Enum.join(" / ")}
+      end)
+
+    stage = text(filters["stage"])
+    query = text(filters["query"]) |> String.downcase()
+
+    names =
+      versions
+      |> Enum.filter(&String.contains?(String.downcase(&1.definition["name"]), query))
+      |> Enum.map(& &1.id)
+
+    filtered =
+      from t in base,
+        where: ^(stage == "") or t.stage == ^stage,
+        where:
+          ^(query == "") or t.workflow_version_id in ^names or
+            fragment("strpos(?::text, ?) > 0", t.id, ^query)
+
+    count = Repo.aggregate(filtered, :count)
+    pages = max(1, ceil(count / @page_size))
+    page = min(positive_integer(filters["page"], 1), pages)
+
+    tickets =
+      Repo.all(
+        from t in filtered,
+          order_by: [desc: t.id],
+          limit: @page_size,
+          offset: ^((page - 1) * @page_size)
+      )
+
+    tickets =
+      Enum.map(tickets, fn ticket ->
+        version = Map.fetch!(by_id, ticket.workflow_version_id)
+
+        %{
+          ticket
+          | workflow_version: %{
+              version
+              | bindings: %{},
+                definition: Map.take(version.definition, ~w(name stages))
+            }
+        }
+      end)
+
+    %{
+      tickets: tickets,
+      total: Enum.sum(Map.values(counts)),
+      filtered: count,
+      counts: counts,
+      stage_labels: labels,
+      page: page,
+      pages: pages,
+      versions: by_id
+    }
+  end
+
+  defp view_policy(scope, version, {:participant, key}),
+    do:
+      participant_policy(
+        scope,
+        version,
+        Instantflow.WorkflowCatalog.ParticipantPages.find(version.definition, key)
+      )
+
+  defp view_policy(scope, version, nil) do
+    if generic_surface?(scope, version),
+      do: PolicyQuery.discover(scope, version),
+      else: dynamic(false)
+  end
+
+  defp view_policy(scope, version, key) do
+    view = Enum.find(version.definition["views"], &(&1["key"] == key))
+
+    if view && generic_surface?(scope, version) do
+      columns =
+        Enum.reduce(view["columns"], dynamic(false), fn
+          builtin, _acc when builtin in ~w(stage assigned_department) ->
+            dynamic(true)
+
+          ref, acc ->
+            [section_key, _] = String.split(ref, ".")
+            section = Enum.find(version.definition["sections"], &(&1["key"] == section_key))
+            rule = PolicyQuery.section(scope, version, section)
+            dynamic(^acc or ^rule)
+        end)
+
+      discover = PolicyQuery.discover(scope, version)
+      dynamic(^discover and ^columns)
+    else
+      dynamic(false)
+    end
+  end
+
+  defp generic_surface?(scope, version) do
+    Instantflow.WorkflowCatalog.ParticipantPages.pages(version.definition) == [] or
+      Instantflow.WorkflowRuntime.ParticipantPolicy.staff_workspace?(scope, version)
+  end
+
+  defp versions(filters) do
+    query = from v in Version, order_by: [desc: v.number, desc: v.id]
+
+    query =
+      if filters["workflow_id"],
+        do: where(query, [v], v.workflow_id == ^positive_integer(filters["workflow_id"], 0)),
+        else: query
+
+    Repo.all(query)
+  end
+
+  defp project(scope, result, key) do
+    # This OR predicate permits only readable sections of already authorized page
+    # records. Hidden content never leaves the database, even for projection.
+    predicate =
+      Enum.reduce(result.versions, dynamic(false), fn {id, version}, acc ->
+        ids = result.tickets |> Enum.filter(&(&1.workflow_version_id == id)) |> Enum.map(& &1.id)
+
+        Enum.reduce(version.definition["sections"], acc, fn section, acc ->
+          rule = PolicyQuery.section(scope, version, section)
+          key = section["key"]
+          dynamic([s, ticket: t], ^acc or (s.ticket_id in ^ids and s.key == ^key and ^rule))
+        end)
+      end)
+
+    sections =
+      Repo.all(
+        from s in Section,
+          join: t in Ticket,
+          as: :ticket,
+          on: t.id == s.ticket_id,
+          where: ^predicate,
+          select: {s.ticket_id, s.key, s.values}
+      )
+      |> Map.new(fn {id, key, values} -> {{id, key}, values} end)
+
+    department_ids = Enum.map(result.tickets, & &1.assigned_department_id) |> Enum.uniq()
+
+    departments =
+      Repo.all(
+        from d in Instantflow.Identity.Department,
+          where: d.id in ^department_ids,
+          select: {d.id, d.name}
+      )
+      |> Map.new()
+
+    rows =
+      Enum.map(result.tickets, fn ticket ->
+        version = Map.fetch!(result.versions, ticket.workflow_version_id)
+        view = Enum.find(version.definition["views"], &(&1["key"] == key))
+
+        cells =
+          Enum.flat_map(view["columns"], fn
+            "stage" ->
+              [%{key: "stage", label: "Etapa", value: stage_label(version, ticket.stage)}]
+
+            "assigned_department" ->
+              [
+                %{
+                  key: "assigned_department",
+                  label: "Departamento atribuído",
+                  value: departments[ticket.assigned_department_id]
+                }
+              ]
+
+            ref ->
+              [section_key, field_key] = String.split(ref, ".")
+              values = Map.get(sections, {ticket.id, section_key})
+              field = Instantflow.WorkflowCatalog.Definition.fields(version.definition)[ref]
+
+              if values,
+                do: [%{key: ref, label: field["label"], value: values[field_key]}],
+                else: []
+          end)
+
+        %{
+          id: ticket.id,
+          type: view["type"],
+          label: view["label"],
+          stage: ticket.stage,
+          stage_label: stage_label(version, ticket.stage),
+          date:
+            Enum.find_value(cells, fn cell ->
+              field = Instantflow.WorkflowCatalog.Definition.fields(version.definition)[cell.key]
+              if field && field["type"] == "date", do: cell.value
+            end),
+          cells: cells
+        }
+      end)
+
+    %{
+      rows: rows,
+      total: result.filtered,
+      page: result.page,
+      pages: result.pages,
+      columns:
+        rows
+        |> Enum.flat_map(& &1.cells)
+        |> Enum.uniq_by(& &1.key)
+        |> Enum.map(&Map.take(&1, [:key, :label])),
+      stages:
+        result.counts
+        |> Enum.sort()
+        |> Enum.map(fn {id, count} -> %{id: id, label: result.stage_labels[id], count: count} end)
+    }
+  end
+
+  defp stage_label(version, key),
+    do: Enum.find(version.definition["stages"], &(&1["key"] == key))["label"]
+
+  defp text(value) when is_binary(value), do: String.slice(value, 0, 100)
+  defp text(_), do: ""
+
+  defp positive_integer(value, _) when is_integer(value) and value > 0,
+    do: min(value, 9_223_372_036_854_775_807)
+
+  defp positive_integer(value, default) when is_binary(value) and byte_size(value) <= 18 do
+    case Integer.parse(value) do
+      {n, ""} when n > 0 -> n
+      _ -> default
+    end
+  end
+
+  defp positive_integer(_, default), do: default
+
+  defp empty,
+    do: %{tickets: [], total: 0, filtered: 0, counts: %{}, stage_labels: %{}, page: 1, pages: 1}
+
+  defp empty_view, do: %{rows: [], total: 0, columns: [], stages: [], page: 1, pages: 1}
+end

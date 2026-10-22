@@ -70,6 +70,15 @@ defmodule Instantflow.TenantIsolationTest do
     assert {:ok, ^b_result} = WorkflowRuntime.command(b.scope, b_command)
     assert {:error, :not_found} = WorkflowRuntime.get(f.admin, b_result["ticket_id"])
 
+    assert WorkflowRuntime.search(f.admin, %{"workflow_id" => b.version.workflow_id}).total == 0
+
+    assert Instantflow.WorkflowCatalog.Views.options(f.admin, %{
+             "workflow_id" => b.version.workflow_id
+           }) == []
+
+    assert Enum.map(WorkflowRuntime.search(f.admin).tickets, & &1.id) == [a_result["ticket_id"]]
+    assert Enum.map(WorkflowRuntime.search(b.scope).tickets, & &1.id) == [b_result["ticket_id"]]
+
     assert {:error, :not_found} =
              WorkflowRuntime.command(f.admin, %{
                "operation" => "create",

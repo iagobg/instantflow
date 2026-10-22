@@ -4,7 +4,34 @@ defmodule InstantflowWeb.RequestLive do
   alias Instantflow.Collaboration.{Editor, Presence}
   alias InstantflowWeb.RuntimeErrors
 
-  def mount(%{"id" => raw_id} = params, _session, socket) do
+  def mount(%{"id" => raw_id} = params, session, socket) do
+    id =
+      case Integer.parse(raw_id) do
+        {n, ""} when n > 0 and n < 9_223_372_036_854_775_807 -> n
+        _ -> nil
+      end
+
+    case Instantflow.WorkflowRuntime.ParticipantPages.route(socket.assigns.current_scope, id) do
+      {:participant, workflow_id, page_key} ->
+        if is_nil(params["workflow_id"]) or params["workflow_id"] == to_string(workflow_id) do
+          {:ok,
+           push_navigate(socket,
+             to:
+               ~p"/o/#{socket.assigns.current_scope.organization.slug}/processos/#{workflow_id}/participacao/#{page_key}/registros/#{id}"
+           )}
+        else
+          unavailable(socket)
+        end
+
+      :denied ->
+        unavailable(socket)
+
+      :default ->
+        mount_staff(params, session, socket)
+    end
+  end
+
+  defp mount_staff(%{"id" => raw_id} = params, _session, socket) do
     workflow_id =
       case Integer.parse(params["workflow_id"] || "") do
         {value, ""} -> value

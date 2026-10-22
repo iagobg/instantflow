@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-22",
+  "scope": "Sprint 10 execution-order step 1: bounded authorized record query and configured view projection foundation",
+  "status": "in_progress",
+  "tasks_complete": [],
+  "tasks_in_progress": [
+    "S10-T02"
+  ],
+  "task_count": "0/4",
+  "base_revision": "a155283dadafdeea25bb5701d6f4dc539e3b371a",
+  "working_tree_dirty": true,
+  "environment": {
+    "host": "WSL Ubuntu",
+    "elixir": "1.19.5-otp-28",
+    "database": "isolated instantflow_test on localhost:55432 and existing disposable runtime/migration regression databases"
+  },
+  "checks": [
+    {
+      "name": "mix precommit",
+      "status": "passed",
+      "result": "237 tests, 0 failures; seed 624532; format, unused dependencies and warnings-as-errors compile passed",
+      "log": ".local/sprint10-final-precommit.log",
+      "log_sha256": "4d5e5127809f80ff3d923fa8cce373def2da949384e8316d15112fe0609dfb99"
+    },
+    {
+      "name": "focused query/privacy/tenant/generated UI acceptance",
+      "status": "passed",
+      "result": "13 tests, 0 failures; seed 288694",
+      "log": ".local/sprint10-projection-acceptance.log",
+      "log_sha256": "b4a28d11ed05d3b106c88d2206dc8d2e2b06af9046f6a4d59beffa218e8d1590"
+    },
+    {
+      "name": "mix assets.build",
+      "status": "passed",
+      "result": "standalone exit 0; JavaScript 346.7kb and CSS 27.5kb",
+      "log": ".local/sprint10-assets.log",
+      "log_sha256": "80bcb40a3b4999bfb898482c5e15027388abbcec5ee4edf88e7a3f5b4ac74a54"
+    },
+    {
+      "name": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "verified_scenarios": [
+    "29 accessible and 45 newer inaccessible records across two pinned versions: authorization before SQL count/paging, full 25-record first page, four-record second page, stable ID order.",
+    "One-record and 29-record projection calls use the same query count, with one readable-section batch; hidden section values do not leave PostgreSQL.",
+    "Configured view totals and options exclude missing views and views made entirely of unreadable fields.",
+    "Current participant relationship revocation, parent with an explicit teacher grant and grant revocation, named confidential support assignment and removal.",
+    "Verified subject-only relationship grants no record, list, count, stage label or view metadata access.",
+    "Shared identity and foreign workflow IDs remain organization-local under the tenant gate and RLS.",
+    "Non-creator participant navigates generated list pages for 26 records, cannot see internal view choices or unrelated records, and retains an old pinned view after second publication removes it.",
+    "All corrected Sprint 09, legacy school, runtime-login revocation, populated migration/restore and transaction regressions remain green."
+  ],
+  "remaining_checkpoints": [
+    "S10-T01 independently configured correction/document workflow with explicit page/projection audience and field/action/document/message authoring; full revocation/reconnect/publication matrix and architecture review.",
+    "S10-T02 configured typed filters/sorts, calendar/undated and urgency/assignment surfaces, incident dashboard migration and authoring integration.",
+    "S10-T03 explicit finance reset/invalidation and reusable account setup/summary capability surfaces.",
+    "S10-T04 curated durable communication and full school/equipment recreation matrix.",
+    "Sprint 11 residual unbounded legacy reads, catalog compilation/query scale measurement and complete preservation acceptance."
+  ],
+  "source_sha256": {
+    "docs/bounded-projections.md": "ff9a3d47c94703b01c783b7972b987630c804d9376c10b169f81b0a4efa216f5",
+    "docs/builder-architecture-contract.md": "992620aa7e5d91e58e5eafe2fa83fd836089fe1ef05e6298d35c22e1da02178a",
+    "docs/builder-execution.md": "51ef52120b091abee511e1371906498eb31437423ea62572395979710c512e08",
+    "lib/instantflow/workflow_catalog/views.ex": "569ba47aff93207aa1c32cd071294fafe5c1d2d555927f3842615927124226b0",
+    "lib/instantflow/workflow_runtime.ex": "a6c8c05559a52e1bb31c9634baff987584b091096a22b832ff598f6960c1de1f",
+    "lib/instantflow/workflow_runtime/policy_query.ex": "a0e3882514f445c169f1f724afcdb1a6a6224e331500b898a83c2f5892e9a121",
+    "lib/instantflow/workflow_runtime/projections.ex": "c36da08020f537db8af06de9bed085ef902aa67709d061eadd15d14e55366b0e",
+    "lib/instantflow_web/components/process_components.ex": "e51da820c28cb61f6532aa165ace3349abb88bc63fd255310e1d058e977e710a",
+    "lib/instantflow_web/live/process_live.ex": "e70b30aefb24e8ed6aeb1f34028fcf444ed0638d43fae4ba50090eb0c2ba9554",
+    "sprint_plan/sprint_10.md": "f6ed4b1bc5a65487c8e41537109789b2da3fe9eb7da38bc0798e12c59074f007",
+    "sprint_plan/sprint_index.md": "9e3b7bd6593b5d3529ae56b1c3b6620e413649746511a55deb09a6102c83a26e",
+    "test/instantflow/tenant_isolation_test.exs": "1bc7c7c3c6a2de0baf54bec226a4a0a2e61f484c63965f3eebf7298fd1af6ce9",
+    "test/instantflow/workflow_runtime/projections_test.exs": "d4ad3a61b54ab631a34f156444b64aaf7bddf9d93117cb6e446a524516162e8b",
+    "test/instantflow_web/live/generated_projection_live_test.exs": "eeadcf9132250eeccb181eec7b59d7c58d7968af1db877b3bfc0e8f49971f9e6"
+  }
+}
