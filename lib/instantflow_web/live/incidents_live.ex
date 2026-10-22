@@ -63,7 +63,9 @@ defmodule InstantflowWeb.IncidentsLive do
 
     workflows =
       WorkflowCatalog.available(socket.assigns.current_scope)
-      |> Enum.filter(&(&1.definition["template_key"] == "incident"))
+      |> Enum.filter(fn version ->
+        Enum.any?(version.definition["views"], &(&1["urgency"] != nil))
+      end)
 
     socket
     |> assign(

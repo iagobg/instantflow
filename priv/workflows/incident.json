@@ -413,7 +413,23 @@
         "stage",
         "report.urgency",
         "report.location"
-      ]
+      ],
+      "filters": [
+        "report.urgency"
+      ],
+      "urgency": {
+        "field": "report.urgency",
+        "values": [
+          "Urgente",
+          "Prioritária",
+          "Rotina"
+        ]
+      },
+      "sort": {
+        "field": "urgency",
+        "direction": "asc"
+      },
+      "assignment_section": "support"
     },
     {
       "key": "board",

@@ -57,7 +57,8 @@ defmodule Instantflow.WorkflowCatalog.Templates do
       version = version!(version_id)
       workflow = Repo.get!(Workflow, version.workflow_id)
       definition = Map.put(version.definition, "format_version", "1.0")
-      validate!(definition, :complete)
+      validate!(definition, :draft)
+      # Old pinned contracts can be repaired in a draft before re-publication.
       # Cloning within this workflow preserves its already-local configuration.
       draft = insert_draft!(a, workflow, definition, version, nil, "cloned", version.bindings)
       draft

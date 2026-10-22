@@ -12,7 +12,7 @@ defmodule Instantflow.WorkflowRuntime.PolicyQuery do
   alias Instantflow.Participants.Relationship
 
   def discover(scope, version) do
-    if scope.role == "parent" and not Map.has_key?(version.definition, "participants") do
+    if Instantflow.WorkflowRuntime.LegacyAccess.parent_portal?(scope, version) do
       dynamic(false)
     else
       version.definition["sections"]
@@ -58,7 +58,7 @@ defmodule Instantflow.WorkflowRuntime.PolicyQuery do
           participant(scope, version, spec["relationship"])
 
         "guardian" ->
-          if Map.has_key?(version.definition, "participants"),
+          if not Instantflow.WorkflowRuntime.LegacyAccess.legacy_definition?(version.definition),
             do: dynamic(false),
             else: relationship(scope, "legacy_guardian", true)
 

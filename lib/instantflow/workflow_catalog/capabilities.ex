@@ -30,10 +30,10 @@ defmodule Instantflow.WorkflowCatalog.Capabilities do
         dependencies: ["core"],
         conflicts: [],
         bindings: ["budgets"],
-        declarations: ["transitions.finance"],
+        declarations: ["transitions.finance", "transitions.reset", "interface.finance"],
         guards: ~w(balance authority receipt_quantities),
         effects: ~w(reserve release post reverse complete),
-        projections: ~w(accounts reservations),
+        projections: ~w(accounts reservations process_summary shared_account_summary),
         migration: :immutable_versions
       },
       %{

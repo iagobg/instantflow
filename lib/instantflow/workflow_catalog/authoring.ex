@@ -40,6 +40,17 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
     history_visibility: :string,
     behavior: :string,
     columns: {:array, :string},
+    visibility_roles: {:array, :string},
+    view_filters: {:array, :string},
+    sort_field: :string,
+    sort_direction: :string,
+    calendar_field: :string,
+    urgency_field: :string,
+    urgency_values: :string,
+    assignment_section: :string,
+    reset_sections: {:array, :string},
+    invalidate_approvals: {:array, :string},
+    reset_enabled: :boolean,
     creates: :boolean,
     guard_op: :string,
     guard_field: :string,
@@ -99,6 +110,17 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
       history_visibility: item["history_visibility"] || "participants",
       behavior: item["behavior"] || "success",
       columns: item["columns"] || [],
+      visibility_roles: item["visibility_roles"] || [],
+      view_filters: item["filters"] || [],
+      sort_field: get_in(item, ["sort", "field"]) || "id",
+      sort_direction: get_in(item, ["sort", "direction"]) || "desc",
+      calendar_field: item["calendar_field"] || "",
+      urgency_field: get_in(item, ["urgency", "field"]) || "",
+      urgency_values: Enum.join(get_in(item, ["urgency", "values"]) || [], "\n"),
+      assignment_section: item["assignment_section"] || "",
+      reset_sections: get_in(item, ["reset", "sections"]) || [],
+      invalidate_approvals: get_in(item, ["reset", "invalidate_approvals"]) || [],
+      reset_enabled: Map.has_key?(item, "reset"),
       creates: definition != nil and item["key"] in definition["creation"]["roles"],
       guard_op: item["guard"]["op"] || "",
       guard_field: item["guard"]["field"],
@@ -351,8 +373,38 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
 
   defp build("actions", v, _, _), do: %{"type" => v.type, "behavior" => v.behavior}
 
-  defp build("views", v, _, _),
-    do: Map.merge(base(v), %{"type" => v.type, "columns" => v.columns})
+  defp build("views", v, _, _) do
+    view =
+      Map.merge(base(v), %{
+        "type" => v.type,
+        "columns" => v.columns,
+        "filters" => v.view_filters,
+        "sort" => %{"field" => v.sort_field, "direction" => v.sort_direction}
+      })
+
+    view =
+      if v.visibility_roles == [],
+        do: view,
+        else: Map.put(view, "visibility_roles", v.visibility_roles)
+
+    view =
+      if v.calendar_field in [nil, ""],
+        do: view,
+        else: Map.put(view, "calendar_field", v.calendar_field)
+
+    view =
+      if v.assignment_section in [nil, ""],
+        do: view,
+        else: Map.put(view, "assignment_section", v.assignment_section)
+
+    if v.urgency_field in [nil, ""],
+      do: view,
+      else:
+        Map.put(view, "urgency", %{
+          "field" => v.urgency_field,
+          "values" => String.split(v.urgency_values || "", "\n", trim: true)
+        })
+  end
 
   defp build("transitions", v, old, d) do
     actors =
@@ -381,6 +433,15 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
 
     item = Map.merge(Map.take(old, ~w(calculation requires_calculation)), item)
     item = if old["finance"], do: Map.put(item, "finance", old["finance"]), else: item
+
+    item =
+      if v.reset_enabled,
+        do:
+          Map.put(item, "reset", %{
+            "sections" => v.reset_sections,
+            "invalidate_approvals" => v.invalidate_approvals
+          }),
+        else: item
 
     if v.department_binding in [nil, ""],
       do: item,

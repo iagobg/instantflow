@@ -1,6 +1,7 @@
 defmodule Instantflow.Incidents do
   @moduledoc "Restricted incident reporting; curated simulated communication never projects internal notes to families."
-  alias Instantflow.{Repo, Tenant, WorkflowCatalog, WorkflowRuntime}
+  import Ecto.Query
+  alias Instantflow.{Repo, Tenant, WorkflowCatalog}
   alias Instantflow.WorkflowCatalog.Version
 
   def install(actor, departments) do
@@ -14,61 +15,80 @@ defmodule Instantflow.Incidents do
     })
   end
 
+  # Compatibility URL delegates to declared urgency views; copied workflows use
+  # the same service without a template-key selector.
   def list(actor, filters) do
+    options =
+      Instantflow.WorkflowCatalog.Views.options(actor)
+      |> Enum.filter(fn option -> option.urgency? end)
+
+    selected =
+      Enum.find(options, fn option -> option.id == filters["view"] end) || List.first(options)
+
+    if selected do
+      input =
+        Map.put(
+          filters,
+          "fields",
+          if(filters["urgency"] in [nil, ""],
+            do: %{},
+            else: urgency_filter(actor, selected, filters["urgency"])
+          )
+        )
+
+      result =
+        Instantflow.WorkflowCatalog.Views.search(actor, selected.workflow_id, selected.key, input)
+
+      rows =
+        Enum.map(result.rows, fn row ->
+          location =
+            Enum.find_value(row.cells, fn cell ->
+              if cell.key != "stage" and cell.value != row.urgency, do: cell.value
+            end)
+
+          %{
+            id: row.id,
+            urgency: row.urgency || "Não informada",
+            location: location || "Não informado",
+            stage: row.stage,
+            stage_label: row.stage_label
+          }
+        end)
+
+      %{
+        rows: rows,
+        total: Enum.sum(Enum.map(result.stages, fn stage -> stage.count end)),
+        filtered: result.total,
+        urgent: result.urgent
+      }
+    else
+      %{rows: [], total: 0, filtered: 0, urgent: 0}
+    end
+  end
+
+  defp urgency_filter(actor, option, value) do
     Tenant.read(
       actor,
-      fn a ->
-        rows =
-          WorkflowRuntime.list(a)
-          |> Enum.flat_map(fn ticket ->
-            version = Repo.get!(Version, ticket.workflow_version_id)
-
-            if version.definition["template_key"] == "incident" do
-              case WorkflowRuntime.get(a, ticket.id) do
-                {:ok, data} ->
-                  report = Enum.find(data.sections, &(&1.key == "report"))
-
-                  if report,
-                    do: [
-                      %{
-                        id: ticket.id,
-                        urgency: report.values["urgency"] || "Não informada",
-                        stage: ticket.stage,
-                        stage_label:
-                          Enum.find(version.definition["stages"], &(&1["key"] == ticket.stage))[
-                            "label"
-                          ],
-                        location: report.values["location"] || "Não informado"
-                      }
-                    ],
-                    else: []
-
-                _ ->
-                  []
-              end
-            else
-              []
-            end
+      fn _ ->
+        version =
+          Repo.all(
+            from v in Version,
+              where: v.workflow_id == ^option.workflow_id,
+              order_by: [desc: v.number]
+          )
+          |> Enum.find(fn v ->
+            Enum.any?(v.definition["views"], fn view ->
+              view["key"] == option.key and view["urgency"] != nil
+            end)
           end)
 
-        filtered =
-          Enum.filter(rows, fn row ->
-            (filters["urgency"] in [nil, ""] or row.urgency == filters["urgency"]) and
-              (filters["stage"] in [nil, ""] or row.stage == filters["stage"])
-          end)
+        spec =
+          version &&
+            Enum.find(version.definition["views"], fn view -> view["key"] == option.key end)
 
-        rank = %{"Urgente" => 0, "Prioritária" => 1, "Rotina" => 2}
-
-        %{
-          total: length(rows),
-          urgent:
-            Enum.count(rows, &(&1.urgency == "Urgente" and &1.stage not in ~w(closed cancelled))),
-          filtered: length(filtered),
-          rows:
-            filtered |> Enum.sort_by(&{Map.get(rank, &1.urgency, 3), -&1.id}) |> Enum.take(100)
-        }
+        if spec, do: %{spec["urgency"]["field"] => value}, else: %{}
       end,
-      %{total: 0, urgent: 0, filtered: 0, rows: []}
+      %{}
     )
   end
 end

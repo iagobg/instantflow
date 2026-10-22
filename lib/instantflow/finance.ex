@@ -87,7 +87,13 @@ defmodule Instantflow.Finance do
       actor,
       fn a ->
         unless a.role == "admin", do: Repo.rollback(:forbidden)
-        Repo.all(from b in Account, order_by: b.name, select: {b.name, b.id})
+
+        Repo.all(
+          from b in Account,
+            order_by: [asc: b.name, asc: b.id],
+            limit: 100,
+            select: {b.name, b.id}
+        )
       end,
       []
     )
@@ -239,22 +245,20 @@ defmodule Instantflow.Finance do
   end
 
   defp permit!(actor, account, role) do
-    unless actor.role != "parent" and
-             Enum.any?(
-               Access.profiles(actor),
-               &(&1.role == role and &1.department_id == account.department_id)
-             ),
+    unless Enum.any?(
+             Access.profiles(actor),
+             &(&1.role == role and &1.department_id == account.department_id)
+           ),
            do: Repo.rollback(:forbidden)
   end
 
-  defp view?(actor, account),
+  def view?(actor, account),
     do:
-      actor.role != "parent" and
-        Enum.any?(
-          Access.profiles(actor),
-          &(&1.role in ~w(finance finance_allocator finance_reverser head) and
-              &1.department_id == account.department_id)
-        )
+      Enum.any?(
+        Access.profiles(actor),
+        &(&1.role in ~w(finance finance_allocator finance_reverser head) and
+            &1.department_id == account.department_id)
+      )
 
   defp positive?(n), do: is_integer(n) and n > 0 and n <= 1_000_000_000_000
   defp reason?(s), do: is_binary(s) and String.length(String.trim(s)) in 1..2000

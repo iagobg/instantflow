@@ -16,7 +16,9 @@ defmodule Instantflow.WorkflowCatalog.Interface do
     {"items", "Entrada rápida de itens", "operations"},
     {"batches", "Lotes e entrega", "operations"},
     {"settlement", "Fechamento do atendimento", "operations"},
-    {"daily_summary", "Resumo diário", "operations"}
+    {"daily_summary", "Resumo diário", "operations"},
+    {"finance_setup", "Configuração financeira", "finance"},
+    {"finance_summary", "Resumo financeiro autorizado", "finance"}
   ]
   @operational_blocks for {key, _, "operations"} <- @block_specs, do: key
 

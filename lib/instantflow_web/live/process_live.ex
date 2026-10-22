@@ -11,6 +11,13 @@ defmodule InstantflowWeb.ProcessLive do
       do:
         Phoenix.PubSub.subscribe(
           Instantflow.PubSub,
+          Instantflow.Finance.topic(socket.assigns.current_scope.organization_id)
+        )
+
+    if connected?(socket),
+      do:
+        Phoenix.PubSub.subscribe(
+          Instantflow.PubSub,
           WorkflowRuntime.list_topic(socket.assigns.current_scope)
         )
 
@@ -32,6 +39,8 @@ defmodule InstantflowWeb.ProcessLive do
        page_key: "overview",
        record_filters: %{},
        record_view: nil,
+       finance_account_form: to_form(%{}, as: :finance_account),
+       finance_allocation_form: to_form(%{}, as: :finance_allocation),
        record_form: to_form(%{}, as: :record_filter),
        workflow_id: nil,
        labels: Instantflow.WorkflowCatalog.Workspaces.labels(%{}),
@@ -121,7 +130,7 @@ defmodule InstantflowWeb.ProcessLive do
     {:noreply,
      socket
      |> assign(
-       record_filters: Map.take(params, ~w(query stage)),
+       record_filters: Map.take(params, ~w(query stage fields assigned_to)),
        record_view: params["view"],
        record_form: to_form(params, as: :record_filter)
      )
@@ -133,6 +142,30 @@ defmodule InstantflowWeb.ProcessLive do
      socket
      |> assign(:record_filters, Map.put(socket.assigns.record_filters, "page", page))
      |> load()}
+  end
+
+  def handle_event("finance-create-account", %{"finance_account" => params}, socket) do
+    result =
+      Instantflow.Finance.create_account(
+        socket.assigns.current_scope,
+        number(params["department_id"]),
+        params["name"]
+      )
+
+    {:noreply, finance_result(socket, result)}
+  end
+
+  def handle_event("finance-allocate", %{"finance_allocation" => params}, socket) do
+    result =
+      Instantflow.Finance.allocate(
+        socket.assigns.current_scope,
+        number(params["account_id"]),
+        number(params["amount"]),
+        params["reason"],
+        socket.assigns.command_key
+      )
+
+    {:noreply, finance_result(socket, result)}
   end
 
   def handle_event("record-create", _, socket) do
@@ -431,6 +464,7 @@ defmodule InstantflowWeb.ProcessLive do
   def handle_info(:reconcile, socket), do: {:noreply, load(socket)}
   def handle_info(:requests_changed, socket), do: {:noreply, load(socket)}
   def handle_info(:operations_changed, socket), do: {:noreply, load(socket)}
+  def handle_info(:budgets_changed, socket), do: {:noreply, load(socket)}
   def handle_info(:permissions_changed, socket), do: {:noreply, load(socket)}
 
   defp load(socket) do
@@ -459,6 +493,7 @@ defmodule InstantflowWeb.ProcessLive do
           can_operate: Workspaces.allowed?(socket.assigns.current_scope, version, "operate")
         )
         |> load_records(version)
+        |> load_finance(version)
 
       data =
         if Workspaces.operational?(version.definition),
@@ -548,13 +583,26 @@ defmodule InstantflowWeb.ProcessLive do
           socket.assigns.record_filters
         )
       else
-        %{columns: [], total: 0, stages: [], rows: [], page: 1, pages: 1}
+        %{
+          columns: [],
+          total: 0,
+          stages: [],
+          rows: [],
+          page: 1,
+          pages: 1,
+          filters: [],
+          urgent: 0,
+          assignment?: false
+        }
       end
 
     socket
     |> assign(
       record_columns: result.columns,
       record_total: result.total,
+      record_filter_options: result.filters,
+      record_urgent: result.urgent,
+      record_assignments?: result.assignment?,
       record_page: result.page,
       record_pages: result.pages,
       record_view_options: Enum.map(views, &{&1.view_label, &1.key}),
@@ -568,6 +616,23 @@ defmodule InstantflowWeb.ProcessLive do
           )
     )
     |> stream(:process_records, result.rows, reset: true)
+  end
+
+  defp finance_result(socket, {:ok, _}),
+    do: socket |> assign(:command_key, Ecto.UUID.generate()) |> load()
+
+  defp finance_result(socket, {:error, reason}),
+    do: socket |> put_flash(:error, message(reason)) |> load()
+
+  defp load_finance(socket, version) do
+    data =
+      if Enum.any?(socket.assigns.blocks, &(&1 in ~w(finance_setup finance_summary))),
+        do: Instantflow.Finance.Surfaces.load(socket.assigns.current_scope, version.workflow_id),
+        else: Instantflow.Finance.Surfaces.empty()
+
+    socket
+    |> assign(finance_surface: Map.delete(data, :summaries))
+    |> stream(:finance_summaries, data.summaries, reset: true)
   end
 
   defp run(socket, command) do
@@ -682,6 +747,10 @@ defmodule InstantflowWeb.ProcessLive do
               <.settlement_block :if={@authorized && @visit} {assigns} />
             <% "daily_summary" -> %>
               <.daily_summary_block :if={@authorized} {assigns} />
+            <% "finance_setup" -> %>
+              <.finance_setup_block {assigns} />
+            <% "finance_summary" -> %>
+              <.finance_summary_block {assigns} />
           <% end %>
         <% end %>
         <.print_block {assigns} />

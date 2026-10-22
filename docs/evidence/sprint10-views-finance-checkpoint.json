@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-22",
+  "status": "checkpoint_verified_sprint_in_progress",
+  "tasks_complete": [
+    "S10-T02",
+    "S10-T03"
+  ],
+  "tasks_remaining": [
+    "S10-T01",
+    "S10-T04"
+  ],
+  "base_revision": "29c4f7042eb751f34cb5381a82d619d5cfa01af1",
+  "checks": [
+    {
+      "name": "mix precommit",
+      "result": "250 tests, 0 failures; seed 387778",
+      "status": "passed",
+      "log": ".local/sprint10-views-finance-final-precommit.log",
+      "sha256": "5d4ff05c6f617b1f171bdf5a57b72802afa93f7642f4e60fbce88d733912282a"
+    },
+    {
+      "name": "mix assets.build",
+      "status": "passed",
+      "log": ".local/sprint10-views-finance-assets.log",
+      "sha256": "2432f9382639883648973bd9cbb54433aa578709bca3349a0759973dfb0ab538"
+    },
+    {
+      "name": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "contracts": "docs/configured-views-and-finance.md",
+  "preservation_note": "Historical fixture seeding temporarily supplies current-client metadata columns, asserts they contain only empty defaults, and removes them before the forward migration. Original business-row snapshots, additive defaults and full backup/restore comparisons pass. No production runtime compatibility bypass was introduced.",
+  "source_sha256": {
+    "docs/configured-views-and-finance.md": "b677d3273be4ea65823013c449520557a8712201514cd1510a941e10d0dc286e",
+    "lib/instantflow/delivery/message.ex": "50dfa86e1a5078ca650896acf7916ea63c7de46e41fcc87b9c4228b13213aa9d",
+    "lib/instantflow/finance.ex": "1e1c3a798ec7ae6e68857751b0e997c8009ca08bca7790d118a00efd6f2022e3",
+    "lib/instantflow/finance/surfaces.ex": "29d393f7f28fd2b10e3c7c9734993ca68500d52e55bbb56c3019e2dd011abaf8",
+    "lib/instantflow/incidents.ex": "bbaacb0f44144085f116eae08ffc9b5c99103eaaefc202968df4c3ef555e9bcf",
+    "lib/instantflow/local_time.ex": "0ee41e62da4574e61de9e1b42730745fe6d71ecd9be8d2ac0444219f7b5dd867",
+    "lib/instantflow/workflow_catalog/authoring.ex": "748e1c1d00da3068927ac0d1bb2c7d52dd35cc9cfa7fd854fd5edfb2c1873ff6",
+    "lib/instantflow/workflow_catalog/capabilities.ex": "1676db7464c11e60a2abe6570831231de3b7f1e9510295290e5761653ad16d1d",
+    "lib/instantflow/workflow_catalog/corrections.ex": "08d21172e4be10a46a3ec88ffcb292b91f5824d14ff3f937c882d951429ff81f",
+    "lib/instantflow/workflow_catalog/definition.ex": "1cd51d82aa9ef6d956b909d282f685939b6102f404e03e4a7dd39e3147291a66",
+    "lib/instantflow/workflow_catalog/finance_surfaces.ex": "1ab4ee83d26e4e69b8606864acc394b63d9048ba7dac3245f3eafcd10c66c2cc",
+    "lib/instantflow/workflow_catalog/interface.ex": "df2359c626a8a4e479fafd3d4211d8f8cbbc44593f34c1fd4031872245aa2f50",
+    "lib/instantflow/workflow_catalog/templates.ex": "9539a3581910849a72a2d93d454a4a9ce023950eab3b767391ab45f5590a3923",
+    "lib/instantflow/workflow_catalog/view_contract.ex": "8f1aa611a9ecc40fa9dcdc8c763d2dc58727129170675e85c51d9ca67b1e200c",
+    "lib/instantflow/workflow_runtime.ex": "7a11c27576344dbcf89cda5d1d04fc5131cb67137445551233553348501acfe7",
+    "lib/instantflow/workflow_runtime/configured_queries.ex": "682e32b7477be149dbbff28e94e5b9b47f959427f141c4e3d8af034989ff1c40",
+    "lib/instantflow/workflow_runtime/corrections.ex": "fec62e5579a33fcb094b809c0c91358ea178a5e19c1df9df24b8c11a8621f318",
+    "lib/instantflow/workflow_runtime/event.ex": "731eb816b9b635bf3c9e082d1f1fb73cbc55032497b28f6eee3884c5d541043c",
+    "lib/instantflow/workflow_runtime/legacy_access.ex": "2def0ebcc6b60e7f1519adb315f5023928c73a484e89cd316fad9ed1ef27784c",
+    "lib/instantflow/workflow_runtime/legacy_resets.ex": "66d37d1a2d14b8db94716c701aad05195bdacf91de3784d8ca6ccaddc27c9000",
+    "lib/instantflow/workflow_runtime/policy_query.ex": "0f01dd7620073f4163cc5cd7acb96afaf75210e58e81dc742f7b8e80c534bcda",
+    "lib/instantflow/workflow_runtime/projections.ex": "277f3a322e762a2b5ff08b5df4730f707ff99fa768369e8dd5df69ba79f5754a",
+    "lib/instantflow_web/components/process_components.ex": "8f3167354f4a4d4466272392004aecabff52da4568b2f5ad605ebef57c008270",
+    "lib/instantflow_web/live/incidents_live.ex": "d8c43be51adb1e6752ba7c11d50b5545e5df84d865fe46d90ae0eade06588018",
+    "lib/instantflow_web/live/process_live.ex": "8bc7bffce05927a6b3588622f2b0d5e99ae017d1bc8ebf44b8cd0e0d8cfd0299",
+    "lib/instantflow_web/live/template_live.ex": "73383e7ef7b796e86d8dae84018812b75d9d8bbf58fb0e3ed4c50549bdbddc80",
+    "priv/repo/migrations/20261022100818_add_projection_audit_and_curated_outbox_contracts.exs": "3e7fe8c5c7812baa7649561cd799f80f32d46be2ffb11961728fdbe41b7da095",
+    "priv/templates/workflow-1.0.schema.json": "5271473f7f21063fc2142dc5c3f4d61ebd70d5b7b704e71fc4c97e1964c019d1",
+    "priv/workflows/field_trip.json": "bdade0ef00006cfa0b354e53effbbef2ac92fcbd098df744b695a417a2cef034",
+    "priv/workflows/incident.json": "e9d79e32c38523d14d297aa664f9e7f73b0a77f1a8f31efd33d1a2783c0f832e",
+    "priv/workflows/requisition.json": "cb02eb958e4c85988b37759b3a6afed35c122729fd0e1c5e9823b6e21d5ac7f2",
+    "sprint_plan/sprint_10.md": "e437fbaf21d69d4d85b82510091dd2df6532e3c47580770e5ee15fd60b06741f",
+    "sprint_plan/sprint_index.md": "67485b555c16ff262fc51a1a48c399e700e977ba3857ef4939452d2026ce7361",
+    "test/instantflow/finance/surfaces_and_resets_test.exs": "6ea467df11036af8bd2d968d3116a3043a382603cbfbad161a30a68395a47369",
+    "test/instantflow/guardian_migration_test.exs": "2cdb27235e05c392da826853037c428798c3433918827eda61adf0d5471a219a",
+    "test/instantflow/process_migration_test.exs": "c691d6adf48ef44372754a3e64101ab4f90461ca59cf0a24a28173e80fc63340",
+    "test/instantflow/workflow_runtime/configured_views_test.exs": "51e4ed1fd1349eecbb0a8a5b375286c67bb910c3d17a5446bb8db299802d63ab",
+    "test/instantflow_web/live/configured_views_live_test.exs": "108198b5b143b0a1f272688691b52cca192e6395737d196248bd60c39a5965f0",
+    "test/instantflow_web/live/finance_surfaces_live_test.exs": "4c19f1c528118ab9e824f61dcc6c788e96e9390c07dab3ee131cba03302d1475",
+    "test/support/historical_schema.ex": "ba7c922ebc46cdc4236fff6012e18b9fa4a03310dec248c9336b82fd0401907f"
+  }
+}

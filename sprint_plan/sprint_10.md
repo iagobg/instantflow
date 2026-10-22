@@ -31,14 +31,14 @@ Sprint 09 regressions are prerequisites throughout: explicit candidate_roles dis
   - Preserve version pinning and compatibility for existing guardian links and enrollment URLs. New external participation remains invitation-based; anonymous signup/uploads are not introduced.
   - Resolve existing records and their actions using their pinned definition after a new publication changes or removes a page, field or stage. Define a safe route fallback without substituting current-version permissions or breaking access to old records. Clear protected streams, retained forms and pending uploads when authority is lost.
 
-- [ ] S10-T02 Replace specialized dashboards with configured views.
+- [x] S10-T02 Replace specialized dashboards with configured views.
   - Declare bounded filters, sorting, stage/assignment/urgency projections, columns and visibility in the common definition contract, retaining table/board behavior and adding generated calendar/undated-item rendering where supported.
   - Replace incident-template-key dashboard selection with configured projections that work under independent workflow, role, section and stage keys.
   - Derive counts, labels, urgency announcements and available filters only from authorized data. Named confidential assignments remain authoritative, and administration still grants no implicit support-note access.
   - Keep UI rendering separate from context queries and policy decisions. Implement database-level authorized filtering/pagination and batched projections for the new/migrated surfaces here; neither paging unauthorized rows then filtering nor a load-all wrapper is acceptable. S11-T02 completes remaining legacy paths and scale measurement before larger-volume readiness is claimed.
   - Add query-count/batch and result-bound checks with multiple pinned versions and uneven accessible/hidden records. Define whether totals are pre-filter or post-filter, use deterministic tie-breaking, and validate filter/sort/column/calendar references against their types and authorized projections. Hidden fields must not influence visible ordering, counts or filter choices. Keep date-only fields separate from timezone-rendered instants.
 
-- [ ] S10-T03 Expose finance setup and summaries as reusable capability surfaces.
+- [x] S10-T03 Expose finance setup and summaries as reusable capability surfaces.
   - Replace inferred correction resets (such as clearing every non-money section on finance release) with explicit validated invalidation/reset declarations. Preserve legacy semantics only for pinned legacy versions. Test approval invalidation and release while unrelated operational/confidential sections survive, including rollback if a later effect fails.
   - Define bounded reset targets and approval invalidation semantics before wiring the editor. Reject unknown targets and invalid combinations, audit affected state without leaking cleared content, and advance the affected revisions in the same transaction as reservation release and stage change. Test stale saves against a reset, duplicate replay, an unrelated section surviving and failure after an earlier effect. Do not introduce arbitrary expressions or a second transition engine.
   - Add schema/editor-configurable finance account binding/setup and authorized reservation/spend/balance surfaces using the existing Finance context and additive capability registry.
@@ -75,7 +75,7 @@ Sprint 09 regressions are prerequisites throughout: explicit candidate_roles dis
 ## Progress
 
 Actual start / finish: 2026-10-22 / not finished  
-Tasks: 0/4. Status: In progress. S10-T02's bounded query foundation and S10-T01's first correction/document checkpoint are implemented; all four tasks remain open pending their full acceptance.  
+Tasks: 2/4. Status: In progress. S10-T02 and S10-T03 are complete; participant preview/message integration and T04 communication/recreation remain open.  
 Planning date: 2026-10-21. Record dated evidence and remaining defects before changing status.  
 Priority: architecture prerequisite before pilot onboarding. Handoff: common participant/view/finance/communication surfaces for Sprint 11 acceptance.
 
@@ -104,3 +104,5 @@ corrected during review. This completes execution-order checkpoint 2; it does no
 complete all T01 work. Curated messages, dedicated synthetic draft-preview UI and
 the broader recreation matrix remain open. Next: configured T02 surfaces and T03
 explicit resets before T04 communications/recreation.
+
+Configured views / finance checkpoint: 2026-10-22. [Contracts and executable evidence](../docs/configured-views-and-finance.md). T02 and T03 pass typed editor/publication, bounded authorized query, privacy, calendar/assignment/urgency, explicit reset/invalidation, late rollback, unrelated-state preservation, generated finance setup and pinned/shared-account acceptance. Full validation:  250 tests, 0 failures; assets build passed. Populated forward migration and restore pass with the additive audit/outbox columns; historical client fixture compatibility is removed before the actual migration. T01 preview/message integration and T04 remain in progress.

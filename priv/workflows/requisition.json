@@ -465,6 +465,13 @@
       "finance": {
         "operation": "release",
         "account_binding": "shared_budget"
+      },
+      "reset": {
+        "sections": [
+          "order",
+          "delivery"
+        ],
+        "invalidate_approvals": []
       }
     },
     {
@@ -508,6 +515,13 @@
       "finance": {
         "operation": "release",
         "account_binding": "shared_budget"
+      },
+      "reset": {
+        "sections": [
+          "order",
+          "delivery"
+        ],
+        "invalidate_approvals": []
       }
     },
     {
@@ -551,6 +565,13 @@
       "finance": {
         "operation": "release",
         "account_binding": "shared_budget"
+      },
+      "reset": {
+        "sections": [
+          "order",
+          "delivery"
+        ],
+        "invalidate_approvals": []
       }
     },
     {

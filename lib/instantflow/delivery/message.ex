@@ -7,6 +7,9 @@ defmodule Instantflow.Delivery.Message do
     field :behavior, :string, default: "success"
     field :status, :string, default: "pending"
     field :attempts, :integer, default: 0
+    field :payload, :map, default: %{}
+    field :recipient_membership_id, :integer
+    field :authorized_membership_id, :integer
     belongs_to :retried_by, Instantflow.Identity.User
     belongs_to :ticket, Instantflow.WorkflowRuntime.Ticket
     belongs_to :event, Instantflow.WorkflowRuntime.Event

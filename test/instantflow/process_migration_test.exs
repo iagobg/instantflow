@@ -25,6 +25,7 @@ defmodule Instantflow.ProcessMigrationTest do
     OperatorRepo.put_dynamic_repo(owner)
     migrations = Application.app_dir(:instantflow, "priv/repo/migrations")
     migrate(migrations, to: 20_261_021_190_401, log: false)
+    Instantflow.HistoricalSchema.prepare_seed()
 
     runtime =
       start_supervised!(
@@ -157,7 +158,9 @@ defmodule Instantflow.ProcessMigrationTest do
           &{&1, OperatorRepo.query!("SELECT to_jsonb(t) FROM #{&1} t ORDER BY id").rows}
         )
 
+      Instantflow.HistoricalSchema.finish_seed()
       migrate(migrations, all: true, log: false)
+      assert :ok = Instantflow.HistoricalSchema.assert_defaults()
 
       for table <- tables do
         assert OperatorRepo.query!(

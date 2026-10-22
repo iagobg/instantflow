@@ -12,10 +12,17 @@ defmodule Instantflow.WorkflowRuntime.LegacyAccess do
   alias Instantflow.WorkflowRuntime.Ticket
 
   def parent_portal?(actor, version),
-    do: actor.role == "parent" and not Map.has_key?(version.definition, "participants")
+    do: actor.role == "parent" and legacy_definition?(version.definition)
+
+  def legacy_definition?(definition) do
+    not Map.has_key?(definition, "participants") and
+      is_nil(get_in(definition, ["interface", "finance"])) and
+      not Map.has_key?(definition, "communications") and
+      not Enum.any?(definition["transitions"], &Map.has_key?(&1, "reset"))
+  end
 
   def guardian?(actor, ticket, version) do
-    not Map.has_key?(version.definition, "participants") and
+    legacy_definition?(version.definition) and
       guardian_relationship?(actor, ticket.id)
   end
 

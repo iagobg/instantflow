@@ -14,9 +14,23 @@ defmodule Instantflow.WorkflowRuntime.Projections do
   import Ecto.Query
   alias Instantflow.{Repo, Tenant}
   alias Instantflow.WorkflowCatalog.Version
-  alias Instantflow.WorkflowRuntime.{PolicyQuery, Section, Ticket}
+  alias Instantflow.WorkflowRuntime.{ConfiguredQueries, PolicyQuery, Section, Ticket}
 
   @page_size 25
+
+  @doc "Internal query for capability aggregates; caller must hold the tenant authorization gate."
+  def authorized_query(scope, workflow_id) do
+    predicate =
+      Enum.reduce(versions(%{"workflow_id" => workflow_id}), dynamic(false), fn version, acc ->
+        rule = PolicyQuery.discover(scope, version)
+        dynamic([ticket: t], ^acc or (t.workflow_version_id == ^version.id and ^rule))
+      end)
+
+    from t in Ticket,
+      as: :ticket,
+      where: t.organization_id == ^scope.organization_id,
+      where: ^predicate
+  end
 
   def participant_search(actor, workflow_id, page_key, filters \\ %{}) do
     Tenant.read(
@@ -182,6 +196,7 @@ defmodule Instantflow.WorkflowRuntime.Projections do
               workflow_id: version.workflow_id,
               key: view["key"],
               type: view["type"],
+              urgency?: not is_nil(view["urgency"]),
               view_label: view["label"],
               label: "#{version.definition["name"]} · #{view["label"]}"
             }
@@ -247,14 +262,18 @@ defmodule Instantflow.WorkflowRuntime.Projections do
           ^(query == "") or t.workflow_version_id in ^names or
             fragment("strpos(?::text, ?) > 0", t.id, ^query)
 
+    filtered = ConfiguredQueries.filter(filtered, scope, versions, view_key, filters)
+    metadata = ConfiguredQueries.metadata(base, scope, versions, view_key)
     count = Repo.aggregate(filtered, :count)
     pages = max(1, ceil(count / @page_size))
     page = min(positive_integer(filters["page"], 1), pages)
 
+    ordered =
+      ConfiguredQueries.order(filtered, scope, versions, view_key, Enum.map(groups, &elem(&1, 0)))
+
     tickets =
       Repo.all(
-        from t in filtered,
-          order_by: [desc: t.id],
+        from t in ordered,
           limit: @page_size,
           offset: ^((page - 1) * @page_size)
       )
@@ -281,7 +300,8 @@ defmodule Instantflow.WorkflowRuntime.Projections do
       stage_labels: labels,
       page: page,
       pages: pages,
-      versions: by_id
+      versions: by_id,
+      query_metadata: metadata
     }
   end
 
@@ -302,7 +322,15 @@ defmodule Instantflow.WorkflowRuntime.Projections do
   defp view_policy(scope, version, key) do
     view = Enum.find(version.definition["views"], &(&1["key"] == key))
 
-    if view && generic_surface?(scope, version) do
+    visible? =
+      view &&
+        (is_nil(view["visibility_roles"]) or
+           Enum.any?(
+             view["visibility_roles"],
+             &Instantflow.Access.role?(scope, version.bindings["roles"][&1] || [])
+           ))
+
+    if visible? && generic_surface?(scope, version) do
       columns =
         Enum.reduce(view["columns"], dynamic(false), fn
           builtin, _acc when builtin in ~w(stage assigned_department) ->
@@ -373,6 +401,43 @@ defmodule Instantflow.WorkflowRuntime.Projections do
       )
       |> Map.new()
 
+    assignment_rule =
+      Enum.reduce(result.versions, dynamic(false), fn {version_id, version}, acc ->
+        view = ConfiguredQueries.view(version, key)
+        section = view && view["assignment_section"]
+
+        if section do
+          permission = ConfiguredQueries.assignment_permission(scope, version, section)
+
+          dynamic(
+            [assignment: a, ticket: t],
+            ^acc or
+              (t.workflow_version_id == ^version_id and a.section_key == ^section and ^permission)
+          )
+        else
+          acc
+        end
+      end)
+
+    ids = Enum.map(result.tickets, & &1.id)
+
+    assignments =
+      Repo.all(
+        from a in Instantflow.Collaboration.Assignment,
+          as: :assignment,
+          join: t in Ticket,
+          as: :ticket,
+          on: t.id == a.ticket_id,
+          join: m in Instantflow.Identity.Membership,
+          on: m.id == a.membership_id,
+          join: u in Instantflow.Identity.User,
+          on: u.id == m.user_id,
+          where: a.ticket_id in ^ids,
+          where: ^assignment_rule,
+          select: {a.ticket_id, a.section_key, u.name}
+      )
+      |> Map.new(fn {id, section, name} -> {{id, section}, name} end)
+
     rows =
       Enum.map(result.tickets, fn ticket ->
         version = Map.fetch!(result.versions, ticket.workflow_version_id)
@@ -408,13 +473,52 @@ defmodule Instantflow.WorkflowRuntime.Projections do
           label: view["label"],
           stage: ticket.stage,
           stage_label: stage_label(version, ticket.stage),
+          assignment: assignments[{ticket.id, view["assignment_section"]}],
+          urgency:
+            projected_value(sections, ticket.id, view["urgency"] && view["urgency"]["field"]),
+          date_kind:
+            if(view["calendar_field"],
+              do:
+                Instantflow.WorkflowCatalog.Definition.fields(version.definition)[
+                  view["calendar_field"]
+                ]["type"]
+            ),
           date:
-            Enum.find_value(cells, fn cell ->
-              field = Instantflow.WorkflowCatalog.Definition.fields(version.definition)[cell.key]
-              if field && field["type"] == "date", do: cell.value
-            end),
+            projected_value(sections, ticket.id, view["calendar_field"]) ||
+              Enum.find_value(cells, fn cell ->
+                field =
+                  Instantflow.WorkflowCatalog.Definition.fields(version.definition)[cell.key]
+
+                if field && field["type"] == "date", do: cell.value
+              end),
           cells: cells
         }
+      end)
+
+    instants =
+      rows
+      |> Enum.filter(&(&1.date_kind == "datetime" and is_binary(&1.date)))
+      |> Enum.map(& &1.date)
+      |> Enum.uniq()
+
+    formatted =
+      if instants == [],
+        do: %{},
+        else:
+          Instantflow.LocalTime.format_many(
+            instants,
+            Repo.one!(
+              from o in Instantflow.Identity.Organization,
+                where: o.id == ^scope.organization_id,
+                select: o.timezone
+            )
+          )
+
+    rows =
+      Enum.map(rows, fn row ->
+        if row.date_kind == "datetime" && row.date,
+          do: %{row | date: formatted[row.date]},
+          else: row
       end)
 
     %{
@@ -422,6 +526,9 @@ defmodule Instantflow.WorkflowRuntime.Projections do
       total: result.filtered,
       page: result.page,
       pages: result.pages,
+      filters: result.query_metadata.filters,
+      urgent: result.query_metadata.urgent,
+      assignment?: result.query_metadata.assignment?,
       columns:
         rows
         |> Enum.flat_map(& &1.cells)
@@ -432,6 +539,13 @@ defmodule Instantflow.WorkflowRuntime.Projections do
         |> Enum.sort()
         |> Enum.map(fn {id, count} -> %{id: id, label: result.stage_labels[id], count: count} end)
     }
+  end
+
+  defp projected_value(_, _, nil), do: nil
+
+  defp projected_value(sections, id, ref) do
+    [section, field] = String.split(ref, ".")
+    (sections[{id, section}] || %{})[field]
   end
 
   defp stage_label(version, key),
@@ -455,5 +569,16 @@ defmodule Instantflow.WorkflowRuntime.Projections do
   defp empty,
     do: %{tickets: [], total: 0, filtered: 0, counts: %{}, stage_labels: %{}, page: 1, pages: 1}
 
-  defp empty_view, do: %{rows: [], total: 0, columns: [], stages: [], page: 1, pages: 1}
+  defp empty_view,
+    do: %{
+      rows: [],
+      total: 0,
+      columns: [],
+      stages: [],
+      page: 1,
+      pages: 1,
+      filters: [],
+      urgent: 0,
+      assignment?: false
+    }
 end

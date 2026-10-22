@@ -46,6 +46,7 @@ defmodule InstantflowWeb.TemplateLive do
          original: nil,
          item_form: to_form(Authoring.form(), as: :item),
          picker: to_form(%{}, as: :picker),
+         finance_account_form: to_form(%{}, as: :new_finance_account),
          budget_options: Instantflow.Finance.binding_options(socket.assigns.current_scope),
          department_options:
            Enum.map(Identity.departments(socket.assigns.current_scope), &{&1.name, &1.id})
@@ -164,6 +165,24 @@ defmodule InstantflowWeb.TemplateLive do
     {:noreply, socket |> assign(:selected_page_key, key) |> load_review()}
   end
 
+  def handle_event("create-finance-account", %{"new_finance_account" => params}, socket) do
+    case Instantflow.Finance.create_account(
+           socket.assigns.current_scope,
+           TemplatesLive.integer(params["department_id"]),
+           params["name"]
+         ) do
+      {:ok, _} ->
+        {:noreply,
+         assign(socket,
+           budget_options: Instantflow.Finance.binding_options(socket.assigns.current_scope),
+           finance_account_form: to_form(%{}, as: :new_finance_account)
+         )}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, InstantflowWeb.RuntimeErrors.message(reason))}
+    end
+  end
+
   def handle_event("new-page", _, socket) do
     params =
       interface_page(socket.assigns.draft.definition, nil)
@@ -235,24 +254,26 @@ defmodule InstantflowWeb.TemplateLive do
         do: Map.delete(interface, "lifecycle"),
         else: Map.put(interface, "lifecycle", %{"close_transition" => params["close_transition"]})
 
-    requires_operations =
-      Enum.any?(pages, fn p ->
-        Enum.any?(
-          p["blocks"],
-          &(&1 in Instantflow.WorkflowCatalog.Workspaces.operational_blocks())
-        )
+    required =
+      Enum.flat_map(pages, fn p ->
+        Enum.map(p["blocks"], &Instantflow.WorkflowCatalog.Interface.required_capability/1)
       end)
 
-    capabilities = draft.definition["capabilities"]
-
     capabilities =
-      if requires_operations,
-        do:
-          Enum.filter(
-            Instantflow.WorkflowCatalog.Capabilities.supported(),
-            &(&1 in capabilities or &1 == "operations")
-          ),
-        else: capabilities
+      Enum.filter(
+        Instantflow.WorkflowCatalog.Capabilities.supported(),
+        &(&1 in draft.definition["capabilities"] or &1 in required)
+      )
+
+    interface =
+      if params["finance_binding"] in [nil, ""],
+        do: Map.delete(interface, "finance"),
+        else:
+          Map.put(interface, "finance", %{
+            "account_binding" => params["finance_binding"],
+            "scope" => params["finance_scope"] || "process",
+            "view_roles" => selections(params["finance_roles"])
+          })
 
     definition =
       draft.definition |> Map.put("interface", interface) |> Map.put("capabilities", capabilities)
@@ -431,6 +452,12 @@ defmodule InstantflowWeb.TemplateLive do
         to_form(interface_page(d, socket.assigns.selected_page_key), as: :interface_page),
       interface_blocks: Instantflow.WorkflowCatalog.Workspaces.blocks(),
       participant_audience_options: participant_audience_options(d),
+      budget_binding_options:
+        for(
+          binding <- d["bindings"],
+          binding["type"] == "budget",
+          do: {binding["label"], binding["key"]}
+        ),
       close_options: Enum.map(d["transitions"], &{&1["label"], &1["key"]}),
       workspace_form: to_form(Instantflow.WorkflowCatalog.Workspaces.labels(d), as: :workspace),
       metadata_form: to_form(Map.take(d, ~w(name description template_version)), as: :metadata),
@@ -571,7 +598,11 @@ defmodule InstantflowWeb.TemplateLive do
         "participant_documents" => projection["documents"] || [],
         "participant_actions" => projection["actions"] || [],
         "participant_status" => Map.get(projection, "status", true),
-        "participant_history" => Map.get(projection, "history", false)
+        "participant_history" => Map.get(projection, "history", false),
+        "finance_binding" =>
+          get_in(definition, ["interface", "finance", "account_binding"]) || "",
+        "finance_scope" => get_in(definition, ["interface", "finance", "scope"]) || "process",
+        "finance_roles" => get_in(definition, ["interface", "finance", "view_roles"]) || []
       })
 
     params =
@@ -815,6 +846,32 @@ defmodule InstantflowWeb.TemplateLive do
                 label="Mostrar histórico das ações selecionadas"
               />
             </fieldset>
+            <fieldset id="finance-page-authoring">
+              <legend>Capacidade financeira</legend>
+              <.input
+                field={@interface_page_form[:finance_binding]}
+                type="select"
+                label="Vínculo orçamentário"
+                options={@budget_binding_options}
+                prompt="Não configurado"
+              />
+              <.input
+                field={@interface_page_form[:finance_scope]}
+                type="select"
+                label="Escopo do resumo"
+                options={[
+                  {"Registros autorizados do processo", "process"},
+                  {"Conta compartilhada (exige autorização financeira)", "shared_account"}
+                ]}
+              />
+              <.input
+                field={@interface_page_form[:finance_roles]}
+                type="select"
+                multiple
+                label="Papéis da projeção financeira"
+                options={@role_options}
+              />
+            </fieldset>
             <button id="save-interface-page" class="btn" disabled={@draft.published_version_id != nil}>Salvar página</button>
           </.form>
           <ol id="interface-block-order">
@@ -836,6 +893,25 @@ defmodule InstantflowWeb.TemplateLive do
               >Descer</button>
             </li>
           </ol>
+          <.form
+            for={@finance_account_form}
+            id="template-finance-account"
+            phx-submit="create-finance-account"
+          >
+            <.input
+              field={@finance_account_form[:name]}
+              label="Nova conta local (administração)"
+              required
+            />
+            <.input
+              field={@finance_account_form[:department_id]}
+              type="select"
+              label="Departamento da conta"
+              options={@department_options}
+              required
+            />
+            <button id="template-create-finance-account" class="btn">Criar conta local</button>
+          </.form>
           <.form
             for={@workspace_form}
             id="workspace-labels-form"
@@ -1256,6 +1332,62 @@ defmodule InstantflowWeb.TemplateLive do
               />
               <div :if={@collection == "views"}>
                 <.input
+                  field={@item_form[:visibility_roles]}
+                  type="select"
+                  multiple
+                  label="Visibilidade (vazio usa acesso ao registro)"
+                  options={@role_options}
+                />
+                <.input
+                  field={@item_form[:view_filters]}
+                  type="select"
+                  multiple
+                  label="Filtros por campos escalares"
+                  options={@field_options}
+                />
+                <.input
+                  field={@item_form[:sort_field]}
+                  type="select"
+                  label="Ordenar por"
+                  options={[
+                    {"Registro", "id"},
+                    {"Etapa", "stage"},
+                    {"Urgência declarada", "urgency"} | @field_options
+                  ]}
+                />
+                <.input
+                  field={@item_form[:sort_direction]}
+                  type="select"
+                  label="Direção"
+                  options={[{"Crescente", "asc"}, {"Decrescente", "desc"}]}
+                />
+                <.input
+                  field={@item_form[:calendar_field]}
+                  type="select"
+                  label="Data/instante do calendário"
+                  prompt="Não configurado"
+                  options={@field_options}
+                />
+                <.input
+                  field={@item_form[:urgency_field]}
+                  type="select"
+                  label="Campo de urgência"
+                  prompt="Não configurado"
+                  options={@field_options}
+                />
+                <.input
+                  field={@item_form[:urgency_values]}
+                  type="textarea"
+                  label="Urgências em ordem (a primeira é a mais alta)"
+                />
+                <.input
+                  field={@item_form[:assignment_section]}
+                  type="select"
+                  label="Seção com atribuição nominal"
+                  prompt="Não configurado"
+                  options={@section_options}
+                />
+                <.input
                   field={@item_form[:type]}
                   type="select"
                   label="Visualização"
@@ -1338,6 +1470,25 @@ defmodule InstantflowWeb.TemplateLive do
                 />
               </div>
               <div :if={@collection == "transitions"}>
+                <.input
+                  field={@item_form[:reset_enabled]}
+                  type="checkbox"
+                  label="Invalidação explícita nesta transição"
+                />
+                <.input
+                  field={@item_form[:reset_sections]}
+                  type="select"
+                  multiple
+                  label="Seções a limpar"
+                  options={@section_options}
+                />
+                <.input
+                  field={@item_form[:invalidate_approvals]}
+                  type="select"
+                  multiple
+                  label="Seções de aprovação a invalidar"
+                  options={@section_options}
+                />
                 <.input field={@item_form[:require_reason]} type="checkbox" label="Exigir motivo" /><.input
                   field={@item_form[:disallow_requester]}
                   type="checkbox"

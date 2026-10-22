@@ -37,16 +37,19 @@ defmodule Instantflow.GuardianMigrationTest do
 
     try do
       migrate(migrations, to: 20_261_021_224_308, log: false)
+      Instantflow.HistoricalSchema.prepare_seed()
       runtime = start_runtime(source, :guardian_migration_runtime)
       Repo.put_dynamic_repo(runtime)
       f = populate()
+      Instantflow.HistoricalSchema.finish_seed()
 
       tables =
         ~w(workflow_versions tickets ticket_sections enrollments guardian_links private_documents transition_events command_receipts outbox_messages memberships)
 
       before = snapshot(tables)
       migrate(migrations, all: true, log: false)
-      assert snapshot(tables) == before
+      assert Instantflow.HistoricalSchema.legacy_snapshot(tables) == before
+      assert :ok = Instantflow.HistoricalSchema.assert_defaults()
 
       mapped = OperatorRepo.all(Relationship)
       assert length(mapped) == 4

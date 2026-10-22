@@ -153,7 +153,7 @@
               "blocks": {
                 "type": "array",
                 "minItems": 1,
-                "maxItems": 7,
+                "maxItems": 9,
                 "uniqueItems": true,
                 "items": {
                   "enum": [
@@ -163,7 +163,9 @@
                     "items",
                     "batches",
                     "settlement",
-                    "daily_summary"
+                    "daily_summary",
+                    "finance_setup",
+                    "finance_summary"
                   ]
                 }
               },
@@ -259,6 +261,35 @@
             }
           },
           "required": [],
+          "additionalProperties": false
+        },
+        "finance": {
+          "type": "object",
+          "properties": {
+            "account_binding": {
+              "type": "string"
+            },
+            "scope": {
+              "enum": [
+                "process",
+                "shared_account"
+              ]
+            },
+            "view_roles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 30,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "account_binding",
+            "scope",
+            "view_roles"
+          ],
           "additionalProperties": false
         }
       },
@@ -933,6 +964,74 @@
           "minItems": 1,
           "maxItems": 50,
           "uniqueItems": true
+        },
+        "visibility_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "maxItems": 30,
+          "uniqueItems": true
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}[.][a-z][a-z0-9_]{0,63}$"
+          },
+          "minItems": 0,
+          "maxItems": 10,
+          "uniqueItems": true
+        },
+        "sort": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string"
+            },
+            "direction": {
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          "required": [
+            "field",
+            "direction"
+          ],
+          "additionalProperties": false
+        },
+        "calendar_field": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}[.][a-z][a-z0-9_]{0,63}$"
+        },
+        "urgency": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}[.][a-z][a-z0-9_]{0,63}$"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "field",
+            "values"
+          ],
+          "additionalProperties": false
+        },
+        "assignment_section": {
+          "type": "string"
         }
       },
       "required": [
@@ -1237,6 +1336,36 @@
         "requires_calculation": {
           "pattern": "^[a-z][a-z0-9_]{0,63}$",
           "type": "string"
+        },
+        "reset": {
+          "type": "object",
+          "properties": {
+            "sections": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}$"
+              },
+              "minItems": 0,
+              "maxItems": 100,
+              "uniqueItems": true
+            },
+            "invalidate_approvals": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}$"
+              },
+              "minItems": 0,
+              "maxItems": 100,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "sections",
+            "invalidate_approvals"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

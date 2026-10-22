@@ -4,6 +4,73 @@ defmodule InstantflowWeb.ProcessComponents do
   import InstantflowWeb.ProcessRoutes
   alias Instantflow.Operations
 
+  def finance_setup_block(assigns) do
+    ~H"""
+    <section id="process-finance-setup" class="card">
+      <h2>Configuração financeira local</h2>
+      <.form
+        :if={@finance_surface.can_create?}
+        for={@finance_account_form}
+        id="process-finance-account"
+        phx-submit="finance-create-account"
+      >
+        <.input field={@finance_account_form[:name]} label="Nome da conta" required />
+        <.input
+          field={@finance_account_form[:department_id]}
+          type="select"
+          label="Departamento"
+          options={@finance_surface.departments}
+          required
+        />
+        <button id="process-finance-create" class="btn">Criar conta</button>
+      </.form>
+      <.form
+        :if={@finance_surface.can_allocate?}
+        for={@finance_allocation_form}
+        id="process-finance-allocation"
+        phx-submit="finance-allocate"
+      >
+        <.input
+          field={@finance_allocation_form[:account_id]}
+          type="select"
+          label="Conta vinculada"
+          options={@finance_surface.account_options}
+        />
+        <.input
+          field={@finance_allocation_form[:amount]}
+          type="number"
+          label="Alocação em centavos"
+          min="1"
+          required
+        />
+        <.input field={@finance_allocation_form[:reason]} label="Motivo" required />
+        <button id="process-finance-allocate" class="btn">Alocar</button>
+      </.form>
+    </section>
+    """
+  end
+
+  def finance_summary_block(assigns) do
+    ~H"""
+    <section id="process-finance-summary" class="card">
+      <h2>Resumo financeiro autorizado</h2>
+      <p>
+        {if @finance_surface.scope == "process",
+          do: "Somente registros autorizados deste processo",
+          else: "Total compartilhado da conta, com autorização financeira própria"}
+      </p>
+      <div id="process-finance-accounts" phx-update="stream">
+        <article :for={{id, account} <- @streams.finance_summaries} id={id}>
+          <h3>{account.name}</h3><p>Reservado: {account.reserved} · Gasto: {account.spent}</p>
+          <p :if={!is_nil(account.available)}>
+            Alocado: {account.allocated} · Disponível: {account.available}
+          </p>
+        </article>
+      </div>
+    </section>
+    """
+  end
+
   def records_block(assigns) do
     ~H"""
     <section id="process-records-block" class="card template-section">
@@ -40,8 +107,29 @@ defmodule InstantflowWeb.ProcessComponents do
           prompt="Todas"
         />
         <button id="filter-process-records" class="btn">Filtrar</button>
+        <.input
+          :for={filter <- @record_filter_options}
+          name={"record_filter[fields][#{filter.ref}]"}
+          id={"record-filter-#{filter.ref}"}
+          type="select"
+          label={filter.label}
+          options={Enum.map(filter.values, &{to_string(&1), to_string(&1)})}
+          value={get_in(@record_form.params, ["fields", filter.ref])}
+          prompt="Todos"
+        />
+        <.input
+          :if={@record_assignments?}
+          field={@record_form[:assigned_to]}
+          type="select"
+          label="Atribuição nominal"
+          prompt="Todas"
+          options={[{"Minhas atribuições", "me"}, {"Sem responsável", "unassigned"}]}
+        />
       </.form>
       <p id="process-record-count">{@record_total} registro(s) disponível(is)</p>
+      <p id="process-urgency-status" role="status" aria-live="polite">
+        {@record_urgent} registro(s) com maior urgência em aberto.
+      </p>
       <div
         id="process-records"
         phx-update="stream"
@@ -49,6 +137,12 @@ defmodule InstantflowWeb.ProcessComponents do
       >
         <article :for={{id, row} <- @streams.process_records} id={id} class="operations-batch">
           <h3>#{row.id} · {row.stage_label}</h3>
+          <p :if={@record_view_type == "calendar"} class="calendar-date">
+            {if row.date, do: row.date, else: "Sem data"}{if row.date_kind == "date",
+              do: " · data civil"}
+          </p>
+          <p :if={row.assignment}>Responsável: {row.assignment}</p>
+          <p :if={row.urgency}>Urgência: {row.urgency}</p>
           <dl>
             <div :for={column <- @record_columns}>
               <dt>{column.label}</dt><dd>{cell(row, column.key)}</dd>

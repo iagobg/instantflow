@@ -15,6 +15,9 @@ defmodule Instantflow.WorkflowCatalog.Definition do
          :ok <- references(definition),
          :ok <- graph(definition),
          :ok <- Interface.validate(definition),
+         :ok <- Instantflow.WorkflowCatalog.ViewContract.validate(definition),
+         :ok <- Instantflow.WorkflowCatalog.Corrections.validate(definition),
+         :ok <- Instantflow.WorkflowCatalog.FinanceSurfaces.validate(definition),
          :ok <- Instantflow.WorkflowCatalog.ParticipantPages.validate(definition) do
       :ok
     end
@@ -193,7 +196,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   defp valid_transition?(t) do
     props?(
       t,
-      ~w(key label from to actors required_fields require_reason kind disallow_requester finance_sensitive history_visibility actions guard department_binding finance calculation requires_calculation)
+      ~w(key label from to actors required_fields require_reason kind disallow_requester finance_sensitive history_visibility actions guard department_binding finance calculation requires_calculation reset)
     ) and label?(t["label"]) and
       is_list(t["actors"]) and t["actors"] != [] and
       Enum.all?(

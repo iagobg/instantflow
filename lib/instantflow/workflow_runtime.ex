@@ -427,19 +427,7 @@ defmodule Instantflow.WorkflowRuntime do
     if transition["kind"] == "resubmission" and ticket.return_stage != transition["to"],
       do: Repo.rollback(:invalid_return)
 
-    if transition["finance"] && transition["finance"]["operation"] == "release" &&
-         Enum.any?(
-           version.definition["stages"],
-           &(&1["initial"] && &1["key"] == transition["to"])
-         ) do
-      for section <- sections,
-          definition = Enum.find(version.definition["sections"], &(&1["key"] == section.key)),
-          not Enum.any?(definition["fields"], &(&1["type"] == "money")) do
-        section
-        |> Ecto.Changeset.change(values: %{}, revision: section.revision + 1)
-        |> Repo.update!()
-      end
-    end
+    reset_details = Instantflow.WorkflowRuntime.Corrections.apply!(version, sections, transition)
 
     Instantflow.Calculations.require!(ticket, sections, transition["requires_calculation"])
 
@@ -471,12 +459,22 @@ defmodule Instantflow.WorkflowRuntime do
       do: Instantflow.Calculations.invalidate!(updated)
 
     Instantflow.Calculations.enqueue!(actor, updated, version, sections, transition)
-    record(updated, actor, transition["key"], ticket.stage, reason, transition["actions"])
+
+    record(
+      updated,
+      actor,
+      transition["key"],
+      ticket.stage,
+      reason,
+      transition["actions"],
+      reset_details
+    )
+
     updated
   end
 
   @doc false
-  def record(ticket, actor, operation, from_stage, reason, actions) do
+  def record(ticket, actor, operation, from_stage, reason, actions, details \\ %{}) do
     Repo.query!("SELECT pg_advisory_xact_lock(hashtextextended('outbox:' || $1::text, 0))", [
       to_string(actor.organization_id)
     ])
@@ -502,7 +500,8 @@ defmodule Instantflow.WorkflowRuntime do
         from_stage: from_stage,
         to_stage: ticket.stage,
         reason: reason,
-        revision: ticket.revision
+        revision: ticket.revision,
+        details: details
       })
 
     for {action, index} <-
