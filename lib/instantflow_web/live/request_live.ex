@@ -265,6 +265,17 @@ defmodule InstantflowWeb.RequestLive do
     end
   end
 
+  def handle_event("retry-communication", %{"id" => id}, socket) do
+    if integer(id) in socket.assigns.communication_ids do
+      communication_result(
+        socket,
+        Instantflow.Delivery.Curated.retry(socket.assigns.current_scope, integer(id))
+      )
+    else
+      failure(socket, :forbidden)
+    end
+  end
+
   def handle_event("private-upload-change", _, socket), do: {:noreply, socket}
 
   def handle_event("private-upload", %{"upload" => %{"target" => target}}, socket) do
@@ -354,6 +365,44 @@ defmodule InstantflowWeb.RequestLive do
   end
 
   def handle_event("refresh", _, socket), do: refresh(socket)
+
+  def handle_event("assignment-search", %{"assignment_search" => %{"query" => query}}, socket)
+      when is_binary(query),
+      do: refresh(assign(socket, :assignment_query, String.slice(query, 0, 100)))
+
+  def handle_event(
+        "communication-search",
+        %{"communication_search" => %{"query" => query}},
+        socket
+      )
+      when is_binary(query),
+      do: refresh(assign(socket, :communication_query, String.slice(query, 0, 100)))
+
+  def handle_event("release-communication", %{"key" => key, "release" => params}, socket) do
+    result =
+      Instantflow.Delivery.Curated.release(
+        socket.assigns.current_scope,
+        socket.assigns.data.ticket.id,
+        key,
+        integer(params["recipient"]),
+        socket.assigns.data.ticket.revision,
+        socket.assigns.action_key
+      )
+
+    communication_result(socket, result)
+  end
+
+  def handle_event("resolve-communication", %{"id" => id, "resolution" => params}, socket) do
+    communication_result(
+      socket,
+      Instantflow.Delivery.Curated.resolve(
+        socket.assigns.current_scope,
+        integer(id),
+        params["outcome"],
+        params["reason"]
+      )
+    )
+  end
 
   def handle_event("participant-search", %{"participant_search" => %{"query" => query}}, socket)
       when is_binary(query),
@@ -448,6 +497,21 @@ defmodule InstantflowWeb.RequestLive do
     {:noreply, updated |> clear_flash() |> put_flash(:error, RuntimeErrors.message(error))}
   end
 
+  defp integer(value) when is_binary(value) do
+    case Integer.parse(value) do
+      {n, ""} when n > 0 and n < 9_223_372_036_854_775_807 -> n
+      _ -> nil
+    end
+  end
+
+  defp integer(_), do: nil
+
+  defp communication_result(socket, {:ok, _}),
+    do: refresh(assign(socket, action_key: Ecto.UUID.generate()))
+
+  defp communication_result(socket, {:error, reason}),
+    do: {:noreply, put_flash(socket, :error, RuntimeErrors.message(reason))}
+
   defp participant_integer(value) when is_binary(value) and byte_size(value) <= 19 do
     case Integer.parse(value) do
       {number, ""} when number in 1..9_223_372_036_854_775_807 -> number
@@ -497,11 +561,19 @@ defmodule InstantflowWeb.RequestLive do
            reference_search_forms: %{},
            directory_queries: %{},
            participant_forms: %{},
+           communication_forms: %{},
+           communication_search: to_form(%{}, as: :communication_search),
+           resolution_form: to_form(%{}, as: :resolution),
+           communication_query: "",
+           communication_ids: [],
+           assignment_query: "",
+           assignment_search: to_form(%{}, as: :assignment_search),
            participant_control_count: 0,
            participant_query: ""
          )
          |> stream(:sections, [], reset: true)
          |> stream(:private_documents, [], reset: true)
+         |> stream(:communications, [], reset: true)
          |> stream(:participant_controls, [], reset: true)
          |> stream(:participant_relationships, [], reset: true)
          |> stream(:events, [], reset: true)
@@ -520,6 +592,18 @@ defmodule InstantflowWeb.RequestLive do
        |> push_navigate(to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/solicitacoes")}
 
   defp load(socket, data) do
+    assignment_query = Map.get(socket.assigns, :assignment_query, "")
+
+    data = %{
+      data
+      | assignments:
+          Instantflow.Collaboration.Assignments.controls_for(
+            socket.assigns.current_scope,
+            data.ticket.id,
+            assignment_query
+          )
+    }
+
     editors = Editor.reconcile(socket.assigns.editors, data)
     forms = Map.new(editors, fn {key, editor} -> {key, to_form(editor.values, as: :section)} end)
     participant_query = Map.get(socket.assigns, :participant_query, "")
@@ -532,6 +616,15 @@ defmodule InstantflowWeb.RequestLive do
       )
 
     participant_forms = Map.new(management.controls, &{&1.key, to_form(%{}, as: :participant)})
+    communication_query = Map.get(socket.assigns, :communication_query, "")
+
+    communications =
+      Instantflow.Delivery.Curated.controls_for(
+        socket.assigns.current_scope,
+        data.ticket.id,
+        communication_query
+      )
+
     directory_queries = Map.get(socket.assigns, :directory_queries, %{})
 
     reference_search_forms =
@@ -564,10 +657,16 @@ defmodule InstantflowWeb.RequestLive do
       attachment_options: attachment_options,
       document_count: length(documents),
       data: data,
+      assignment_search: to_form(%{"query" => assignment_query}, as: :assignment_search),
       editors: editors,
       forms: forms,
       participant_query: participant_query,
       participant_forms: participant_forms,
+      communication_forms: Map.new(communications, &{&1.key, to_form(%{}, as: :release)}),
+      communication_ids: for(control <- communications, control.message, do: control.message.id),
+      communication_count: length(communications),
+      resolution_form: to_form(%{}, as: :resolution),
+      communication_search: to_form(%{"query" => communication_query}, as: :communication_search),
       participant_search_form: to_form(%{"query" => participant_query}, as: :participant_search),
       participant_control_count: length(management.controls),
       directory_queries: directory_queries,
@@ -577,6 +676,7 @@ defmodule InstantflowWeb.RequestLive do
     )
     |> stream(:private_documents, documents, reset: true)
     |> stream(:participant_controls, management.controls, reset: true)
+    |> stream(:communications, communications, reset: true)
     |> stream(:participant_relationships, management.relationships, reset: true)
     |> stream(:assignments, data.assignments, reset: true)
     |> stream(:sections, data.sections, reset: true)
@@ -847,6 +947,73 @@ defmodule InstantflowWeb.RequestLive do
           </section>
         </div>
         <aside class="request-actions">
+          <section :if={@communication_count > 0} id="curated-release" class="card">
+            <h2>Comunicações selecionadas · Simulação</h2>
+            <.form
+              for={@communication_search}
+              id="communication-search"
+              phx-change="communication-search"
+            >
+              <.input
+                field={@communication_search[:query]}
+                label="Buscar destinatário verificado"
+                maxlength="100"
+                phx-debounce="250"
+              />
+            </.form>
+            <div id="communication-controls" phx-update="stream">
+              <article :for={{id, control} <- @streams.communications} id={id}>
+                <h3>{control.label}</h3>
+                <.form
+                  for={@communication_forms[control.key]}
+                  id={"release-#{control.key}"}
+                  phx-submit="release-communication"
+                  phx-value-key={control.key}
+                >
+                  <.input
+                    field={@communication_forms[control.key][:recipient]}
+                    id={"release-recipient-#{control.key}"}
+                    type="select"
+                    label="Destinatário"
+                    prompt="Selecione"
+                    options={control.recipients}
+                  />
+                  <button id={"enqueue-#{control.key}"} disabled={@dirty or @stale} class="btn">Liberar conteúdo selecionado</button>
+                </.form>
+                <p :if={control.message}>Simulação · {control.message.status}</p>
+                <button
+                  :if={control.message && control.message.retry?}
+                  id={"retry-curated-#{control.message.id}"}
+                  phx-click="retry-communication"
+                  phx-value-id={control.message.id}
+                  class="btn"
+                >Tentar novamente</button>
+                <.form
+                  :if={control.message && control.message.resolve?}
+                  for={@resolution_form}
+                  id={"resolve-#{control.message.id}"}
+                  phx-submit="resolve-communication"
+                  phx-value-id={control.message.id}
+                >
+                  <.input
+                    field={@resolution_form[:outcome]}
+                    id={"resolution-outcome-#{control.message.id}"}
+                    type="select"
+                    label="Resultado confirmado"
+                    options={[{"Sucesso simulado", "succeeded"}, {"Falha simulada", "failed"}]}
+                  />
+                  <.input
+                    field={@resolution_form[:reason]}
+                    id={"resolution-reason-#{control.message.id}"}
+                    label="Evidência da confirmação"
+                    required
+                    maxlength="2000"
+                  />
+                  <button class="btn">Registrar resultado explícito</button>
+                </.form>
+              </article>
+            </div>
+          </section>
           <section
             :if={@data.calculations != []}
             id="calculation-status"
@@ -1012,6 +1179,19 @@ defmodule InstantflowWeb.RequestLive do
               </article>
             </div>
           </section>
+          <.form
+            :if={@data.assignments != []}
+            for={@assignment_search}
+            id="assignment-search"
+            phx-change="assignment-search"
+          >
+            <.input
+              field={@assignment_search[:query]}
+              label="Buscar responsável elegível"
+              maxlength="100"
+              phx-debounce="250"
+            />
+          </.form>
           <div id="section-assignments" phx-update="stream">
             <section :for={{id, assignment} <- @streams.assignments} id={id} class="card">
               <h2>Atribuir: {assignment.label}</h2>

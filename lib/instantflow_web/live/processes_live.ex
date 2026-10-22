@@ -10,12 +10,14 @@ defmodule InstantflowWeb.ProcessesLive do
 
   defp load(socket) do
     processes = Workspaces.installed(socket.assigns.current_scope)
+    inboxes = Instantflow.Delivery.Curated.options(socket.assigns.current_scope)
 
     participant_pages =
       Instantflow.WorkflowRuntime.Projections.participant_options(socket.assigns.current_scope)
 
     socket
-    |> assign(empty?: processes == [] and participant_pages == [])
+    |> assign(empty?: processes == [] and participant_pages == [] and inboxes == [])
+    |> stream(:inboxes, inboxes, reset: true)
     |> stream(:processes, processes, reset: true)
     |> stream(:participant_pages, participant_pages, reset: true)
   end
@@ -39,6 +41,14 @@ defmodule InstantflowWeb.ProcessesLive do
       <p :if={@empty?} id="processes-empty" class="card">
         Nenhum processo disponível. Crie um modelo, revise os acessos e publique para começar.
       </p>
+      <div id="communication-entry-pages" phx-update="stream">
+        <section :for={{id, inbox} <- @streams.inboxes} id={id} class="card">
+          <.link
+            id={"inbox-entry-#{inbox.id}"}
+            navigate={~p"/o/#{@current_scope.organization.slug}/processos/#{inbox.id}/comunicacoes"}
+          >{inbox.label}</.link>
+        </section>
+      </div>
       <div id="installed-processes" phx-update="stream" class="foundation-grid">
         <section :for={{id, version} <- @streams.processes} id={id} class="card">
           <h2>{version.definition["name"]}</h2><p>{version.definition["description"]}</p><p>

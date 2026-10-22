@@ -43,6 +43,7 @@ defmodule InstantflowWeb.ParticipantLive do
      |> stream(:records, [])
      |> stream(:fields, [])
      |> stream(:documents, [])
+     |> stream(:messages, [], reset: true)
      |> stream(:history, [])
      |> stream(:actions, [])}
   end
@@ -220,7 +221,7 @@ defmodule InstantflowWeb.ParticipantLive do
         socket =
           socket
           |> assign(
-            data: Map.drop(data, [:fields, :documents, :history, :actions]),
+            data: Map.drop(data, [:fields, :documents, :history, :actions, :messages]),
             page_title: data.label,
             page_key: data.page_key,
             forms: forms,
@@ -229,6 +230,7 @@ defmodule InstantflowWeb.ParticipantLive do
           )
           |> stream(:fields, data.fields, reset: true)
           |> stream(:documents, data.documents, reset: true)
+          |> stream(:messages, data.messages, reset: true)
           |> stream(:history, data.history, reset: true)
           |> stream(:actions, data.actions, reset: true)
 
@@ -256,6 +258,7 @@ defmodule InstantflowWeb.ParticipantLive do
         )
         |> stream(:fields, [], reset: true)
         |> stream(:documents, [], reset: true)
+        |> stream(:messages, [], reset: true)
         |> stream(:history, [], reset: true)
         |> stream(:actions, [], reset: true)
         |> redirect(to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/processos")
@@ -355,6 +358,7 @@ defmodule InstantflowWeb.ParticipantLive do
                   <input type="hidden" name="ref" value={field.ref} />
                   <.input
                     field={@forms[field.ref][:value]}
+                    id={"participant-input-#{field.ref}"}
                     label={field.label}
                     type={input_type(field.type)}
                     options={options(field)}
@@ -401,9 +405,24 @@ defmodule InstantflowWeb.ParticipantLive do
             >
               <input type="hidden" name="action[edge]" value={action.id} />
               <input type="hidden" name="action[revision]" value={@data.revision} />
-              <.input :if={action.reason?} field={@action_form[:reason]} label="Motivo" />
+              <.input
+                :if={action.reason?}
+                id={"participant-action-reason-#{action.id}"}
+                field={@action_form[:reason]}
+                label="Motivo"
+              />
               <button id={"participant-action-#{action.id}"} class="btn">{action.label}</button>
             </.form>
+          </div>
+          <div id="participant-messages" phx-update="stream">
+            <article :for={{dom_id, message} <- @streams.messages} id={dom_id}>
+              <h3>{message.label}</h3><p>Simulação · {message.status}</p>
+              <dl>
+                <div :for={field <- message.content}>
+                  <dt>{field["label"]}</dt><dd>{Jason.encode!(field["value"])}</dd>
+                </div>
+              </dl>
+            </article>
           </div>
           <div id="participant-history" phx-update="stream">
             <p :for={{dom_id, event} <- @streams.history} id={dom_id}>

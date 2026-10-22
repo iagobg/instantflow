@@ -14,7 +14,8 @@ defmodule InstantflowWeb.TemplateLive do
     "roles" => "Papel simbólico",
     "bindings" => "Vínculo de departamento",
     "views" => "Visualização",
-    "participants" => "Relacionamento verificado"
+    "participants" => "Relacionamento verificado",
+    "communications" => "Comunicação selecionada"
   }
   @field_labels %{
     "short_text" => "Texto curto",
@@ -41,6 +42,8 @@ defmodule InstantflowWeb.TemplateLive do
          export: nil,
          graph_focus: "",
          selected_page_key: nil,
+         preview: nil,
+         preview_form: to_form(%{}, as: :preview),
          collection: "stages",
          parent: nil,
          original: nil,
@@ -94,6 +97,16 @@ defmodule InstantflowWeb.TemplateLive do
   end
 
   def handle_event("dirty", _, socket), do: {:noreply, assign(socket, unsaved: true)}
+
+  def handle_event("preview-participant", %{"preview" => params}, socket) do
+    preview =
+      Instantflow.WorkflowRuntime.ParticipantPreview.project(
+        socket.assigns.draft.definition,
+        params
+      )
+
+    {:noreply, assign(socket, preview: preview, preview_form: to_form(params, as: :preview))}
+  end
 
   def handle_event("save-item", %{"item" => p}, socket) do
     a = socket.assigns
@@ -224,6 +237,11 @@ defmodule InstantflowWeb.TemplateLive do
           "status" => params["participant_status"] == "true",
           "history" => params["participant_history"] == "true"
         }
+
+        projection =
+          if selections(params["participant_messages"]) == [],
+            do: projection,
+            else: Map.put(projection, "messages", selections(params["participant_messages"]))
 
         Map.put(page, "participant", projection)
       else
@@ -442,6 +460,7 @@ defmodule InstantflowWeb.TemplateLive do
     socket
     |> assign(
       draft: review.draft,
+      preview: nil,
       review_errors: review.errors,
       review_warnings: review.warnings,
       unsaved: false,
@@ -452,6 +471,9 @@ defmodule InstantflowWeb.TemplateLive do
         to_form(interface_page(d, socket.assigns.selected_page_key), as: :interface_page),
       interface_blocks: Instantflow.WorkflowCatalog.Workspaces.blocks(),
       participant_audience_options: participant_audience_options(d),
+      communication_options:
+        Enum.map(Map.get(d, "communications", []), &{&1["label"], &1["key"]}),
+      relationship_options: Enum.map(Map.get(d, "participants", []), &{&1["label"], &1["key"]}),
       budget_binding_options:
         for(
           binding <- d["bindings"],
@@ -597,6 +619,7 @@ defmodule InstantflowWeb.TemplateLive do
         "participant_fields" => projection["fields"] || [],
         "participant_documents" => projection["documents"] || [],
         "participant_actions" => projection["actions"] || [],
+        "participant_messages" => projection["messages"] || [],
         "participant_status" => Map.get(projection, "status", true),
         "participant_history" => Map.get(projection, "history", false),
         "finance_binding" =>
@@ -693,6 +716,59 @@ defmodule InstantflowWeb.TemplateLive do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope} unsaved={@unsaved}>
       <div :if={@draft} id="workflow-editor">
+        <section id="participant-preview" class="card">
+          <h2>Prévia sintética de participação</h2>
+          <p>
+            Dados fictícios sob a política compartilhada. Vínculos e atribuições reais não são consultados; ações não são executadas.
+          </p>
+          <.form for={@preview_form} id="participant-preview-form" phx-submit="preview-participant">
+            <.input
+              field={@preview_form[:page]}
+              type="select"
+              label="Página"
+              options={
+                Enum.map(
+                  Instantflow.WorkflowCatalog.ParticipantPages.pages(@draft.definition),
+                  &{&1["label"], &1["key"]}
+                )
+              }
+            />
+            <.input
+              field={@preview_form[:role]}
+              type="select"
+              label="Papel simbólico"
+              options={@role_options}
+            />
+            <.input
+              field={@preview_form[:stage]}
+              type="select"
+              label="Etapa"
+              options={@stage_options}
+            />
+            <.input
+              field={@preview_form[:verified]}
+              type="checkbox"
+              label="Relacionamentos verificados fictícios"
+            />
+            <button id="run-participant-preview" class="btn">Gerar prévia</button>
+          </.form>
+          <div
+            :if={@preview}
+            id="participant-preview-result"
+            data-authorized={to_string(@preview.allowed?)}
+          >
+            <p :if={not @preview.allowed?}>Sem acesso nesta configuração.</p>
+            <p :for={field <- @preview.fields} id={"preview-field-#{field.id}"}>
+              {field.label}: {field.value}
+            </p>
+            <p :for={document <- @preview.documents}>{document} · Arquivo fictício</p>
+            <p :for={action <- @preview.actions}>{action} · Ação simulada</p>
+            <p :if={@preview.status}>{@preview.status}</p>
+            <p :for={message <- @preview.messages}>
+              {message} · Somente entregas ao destinatário autorizado
+            </p>
+          </div>
+        </section>
         <div class="page-heading">
           <div>
             <p class="eyebrow">EDITOR DE MODELOS</p><h1>{@draft.definition["name"]}</h1><p>
@@ -794,6 +870,13 @@ defmodule InstantflowWeb.TemplateLive do
               value={@interface_page_form.params["access_" <> key] || []}
             />
             <fieldset id="participant-page-authoring">
+              <.input
+                field={@interface_page_form[:participant_messages]}
+                type="select"
+                multiple
+                label="Mensagens selecionadas"
+                options={@communication_options}
+              />
               <legend>Projeção para participantes</legend>
               <.input
                 field={@interface_page_form[:participant_enabled]}
@@ -1196,6 +1279,38 @@ defmodule InstantflowWeb.TemplateLive do
                   label="Papel pode criar solicitações"
                 />
               </div>
+              <div :if={@collection == "communications"} id="communication-authoring">
+                <.input
+                  field={@item_form[:recipient_relationship]}
+                  type="select"
+                  label="Vínculo destinatário"
+                  options={@relationship_options}
+                />
+                <.input
+                  field={@item_form[:message_fields]}
+                  type="select"
+                  multiple
+                  label="Somente estes campos serão compartilhados"
+                  options={@field_options}
+                />
+                <.input
+                  field={@item_form[:manager_roles]}
+                  type="select"
+                  multiple
+                  label="Papéis autorizados a liberar"
+                  options={@role_options}
+                />
+                <.input
+                  field={@item_form[:department_binding]}
+                  label="Chave do departamento vinculado"
+                />
+                <.input
+                  field={@item_form[:behavior]}
+                  type="select"
+                  label="Simulação"
+                  options={Enum.map(~w(success fail_once failure ambiguous), &{&1, &1})}
+                />
+              </div>
               <div :if={@collection == "participants"}>
                 <.input
                   field={@item_form[:kind]}
@@ -1504,6 +1619,13 @@ defmodule InstantflowWeb.TemplateLive do
                   options={[{"Participantes", "participants"}, {"Somente atores", "actors"}]}
                 />
                 <.input
+                  field={@item_form[:guard_communication]}
+                  type="select"
+                  label="Comunicação exigida"
+                  prompt="Selecione"
+                  options={@communication_options}
+                />
+                <.input
                   field={@item_form[:guard_op]}
                   type="select"
                   label="Condição para avançar"
@@ -1517,6 +1639,7 @@ defmodule InstantflowWeb.TemplateLive do
                     {"Menor ou igual", "lte"},
                     {"Pertence à lista", "in"},
                     {"Entrega simulada concluída", "delivery_succeeded"},
+                    {"Comunicação selecionada concluída", "communication_succeeded"},
                     {"Arquivo disponível", "attachment_ready"},
                     {"Todas as condições", "all"},
                     {"Qualquer condição", "any"}

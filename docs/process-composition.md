@@ -53,3 +53,13 @@ Final validation passed: mix precommit (183 tests, zero failures), Python runner
 ## Maintainability follow-up
 
 The [modularity review](modularity-review.md) records the subsequent capability/interface contract extraction, component boundaries, reuse checks and remaining architecture prerequisites. Its evidence supersedes the source hashes above for files changed in that pass.
+
+## Sprint 10 completion follow-up
+
+The compatibility limits above describe the original composition checkpoint. Sprint 10
+subsequently added generated participant correction/document/status/message pages,
+configured authorized views and calendar projections, explicit finance resets/setup,
+and reusable curated simulated delivery. The [recreation matrix](sprint10-generated-experiences.md)
+records independent school copies and the equipment desk using common pages. Historical
+adapters remain for pinned compatibility; Sprint 11 owns full populated replacement
+and residual read-path/load acceptance.

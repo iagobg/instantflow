@@ -16,50 +16,59 @@ defmodule Instantflow.WorkflowRuntime.Policy do
       )
   end
 
-  def section?(actor, ticket, version, section, :read),
-    do: Enum.any?(section["access"], &(&1["read"] and actor?(actor, ticket, version, &1)))
+  def section?(actor, ticket, version, section, mode, facts \\ :live)
 
-  def section?(actor, ticket, version, section, :edit),
+  def section?(actor, ticket, version, section, :read, facts),
+    do: Enum.any?(section["access"], &(&1["read"] and actor?(actor, ticket, version, &1, facts)))
+
+  def section?(actor, ticket, version, section, :edit, facts),
     do:
       not Instantflow.Calculations.Contract.computed?(version.definition, section["key"]) and
         Enum.any?(
           section["access"],
-          &(ticket.stage in &1["edit_stages"] and actor?(actor, ticket, version, &1))
+          &(ticket.stage in &1["edit_stages"] and actor?(actor, ticket, version, &1, facts))
         )
 
-  def transition?(actor, ticket, version, transition) do
-    transition["from"] == ticket.stage and transition_actor?(actor, ticket, version, transition)
+  def transition?(actor, ticket, version, transition, facts \\ :live) do
+    transition["from"] == ticket.stage and
+      transition_actor?(actor, ticket, version, transition, facts)
   end
 
-  defp transition_actor?(actor, ticket, version, transition) do
+  defp transition_actor?(actor, ticket, version, transition, facts \\ :live) do
     (not Map.get(transition, "disallow_requester", false) or
        actor.user_id != ticket.requester_id) and
       (not Map.get(transition, "finance_sensitive", false) or actor.user_id != ticket.requester_id) and
-      Enum.any?(transition["actors"], &actor?(actor, ticket, version, &1))
+      Enum.any?(transition["actors"], &actor?(actor, ticket, version, &1, facts))
   end
 
-  def actor?(actor, ticket, version, spec) do
+  def actor?(actor, ticket, version, spec, facts \\ :live) do
     (not LegacyAccess.parent_portal?(actor, version) or
        LegacyAccess.guardian?(actor, ticket, version)) and
       Enum.any?(Access.profiles(actor), fn profile ->
         profile.role in Map.get(version.bindings["roles"], spec["role"], []) and
           case spec["scope"] do
             "participant" ->
-              Instantflow.Participants.linked?(actor, ticket, version, spec["relationship"])
+              if facts == :live,
+                do:
+                  Instantflow.Participants.linked?(actor, ticket, version, spec["relationship"]),
+                else: spec["relationship"] in facts.relationships
 
             "assigned_user" ->
-              Instantflow.Collaboration.Assignments.assigned?(
-                actor,
-                ticket,
-                version,
-                spec["assignment_key"]
-              )
+              if facts == :live,
+                do:
+                  Instantflow.Collaboration.Assignments.assigned?(
+                    actor,
+                    ticket,
+                    version,
+                    spec["assignment_key"]
+                  ),
+                else: spec["assignment_key"] in facts.assignments
 
             "requester" ->
               actor.user_id == ticket.requester_id
 
             "guardian" ->
-              LegacyAccess.guardian?(actor, ticket, version)
+              facts == :live and LegacyAccess.guardian?(actor, ticket, version)
 
             "workflow_department" ->
               profile.department_id == version.bindings["departments"][spec["department_binding"]]
@@ -103,6 +112,15 @@ defmodule Instantflow.WorkflowRuntime.Policy do
   end
 
   def history?(_actor, _ticket, _version, %{operation: "create"}), do: true
+
+  def history?(actor, ticket, version, %{operation: "release:" <> key}),
+    do:
+      Instantflow.Delivery.Curated.authorized?(
+        actor,
+        ticket,
+        version,
+        Instantflow.WorkflowCatalog.Communications.find(version.definition, key)
+      )
 
   def history?(actor, ticket, version, %{operation: "document:" <> operation}) do
     case String.split(operation, ":", parts: 2) do

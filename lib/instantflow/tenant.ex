@@ -60,6 +60,14 @@ defmodule Instantflow.Tenant do
 
   def raw(_, _), do: {:error, :forbidden}
 
+  @doc "Infrastructure jobs acquire the shared authorization gate before business locks."
+  def authorization_gate!(id) do
+    Repo.query!(
+      "SELECT pg_advisory_xact_lock_shared(hashtextextended('access:' || $1::text, 0))",
+      [to_string(id)]
+    )
+  end
+
   def read(scope, fun, fallback \\ nil) do
     case transaction(scope, fun) do
       {:ok, value} -> value

@@ -309,6 +309,11 @@ defmodule Instantflow.WorkflowRuntime.ParticipantPages do
       actions: actions,
       documents: documents,
       history: history,
+      messages:
+        Instantflow.Delivery.Curated.inbox(scope, ticket.workflow_id, %{
+          "ticket_id" => ticket.id,
+          "keys" => spec["messages"] || []
+        }).rows,
       uploads: uploads
     }
   end

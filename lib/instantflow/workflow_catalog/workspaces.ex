@@ -40,7 +40,8 @@ defmodule Instantflow.WorkflowCatalog.Workspaces do
           Repo.all(
             from v in Version,
               where:
-                fragment("jsonb_path_exists(?, '$.interface.pages[*].participant')", v.definition),
+                fragment("jsonb_path_exists(?, '$.interface.pages[*].participant')", v.definition) or
+                  fragment("jsonb_exists(?, 'communications')", v.definition),
               distinct: v.workflow_id,
               select: v.workflow_id
           )

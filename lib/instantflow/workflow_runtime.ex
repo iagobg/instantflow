@@ -145,7 +145,9 @@ defmodule Instantflow.WorkflowRuntime do
          deliveries:
            Repo.all(
              from m in Message,
-               where: m.ticket_id == ^id and m.kind != "refresh" and m.event_id in ^event_ids,
+               where:
+                 m.ticket_id == ^id and m.kind != "refresh" and m.event_id in ^event_ids and
+                   m.payload == ^%{},
                order_by: m.id
            )
        }}
@@ -410,11 +412,14 @@ defmodule Instantflow.WorkflowRuntime do
       Repo.all(
         from m in Message,
           where: m.ticket_id == ^ticket.id,
+          where: m.payload == ^%{},
           distinct: m.kind,
           order_by: [asc: m.kind, desc: m.id]
       )
       |> Enum.filter(&(&1.status == "succeeded"))
       |> Enum.map(& &1.kind)
+
+    deliveries = deliveries ++ Instantflow.Delivery.Curated.successes(ticket, version)
 
     unless Guards.pass?(
              transition["guard"],
@@ -515,6 +520,8 @@ defmodule Instantflow.WorkflowRuntime do
         behavior: action["behavior"]
       })
     end
+
+    event
   end
 
   defp command_access?(actor, ticket, version) do

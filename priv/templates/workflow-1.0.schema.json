@@ -36,11 +36,12 @@
           "finance",
           "operations",
           "documents",
-          "participants"
+          "participants",
+          "communications"
         ]
       },
       "minItems": 1,
-      "maxItems": 5,
+      "maxItems": 6,
       "uniqueItems": true
     },
     "participants": {
@@ -297,6 +298,14 @@
         "pages"
       ],
       "additionalProperties": false
+    },
+    "communications": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/communication"
+      },
+      "minItems": 0,
+      "maxItems": 20
     }
   },
   "required": [
@@ -922,6 +931,23 @@
             "value"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "communication_succeeded"
+            },
+            "communication": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            }
+          },
+          "required": [
+            "op",
+            "communication"
+          ],
+          "additionalProperties": false
         }
       ]
     },
@@ -1171,6 +1197,23 @@
             "op",
             "field",
             "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "communication_succeeded"
+            },
+            "communication": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            }
+          },
+          "required": [
+            "op",
+            "communication"
           ],
           "additionalProperties": false
         }
@@ -1437,6 +1480,16 @@
         },
         "history": {
           "type": "boolean"
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "minItems": 0,
+          "maxItems": 20,
+          "uniqueItems": true
         }
       },
       "required": [
@@ -1447,6 +1500,59 @@
         "actions",
         "status",
         "history"
+      ],
+      "additionalProperties": false
+    },
+    "communication": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "recipient_relationship": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "release_actors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/actor"
+          },
+          "minItems": 1,
+          "maxItems": 30
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}[.][a-z][a-z0-9_]{0,63}$"
+          },
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true
+        },
+        "behavior": {
+          "enum": [
+            "success",
+            "fail_once",
+            "failure",
+            "ambiguous"
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "recipient_relationship",
+        "release_actors",
+        "fields",
+        "behavior"
       ],
       "additionalProperties": false
     }

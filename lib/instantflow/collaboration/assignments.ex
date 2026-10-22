@@ -23,15 +23,47 @@ defmodule Instantflow.Collaboration.Assignments do
       )
   end
 
-  def controls(actor, ticket, version) do
+  def controls_for(actor, id, search) do
+    Instantflow.Tenant.read(
+      actor,
+      fn fresh ->
+        ticket = Repo.get(Instantflow.WorkflowRuntime.Ticket, id) || Repo.rollback(:not_found)
+        version = Repo.get!(Instantflow.WorkflowCatalog.Version, ticket.workflow_version_id)
+        controls(fresh, ticket, version, search)
+      end,
+      []
+    )
+  end
+
+  def controls(actor, ticket, version, search \\ "") do
+    search = if is_binary(search), do: String.slice(search, 0, 100), else: ""
+
     Enum.flat_map(version.definition["sections"], fn section ->
       if manager?(actor, ticket, version, section) do
         spec = section["assignment"]
 
+        roles = version.bindings["roles"][spec["role"]]
+        department = version.bindings["departments"][spec["department_binding"]]
+        legacy? = Instantflow.WorkflowRuntime.LegacyAccess.legacy_definition?(version.definition)
+
         candidates =
-          Repo.all(from m in Membership, where: m.active, preload: [:user])
-          |> Enum.map(&Access.load/1)
-          |> Enum.filter(&(&1.user.active && eligible?(&1, version, spec)))
+          Repo.all(
+            from m in Membership,
+              join: u in Instantflow.Identity.User,
+              on: u.id == m.user_id,
+              left_join: g in Instantflow.Access.Grant,
+              on: g.membership_id == m.id,
+              where:
+                m.active and u.active and
+                  (not (^legacy?) or m.role != "parent") and
+                  ((m.role in ^roles and m.department_id == ^department) or
+                     (g.role in ^roles and g.department_id == ^department)) and
+                  fragment("strpos(lower(?), lower(?)) > 0", u.name, ^search),
+              distinct: m.id,
+              order_by: m.id,
+              limit: 100,
+              preload: [:user]
+          )
 
         assignment = Repo.get_by(Assignment, ticket_id: ticket.id, section_key: section["key"])
 
@@ -101,7 +133,7 @@ defmodule Instantflow.Collaboration.Assignments do
   end
 
   defp eligible?(actor, version, spec) do
-    actor.active && actor.role != "parent" &&
+    actor.active && not Instantflow.WorkflowRuntime.LegacyAccess.parent_portal?(actor, version) &&
       Enum.any?(
         Access.profiles(actor),
         &(&1.role in version.bindings["roles"][spec["role"]] &&

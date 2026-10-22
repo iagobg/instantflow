@@ -1,13 +1,27 @@
 defmodule Instantflow.WorkflowCatalog.Capabilities do
   @moduledoc "Closed, additive capability contract shared by authoring and runtime."
 
-  @supported ~w(core finance operations documents participants)
+  @supported ~w(core finance operations documents participants communications)
 
   def supported, do: @supported
 
   @doc "Versioned ownership and execution metadata for the closed capability set."
   def descriptors do
     [
+      %{
+        id: "communications",
+        version: 1,
+        owner: Instantflow.Delivery.Curated,
+        tables: ~w(outbox_messages delivery_attempts command_receipts transition_events),
+        dependencies: ~w(core participants),
+        conflicts: [],
+        bindings: [],
+        declarations: ~w(communications interface.pages.participant.messages),
+        guards: ~w(live_recipient release_authority communication_succeeded),
+        effects: ~w(curated_release simulation retry resolve),
+        projections: ~w(curated_inbox delivery_status),
+        migration: :immutable_versions
+      },
       %{
         id: "core",
         version: 1,
@@ -80,6 +94,7 @@ defmodule Instantflow.WorkflowCatalog.Capabilities do
         migration: :immutable_versions
       }
     ]
+    |> Enum.sort_by(&Enum.find_index(@supported, fn id -> id == &1.id end))
   end
 
   def descriptor(id), do: Enum.find(descriptors(), &(&1.id == id))

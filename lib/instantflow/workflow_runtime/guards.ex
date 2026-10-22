@@ -1,6 +1,9 @@
 defmodule Instantflow.WorkflowRuntime.Guards do
   def pass?(nil, _, _, _), do: true
 
+  def pass?(%{"op" => "communication_succeeded", "communication" => key}, _, _, deliveries),
+    do: ("communication:" <> key) in deliveries
+
   def pass?(%{"op" => "all", "args" => args}, values, fields, deliveries),
     do: Enum.all?(args, &pass?(&1, values, fields, deliveries))
 

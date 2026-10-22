@@ -50,6 +50,12 @@ defmodule Instantflow.WorkflowCatalog.ParticipantPages do
           Enum.any?(spec["actions"], &(&1 not in actions)) ->
             ["#{path}.actions: selecione transições existentes."]
 
+          Enum.any?(
+            spec["messages"] || [],
+            &is_nil(Instantflow.WorkflowCatalog.Communications.find(definition, &1))
+          ) ->
+            ["#{path}.messages: selecione comunicações declaradas."]
+
           true ->
             []
         end

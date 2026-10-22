@@ -55,3 +55,12 @@ Views: table, Kanban, authorized live budgets. Demo: two individually affordable
 ## Reuse gate
 
 Templates pass the same validator as editor/imported definitions. Generic LiveViews cannot hardcode school stage names. Registered finance/support capabilities supply domain behavior chosen by templates.
+
+## Generated recreation evidence
+
+Sprint 10 recreates these behaviors under independent workflow, role, section, field,
+stage and page keys through editor/import, local mapping, publication and generated
+pages. The [shared evidence matrix](../docs/sprint10-generated-experiences.md#executable-recreation-matrix)
+maps each example and the blank equipment service desk to its portable fixture,
+generated route and named acceptance scenario. Simulated integrations and the
+compatibility/replacement limits remain explicit.

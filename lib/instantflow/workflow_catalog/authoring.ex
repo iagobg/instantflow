@@ -2,7 +2,7 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
   @moduledoc "Fixed, typed authoring controls over the declarative contract. No dynamic atoms or executable code."
   alias Instantflow.WorkflowCatalog.{Definition, Interchange}
 
-  @collections ~w(stages sections fields access transitions actions roles bindings views participants)
+  @collections ~w(stages sections fields access transitions actions roles bindings views participants communications)
   @types %{
     key: :string,
     label: :string,
@@ -15,6 +15,9 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
     department_binding: :string,
     assignment_key: :string,
     relationship: :string,
+    recipient_relationship: :string,
+    message_fields: {:array, :string},
+    guard_communication: :string,
     manager_roles: {:array, :string},
     candidate_roles: {:array, :string},
     reference_target: :string,
@@ -77,10 +80,14 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
       scope: item["scope"] || "requester",
       department_binding:
         item["department_binding"] ||
-          get_in(item, ["managers", Access.at(0), "department_binding"]),
+          get_in(item, ["managers", Access.at(0), "department_binding"]) ||
+          get_in(item, ["release_actors", Access.at(0), "department_binding"]),
       assignment_key: item["assignment_key"],
       relationship: item["relationship"],
-      manager_roles: for(a <- item["managers"] || [], do: a["role"]),
+      recipient_relationship: item["recipient_relationship"],
+      message_fields: Enum.filter(item["fields"] || [], &is_binary/1),
+      guard_communication: get_in(item, ["guard", "communication"]),
+      manager_roles: for(a <- item["managers"] || item["release_actors"] || [], do: a["role"]),
       candidate_roles: item["candidate_roles"] || [],
       reference_target: get_in(item, ["reference", "target"]),
       reference_relationship: get_in(item, ["reference", "relationship"]),
@@ -224,6 +231,7 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
   def items(d, "actions", parent), do: find_parent(d["transitions"], parent)["actions"]
   def items(d, "roles", _), do: d["role_requirements"]
   def items(d, "participants", _), do: Map.get(d, "participants", [])
+  def items(d, "communications", _), do: Map.get(d, "communications", [])
   def items(d, c, _) when c in @collections, do: d[c]
 
   def identity(%{"scope" => "participant"} = item, "access"),
@@ -244,6 +252,13 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
   end
 
   defp put_items(d, "roles", _, items), do: Map.put(d, "role_requirements", items)
+
+  defp put_items(d, "communications", _, items) do
+    d
+    |> Map.put("communications", items)
+    |> Map.update!("capabilities", &Enum.uniq(&1 ++ ["participants", "communications"]))
+  end
+
   defp put_items(d, "participants", _, []), do: Map.delete(d, "participants")
 
   defp put_items(d, "participants", _, items) do
@@ -262,6 +277,29 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
     do: Map.merge(base(v), %{"initial" => v.initial, "terminal" => v.terminal})
 
   defp build("roles", v, _, _), do: base(v)
+
+  defp build("communications", v, old, _) do
+    actors =
+      if Enum.all?(old["release_actors"] || [], &(&1["scope"] == "workflow_department")) do
+        Enum.map(
+          v.manager_roles,
+          &%{
+            "role" => &1,
+            "scope" => "workflow_department",
+            "department_binding" => v.department_binding
+          }
+        )
+      else
+        old["release_actors"]
+      end
+
+    Map.merge(base(v), %{
+      "recipient_relationship" => v.recipient_relationship,
+      "fields" => v.message_fields,
+      "release_actors" => actors,
+      "behavior" => v.behavior
+    })
+  end
 
   defp build("participants", v, old, _) do
     managers =
@@ -459,6 +497,9 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
 
   defp guard(%{guard_op: "delivery_succeeded"} = v, _),
     do: %{"op" => "delivery_succeeded", "kind" => v.guard_kind}
+
+  defp guard(%{guard_op: "communication_succeeded"} = v, _),
+    do: %{"op" => "communication_succeeded", "communication" => v.guard_communication}
 
   defp guard(%{guard_op: op} = v, _) when op in ~w(present attachment_ready),
     do: %{"op" => op, "field" => v.guard_field}

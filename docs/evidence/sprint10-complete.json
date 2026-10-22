@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-22",
+  "status": "sprint_complete",
+  "sprint": "10",
+  "tasks_complete": [
+    "S10-T01",
+    "S10-T02",
+    "S10-T03",
+    "S10-T04"
+  ],
+  "tasks_remaining": [],
+  "base_revision": "a4c2b2fcd72d25192747aaed314e74f06704395d",
+  "checks": [
+    {
+      "name": "mix precommit",
+      "status": "passed",
+      "result": "268 tests, 0 failures; seed 13037",
+      "log": ".local/sprint10-complete-precommit.log",
+      "sha256": "3c3e7877d53c8651c74ed2fa98f00b07e10f2b916d5c65530e3bf0463599f30c"
+    },
+    {
+      "name": "mix assets.build",
+      "status": "passed",
+      "result": "JavaScript and CSS bundles built",
+      "log": ".local/sprint10-complete-assets.log",
+      "sha256": "34857d9629b7597664076090c931a99821d196845e5b214c2670730f2c204ede"
+    },
+    {
+      "name": "focused contract/privacy/UI checks",
+      "status": "passed",
+      "result": "14 tests, 0 failures; seed 616702",
+      "log": ".local/sprint10-contract-final.log",
+      "sha256": "c9bf6b7707af12a6e7971028b13362b5b33c390cf583346e99736896ec48f637"
+    },
+    {
+      "name": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "contracts": "docs/sprint10-generated-experiences.md",
+  "recreation_matrix": [
+    {
+      "example": "enrollment",
+      "definition_fixture": "Sprint10RecreationFixtures.definition/enrollment",
+      "acceptance": "test/instantflow_web/live/sprint10_school_recreation_test.exs",
+      "setup": "import, editor local mappings and publication",
+      "routes": "common staff record/process; declared participant pages or curated inbox where applicable"
+    },
+    {
+      "example": "incident",
+      "definition_fixture": "Sprint10RecreationFixtures.definition/incident",
+      "acceptance": "test/instantflow_web/live/sprint10_school_recreation_test.exs",
+      "setup": "import, editor local mappings and publication",
+      "routes": "common staff record/process; declared participant pages or curated inbox where applicable"
+    },
+    {
+      "example": "requisition",
+      "definition_fixture": "Sprint10RecreationFixtures.definition/requisition",
+      "acceptance": "test/instantflow_web/live/sprint10_school_recreation_test.exs",
+      "setup": "import, editor local mappings and publication",
+      "routes": "common staff record/process; declared participant pages or curated inbox where applicable"
+    },
+    {
+      "example": "field_trip",
+      "definition_fixture": "Sprint10RecreationFixtures.definition/field_trip",
+      "acceptance": "test/instantflow_web/live/sprint10_school_recreation_test.exs",
+      "setup": "import, editor local mappings and publication",
+      "routes": "common staff record/process; declared participant pages or curated inbox where applicable"
+    },
+    {
+      "example": "equipment",
+      "definition_fixture": "Sprint10RecreationFixtures.equipment/0",
+      "acceptance": "test/instantflow_web/live/sprint10_equipment_recreation_test.exs",
+      "setup": "blank desk, editor mappings/publication, scoped resource/parts commands",
+      "routes": "common participant/process/record/inbox"
+    }
+  ],
+  "privacy_and_composition": [
+    "SQL recipient authorization before counts/paging; 25-row pages; constant query count at 1 and 28 releases",
+    "Immutable pinned selected-field snapshots; source edits and new publications do not rewrite delivery content",
+    "Current sender, recipient, organization and verified relationship fencing at dispatch/retry/result",
+    "Duplicate receipt/dispatch, failure/retry ceiling, ambiguous explicit resolution and latest-release closure guard",
+    "No recipient record access or internal note/sender/reason/source-record metadata in inbox",
+    "Shared identity tenant isolation, recipient/author membership revocation and relationship revocation",
+    "Synthetic preview runs shared actor/section/transition policy without database access",
+    "All existing scoped grant, finance reset/rollback/concurrency, participant/file/publication and populated migration/restore regressions pass"
+  ],
+  "architecture_review": "Catalog owns pure declarations; capability contexts own scoped commands and bounded projections; shared LiveViews own forms/streams. No per-example renderer/route was added. Findings and corrections are recorded in the linked contract.",
+  "remaining_scope": "Sprint 11: residual historical read paths, customer-volume measurement, operational extraction and full populated replacement. No deployment, real transport or launch readiness is inferred.",
+  "source_sha256": {
+    "design/06-school-templates.md": "35f4ecb7ec9aa19421342612413d3680ca1b76320613c5ac423664b60af17c09",
+    "docs/builder-architecture-contract.md": "d1061f7f0346e602e8238dc3cd2f03df79ea2f2a4abe890fc0aa80323fcc622c",
+    "docs/participant-pages.md": "3f4c97a019e98ac74889a68aba6ef27137d9620e3d82a58cf0d643e1ddb16956",
+    "docs/process-composition.md": "64d38a4c520c9379dbce998fefa55b1b768b3357d3919b5625848a2ad82e8e6e",
+    "docs/sprint10-generated-experiences.md": "f1864f6f62e26c81177c97db793fc4cb9cc480761223ffbe43792be27d9c080b",
+    "lib/instantflow/collaboration/assignments.ex": "ad06b5b25df570d4822dbdaabfa527007ee91406ca7523488a55379f8ba8ab73",
+    "lib/instantflow/delivery.ex": "fe5b15c7a632618af04a1a4825ff24f5274034d109b54aa76dba147327b71cf1",
+    "lib/instantflow/delivery/curated.ex": "dab629f8048a02220c3d5f13b3a955b16b0be1b88aadff22002e6532c5e2bb97",
+    "lib/instantflow/tenant.ex": "682d63a3515f2572614c7d1de65ae4f0d1084b971a4fdef2e6796754376386b8",
+    "lib/instantflow/workflow_catalog/authoring.ex": "5fdd0fdfd9105b0c58ad1f3d1a1c4a4a19fd2828a0063a0bcdd7fd23ab53f8a8",
+    "lib/instantflow/workflow_catalog/capabilities.ex": "1169d9d83e6d88892bfa84f0bab2a4c86f8a90fd3e0480cecf0d49d2954cdf3b",
+    "lib/instantflow/workflow_catalog/communications.ex": "11676952f3a9e6c9a015327f066c1ee4cbfc8c90ca2f16ca5bc1515ab0aa8a05",
+    "lib/instantflow/workflow_catalog/definition.ex": "0557f604655039ed1efd77b15cb1bc7387cc16c310bfe1e5461dd2545cea7346",
+    "lib/instantflow/workflow_catalog/participant_pages.ex": "4dc52f5258f431888e67f9d32235c7db7d3f9c354d13fa0f8c0be82ef6628016",
+    "lib/instantflow/workflow_catalog/workspaces.ex": "cba4dcdcea4aa20002cb282ab1f78ffed8be933d86f454ff324ef19e1b1e8a4c",
+    "lib/instantflow/workflow_runtime.ex": "8fe061bdd1779823e4aa6c27962d153c365846817e26bdefa4821bdb4cfb6233",
+    "lib/instantflow/workflow_runtime/guards.ex": "3fbe7266082778fa932261b409ab7a145a7019e832e1b114a34d3b8864e18287",
+    "lib/instantflow/workflow_runtime/participant_pages.ex": "8261c18dcc07699fd92ef64dcf1f83562d4eb03b4cbefe554bde10cb048a4bfc",
+    "lib/instantflow/workflow_runtime/participant_preview.ex": "76fb4e10e36f4d8c9a51b6879ca8cd91ac44d867c5f4c4d262e71ed2820de33f",
+    "lib/instantflow/workflow_runtime/policy.ex": "3ad4a7f43a9642605b815bfdc14c07d74b393b55def4ee0fcff6e25ce037e2e5",
+    "lib/instantflow/workflow_runtime/policy_query.ex": "160159f60861b7a582911dca2e270444186b3b98f295c6a8557b7f0685a54610",
+    "lib/instantflow_web/live/messages_live.ex": "20260f72f6565a33e72e39973e0fc49da7b0e2e24e930de80ab933ae2e62bf3e",
+    "lib/instantflow_web/live/participant_live.ex": "72e484a5056b73fa1359922d6f3668bb08f1e69594c5ec20d8b74ec6212a3ee0",
+    "lib/instantflow_web/live/processes_live.ex": "19f49b52e770d15309db156630eca0e181386c843339240da027fa123e87cf2e",
+    "lib/instantflow_web/live/request_live.ex": "9266e45601cba7bf850c2444738f585f715438890ced2158a4c696b46665c18d",
+    "lib/instantflow_web/live/template_live.ex": "f025b607e979af9de08b4982533f610b810cf9c6990064c0b287f2c4f0eecf15",
+    "lib/instantflow_web/router.ex": "c434c748c27a171a6d98b0152a74160ab8639e3ecae6f3ef428d3c53615d1dd1",
+    "lib/instantflow_web/user_auth.ex": "8e42359d1ac1cd29b704bfcb8ab47782a4030bd7b367f140dbf4b97bb4266b1a",
+    "priv/templates/capabilities-1.0.json": "801c81bc67ce2d15de30fbf7a1a049342d5bbd21e8e227bc733a3a30450e269a",
+    "priv/templates/workflow-1.0.schema.json": "d5527261baa7d6760351f69716cd0e70e1a3329fae236d0b977c8fbebe5d10f5",
+    "sprint_plan/sprint_10.md": "1d8f701780a411a0e975ee05b8e6509f2e29763e385723c8e9e3a2fd2a4155cf",
+    "sprint_plan/sprint_index.md": "ee28fe5bb843e49f40563e6d080babe7ec55eab77b43dfab96a113e91096f653",
+    "test/instantflow/curated_communications_test.exs": "fb275585d8e660e0c51eda2f68b5145fc24c78cb49a211bd3e026f82bebb65f4",
+    "test/instantflow/sprint10_recreation_contract_test.exs": "3e4e96b1049ea85cfb3da82d23a27ac395ac99f8940d989fb2068007dc62760c",
+    "test/instantflow_web/live/curated_messages_live_test.exs": "cd0b0d204d2c48217c5afc235b81a1ca4b35bdfbebf2c96bf3aeeaa3e168d210",
+    "test/instantflow_web/live/sprint10_equipment_recreation_test.exs": "ad75bfbd15e4a5d674737fe21819dff4855030129b3a48312f1a04d2bf1aad0c",
+    "test/instantflow_web/live/sprint10_school_recreation_test.exs": "79044988a65a3455499f1b5c5d4fcdc46bc24a11b88f20f377aebc0dd40212fc",
+    "test/support/curated_fixtures.ex": "6c11f72096957301493420e73eb612feca102525ec29b18c7e39a9e65b13fba0",
+    "test/support/sprint10_recreation_fixtures.ex": "e02a5ec417f4f9e717a269c91cbcd43beec3fec3bb216a9e9095b42dbd662bc0"
+  }
+}

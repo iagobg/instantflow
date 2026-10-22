@@ -22,6 +22,7 @@ defmodule Instantflow.Delivery do
 
   def process(organization_id, id) do
     Tenant.raw(organization_id, fn ->
+      Tenant.authorization_gate!(organization_id)
       message = Repo.get_by(Message, id: id, organization_id: organization_id)
 
       if message do
@@ -41,9 +42,19 @@ defmodule Instantflow.Delivery do
       number = message.attempts + 1
 
       result =
-        if message.behavior == "failure" or (message.behavior == "fail_once" and number == 1),
-          do: "failed",
-          else: "succeeded"
+        cond do
+          message.payload["release"] && not Instantflow.Delivery.Curated.eligible?(message) ->
+            "cancelled"
+
+          message.payload["ambiguous"] ->
+            "ambiguous"
+
+          message.behavior == "failure" or (message.behavior == "fail_once" and number == 1) ->
+            "failed"
+
+          true ->
+            "succeeded"
+        end
 
       Repo.insert!(%Attempt{
         organization_id: organization_id,
@@ -73,6 +84,8 @@ defmodule Instantflow.Delivery do
 
   defp process_batch(organization_id, ids) do
     Tenant.raw(organization_id, fn ->
+      Tenant.authorization_gate!(organization_id)
+
       ticket_ids =
         Repo.all(from m in Message, where: m.id in ^ids, select: m.ticket_id, distinct: true)
 
@@ -148,6 +161,7 @@ defmodule Instantflow.Delivery do
 
     if outcome? or ticket.revision > ticket.refreshed_revision do
       WorkflowRuntime.invalidate_lists(organization_id, message.ticket_id)
+      Instantflow.Delivery.Curated.invalidate(message.ticket_id)
 
       Phoenix.PubSub.broadcast(
         Instantflow.PubSub,
@@ -171,6 +185,20 @@ defmodule Instantflow.Delivery do
   end
 
   def retry(actor, id) do
+    curated? =
+      Tenant.read(
+        actor,
+        fn _ ->
+          message = Repo.get(Message, id)
+          message && message.payload["release"]
+        end,
+        false
+      )
+
+    if curated?, do: Instantflow.Delivery.Curated.retry(actor, id), else: legacy_retry(actor, id)
+  end
+
+  defp legacy_retry(actor, id) do
     Tenant.transaction(actor, fn actor ->
       message = Repo.get_by(Message, id: id, organization_id: actor.organization_id)
       unless message, do: Repo.rollback(:not_found)

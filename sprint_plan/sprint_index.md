@@ -2,7 +2,7 @@
 
 [Design index](../design/index.md)
 
-Status: Sprints 00–09 complete; Sprint 10 in progress; Sprint 11 architecture priority; Sprints 12–15 customer delivery planned · Updated: 2026-10-22
+Status: Sprints 00–10 complete; Sprint 11 architecture priority; Sprints 12–15 customer delivery planned · Updated: 2026-10-22
 
 Dependency-ordered increments without duration estimates. Sprints 00 and 01 retain their original single-organization evidence. Sprint 01A has migrated and verified the multi-organization foundation before Sprint 02, preserving existing records.
 
@@ -19,7 +19,7 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 | [07](sprint_07.md) | Integrated demonstration and delivery | 06; D-09 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [08](sprint_08.md) | Optional isolated Python calculations | 07; D-16, D-17; host activation gate | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [09](sprint_09.md) | Shared builder contracts, participants, references and document policies | Existing 01A–08; D-25–28 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
-| [10](sprint_10.md) | Generated participant experiences and reusable projections | 09; D-06–07, D-25–27 | In progress | 2/4 | 2026-10-22 / — |
+| [10](sprint_10.md) | Generated participant experiences and reusable projections | 09; D-06–07, D-25–27 | Done | 4/4 | 2026-10-22 / 2026-10-22 |
 | [11](sprint_11.md) | Cross-domain contracts, scalable reads and builder acceptance | 09–10; D-09, D-14, D-25–27 | Planned | 0/5 | — / — |
 | [12](sprint_12.md) | Pilot scope, isolation and account access | 11 architecture gate; D-21–23, D-27 | Planned | 0/3 | — / — |
 | [13](sprint_13.md) | Organization onboarding and first workflow | 12; D-22, D-27 | Planned | 0/3 | — / — |
@@ -33,10 +33,13 @@ incorporate the corrected Sprint 09 contracts under D-29. Deliver the first
 participant slice with bounded queries before expanding views, finance and
 communications. Sprint 10 owns bounded reads for its new/migrated surfaces;
 Sprint 11 completes residual paths and load acceptance. The four Sprint 10 task
-IDs are unchanged. T02 and T03 are complete (2/4). Sprint 10 started on 2026-10-22 with the
-[bounded query checkpoint](../docs/bounded-projections.md); the first full T01
-participant correction/document slice now has [local implementation and review
-evidence](../docs/participant-pages.md). The [configured view/finance checkpoint](../docs/configured-views-and-finance.md) completes T02/T03. The remaining work is T01 preview/message integration and T04 communication/recreation.
+IDs are unchanged. All four tasks are complete (4/4). Sprint 10 started and finished on
+2026-10-22. The [bounded query checkpoint](../docs/bounded-projections.md), reviewed
+[participant slice](../docs/participant-pages.md), [view/finance checkpoint](../docs/configured-views-and-finance.md)
+and [generated-experience recreation matrix](../docs/sprint10-generated-experiences.md)
+record the implementation sequence. Final validation passes 268 tests, asset build
+and whitespace checks; [completion evidence](../docs/evidence/sprint10-complete.json)
+records the exact sources and logs. Sprint 11 is next and remains Planned.
 
 The [builder architecture contract](../docs/builder-architecture-contract.md) and D-28 establish the remediation sequence. Sprint 09 now completes the shared execution/binding boundary, participants, references, document policies and populated migration/recovery with [implementation evidence](../docs/participants-and-documents.md). Sprint 10 introduces bounded projections and explicit correction resets; Sprint 11 completes scale, compatibility and full school replacement. Sprint 11 cleanup does not defer modular design until the end.
 

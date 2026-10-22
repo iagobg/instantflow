@@ -1,6 +1,6 @@
 # Sprint 10 — Generated participant experiences and reusable projections
 
-[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: In progress · Dependencies: corrected Sprint 09; D-06–07, D-11, D-25–29
+[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Done · Dependencies: corrected Sprint 09; D-06–07, D-11, D-25–29
 
 Goal: recreate the school examples' authorized participant experiences through configured pages and bounded reusable capabilities, removing their dependence on process-key-selected screens. Completion enables the cross-domain acceptance gate in Sprint 11; it does not enable customer launch.
 
@@ -22,7 +22,7 @@ Sprint 09 regressions are prerequisites throughout: explicit candidate_roles dis
 
 ## Implementation tasks
 
-- [ ] S10-T01 Generate external participant pages from declared projections.
+- [x] S10-T01 Generate external participant pages from declared projections.
   - Specify the audience and authorization of each projection separately from the page's visibility. Page/block configuration never grants underlying record, section, file or command authority. Project on the server before rendering or broadcasting; hiding a block in the browser is not authorization.
   - Provide generated discovery/entry and navigation for authorized participants, including users who cannot create records; record creation permission must not be the only route to their existing work. Read-only subjects remain absent unless independently authorized. Test direct links and list/count metadata as well as the detail page.
   - Extend the shared interface schema/editor with bounded participant-facing status, allowed fields, requested actions, documents and curated messages using the relationship policies from Sprint 09.
@@ -47,7 +47,7 @@ Sprint 09 regressions are prerequisites throughout: explicit candidate_roles dis
   - Preserve separate allocation, reservation, posting and reversal authority, prohibited self-approval, partial receipt guards, idempotency and audit. A configured UI block cannot bypass these commands.
   - Verify composition with ordinary record and resource/item blocks, including invalid graph/actor/binding rejection. Do not invent payment-provider, tax, multi-currency or full accounting behavior.
 
-- [ ] S10-T04 Generalize curated communications and verify copied school processes.
+- [x] S10-T04 Generalize curated communications and verify copied school processes.
   - Model curated release explicitly: an authorized internal actor may release declared content to a verified recipient without giving that recipient internal record/section access. Define permitted source fields, release authority, recipient relationship and recipient-visible status/history; do not copy every field readable by the sender. Named confidential support notes are never included implicitly.
   - Specify content/recipient snapshot and version semantics at enqueue, then revalidate current organization, recipient relationship and release eligibility at dispatch/retry/result application. Revoked or suspended recipients must not receive queued content; changed source data must not silently alter an already authorized message. Exercise revocation between enqueue and dispatch, duplicate attempts, failed/ambiguous simulation and closure guards. Reuse the existing durable outbox protocol.
   - Declare supported participant recipients, curated content projections and delivery-status/closure guards without school-specific keys. Confidential internal sections must never be copied implicitly into a message.
@@ -74,8 +74,8 @@ Sprint 09 regressions are prerequisites throughout: explicit candidate_roles dis
 
 ## Progress
 
-Actual start / finish: 2026-10-22 / not finished  
-Tasks: 2/4. Status: In progress. S10-T02 and S10-T03 are complete; participant preview/message integration and T04 communication/recreation remain open.  
+Actual start / finish: 2026-10-22 / 2026-10-22  
+Tasks: 4/4. Status: Done. All participant, configured-view, finance/reset and curated-communication/recreation acceptance gates passed.  
 Planning date: 2026-10-21. Record dated evidence and remaining defects before changing status.  
 Priority: architecture prerequisite before pilot onboarding. Handoff: common participant/view/finance/communication surfaces for Sprint 11 acceptance.
 
@@ -105,4 +105,6 @@ complete all T01 work. Curated messages, dedicated synthetic draft-preview UI an
 the broader recreation matrix remain open. Next: configured T02 surfaces and T03
 explicit resets before T04 communications/recreation.
 
-Configured views / finance checkpoint: 2026-10-22. [Contracts and executable evidence](../docs/configured-views-and-finance.md). T02 and T03 pass typed editor/publication, bounded authorized query, privacy, calendar/assignment/urgency, explicit reset/invalidation, late rollback, unrelated-state preservation, generated finance setup and pinned/shared-account acceptance. Full validation:  250 tests, 0 failures; assets build passed. Populated forward migration and restore pass with the additive audit/outbox columns; historical client fixture compatibility is removed before the actual migration. T01 preview/message integration and T04 remain in progress.
+Configured views / finance checkpoint: 2026-10-22. [Contracts and executable evidence](../docs/configured-views-and-finance.md). T02 and T03 pass typed editor/publication, bounded authorized query, privacy, calendar/assignment/urgency, explicit reset/invalidation, late rollback, unrelated-state preservation, generated finance setup and pinned/shared-account acceptance. Full validation: `mix precommit`, 250 tests, 0 failures; assets build passed. Populated forward migration and restore pass with the additive audit/outbox columns; historical client fixture compatibility is removed before the actual migration. T01 preview/message integration and T04 were still in progress at this checkpoint.
+
+Completion: 2026-10-22. [Generated experiences, operating contracts and recreation matrix](../docs/sprint10-generated-experiences.md), with [machine-readable evidence](../docs/evidence/sprint10-complete.json). T01 now includes synthetic draft preview under the shared policy and selected recipient messages. T04 includes typed communication authoring, immutable pinned snapshots, current eligibility at release/dispatch/retry/result, SQL-authorized inbox paging/counts, failed and ambiguous simulation, bounded retries and closure guards. Independently renamed enrollment, incident, requisition and trip copies are imported, mapped, published and operated through generated pages; the blank equipment desk composes participant/view/message contracts with private documents, parts and settlement. The full gate passes `mix precommit` (268 tests, 0 failures), asset build and whitespace checks. Sprint 11 retains residual historical read paths, load measurement and full populated replacement acceptance; customer launch remains outside this sprint.

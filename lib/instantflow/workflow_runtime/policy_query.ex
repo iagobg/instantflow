@@ -97,7 +97,8 @@ defmodule Instantflow.WorkflowRuntime.PolicyQuery do
     spec = section && section["assignment"]
 
     eligible? =
-      spec && scope.active && scope.role != "parent" &&
+      spec && scope.active &&
+        not Instantflow.WorkflowRuntime.LegacyAccess.parent_portal?(scope, version) &&
         Enum.any?(Access.profiles(scope), fn profile ->
           profile.role in version.bindings["roles"][spec["role"]] and
             profile.department_id == version.bindings["departments"][spec["department_binding"]]

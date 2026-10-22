@@ -18,6 +18,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
          :ok <- Instantflow.WorkflowCatalog.ViewContract.validate(definition),
          :ok <- Instantflow.WorkflowCatalog.Corrections.validate(definition),
          :ok <- Instantflow.WorkflowCatalog.FinanceSurfaces.validate(definition),
+         :ok <- Instantflow.WorkflowCatalog.Communications.validate(definition),
          :ok <- Instantflow.WorkflowCatalog.ParticipantPages.validate(definition) do
       :ok
     end
@@ -133,7 +134,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
     valid =
       props?(
         d,
-        ~w(format_version template_key template_version locale name description capabilities role_requirements sections stages creation transitions bindings assignment views interface participants)
+        ~w(format_version template_key template_version locale name description capabilities role_requirements sections stages creation transitions bindings assignment views interface participants communications)
       ) and
         d["format_version"] in ["1.0", "1.0-draft"] and d["locale"] == "pt-BR" and
         key?(d["template_key"]) and
@@ -355,7 +356,11 @@ defmodule Instantflow.WorkflowCatalog.Definition do
 
   defp valid_resubmission?(_, _), do: true
   defp valid_guard?(nil, _, _), do: true
+
   defp valid_guard?(_, _, depth) when depth > 8, do: false
+
+  defp valid_guard?(%{"op" => "communication_succeeded", "communication" => key} = g, _, _),
+    do: props?(g, ~w(op communication)) and is_binary(key)
 
   defp valid_guard?(%{"op" => op, "args" => args} = g, fields, depth) when op in ~w(all any),
     do:

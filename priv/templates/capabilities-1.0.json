@@ -2,7 +2,11 @@
   "format_version": "1.0",
   "capabilities": [
     "core",
-    "finance"
+    "finance",
+    "operations",
+    "documents",
+    "participants",
+    "communications"
   ],
   "supported": {
     "field_types": [
@@ -15,14 +19,16 @@
       "boolean",
       "single_choice",
       "multiple_choice",
-      "attachment"
+      "attachment",
+      "directory_reference"
     ],
     "scopes": [
       "requester",
       "assigned_department",
       "guardian",
       "workflow_department",
-      "assigned_user"
+      "assigned_user",
+      "participant"
     ],
     "transition_kinds": [
       "forward",
@@ -43,7 +49,8 @@
       "lt",
       "lte",
       "delivery_succeeded",
-      "attachment_ready"
+      "attachment_ready",
+      "communication_succeeded"
     ],
     "actions": [
       "simulate_notification",
@@ -77,7 +84,13 @@
       "department",
       "budget"
     ],
-    "section_assignment": "Named local membership, fixed role/department, explicit manager actors and stages"
+    "section_assignment": "Named local membership, fixed role/department, explicit manager actors and stages",
+    "curated_behaviors": [
+      "success",
+      "fail_once",
+      "failure",
+      "ambiguous"
+    ]
   },
   "reserved_fail_closed": {
     "field_types": [

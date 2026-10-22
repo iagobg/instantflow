@@ -144,11 +144,11 @@ The [checkpoint evidence](evidence/sprint10-participant-checkpoint.json) records
 validation and source hashes. Fixtures are synthetic and use supported installation
 and scoped commands; no schema migration or deployment is required.
 
-## Remaining work
+## Completion follow-up
 
-This checkpoint covers the first correction/document experience, not all of T01.
-Curated messages and recipient-visible delivery status remain T04 work. A dedicated
-synthetic participant draft-preview interaction remains open; this increment adds
-no preview that reads live records or simulates permission by hiding browser blocks.
-Full school/equipment recreation remains pending. Next in the sprint sequence are
-the configured filter/sort/calendar/urgency surfaces and explicit finance resets.
+This document records the first correction/document checkpoint. Sprint 10 subsequently
+completed [configured views and explicit finance resets](configured-views-and-finance.md)
+and [synthetic participant preview, selected messages, curated delivery and the
+school/equipment recreation matrix](sprint10-generated-experiences.md). The completion
+record supersedes the checkpoint's remaining-work status while preserving its dated
+privacy, revocation, publication and architecture evidence.
