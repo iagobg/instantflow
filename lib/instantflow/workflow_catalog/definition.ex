@@ -1,7 +1,9 @@
 defmodule Instantflow.WorkflowCatalog.Definition do
   @moduledoc "Shared structural and semantic validation for editing, interchange and publication."
+  alias Instantflow.WorkflowCatalog.{CalculationContract, Capabilities, Diagnostics, Interface}
+
   @types ~w(short_text long_text integer money date datetime boolean single_choice multiple_choice directory_reference attachment)
-  @scopes ~w(requester assigned_department guardian workflow_department assigned_user)
+  @scopes ~w(requester assigned_department guardian workflow_department assigned_user participant)
   @kinds ~w(forward correction resubmission rejection cancellation reopening)
   @actions ~w(simulate_notification simulate_provisioning simulate_payment)
 
@@ -9,8 +11,10 @@ defmodule Instantflow.WorkflowCatalog.Definition do
     with :ok <- bounded(definition),
          :ok <- schema(definition),
          :ok <- shape(definition),
+         :ok <- Diagnostics.validate(definition),
          :ok <- references(definition),
-         :ok <- graph(definition) do
+         :ok <- graph(definition),
+         :ok <- Interface.validate(definition) do
       :ok
     end
   rescue
@@ -90,6 +94,9 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   def valid_value?(%{"type" => "attachment"}, value),
     do: is_binary(value) and Regex.match?(~r/^[0-9a-f-]{36}$/, value)
 
+  def valid_value?(%{"type" => "directory_reference", "reference" => %{}}, value),
+    do: is_integer(value) and value > 0 and value <= 9_007_199_254_740_991
+
   def valid_value?(%{"type" => "directory_reference"}, _value),
     do: false
 
@@ -122,12 +129,14 @@ defmodule Instantflow.WorkflowCatalog.Definition do
     valid =
       props?(
         d,
-        ~w(format_version template_key template_version locale name description capabilities role_requirements sections stages creation transitions bindings assignment views)
+        ~w(format_version template_key template_version locale name description capabilities role_requirements sections stages creation transitions bindings assignment views interface participants)
       ) and
         d["format_version"] in ["1.0", "1.0-draft"] and d["locale"] == "pt-BR" and
         key?(d["template_key"]) and
         label?(d["name"]) and
-        d["capabilities"] in [["core"], ["core", "finance"]] and keyed?(d["role_requirements"]) and
+        Capabilities.valid?(d["capabilities"]) and
+        keyed?(Map.get(d, "participants", [])) and
+        keyed?(d["role_requirements"]) and
         length(d["role_requirements"]) in 1..30 and
         keyed?(d["stages"]) and length(d["stages"]) in 1..100 and keyed?(d["sections"]) and
         length(d["sections"]) in 1..100 and
@@ -156,16 +165,19 @@ defmodule Instantflow.WorkflowCatalog.Definition do
     props?(s, ~w(key label classification access fields assignment)) and label?(s["label"]) and
       s["classification"] in ~w(internal restricted) and
       is_list(s["access"]) and s["access"] != [] and
-      Enum.uniq_by(s["access"], &{&1["role"], &1["scope"]}) == s["access"] and
+      Enum.uniq_by(s["access"], &{&1["role"], &1["scope"], &1["relationship"]}) == s["access"] and
       Enum.all?(s["access"], fn a ->
-        props?(a, ~w(role scope department_binding assignment_key read edit_stages)) and
+        props?(a, ~w(role scope department_binding assignment_key relationship read edit_stages)) and
           a["scope"] in @scopes and
           is_boolean(a["read"]) and is_list(a["edit_stages"]) and
           (a["edit_stages"] == [] or a["read"])
       end) and
       keyed?(s["fields"]) and
       Enum.all?(s["fields"], fn f ->
-        props?(f, ~w(key label type options currency)) and label?(f["label"]) and
+        props?(f, ~w(key label type options currency reference document_policy)) and
+          label?(f["label"]) and
+          (not Map.has_key?(f, "document_policy") or f["type"] == "attachment") and
+          (not Map.has_key?(f, "reference") or f["type"] == "directory_reference") and
           f["type"] in @types and
           (f["type"] not in ~w(single_choice multiple_choice) or
              (is_list(f["options"]) and length(f["options"]) in 1..100 and
@@ -185,7 +197,8 @@ defmodule Instantflow.WorkflowCatalog.Definition do
       is_list(t["actors"]) and t["actors"] != [] and
       Enum.all?(
         t["actors"],
-        &(props?(&1, ~w(role scope department_binding assignment_key)) and &1["scope"] in @scopes)
+        &(props?(&1, ~w(role scope department_binding assignment_key relationship)) and
+            &1["scope"] in @scopes)
       ) and
       is_boolean(t["require_reason"]) and t["kind"] in @kinds and
       (not Map.has_key?(t, "disallow_requester") or is_boolean(t["disallow_requester"])) and
@@ -207,7 +220,17 @@ defmodule Instantflow.WorkflowCatalog.Definition do
     fields = fields(d)
 
     valid =
-      is_list(d["creation"]["roles"]) and d["creation"]["roles"] != [] and
+      Enum.all?(Map.get(d, "participants", []), fn spec ->
+        Enum.all?(spec["managers"], fn actor ->
+          actor["scope"] in ~w(assigned_department workflow_department) and
+            valid_actor?(actor, roles, d)
+        end)
+      end) and
+        Enum.all?(fields, fn {_, field} ->
+          policy = field["document_policy"]
+          is_nil(policy) or Enum.all?(policy["reviewers"], &valid_actor?(&1, roles, d))
+        end) and
+        is_list(d["creation"]["roles"]) and d["creation"]["roles"] != [] and
         Enum.all?(d["creation"]["roles"], &(&1 in roles)) and
         Enum.any?(
           d["bindings"],
@@ -228,7 +251,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
           )
         end) and
         Enum.all?(d["transitions"], fn t ->
-          Instantflow.Calculations.Contract.spec?(t["calculation"], d) and calculation_flow?(t, d) and
+          CalculationContract.spec?(t["calculation"], d) and calculation_flow?(t, d) and
             finance_spec?(t["finance"], d) and t["from"] in stages and t["to"] in stages and
             Enum.all?(t["actors"], &valid_actor?(&1, roles, d)) and
             (not Map.has_key?(t, "department_binding") or
@@ -265,7 +288,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   defp finance_spec?(spec, d) do
     fields = fields(d)
 
-    d["capabilities"] == ["core", "finance"] and
+    Capabilities.enabled?(d, "finance") and
       Enum.any?(d["bindings"], &(&1["type"] == "budget" and &1["key"] == spec["account_binding"])) and
       (spec["operation"] not in ~w(reserve post) or
          (get_in(fields, [spec["amount_field"], "type"]) == "money" and
@@ -293,7 +316,12 @@ defmodule Instantflow.WorkflowCatalog.Definition do
 
   defp valid_actor?(a, roles, d) do
     a["role"] in roles and
+      (a["scope"] == "participant" or not Map.has_key?(a, "relationship")) and
       case a["scope"] do
+        "participant" ->
+          not Map.has_key?(a, "department_binding") and not Map.has_key?(a, "assignment_key") and
+            Enum.any?(Map.get(d, "participants", []), &(&1["key"] == a["relationship"]))
+
         "workflow_department" ->
           not Map.has_key?(a, "assignment_key") and
             Enum.any?(

@@ -7,7 +7,7 @@ defmodule Instantflow.Access do
 
   @roles ~w(teacher admissions head finance finance_allocator finance_reverser operations it dean counselor python_author python_reviewer python_binder python_execute python_source)
   def roles, do: @roles
-  def binding_roles, do: ["admin", "staff", "parent" | @roles]
+  def binding_roles, do: ["admin", "staff", "parent", "external" | @roles]
 
   def load(%Membership{} = actor) do
     grants =

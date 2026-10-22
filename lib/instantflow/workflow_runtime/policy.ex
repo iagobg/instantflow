@@ -1,11 +1,19 @@
 defmodule Instantflow.WorkflowRuntime.Policy do
   @moduledoc "Deny-by-default role, department, relationship, stage, and section policies."
   alias Instantflow.Access
-
-  def discover?(%{role: "parent"}, _ticket, _version), do: false
+  alias Instantflow.WorkflowRuntime.LegacyAccess
 
   def discover?(actor, ticket, version) do
-    Enum.any?(version.definition["sections"], &section?(actor, ticket, version, &1, :read))
+    not LegacyAccess.parent_portal?(actor, version) and
+      Enum.any?(version.definition["sections"], &section?(actor, ticket, version, &1, :read))
+  end
+
+  def create?(actor, version) do
+    not LegacyAccess.parent_portal?(actor, version) and
+      Enum.any?(
+        version.definition["creation"]["roles"],
+        &Access.role?(actor, Map.get(version.bindings["roles"], &1, []))
+      )
   end
 
   def section?(actor, ticket, version, section, :read),
@@ -31,10 +39,14 @@ defmodule Instantflow.WorkflowRuntime.Policy do
   end
 
   def actor?(actor, ticket, version, spec) do
-    (actor.role != "parent" or Instantflow.Enrollment.guardian?(actor, ticket.id)) and
+    (not LegacyAccess.parent_portal?(actor, version) or
+       LegacyAccess.guardian?(actor, ticket, version)) and
       Enum.any?(Access.profiles(actor), fn profile ->
         profile.role in Map.get(version.bindings["roles"], spec["role"], []) and
           case spec["scope"] do
+            "participant" ->
+              Instantflow.Participants.linked?(actor, ticket, version, spec["relationship"])
+
             "assigned_user" ->
               Instantflow.Collaboration.Assignments.assigned?(
                 actor,
@@ -47,7 +59,7 @@ defmodule Instantflow.WorkflowRuntime.Policy do
               actor.user_id == ticket.requester_id
 
             "guardian" ->
-              Instantflow.Enrollment.guardian?(actor, ticket.id)
+              LegacyAccess.guardian?(actor, ticket, version)
 
             "workflow_department" ->
               profile.department_id == version.bindings["departments"][spec["department_binding"]]
@@ -83,7 +95,26 @@ defmodule Instantflow.WorkflowRuntime.Policy do
     section && Instantflow.Collaboration.Assignments.manager?(actor, ticket, version, section)
   end
 
+  def history?(actor, ticket, version, %{operation: "participant:" <> operation}) do
+    case String.split(operation, ":", parts: 2) do
+      [_, key] -> Instantflow.Participants.manage?(actor, ticket, version, key)
+      _ -> false
+    end
+  end
+
   def history?(_actor, _ticket, _version, %{operation: "create"}), do: true
+
+  def history?(actor, ticket, version, %{operation: "document:" <> operation}) do
+    case String.split(operation, ":", parts: 2) do
+      [_, ref] ->
+        key = ref |> String.split(".", parts: 2) |> hd()
+        section = Enum.find(version.definition["sections"], &(&1["key"] == key))
+        section != nil and section?(actor, ticket, version, section, :read)
+
+      _ ->
+        false
+    end
+  end
 
   def history?(actor, ticket, version, event) do
     case Enum.find(version.definition["transitions"], &(&1["key"] == event.operation)) do

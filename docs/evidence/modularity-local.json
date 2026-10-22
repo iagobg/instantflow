@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-21",
+  "status": "local_architecture_review_and_refactor",
+  "branch": "codex/restaurant-operations",
+  "base_revision": "11b432bc53838515fb63d68e07ce81d28d824be5",
+  "checks": {
+    "mix_precommit": {
+      "tests": 190,
+      "failures": 0,
+      "exit_code": 0,
+      "includes": [
+        "compile warnings as errors",
+        "unused dependency lock check",
+        "format check",
+        "full Elixir regression suite"
+      ]
+    },
+    "assets_build": "passed",
+    "git_diff_check": "passed",
+    "local_preview": "responds with HTTP 302 authentication redirect on port 4005"
+  },
+  "new_regressions": [
+    "additive finance and operations capabilities in arbitrary order",
+    "unknown/duplicate/missing-core capability rejection",
+    "portable schema and builder vocabulary agreement",
+    "undeclared block, role and capability rejection",
+    "renamed lifecycle closure pinned across republication",
+    "finance reservation permissions and rollback in a resource-session process",
+    "valid no-view process renders and starts records",
+    "resource-only pages do not require record-view definitions"
+  ],
+  "unchanged_boundaries": [
+    "no new migration or rewrite of saved definitions",
+    "no policy relaxation for guardian relationships or private documents",
+    "no deployment or customer launch",
+    "Python/deployment code unchanged; prior Python checks not rerun in this pass"
+  ],
+  "remaining_architecture_gates": [
+    "generic participant relationships and external projections",
+    "generic document access for external participants",
+    "replacement of key-specific legacy dashboards",
+    "explicit broader currency/timezone/reference-field contracts",
+    "authorized database pagination and remaining view renderers"
+  ],
+  "files_sha256": {
+    "lib/instantflow/workflow_catalog/capabilities.ex": "1d50bea2636daa1c7b548c7e5c19e95ed17d45536888ba364d513789243d0a52",
+    "lib/instantflow/workflow_catalog/interface.ex": "480507cc5807487b7d0c9968eb48f0728e4354f13b66ff70ad5c6c4019fa5188",
+    "lib/instantflow/workflow_catalog/workspaces.ex": "1854e2d5a9b23de0f6d3deb066b134a55c66410a6292dbf8176ccfbeb54ed028",
+    "lib/instantflow/workflow_catalog/legacy_workspaces.ex": "4c8599664f728548cd9bc1195ebf9d9df93f07cb49cf6c18ba87fe4163d5ad3c",
+    "lib/instantflow/workflow_catalog/definition.ex": "974f4d64e31a03627de5ed4ec3a1610db6e4e8339b3b695b5f1742b2beea7773",
+    "lib/instantflow/workflow_runtime.ex": "103f57b0eaa0b808844d4b356a2eb8f24ef4af54d4e74499b467a4e0408dd368",
+    "lib/instantflow_web/components/process_components.ex": "80f7acb0ea755777e367f55fdeb5c6b0e9d0d1c73679350a7f81d00a13bb99b0",
+    "lib/instantflow_web/process_routes.ex": "11b480053f722e9dc5d6bc531d36127a25de0bf5ea1828d36b22e2892ac3bcd2",
+    "lib/instantflow_web/live/process_live.ex": "e90fddde79643b7fb6530ae98f543b62f32e3ac2e388500c2b70d78b68da0494",
+    "lib/instantflow_web/live/template_live.ex": "a31833c3321d6ad4cba28aa1ffb6492664fed19577c9d8681012f35dbf004a08",
+    "lib/instantflow_web/user_auth.ex": "be9e5c7e7be41b2671e58a1e7e8201daaaa06e9096819a2ed7bb2522d6485e16",
+    "priv/templates/workflow-1.0.schema.json": "4ea7a46f879de3399ec65cc5fa452a901535e2ec6779ffc27f2481d1baef54fd",
+    "test/instantflow/workflow_catalog/builder_contract_test.exs": "5e86aa3b82875b0e9154d30bb16d211d1370ff239044db39db8ecbf4aed87539",
+    "test/instantflow/builder_composition_test.exs": "a03a224827279168fb891c9467ed6782bc04f37b330a8dd0f6e2fc037b478540",
+    "test/instantflow_web/live/processes_live_test.exs": "81cf455eef7f8032fc156bc65269d345fa38c4ac82decf4e811f5a5be485a268",
+    "docs/modularity-review.md": "74da4f945f1ce8a26d457913eef75d9de7b7d647b96cdbe87e5895f1ff18c713"
+  }
+}

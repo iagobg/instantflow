@@ -1,0 +1,133 @@
+{
+  "format_version": "1.0",
+  "template_key": "resource_service",
+  "template_version": "0.1.0",
+  "locale": "pt-BR",
+  "name": "Atendimento com itens",
+  "description": "Atendimentos por recurso, itens de catálogo e lotes por destino. Use o espaço operacional para abrir e fechar.",
+  "capabilities": [
+    "core",
+    "operations"
+  ],
+  "role_requirements": [
+    {
+      "key": "operator",
+      "label": "Operador"
+    }
+  ],
+  "sections": [
+    {
+      "key": "service",
+      "label": "Atendimento",
+      "classification": "internal",
+      "access": [
+        {
+          "role": "operator",
+          "scope": "requester",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "operator",
+          "scope": "assigned_department",
+          "read": true,
+          "edit_stages": []
+        }
+      ],
+      "fields": [
+        {
+          "key": "reference",
+          "label": "Referência operacional",
+          "type": "short_text"
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "key": "open",
+      "label": "Em atendimento",
+      "initial": true,
+      "terminal": false
+    },
+    {
+      "key": "settled",
+      "label": "Encerrado",
+      "initial": false,
+      "terminal": true
+    }
+  ],
+  "creation": {
+    "roles": [
+      "operator"
+    ]
+  },
+  "transitions": [
+    {
+      "key": "settle",
+      "label": "Encerrar pelo espaço operacional",
+      "from": "open",
+      "to": "settled",
+      "actors": [
+        {
+          "role": "operator",
+          "scope": "requester"
+        },
+        {
+          "role": "operator",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": []
+    }
+  ],
+  "bindings": [
+    {
+      "key": "service_department",
+      "type": "department",
+      "label": "Departamento operacional"
+    }
+  ],
+  "assignment": {
+    "department_binding": "service_department"
+  },
+  "views": [
+    {
+      "key": "services",
+      "label": "Atendimentos",
+      "type": "table",
+      "columns": [
+        "stage"
+      ]
+    }
+  ],
+  "interface": {
+    "pages": [
+      {
+        "key": "overview",
+        "label": "Atendimento",
+        "blocks": [
+          "catalog",
+          "resources",
+          "items",
+          "batches",
+          "settlement",
+          "daily_summary"
+        ]
+      }
+    ],
+    "labels": {
+      "resource": "Mesa",
+      "resources": "Mesas",
+      "catalog": "Cardápio",
+      "actor": "Garçom",
+      "destination": "Destino de preparo"
+    },
+    "lifecycle": {
+      "close_transition": "settle"
+    }
+  }
+}

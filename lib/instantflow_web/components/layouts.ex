@@ -7,6 +7,15 @@ defmodule InstantflowWeb.Layouts do
   slot :inner_block, required: true
 
   def app(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :navigation,
+        if(assigns.current_scope,
+          do: Instantflow.WorkflowCatalog.Workspaces.navigation(assigns.current_scope)
+        )
+      )
+
     ~H"""
     <a href="#main-content" class="skip-link">Pular para o conteúdo</a>
     <div class={if @current_scope, do: "app-shell", else: "auth-shell"}>
@@ -21,7 +30,7 @@ defmodule InstantflowWeb.Layouts do
           |> String.split()
           |> Enum.take(2)
           |> Enum.map_join(&String.first/1)}</span><div>
-            <strong>{@current_scope.organization.name}</strong><small>Ambiente escolar</small>
+            <strong>{@current_scope.organization.name}</strong><small>Espaço da organização</small>
           </div>
         </div>
         <p class="nav-label">ESPAÇO DE TRABALHO</p>
@@ -35,6 +44,17 @@ defmodule InstantflowWeb.Layouts do
           }
         >Trocar organização</.link>
         <nav aria-label="Navegação principal">
+          <.link
+            id="processes-link"
+            navigate={~p"/o/#{@current_scope.organization.slug}/processos"}
+            class="nav-link"
+          ><.icon name="hero-squares-2x2" />Processos</.link>
+          <.link
+            :for={process <- @navigation}
+            id={"process-link-#{process.id}"}
+            navigate={~p"/o/#{@current_scope.organization.slug}/processos/#{process.id}"}
+            class="nav-link"
+          ><.icon name="hero-squares-2x2" />{process.label}</.link>
           <.link
             :if={@current_scope.role == "admin"}
             id="workflow-templates-link"
@@ -52,28 +72,7 @@ defmodule InstantflowWeb.Layouts do
             navigate={~p"/o/#{@current_scope.organization.slug}/calculos"}
             class="nav-link"
           ><.icon name="hero-squares-2x2" />Cálculos Python</.link>
-          <.link
-            id="enrollment-link"
-            navigate={~p"/o/#{@current_scope.organization.slug}/matriculas"}
-            class="nav-link"
-          ><.icon name="hero-users" />Matrículas</.link>
-          <.link
-            :if={@current_scope.role != "parent"}
-            navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes"}
-            class="nav-link"
-          ><.icon name="hero-squares-2x2" />Solicitações</.link>
-          <.link
-            :if={@current_scope.role != "parent"}
-            id="incidents-link"
-            navigate={~p"/o/#{@current_scope.organization.slug}/ocorrencias"}
-            class="nav-link"
-          ><.icon name="hero-information-circle" />Ocorrências</.link>
-          <.link
-            :if={@current_scope.role != "parent"}
-            id="budgets-link"
-            navigate={~p"/o/#{@current_scope.organization.slug}/orcamentos"}
-            class="nav-link"
-          ><.icon name="hero-building-office" />Orçamentos</.link>
+
           <.link navigate={~p"/o/#{@current_scope.organization.slug}"} class="nav-link"><.icon name="hero-squares-2x2" />Visão geral</.link><.link
             :if={@current_scope.role == "admin"}
             navigate={~p"/o/#{@current_scope.organization.slug}/equipe"}
@@ -90,7 +89,7 @@ defmodule InstantflowWeb.Layouts do
         <header class="topbar">
           <span>{if @current_scope,
             do: @current_scope.department.name,
-            else: "Organização escolar, em fluxo"}</span><div class="topbar-actions">
+            else: "Sua organização, em fluxo"}</span><div class="topbar-actions">
             <button
               id="theme-toggle"
               type="button"

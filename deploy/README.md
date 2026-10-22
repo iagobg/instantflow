@@ -1,92 +1,143 @@
-# Push-to-deploy on the Oracle VPS
+# Deployment reference for LLM reviews
 
-This matches the workspace's private `deploy/oracle-caddy` stack: GitHub Actions builds an ARM64 image, publishes to GHCR, then connects over SSH to replace only Instantflow.
+This document describes Instantflow's deployment architecture, the files that control it, and the evidence available to a future reviewer. It is a reference for understanding and assessing the setup, rather than a first-time installation walkthrough.
 
-A push to `main` (or manually running **Checks** on `main`) runs the existing foundation checks first. Only a successful run calls `deploy.yml`. Pull requests and other branches never deploy. Images use full commit SHA tags; deploys are serialized in Actions and on the host. Runs that are no longer the main branch tip skip the SSH deployment. The web process runs as nobody, without Docker access or operator database credentials. Python execution is explicitly disabled in Compose pending separate gVisor acceptance.
+## Scope and sources of truth
 
-## One-time setup
+Instantflow follows the other projects in the WSL workspace: GitHub Actions publishes an ARM64 image to GHCR, then redeploys one application through the VPS's shared Docker Compose/Caddy stack.
 
-Source templates are in `deploy/oracle-caddy/`. Install their contents into the private `/home/iago/workspace/deploy/oracle-caddy/` directory, then copy only the Instantflow files to `portfolio-server:/home/ubuntu/apps/oracle-caddy/`. Keep future infrastructure edits in sync with these templates. Do not replace the shared compose.yml, .env, Caddyfile, or other projects.
-
-The installer can prepare the local private directory and generate matching random credentials without printing secrets or changing shared configuration:
-
-```sh
-python3 deploy/install.py /home/iago/workspace/deploy/oracle-caddy
-```
-
-It preserves existing credentials, refuses partial configuration or conflicting project files, and starts no services. Copy only its two Instantflow configuration files and three private environment files to the matching VPS paths. Avoid syncing unrelated deployment changes. Alternatively, create the following private files from their examples next to the VPS's shared compose.yml:
-
-- `instantflow.db.env`: dedicated PostgreSQL cluster's operator account.
-- `instantflow.operator.env`: one-off migration credentials and runtime role password.
-- `instantflow.env`: runtime database login and Phoenix secret only.
-
-Generate independent passwords with `openssl rand -hex 32` and the Phoenix secret with `openssl rand -hex 64`. Replace all placeholders. The operator password must match between db and operator files; the runtime password must match both runtime URLs and RUNTIME_DB_PASSWORD. Use `chmod 600` for the three files. Never commit real environment files.
-
-The dedicated database has no published port. The database's initialization account is privileged because existing migrations create roles and security-definer functions; only the migration container receives it. PostgreSQL initialization environment variables apply only when the volume is empty. Changing a password in a file alone does not rotate an existing database login.
-
-On this VPS, the shared backup directory is owned by root. Create Instantflow's private subdirectory once so the deployment SSH user can write its snapshots:
-
-```sh
-ssh portfolio-server 'sudo install -d -m 700 -o ubuntu -g ubuntu /home/ubuntu/apps/oracle-caddy/backups/instantflow'
-```
-
-In GitHub repository `iagobg/instantflow`, open **Settings → Secrets and variables → Actions**, select **New repository secret**, and add the following secrets. This uses repository Actions secrets like the other workspace projects; no GitHub Environment or environment approval gate is required.
-
-| Secret | Value |
+| Concern | Source |
 | --- | --- |
-| DEPLOY_HOST | 134.65.245.186 |
-| DEPLOY_USER | ubuntu |
-| DEPLOY_PATH | /home/ubuntu/apps/oracle-caddy |
-| DEPLOY_SSH_KEY | A private SSH deployment key whose public key is authorized on the VPS |
-| DEPLOY_KNOWN_HOSTS | Verified known_hosts entry for the VPS (host key, not the login public key) |
+| CI gates and deployment triggers | [checks.yml](../.github/workflows/checks.yml) |
+| Image publication and SSH orchestration | [deploy.yml](../.github/workflows/deploy.yml) |
+| Release build and Docker build-context exclusions | [Dockerfile](../Dockerfile), [.dockerignore](../.dockerignore) |
+| Backup, migration, restart, and image recording | [redeploy.sh](redeploy.sh) |
+| Application/database service definitions | [instantflow.compose.yml](oracle-caddy/projects/instantflow.compose.yml) |
+| HTTPS routing | [instantflow.caddy](oracle-caddy/caddy-sites/instantflow.caddy) |
+| Operator-only release migrations | [Instantflow.Release](../lib/instantflow/release.ex) |
+| Runtime database identity check | [Instantflow.RuntimeDatabase](../lib/instantflow/runtime_database.ex) |
+| Private configuration preparation | [install.py](install.py) and the adjacent `.env.example` templates |
+| Application operating boundaries and account bootstrap | [deployment.md](../docs/deployment.md), [organizations-operations.md](../docs/organizations-operations.md) |
 
-If you previously saved these secrets under a `production` environment, add them as repository secrets instead: the workflow no longer selects that environment. Keep database passwords and Phoenix runtime secrets in the private VPS environment files described above.
+There are three distinct configuration locations:
 
-Verify the host fingerprint through the existing trusted SSH connection before copying a known_hosts entry. Do not rely on an unverified CI-time ssh-keyscan. The deployment user needs noninteractive `sudo docker compose` access, matching the existing projects.
+- This repository contains reviewable templates and deployment code.
+- `/home/iago/workspace/deploy/oracle-caddy/` contains the private local deployment configuration.
+- `/home/ubuntu/apps/oracle-caddy/` contains the configuration actually used by the VPS.
 
-The workflow uses GITHUB_TOKEN to publish; no registry write token is needed. If the GHCR package is private, authenticate the VPS's **root Docker client** once using a token with read:packages, matching the existing private stack. For public packages no registry login is needed.
+A project push updates the application image. It does **not** synchronize Compose fragments, Caddy routes, or private environment files. Those files can drift between the repository, private local directory, and VPS; reviews need to distinguish intended configuration from observed deployed state. Shared `compose.yml`, `Caddyfile`, and other projects belong to the private deployment stack.
 
-Point `instantflow.iagobussoletti.com.br` DNS to the VPS. Install `caddy-sites/instantflow.caddy`. After the first successful deployment, validate and reload Caddy:
+## Topology and configuration boundaries
+
+The SSH alias is `portfolio-server`; the deployment target is `ubuntu@134.65.245.186`. The public endpoint is [instantflow.iagobussoletti.com.br](https://instantflow.iagobussoletti.com.br/entrar), with Cloudflare in front of the shared Caddy service.
+
+| Service | Purpose and boundary |
+| --- | --- |
+| `instantflow` | Phoenix release, port 4000 on the shared web network and private database network; no host port published |
+| `instantflow-db` | PostgreSQL 16.15, persistent `instantflow-data` volume, internal database network, no host port published |
+| `instantflow-migrate` | Disposable service in the `tools` profile; operator credentials and private database network only |
+| Shared `caddy` | Public HTTP/HTTPS entry point; route files imported from `caddy-sites/*.caddy` |
+
+The web image runs as `nobody:nogroup`, drops capabilities, enables no-new-privileges, and has no Docker socket mount. Its database login is `instantflow_runtime`; application startup rejects an owner/superuser/BYPASSRLS/CREATEROLE identity. The migration process uses OperatorRepo without starting the web application. PostgreSQL's initialization/operator account is privileged because the existing migrations create roles and security-definer functions.
+
+The private files beside the VPS's shared Compose file have separate consumers:
+
+| File | Consumer and contents |
+| --- | --- |
+| `instantflow.env` | Web process: runtime database URL, Phoenix secret, host, and pool settings |
+| `instantflow.operator.env` | Migration process: operator URL, runtime role password, and configuration required by release evaluation |
+| `instantflow.db.env` | PostgreSQL initialization: database name and operator credentials |
+| `instantflow.image.env` | Last image whose deployment completed the health wait; no credentials |
+
+The three credential files have mode `600`. The runtime password must agree across both runtime URLs and `RUNTIME_DB_PASSWORD`; the operator password must agree between the database and migration files. PostgreSQL initialization variables only initialize an empty volume; editing an environment file alone does not rotate an existing login.
+
+`install.py` prepares the private local directory, generates matching random credentials, preserves existing credentials, and refuses partial credential sets or conflicting project files. It does not start services or synchronize the VPS. Reviews can check configuration names, permissions, and consistency without printing secret values.
+
+## GitHub Actions contract
+
+A push to `main`, or a manual run of **Checks** on `main`, runs the foundation job before calling the reusable deployment workflow. Pull requests and other branches do not deploy. The foundation job includes project checks, Python tests, deployment tests, asset builds, rehearsals, and the benchmark.
+
+The repository uses **repository Actions secrets**. There is no GitHub Environment or environment approval gate. The concurrency group named `instantflow-production` is only a serialization identifier.
+
+| Secret | Role |
+| --- | --- |
+| `DEPLOY_HOST` | VPS address: `134.65.245.186` |
+| `DEPLOY_USER` | SSH user: `ubuntu` |
+| `DEPLOY_PATH` | Shared deployment root: `/home/ubuntu/apps/oracle-caddy` |
+| `DEPLOY_SSH_KEY` | Dedicated Actions private key; its public key is authorized on the VPS |
+| `DEPLOY_KNOWN_HOSTS` | Verified VPS host-key entry for strict SSH identity checking |
+
+Application/database secrets stay in the private deployment files, outside Actions. `GITHUB_TOKEN` publishes images with package-write permission. The VPS successfully pulled the published image during initial verification; private registry access, if introduced later, would need authentication for the root Docker client used by `sudo`.
+
+The publish job runs on `ubuntu-24.04-arm` and builds `linux/arm64`. Images are tagged `ghcr.io/iagobg/instantflow:<full-commit-sha>`; deployment does not use `latest`. SHA tags identify the selected revision, but the script does not pin a manifest digest.
+
+Actions deployments are serialized without canceling a running deployment. The SSH job checks the current main-branch tip before proceeding and skips superseded commits. A separate host `flock` serializes script invocations, including manual ones.
+
+## Deployment behavior and failure semantics
+
+The checked-out Actions revision streams `redeploy.sh` to `bash -s` over SSH. No application source checkout is required on the VPS.
+
+1. Validate the full-SHA GHCR image argument, acquire the host lock, and check required configuration files.
+2. Pull the application/migration image and PostgreSQL image before stopping the web service.
+3. Ensure the database is healthy.
+4. Write a private custom-format `pg_dump` under `backups/instantflow/` and require a nonempty result.
+5. Stop only the Instantflow web service for the migration window.
+6. Run `Instantflow.Release.migrate()` in a disposable operator container, including runtime-role password configuration.
+7. Start the web service with `--no-deps` and wait for its local login HTTP health check.
+8. Atomically replace `instantflow.image.env` after the health wait succeeds, leaving the shared `.env` untouched.
+
+CI/publication failures do not invoke the VPS script. Pull and backup failures occur before the script stops the web service. A migration failure leaves it stopped for intervention. A health failure fails the deployment but can leave the new container running or unhealthy; the image record still describes the previous successful deployment. That record alone is therefore not proof of the currently running image.
+
+Migrations are forward-only and involve maintenance downtime. There is no automatic image rollback, schema downgrade, or database restore. Deploying an older image requires schema compatibility assessment; the script still runs pending migrations.
+
+Routine image redeploys do not reload Caddy. Route changes require separate Caddy validation/reload. The initial certificate was issued by Let's Encrypt through the existing Cloudflare/Caddy path.
+
+## Review-sensitive implementation details
+
+These behaviors were established during the first VPS deployment and are covered where applicable by [test_redeploy.py](test_redeploy.py):
+
+- `sudo` resets the caller's environment. The selected image is passed through `sudo env INSTANTFLOW_IMAGE=...`; exporting it only in the SSH shell fails Compose interpolation.
+- Docker commands receive `/dev/null` as stdin. Otherwise, an interactive Docker command can consume the remainder of the script streamed over SSH and cause an incomplete deployment to appear successful.
+- The shared `backups/` directory is root-owned on this VPS. Its `instantflow/` subdirectory is owned by `ubuntu:ubuntu` with mode `700`, allowing private snapshots without changing other projects' backup permissions.
+- Commands use the shared root Compose file plus Instantflow's fragment and target specific services. Other project containers appear as Compose “orphans” in this partial view; removing them is not part of deployment.
+- Private environment files are excluded from Git, and the Docker context allowlist excludes workspace credentials/data. Compose templates alone do not prove the live web container lacks operator credentials or Docker access.
+- A clean CI database exposed an organization-ID collision in an enrollment fixture. The correction is in [enrollment_fixtures.ex](../test/support/enrollment_fixtures.ex); validation included the failing seed and a fresh temporary PostgreSQL cluster.
+
+## Verification evidence and review entry points
+
+On **2026-10-21**, [Actions run 39619134537](https://github.com/iagobg/instantflow/actions/runs/39619134537) completed successfully for commit `acd0b1afb3bd675be71a60345db32a6a564e2c5c`: foundation checks, ARM64 image publication, and automatic SSH redeployment all passed.
+
+Post-deployment observations included:
+
+- The VPS ran that exact image and both Instantflow containers were healthy.
+- Public HTTPS login, compiled JavaScript, and compiled CSS returned HTTP 200; the unauthenticated root redirected to the login page.
+- The automatic pre-deploy backup existed with mode `600` and a size of 200,175 bytes.
+- The web container ran as `nobody:nogroup` without bind mounts, and PostgreSQL had no published port on its internal network.
+- Existing VPS applications remained running with unchanged container uptimes.
+
+This is historical evidence, not a statement that a future checkout or live deployment is unchanged. Current reviews can compare the running image, recorded image, workflow revision, template copies, health state, and backup metadata.
+
+Local validation entry points are `mix precommit`, `python3 -m unittest discover -s deploy -p 'test_*.py' -v`, `python3 -m unittest discover -s runner -p 'test_*.py' -v`, and `bash -n deploy/redeploy.sh`. An x86 local release build does not establish ARM64 compatibility.
+
+Read-only VPS checks, from `/home/ubuntu/apps/oracle-caddy/`, include:
 
 ```sh
-cd /home/ubuntu/apps/oracle-caddy
-sudo docker compose -f compose.yml exec -T caddy caddy validate --config /etc/caddy/Caddyfile
-sudo docker compose -f compose.yml exec -T caddy caddy reload --config /etc/caddy/Caddyfile
-curl --fail https://instantflow.iagobussoletti.com.br/entrar
-```
-
-Caddy already imports the sites directory; routine redeploys need no reload. Do not enable a DNS proxy that changes websocket/origin behavior without testing LiveView.
-
-## Deployment sequence and failure handling
-
-`deploy/redeploy.sh DEPLOY_PATH ghcr.io/iagobg/instantflow:<full-sha>` is streamed from the checked-out Actions revision to the VPS; no application source checkout is needed there.
-
-1. Acquire a host lock and verify private configuration exists.
-2. Pull the exact application image and PostgreSQL image before stopping the app.
-3. Ensure the dedicated database is healthy.
-4. Save a private custom-format pg_dump under `backups/instantflow/`.
-5. Stop only Instantflow for the forward-only migration window.
-6. Run `Instantflow.Release.migrate()` in a disposable operator container. This migrates using OperatorRepo and sets the non-owner runtime role's password without starting the web application.
-7. Start the web container and wait for its local HTTP health check.
-8. Record the successful image in `instantflow.image.env`, leaving the shared .env untouched.
-
-The health check verifies the login HTTP endpoint. The application's startup role check also queries PostgreSQL and rejects privileged web credentials. CI failure or pull failure leaves the running application alone. Migration failure leaves it stopped for operator intervention; health failure marks the workflow failed. There is no automatic database downgrade or rollback across schema changes.
-
-For manual Compose operations, load the recorded image file as well as the shared environment:
-
-```sh
+sudo docker compose --env-file .env --env-file instantflow.image.env \
+  -f compose.yml -f projects/instantflow.compose.yml --profile tools config --quiet
 sudo docker compose --env-file .env --env-file instantflow.image.env \
   -f compose.yml -f projects/instantflow.compose.yml ps
-sudo docker compose --env-file .env --env-file instantflow.image.env \
-  -f compose.yml -f projects/instantflow.compose.yml logs --tail 100 instantflow
+sudo docker inspect oracle-caddy-instantflow-1 \
+  --format 'image={{.Config.Image}} user={{.Config.User}} health={{.State.Health.Status}}'
+curl --fail --silent --show-error --output /dev/null \
+  --write-out '%{http_code}\n' https://instantflow.iagobussoletti.com.br/entrar
 ```
 
-For an image rollback, run the deployment script with a previously published SHA **only after confirming schema compatibility**. It still takes a backup and runs pending migrations; it never downgrades the database. Recovery after incompatible migrations requires a planned database restore and maintenance window.
+`config --quiet` validates without printing resolved credentials. Full resolved Compose output, container environment dumps, and unrestricted application logs can disclose private values.
 
-Backups are local pre-deploy snapshots, retained until the operator removes them. Monitor disk use and arrange encrypted off-host copies and restore rehearsals before relying on them for production recovery. No automatic deletion is configured.
+## Remaining operating boundaries
 
-Fresh deployments create an empty application database. Do not run demonstration seeds in production. Use the existing organization/bootstrap operator procedures in `docs/organizations-operations.md` to create synthetic demonstration accounts.
+Backups are local pre-deploy snapshots without automatic retention or off-host replication. A successful dump is not a restore rehearsal or a recovery-time guarantee. Recovery after incompatible migrations remains a planned restore/cutover operation.
 
-## Verification
+The initial database contained no user accounts or demonstration seeds. Administrator/organization bootstrap is separate from deployment; production demo seeds are intentionally refused by the application.
 
-Run `mix precommit`, `python3 -m unittest discover -s deploy -p 'test_*.py' -v`, and `bash -n deploy/redeploy.sh`. Build on ARM64 with `docker build -t instantflow:smoke .`; local x86 releases cannot validate the VPS architecture. Validate Compose using placeholder env files in an isolated directory with `docker compose ... config --quiet` before copying real configuration.
+Python execution is explicitly disabled in Compose. The deployment's success does not establish gVisor containment, uploaded-code execution readiness, or capacity for real workloads. Those boundaries remain documented in [python-readiness.md](../docs/python-readiness.md) and [python-calculations.md](../docs/python-calculations.md).

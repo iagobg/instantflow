@@ -147,7 +147,12 @@ defmodule InstantflowWeb.TeamLive do
                       class="badge"
                     >Acesso inativo</span>
                   </td><td>{member.department.name}</td><td>
-                    {if member.role == "admin", do: "Administrador", else: "Colaborador"}
+                    {case member.role do
+                      "admin" -> "Administrador"
+                      "external" -> "Participante externo"
+                      "parent" -> "Responsável"
+                      _ -> "Colaborador"
+                    end}
                     <div :for={grant <- member.grants} id={"grant-#{grant.id}"} class="grant-row">
                       <small>{role_label(grant.role)} · {department_label(
                         @departments,
@@ -230,7 +235,11 @@ defmodule InstantflowWeb.TeamLive do
               field={@form[:role]}
               type="select"
               label="Perfil de acesso"
-              options={[{"Colaborador", "staff"}, {"Administrador", "admin"}]}
+              options={[
+                {"Colaborador", "staff"},
+                {"Administrador", "admin"},
+                {"Participante externo", "external"}
+              ]}
               required
             /><button id="create-invite" class="btn primary" phx-disable-with="Gerando convite…">Gerar convite</button>
           </.form><div :if={@code} id="invitation-result" role="status" class="code-result">

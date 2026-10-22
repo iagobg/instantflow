@@ -1578,4 +1578,251 @@ defmodule Instantflow.RuntimeRoleTest do
 
     count >= expected or wait_for_waiters(connection, database, expected, remaining - 1)
   end
+
+  test "operational commands race on real runtime connections without duplicate visits or batches",
+       c do
+    alias Instantflow.Operations
+    actor = c.a_scope
+    Instantflow.OperationsFixtures.install_operations(actor)
+    {:ok, resource} = operations_command(actor, "add_resource", %{"name" => "Mesa 08"})
+
+    {:ok, product} =
+      operations_command(actor, "save_product", %{
+        "name" => "Sopa",
+        "category" => "Pratos",
+        "destination" => "Cozinha",
+        "price" => 2550
+      })
+
+    open = %{
+      "operation" => "open_session",
+      "resource_id" => resource["id"],
+      "waiter" => "Carlos",
+      "business_date" => Date.to_iso8601(Operations.today())
+    }
+
+    supervisor = start_supervised!({Task.Supervisor, []})
+    parent = self()
+
+    tasks =
+      for n <- 1..2 do
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          Repo.put_dynamic_repo(c.runtime)
+          send(parent, {:ready_operation, self()})
+
+          receive do
+            :go -> Operations.command(actor, Map.merge(open, %{"key" => "open-#{n}"}))
+          end
+        end)
+      end
+
+    for _ <- tasks do
+      assert_receive {:ready_operation, pid}
+      send(pid, :go)
+    end
+
+    results = Enum.map(tasks, &Task.await(&1, 10_000))
+    assert Enum.count(results, &match?({:ok, _}, &1)) == 1
+    assert Enum.count(results, &(&1 == {:error, :occupied})) == 1
+    {:ok, session} = Enum.find(results, &match?({:ok, _}, &1))
+    p = hd(Operations.workspace(actor, Operations.today()).products)
+
+    command = %{
+      "operation" => "submit_batch",
+      "key" => "duplicate-batch",
+      "session_id" => session["id"],
+      "lines" => [
+        %{"product_id" => product["id"], "product_revision" => p.revision, "quantity" => 2}
+      ]
+    }
+
+    tasks =
+      for _ <- 1..2 do
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          Repo.put_dynamic_repo(c.runtime)
+          send(parent, {:ready_batch, self()})
+
+          receive do
+            :go -> Operations.command(actor, command)
+          end
+        end)
+      end
+
+    pids =
+      for _ <- tasks do
+        assert_receive {:ready_batch, pid}
+        pid
+      end
+
+    Enum.each(pids, &send(&1, :go))
+    [first, second] = Enum.map(tasks, &Task.await(&1, 10_000))
+    assert first == second
+    assert {:ok, _} = first
+    assert %{total: 5100, batches: [_]} = Operations.visit(actor, session["id"])
+    assert {:ok, []} = Tenant.raw(c.b.id, fn -> Repo.all(Instantflow.Operations.Product) end)
+    assert Repo.all(Instantflow.Operations.Product) == []
+
+    assert {:ok, %{rows: [["instantflow_runtime", false, false]]}} =
+             Tenant.raw(c.a.id, fn ->
+               Repo.query!(
+                 "SELECT current_user, rolsuper, rolbypassrls FROM pg_roles WHERE rolname=current_user"
+               )
+             end)
+
+    for schema <- [
+          Instantflow.Operations.Resource,
+          Instantflow.Operations.Session,
+          Instantflow.Operations.Batch,
+          Instantflow.Operations.Line,
+          Instantflow.Operations.Receipt,
+          Instantflow.Operations.DayClose
+        ] do
+      assert {:ok, []} = Tenant.raw(c.b.id, fn -> Repo.all(schema) end)
+      assert Repo.all(schema) == []
+    end
+  end
+
+  test "declared participant revocation fences queued writes and references on real connections",
+       c do
+    alias Instantflow.{BuilderFixtures, Participants}
+    visitor = reviewer(c, "declared-participant")
+    definition = BuilderFixtures.document_definition()
+
+    bindings = %{
+      "roles" => %{"requester" => ["admin"], "reviewer" => ["admin"], "visitor" => ["staff"]},
+      "departments" => %{"responsible" => c.a_scope.department_id}
+    }
+
+    version = BuilderFixtures.install(c.a_scope, definition, bindings)
+
+    {:ok, result} =
+      WorkflowRuntime.command(c.a_scope, %{
+        "operation" => "create",
+        "workflow_id" => version.workflow_id,
+        "key" => Ecto.UUID.generate()
+      })
+
+    id = result["ticket_id"]
+
+    for {operation, revision} <- [{"create", 0}, {"verify", 1}] do
+      assert {:ok, _} =
+               Participants.command(
+                 c.a_scope,
+                 BuilderFixtures.participant_command(id, visitor.id, operation, revision)
+               )
+    end
+
+    assert {:error, :not_found} =
+             Participants.command(
+               c.a_scope,
+               BuilderFixtures.participant_command(id, c.b_scope.id, "create", 0)
+             )
+
+    assert {:ok, []} =
+             Tenant.raw(c.b.id, fn -> Repo.all(Instantflow.Participants.Relationship) end)
+
+    assert Repo.all(Instantflow.Participants.Relationship) == []
+    {:ok, data} = WorkflowRuntime.get(visitor, id)
+    section = hd(data.sections)
+
+    write = %{
+      "operation" => "save_section",
+      "ticket_id" => id,
+      "section" => section.key,
+      "values" => %{"description" => "Não deve persistir"},
+      "key" => Ecto.UUID.generate(),
+      "expected_stage_revision" => data.ticket.stage_revision,
+      "expected_section_revision" => section.revision
+    }
+
+    {:ok, document} =
+      Instantflow.PrivateDocuments.upload(
+        visitor,
+        id,
+        "customer_details",
+        "evidence",
+        "synthetic.pdf",
+        Instantflow.EnrollmentFixtures.pdf()
+      )
+
+    {:ok, _} = Instantflow.PrivateDocuments.review(c.a_scope, document.object_key, true)
+
+    [{_, reference}] =
+      Instantflow.Participants.Directory.options(c.a_scope, id, "request", "contact")
+
+    {:ok, internal} = WorkflowRuntime.get(c.a_scope, id)
+
+    manager_write =
+      Instantflow.CollaborationFixtures.section_command(internal, "request", %{
+        "contact" => reference
+      })
+
+    observer = self()
+    supervisor = start_supervised!(Task.Supervisor)
+
+    revoker =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        Repo.transaction(fn ->
+          result =
+            Participants.command(
+              c.a_scope,
+              BuilderFixtures.participant_command(id, visitor.id, "revoke", 2)
+            )
+
+          send(observer, :participant_gate_held)
+
+          receive do
+            :commit -> result
+          after
+            5000 -> Repo.rollback(:barrier_timeout)
+          end
+        end)
+      end)
+
+    assert_receive :participant_gate_held, 5000
+
+    writer =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+        WorkflowRuntime.command(visitor, write)
+      end)
+
+    manager_writer =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+        WorkflowRuntime.command(c.a_scope, manager_write)
+      end)
+
+    file_reader =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+        Instantflow.PrivateDocuments.download(visitor, document.object_key)
+      end)
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec(
+          {Postgrex, c.owner_config ++ [database: c.database]},
+          id: :participant_observer
+        )
+      )
+
+    assert wait_for_waiters(connection, c.database, 3, 1000)
+    send(revoker.pid, :commit)
+    assert {:ok, {:ok, _}} = Task.await(revoker)
+    assert {:error, :forbidden} = Task.await(writer)
+    assert {:error, :invalid_reference} = Task.await(manager_writer)
+    assert {:error, :not_found} = Task.await(file_reader)
+    assert {:error, :not_found} = WorkflowRuntime.get(visitor, id)
+    assert count_receipts(id) == 6
+  end
+
+  defp operations_command(actor, operation, attrs) do
+    Instantflow.Operations.command(
+      actor,
+      Map.merge(attrs, %{"operation" => operation, "key" => Ecto.UUID.generate()})
+    )
+  end
 end

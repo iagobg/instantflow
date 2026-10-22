@@ -1,6 +1,6 @@
 # InstantFlow design
 
-Status: Sprints 00–08 complete; private academic Python deployment verified and enabled · Updated: 2026-10-21
+Status: Sprints 00–09 complete; private academic Python deployment verified and enabled; Sprints 10–11 architecture priority; Sprints 12–15 customer delivery planned · Updated: 2026-10-21
 
 Build a general-purpose, multi-organization workflow platform using Elixir and Phoenix LiveView. Organizations across different sectors configure their own processes, forms, permissions, and live dashboards. Four school workflows provide the initial demonstration, including cross-department collaboration and an external-participant portal illustrated by parent access.
 
@@ -16,6 +16,8 @@ Build a general-purpose, multi-organization workflow platform using Elixir and P
 The user confirmed template import/export and an LLM authoring guide in Sprint 03. They use the same validated model as the editor.
 
 ## Document map
+
+[First real customer roadmap](../sprint_plan/first_customer_roadmap.md) adds proposed assisted onboarding, shared-database demo controls, real delivery and operational acceptance gates. Existing simulation and academic hosting decisions remain in force until those gates are implemented and accepted; this documentation does not enable customer operation.
 
 1. [Product scope](01-product.md)
 2. [Architecture](02-architecture.md)
@@ -37,3 +39,9 @@ Confirmed means explicitly requested or answered. Proposed means a working desig
 Sprint 04 delivery: [enrollment operations and private documents](../docs/enrollment.md), with verified local guardian links, explicit parent projections and synthetic file limits. [Sprint evidence](../sprint_plan/sprint_04.md).
 
 Sprint 07 delivery: [integrated demonstration](../docs/demo.md), [release-gate evidence](../docs/release-gates.md), [local performance](../docs/performance.md) and [deployment boundaries](../docs/deployment.md). Sprint 05 finance and Sprint 06 incident evidence are in the sprint index.
+
+- [Process composition and generated interfaces](../docs/process-composition.md): organization-owned definitions, page/block authoring, generic URLs and legacy migration limits.
+
+- [Modularity review and extension rules](../docs/modularity-review.md): current buildability matrix, capability contracts and remaining domain dependencies.
+
+- [Builder architecture contract](../docs/builder-architecture-contract.md): Sprint 09–11 ownership, execution, publication and recreation requirements; [execution contracts](../docs/builder-execution.md) and [Sprint 09 completion](../docs/participants-and-documents.md).

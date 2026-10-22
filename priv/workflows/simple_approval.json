@@ -266,5 +266,16 @@
         "stage"
       ]
     }
-  ]
+  ],
+  "interface": {
+    "pages": [
+      {
+        "key": "overview",
+        "label": "Acompanhamento",
+        "blocks": [
+          "records"
+        ]
+      }
+    ]
+  }
 }

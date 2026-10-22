@@ -4,7 +4,13 @@ defmodule InstantflowWeb.RequestLive do
   alias Instantflow.Collaboration.{Editor, Presence}
   alias InstantflowWeb.RuntimeErrors
 
-  def mount(%{"id" => raw_id}, _session, socket) do
+  def mount(%{"id" => raw_id} = params, _session, socket) do
+    workflow_id =
+      case Integer.parse(params["workflow_id"] || "") do
+        {value, ""} -> value
+        _ -> nil
+      end
+
     case Integer.parse(raw_id) do
       {id, ""} when id > 0 and id < 9_223_372_036_854_775_807 ->
         if connected?(socket) do
@@ -20,7 +26,7 @@ defmodule InstantflowWeb.RequestLive do
         end
 
         case WorkflowRuntime.get(socket.assigns.current_scope, id) do
-          {:ok, data} ->
+          {:ok, data} when is_nil(workflow_id) or data.ticket.workflow_id == workflow_id ->
             {:ok,
              socket
              |> assign(
@@ -247,7 +253,8 @@ defmodule InstantflowWeb.RequestLive do
              section,
              field,
              entry.client_name,
-             File.read!(path)
+             File.read!(path),
+             socket.assigns.action_key <> ":" <> entry.ref
            )}
         end)
 
@@ -269,15 +276,24 @@ defmodule InstantflowWeb.RequestLive do
   end
 
   def handle_event("review-private-document", %{"key" => key, "accept" => accept}, socket) do
-    case Instantflow.PrivateDocuments.review(socket.assigns.current_scope, key, accept == "true") do
-      {:ok, _} -> refresh(socket)
+    case Instantflow.PrivateDocuments.review(
+           socket.assigns.current_scope,
+           key,
+           accept == "true",
+           socket.assigns.action_key
+         ) do
+      {:ok, _} -> refresh(assign(socket, :action_key, Ecto.UUID.generate()))
       {:error, error} -> failure(socket, error)
     end
   end
 
   def handle_event("delete-private-document", %{"key" => key}, socket) do
-    case Instantflow.PrivateDocuments.delete(socket.assigns.current_scope, key) do
-      {:ok, _} -> refresh(socket)
+    case Instantflow.PrivateDocuments.delete(
+           socket.assigns.current_scope,
+           key,
+           socket.assigns.action_key
+         ) do
+      {:ok, _} -> refresh(assign(socket, :action_key, Ecto.UUID.generate()))
       {:error, error} -> failure(socket, error)
     end
   end
@@ -311,6 +327,70 @@ defmodule InstantflowWeb.RequestLive do
   end
 
   def handle_event("refresh", _, socket), do: refresh(socket)
+
+  def handle_event("participant-search", %{"participant_search" => %{"query" => query}}, socket)
+      when is_binary(query),
+      do: refresh(assign(socket, :participant_query, String.slice(query, 0, 100)))
+
+  def handle_event(
+        "participant-create",
+        %{"participant" => %{"membership_id" => raw}, "relationship" => relationship},
+        socket
+      ) do
+    participant_change(socket, "create", relationship, participant_integer(raw), 0)
+  end
+
+  def handle_event(
+        "participant-state",
+        %{
+          "operation" => operation,
+          "relationship" => relationship,
+          "membership" => raw,
+          "revision" => revision
+        },
+        socket
+      ) do
+    participant_change(
+      socket,
+      operation,
+      relationship,
+      participant_integer(raw),
+      participant_integer(revision)
+    )
+  end
+
+  def handle_event(
+        "search-reference",
+        %{"directory" => %{"query" => query}, "section" => section, "field" => field},
+        socket
+      )
+      when is_binary(query) do
+    scope = socket.assigns.current_scope
+
+    case WorkflowRuntime.get(scope, socket.assigns.data.ticket.id) do
+      {:ok, data} ->
+        ref = section <> "." <> field
+
+        options =
+          Instantflow.Participants.Directory.options(scope, data.ticket.id, section, field, query)
+
+        queries =
+          Map.put(
+            Map.get(socket.assigns, :directory_queries, %{}),
+            ref,
+            String.slice(query, 0, 100)
+          )
+
+        {:noreply,
+         socket
+         |> assign(:directory_queries, queries)
+         |> load(%{data | reference_options: Map.put(data.reference_options, ref, options)})}
+
+      _ ->
+        refresh(socket)
+    end
+  end
+
   def handle_event("reconcile", _, socket), do: refresh(socket)
 
   def handle_event("heartbeat", _, socket) do
@@ -341,6 +421,29 @@ defmodule InstantflowWeb.RequestLive do
     {:noreply, updated |> clear_flash() |> put_flash(:error, RuntimeErrors.message(error))}
   end
 
+  defp participant_integer(value) when is_binary(value) and byte_size(value) <= 19 do
+    case Integer.parse(value) do
+      {number, ""} when number in 1..9_223_372_036_854_775_807 -> number
+      _ -> nil
+    end
+  end
+
+  defp participant_integer(_), do: nil
+
+  defp participant_change(socket, operation, relationship, member, revision) do
+    case Instantflow.Participants.command(socket.assigns.current_scope, %{
+           "operation" => operation,
+           "relationship" => relationship,
+           "membership_id" => member,
+           "expected_revision" => revision,
+           "ticket_id" => socket.assigns.data.ticket.id,
+           "key" => socket.assigns.action_key
+         }) do
+      {:ok, _} -> refresh(assign(socket, :action_key, Ecto.UUID.generate()))
+      {:error, reason} -> failure(socket, reason)
+    end
+  end
+
   defp refresh(socket) do
     case WorkflowRuntime.get(socket.assigns.current_scope, socket.assigns.data.ticket.id) do
       {:ok, data} ->
@@ -357,7 +460,27 @@ defmodule InstantflowWeb.RequestLive do
 
         {:noreply,
          socket
-         |> assign(data: nil, editors: %{}, forms: %{}, dirty: false)
+         |> assign(
+           data: nil,
+           editors: %{},
+           forms: %{},
+           dirty: false,
+           attachment_options: [],
+           document_count: 0,
+           reference_search_forms: %{},
+           directory_queries: %{},
+           participant_forms: %{},
+           participant_control_count: 0,
+           participant_query: ""
+         )
+         |> stream(:sections, [], reset: true)
+         |> stream(:private_documents, [], reset: true)
+         |> stream(:participant_controls, [], reset: true)
+         |> stream(:participant_relationships, [], reset: true)
+         |> stream(:events, [], reset: true)
+         |> stream(:deliveries, [], reset: true)
+         |> stream(:assignments, [], reset: true)
+         |> stream(:calculations, [], reset: true)
          |> redirect(to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/solicitacoes")}
     end
   end
@@ -372,6 +495,22 @@ defmodule InstantflowWeb.RequestLive do
   defp load(socket, data) do
     editors = Editor.reconcile(socket.assigns.editors, data)
     forms = Map.new(editors, fn {key, editor} -> {key, to_form(editor.values, as: :section)} end)
+    participant_query = Map.get(socket.assigns, :participant_query, "")
+
+    management =
+      Instantflow.Participants.controls(
+        socket.assigns.current_scope,
+        data.ticket.id,
+        participant_query
+      )
+
+    participant_forms = Map.new(management.controls, &{&1.key, to_form(%{}, as: :participant)})
+    directory_queries = Map.get(socket.assigns, :directory_queries, %{})
+
+    reference_search_forms =
+      Map.new(data.reference_options, fn {ref, _} ->
+        {ref, to_form(%{"query" => Map.get(directory_queries, ref, "")}, as: :directory)}
+      end)
 
     attachment_options =
       for section <- data.section_definitions,
@@ -400,10 +539,18 @@ defmodule InstantflowWeb.RequestLive do
       data: data,
       editors: editors,
       forms: forms,
+      participant_query: participant_query,
+      participant_forms: participant_forms,
+      participant_search_form: to_form(%{"query" => participant_query}, as: :participant_search),
+      participant_control_count: length(management.controls),
+      directory_queries: directory_queries,
+      reference_search_forms: reference_search_forms,
       dirty: Enum.any?(editors, fn {_, e} -> e.dirty end),
       stale: data.ticket.revision != socket.assigns.review_revision
     )
     |> stream(:private_documents, documents, reset: true)
+    |> stream(:participant_controls, management.controls, reset: true)
+    |> stream(:participant_relationships, management.relationships, reset: true)
     |> stream(:assignments, data.assignments, reset: true)
     |> stream(:sections, data.sections, reset: true)
     |> stream(:events, data.events, reset: true)
@@ -463,7 +610,8 @@ defmodule InstantflowWeb.RequestLive do
           {type, ""} when type not in ["short_text", "long_text"] ->
             nil
 
-          {type, value} when type in ["integer", "money"] ->
+          {type, value}
+          when type in ["integer", "money", "directory_reference"] and is_binary(value) ->
             case Integer.parse(value) do
               {number, ""} -> number
               _ -> value
@@ -489,9 +637,13 @@ defmodule InstantflowWeb.RequestLive do
   defp stage_label(data),
     do: Enum.find(data.version.definition["stages"], &(&1["key"] == data.ticket.stage))["label"]
 
+  defp participant_status("verified"), do: "Verificado"
+  defp participant_status("revoked"), do: "Revogado"
+  defp participant_status(_), do: "Aguardando verificação"
   defp field_type("long_text"), do: "textarea"
   defp field_type(type) when type in ["money", "integer"], do: "number"
   defp field_type("date"), do: "date"
+  defp field_type("directory_reference"), do: "select"
   defp field_type(type) when type in ["boolean", "single_choice", "multiple_choice"], do: "select"
   defp field_type(_), do: "text"
 
@@ -499,6 +651,23 @@ defmodule InstantflowWeb.RequestLive do
     do: [{"Não informado", ""}, {"Sim", "true"}, {"Não", "false"}]
 
   defp options(field), do: Map.get(field, "options", [])
+
+  defp field_options(%{"type" => "directory_reference"} = field, data, section),
+    do: [
+      {"Não informado", ""} | Map.get(data.reference_options, section <> "." <> field["key"], [])
+    ]
+
+  defp field_options(field, _, _), do: options(field)
+
+  defp format_field(%{"type" => "directory_reference"} = field, value, data, section) do
+    if is_nil(value),
+      do: "—",
+      else:
+        get_in(data.reference_labels, [section <> "." <> field["key"], value]) ||
+          "Referência indisponível"
+  end
+
+  defp format_field(_, value, _, _), do: format_value(value)
   defp delivery_label("failed"), do: "Falhou"
   defp delivery_label("succeeded"), do: "Concluída"
   defp delivery_label(_), do: "Pendente"
@@ -517,7 +686,9 @@ defmodule InstantflowWeb.RequestLive do
       current_scope={@current_scope}
       unsaved={@dirty or (@reason.params["reason"] || "") != ""}
     >
-      <.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes"}>← Todas as solicitações</.link>
+      <.link navigate={
+        ~p"/o/#{@current_scope.organization.slug}/processos/#{@data.ticket.workflow_id}"
+      }>← Voltar ao processo</.link>
       <div class="page-heading request-heading">
         <div>
           <p class="eyebrow">{@data.version.definition["name"]} · VERSÃO {@data.version.number}</p><h1>
@@ -569,7 +740,9 @@ defmodule InstantflowWeb.RequestLive do
                 <h3>Versão salva por outra pessoa</h3>
                 <dl>
                   <div :for={field <- definition["fields"]}>
-                    <dt>{field["label"]}</dt><dd>{format_value(section.values[field["key"]])}</dd>
+                    <dt>{field["label"]}</dt><dd>
+                      {format_field(field, section.values[field["key"]], @data, section.key)}
+                    </dd>
                   </div>
                 </dl>
                 <button
@@ -580,7 +753,27 @@ defmodule InstantflowWeb.RequestLive do
                 >Reaplicar minhas alterações</button>
               </div>
               <button class="btn" phx-click="discard" phx-value-key={section.key}>Descartar meu rascunho</button>
-            </div><.form
+            </div>
+            <.form
+              :for={field <- definition["fields"]}
+              :if={
+                section.key in @data.editable and field["type"] == "directory_reference" and
+                  field["reference"] != nil
+              }
+              for={@reference_search_forms[section.key <> "." <> field["key"]]}
+              id={"directory-search-#{section.key}-#{field["key"]}"}
+              phx-change="search-reference"
+              phx-value-section={section.key}
+              phx-value-field={field["key"]}
+            >
+              <.input
+                field={@reference_search_forms[section.key <> "." <> field["key"]][:query]}
+                label={"Buscar #{field["label"]}"}
+                maxlength="100"
+                phx-debounce="250"
+              />
+            </.form>
+            <.form
               :if={section.key in @data.editable}
               for={@forms[section.key]}
               id={"section-form-#{section.key}"}
@@ -603,11 +796,14 @@ defmodule InstantflowWeb.RequestLive do
                 label={field["label"]}
                 type={field_type(field["type"])}
                 multiple={field["type"] == "multiple_choice"}
-                disabled={field["type"] in ~w(directory_reference attachment)}
+                disabled={
+                  field["type"] == "attachment" or
+                    (field["type"] == "directory_reference" and field["reference"] == nil)
+                }
                 min={if field["type"] == "money", do: 0}
                 step={if field["type"] in ~w(integer money), do: 1}
                 placeholder={if field["type"] == "datetime", do: "2026-10-20T14:00:00-03:00"}
-                options={options(field)}
+                options={field_options(field, @data, section.key)}
               /><button
                 class="btn primary"
                 id={"save-#{section.key}"}
@@ -616,7 +812,9 @@ defmodule InstantflowWeb.RequestLive do
               >Salvar formulário</button>
             </.form><dl :if={section.key not in @data.editable}>
               <div :for={field <- definition["fields"]}>
-                <dt>{field["label"]}</dt><dd>{format_value(section.values[field["key"]])}</dd>
+                <dt>{field["label"]}</dt><dd>
+                  {format_field(field, section.values[field["key"]], @data, section.key)}
+                </dd>
               </div>
             </dl>
           </section>
@@ -698,7 +896,7 @@ defmodule InstantflowWeb.RequestLive do
                   href={~p"/o/#{@current_scope.organization.slug}/documentos/#{doc.object_key}"}
                 >Baixar documento privado</.link>
                 <button
-                  :if={doc.status == "quarantined" and doc.section_key in @data.editable}
+                  :if={doc.status == "quarantined" and doc.can_review}
                   id={"release-private-#{doc.id}"}
                   class="btn"
                   phx-click="review-private-document"
@@ -706,7 +904,7 @@ defmodule InstantflowWeb.RequestLive do
                   phx-value-accept="true"
                 >Revisei: liberar documento fictício</button>
                 <button
-                  :if={doc.status == "quarantined" and doc.section_key in @data.editable}
+                  :if={doc.status == "quarantined" and doc.can_review}
                   id={"reject-private-#{doc.id}"}
                   class="btn"
                   phx-click="review-private-document"
@@ -720,6 +918,70 @@ defmodule InstantflowWeb.RequestLive do
                   phx-click="delete-private-document"
                   phx-value-key={doc.object_key}
                 >Excluir conteúdo</button>
+              </article>
+            </div>
+          </section>
+          <section :if={@participant_control_count > 0} id="participant-management" class="card">
+            <h2>Relacionamentos de participantes</h2>
+            <p>
+              Adicionar não concede acesso. Verifique o vínculo antes de liberar os dados do registro.
+            </p>
+            <.form
+              for={@participant_search_form}
+              id="participant-search-form"
+              phx-change="participant-search"
+            >
+              <.input
+                field={@participant_search_form[:query]}
+                label="Buscar conta local elegível"
+                maxlength="100"
+                phx-debounce="250"
+              />
+            </.form>
+            <div id="participant-controls" phx-update="stream">
+              <section :for={{id, control} <- @streams.participant_controls} id={id}>
+                <h3>{control.label}</h3>
+                <.form
+                  for={@participant_forms[control.key]}
+                  id={"participant-add-#{control.key}"}
+                  phx-submit="participant-create"
+                  phx-value-relationship={control.key}
+                >
+                  <.input
+                    field={@participant_forms[control.key][:membership_id]}
+                    type="select"
+                    id={"participant-member-#{control.key}"}
+                    label="Conta convidada"
+                    prompt="Selecione uma conta"
+                    options={control.candidates}
+                  />
+                  <button id={"participant-create-#{control.key}"} class="btn">Adicionar vínculo pendente</button>
+                </.form>
+              </section>
+            </div>
+            <div id="participant-relationships" phx-update="stream">
+              <article :for={{id, link} <- @streams.participant_relationships} id={id}>
+                <strong>{link.name}</strong><p>{participant_status(link.status)}</p>
+                <button
+                  :if={link.status != "verified"}
+                  id={"participant-verify-#{link.id}"}
+                  class="btn"
+                  phx-click="participant-state"
+                  phx-value-operation="verify"
+                  phx-value-relationship={link.key}
+                  phx-value-membership={link.membership_id}
+                  phx-value-revision={link.revision}
+                >Verificar relacionamento</button>
+                <button
+                  :if={link.status != "revoked"}
+                  id={"participant-revoke-#{link.id}"}
+                  class="btn"
+                  phx-click="participant-state"
+                  phx-value-operation="revoke"
+                  phx-value-relationship={link.key}
+                  phx-value-membership={link.membership_id}
+                  phx-value-revision={link.revision}
+                >Revogar relacionamento</button>
               </article>
             </div>
           </section>

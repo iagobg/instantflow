@@ -4,6 +4,12 @@ InstantFlow is a general-purpose, multi-organization workflow platform built wit
 
 ## Current delivery
 
+Sprint 09 is complete: invited external identities, scoped participant/subject verification, editable directory references, declared private-document policies and populated guardian migration/recovery now use shared builder contracts. Generic record controls manage relationships and document release. See [authoring, operation and acceptance evidence](docs/participants-and-documents.md). Generated participant projections and full school replacement remain in Sprints 10–11.
+
+The [modularity review](docs/modularity-review.md) records the builder contract, structural refactor, verified reuse and remaining domain dependencies. Complete school portal recreation through the editor remains an explicit architecture gap. The [sprint plan](sprint_plan/sprint_index.md) prioritizes that remediation in Sprints 09–11 before pilot delivery in Sprints 12–15.
+
+A local restaurant-pilot workspace now provides menu setup, fast product selection, table visits, destination-specific thermal tickets, cancellation notices, manual checkout, daily summaries/closure and estimated product consumption. Open **Processos** and select the published process. Pages, reusable blocks, names and access roles are configured in the process editor; see [process composition](docs/process-composition.md). See [restaurant scope, walkthrough and limitations](docs/restaurant-pilot.md). Real customer launch and Windows/POS-80 physical printing remain gated and unverified.
+
 Sprint 07 completes integrated verification and local delivery: [reproducible demo](docs/demo.md), [release gates](docs/release-gates.md), [performance evidence](docs/performance.md), and [deployment/limits](docs/deployment.md). All 136 tests pass. Populated backup recovery and production release smoke passed.
 
 Sprint 08 adds an immutable Python script catalogue, separate review/activation permissions, reference-only workflow bindings, durable asynchronous calculation runs and PT-BR status/retry controls. The synthetic trip example targets gVisor on the owner's private Oracle ARM VPS. Execution is disabled by default pending real-host isolation/recovery verification; see the [walkthrough and operator guide](docs/python-calculations.md).

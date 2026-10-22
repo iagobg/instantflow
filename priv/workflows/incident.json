@@ -424,5 +424,16 @@
         "report.urgency"
       ]
     }
-  ]
+  ],
+  "interface": {
+    "pages": [
+      {
+        "key": "overview",
+        "label": "Acompanhamento",
+        "blocks": [
+          "records"
+        ]
+      }
+    ]
+  }
 }

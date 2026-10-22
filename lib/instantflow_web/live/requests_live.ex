@@ -76,7 +76,10 @@ defmodule InstantflowWeb.RequestsLive do
       do: {:noreply, load(socket)}
 
   defp load(socket) do
-    versions = WorkflowCatalog.available(socket.assigns.current_scope)
+    versions =
+      WorkflowCatalog.available(socket.assigns.current_scope)
+      |> Enum.reject(&Instantflow.WorkflowCatalog.Workspaces.operational?(&1.definition))
+
     result = WorkflowRuntime.search(socket.assigns.current_scope, socket.assigns.filters)
 
     labels = result.stage_labels

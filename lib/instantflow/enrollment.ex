@@ -120,16 +120,7 @@ defmodule Instantflow.Enrollment do
 
   # Called only inside an established tenant transaction. A foreign or unverified link never grants access.
   def guardian?(actor, ticket_id) do
-    Repo.exists?(
-      from g in GuardianLink,
-        join: e in Record,
-        on: e.id == g.enrollment_id,
-        where:
-          g.organization_id == ^actor.organization_id and
-            e.organization_id == ^actor.organization_id and
-            g.membership_id == ^actor.id and g.active and not is_nil(g.verified_at) and
-            e.ticket_id == ^ticket_id
-    )
+    Instantflow.WorkflowRuntime.LegacyAccess.guardian_relationship?(actor, ticket_id)
   end
 
   def list(actor) do

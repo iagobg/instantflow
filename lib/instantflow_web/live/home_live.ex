@@ -25,7 +25,7 @@ defmodule InstantflowWeb.HomeLive do
           <span class="badge sim">◇ Ambiente de demonstração</span><h2 id="welcome-title">
             Menos caminhos soltos.<br />Mais trabalho em fluxo.
           </h2><p>
-            Um lugar para organizar solicitações, conectar departamentos e acompanhar cada decisão da sua escola.
+            Um lugar para organizar solicitações, conectar departamentos e acompanhar cada decisão da sua organização.
           </p><.link
             :if={@current_scope.role == "admin"}
             navigate={~p"/o/#{@current_scope.organization.slug}/equipe"}
@@ -40,7 +40,7 @@ defmodule InstantflowWeb.HomeLive do
         <section class="card">
           <.icon name="hero-building-office" /><p class="eyebrow">ORGANIZAÇÃO</p><h2>
             {@current_scope.organization.name}
-          </h2><p>Uma comunidade escolar, um ambiente compartilhado.</p><span class="badge">✓ Organização configurada</span>
+          </h2><p>Seus processos, pessoas e responsabilidades em um ambiente compartilhado.</p><span class="badge">✓ Organização configurada</span>
         </section>
         <section class="card">
           <.icon name="hero-users" /><p class="eyebrow">SEU DEPARTAMENTO</p><h2>
@@ -53,14 +53,14 @@ defmodule InstantflowWeb.HomeLive do
           <.icon name="hero-squares-2x2" /><p class="eyebrow">TRABALHO EM FLUXO</p><h2>
             Fluxos de trabalho
           </h2><p>
-            Crie uma solicitação e acompanhe aprovação, correção e entregas simuladas.
-          </p><.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes"} class="badge">→ Abrir solicitações</.link>
+            Abra os processos configurados pela organização e acompanhe seus atendimentos e registros.
+          </p><.link navigate={~p"/o/#{@current_scope.organization.slug}/processos"} class="badge">→ Abrir processos</.link>
         </section>
       </div>
       <section class="note">
         <.icon name="hero-information-circle" /><div>
           <strong>Uma base pronta para crescer</strong><p>
-            Use o fluxo de aprovação para explorar solicitações, decisões e histórico com dados fictícios.
+            Crie processos a partir de uma estrutura inicial ou adapte um exemplo. Somente os modelos publicados entram no seu espaço de trabalho.
           </p>
         </div>
       </section>

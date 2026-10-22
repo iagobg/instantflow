@@ -112,6 +112,130 @@ defmodule InstantflowWeb.TemplatesLiveTest do
     refute has_element?(editor, "#graph-edges .dimmed")
   end
 
+  test "administrator declares a participant relationship through typed editor controls", %{
+    conn: conn
+  } do
+    admin = staff_fixture()
+    {:ok, draft} = Templates.new(admin, "external_service", "Serviço externo")
+    {:ok, editor, _} = live(login(conn, admin), ~p"/o/horizonte/modelos/#{draft.id}")
+    editor |> form("#authoring-picker", picker: %{collection: "participants"}) |> render_submit()
+
+    editor
+    |> form("#template-item-form",
+      item: %{
+        key: "customer",
+        label: "Cliente verificado",
+        kind: "external",
+        candidate_roles: ["requester"],
+        manager_roles: ["reviewer"],
+        department_binding: "responsible"
+      }
+    )
+    |> render_submit()
+
+    assert has_element?(editor, "#items-participants-root-customer")
+    {:ok, saved} = Templates.get(admin, draft.id)
+
+    assert saved.definition["participants"] == [
+             %{
+               "key" => "customer",
+               "label" => "Cliente verificado",
+               "kind" => "external",
+               "candidate_roles" => ["requester"],
+               "managers" => [
+                 %{
+                   "role" => "reviewer",
+                   "scope" => "workflow_department",
+                   "department_binding" => "responsible"
+                 }
+               ]
+             }
+           ]
+
+    assert "participants" in saved.definition["capabilities"]
+
+    editor
+    |> form("#authoring-picker", picker: %{collection: "access", section: "request"})
+    |> render_submit()
+
+    editor
+    |> form("#template-item-form",
+      item: %{
+        role: "requester",
+        scope: "participant",
+        relationship: "customer",
+        read: true,
+        edit_stages: ["draft"]
+      }
+    )
+    |> render_submit()
+
+    assert has_element?(editor, "#items-access-request-requester-participant-customer")
+
+    editor
+    |> form("#authoring-picker", picker: %{collection: "fields", section: "request"})
+    |> render_submit()
+
+    editor
+    |> form("#template-item-form",
+      item: %{
+        key: "contact",
+        label: "Contato",
+        type: "directory_reference",
+        reference_target: "participant",
+        reference_relationship: "customer"
+      }
+    )
+    |> render_submit()
+
+    assert has_element?(editor, "#items-fields-request-contact")
+    {:ok, configured} = Templates.get(admin, draft.id)
+    field = Enum.find(hd(configured.definition["sections"])["fields"], &(&1["key"] == "contact"))
+
+    assert field["reference"] == %{
+             "target" => "participant",
+             "relationship" => "customer",
+             "cardinality" => "one"
+           }
+
+    editor
+    |> form("#authoring-picker", picker: %{collection: "fields", section: "request"})
+    |> render_submit()
+
+    editor
+    |> form("#template-item-form",
+      item: %{
+        key: "evidence",
+        label: "Comprovante",
+        type: "attachment",
+        document_reviewers: ["reviewer"],
+        document_department: "responsible",
+        document_max_bytes: "4096",
+        document_media_types: ["application/pdf"]
+      }
+    )
+    |> render_submit()
+
+    assert has_element?(editor, "#items-fields-request-evidence")
+    {:ok, documents} = Templates.get(admin, draft.id)
+    assert "documents" in documents.definition["capabilities"]
+
+    editor
+    |> form("#interface-page-form",
+      interface_page: %{
+        key: "overview",
+        label: "Trabalho",
+        blocks: ["records", "catalog"],
+        close_transition: "complete"
+      }
+    )
+    |> render_submit()
+
+    {:ok, composed} = Templates.get(admin, draft.id)
+    assert "participants" in composed.definition["capabilities"]
+    assert "operations" in composed.definition["capabilities"]
+  end
+
   test "non-administrators and revoked sessions cannot author or export", %{conn: conn} do
     staff = staff_fixture("staff")
 

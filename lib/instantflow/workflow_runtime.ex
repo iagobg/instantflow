@@ -2,11 +2,23 @@ defmodule Instantflow.WorkflowRuntime do
   @moduledoc "Transactional guarded commands. Lock order: actor user, membership, workflow (create) or ticket, sections, receipt/outbox."
   import Ecto.Query
   alias Instantflow.{Identity, Repo, Tenant}
-  alias Instantflow.WorkflowCatalog.{Definition, Version, Workflow}
-  alias Instantflow.WorkflowRuntime.{Event, Guards, Policy, Receipt, Section, Ticket}
+  alias Instantflow.WorkflowCatalog.{Capabilities, Definition, Version, Workflow}
+
+  alias Instantflow.WorkflowRuntime.{
+    Event,
+    Guards,
+    LegacyAccess,
+    Policy,
+    Receipt,
+    Section,
+    Ticket
+  }
+
   alias Instantflow.Delivery.Message
 
-  def command(actor, command) when is_map(command) do
+  def command(actor, command, origin \\ :generic)
+
+  def command(actor, command, origin) when is_map(command) do
     with :ok <- command_shape(command) do
       transaction =
         if command["operation"] == "assign",
@@ -30,10 +42,14 @@ defmodule Instantflow.WorkflowRuntime do
             ticket = Repo.get!(Ticket, receipt.ticket_id)
             version = Repo.get!(Version, ticket.workflow_version_id)
             unless command_access?(actor, ticket, version), do: Repo.rollback(:forbidden)
+
+            if command["operation"] == "create" and not Policy.create?(actor, version),
+              do: Repo.rollback(:forbidden)
+
             unless receipt.digest == digest, do: Repo.rollback(:idempotency_mismatch)
             receipt.result
           else
-            ticket = apply_command(actor, command)
+            ticket = apply_command(actor, command, origin)
             result = %{"ticket_id" => ticket.id, "revision" => ticket.revision}
 
             Repo.insert!(%Receipt{
@@ -62,7 +78,7 @@ defmodule Instantflow.WorkflowRuntime do
     end
   end
 
-  def command(_, _), do: {:error, :invalid_command}
+  def command(_, _, _), do: {:error, :invalid_command}
 
   def get(actor, id), do: Tenant.read(actor, &get_scoped(&1, id), {:error, :not_found})
 
@@ -87,6 +103,9 @@ defmodule Instantflow.WorkflowRuntime do
 
       event_ids = Enum.map(events, & &1.id)
 
+      directory =
+        Instantflow.Participants.Directory.project(scope, ticket, version, sections, readable)
+
       projected_definition =
         version.definition
         |> Map.take(~w(name stages transitions))
@@ -106,6 +125,8 @@ defmodule Instantflow.WorkflowRuntime do
          ticket: ticket,
          version: %{version | definition: projected_definition, bindings: %{}},
          sections: Enum.filter(sections, &(&1.key in keys)),
+         reference_options: directory.options,
+         reference_labels: directory.labels,
          section_definitions:
            Enum.map(readable, &Map.take(&1, ~w(key label classification fields))),
          assignments: Instantflow.Collaboration.Assignments.controls(scope, ticket, version),
@@ -205,13 +226,14 @@ defmodule Instantflow.WorkflowRuntime do
       |> Enum.each(fn member ->
         scope = Instantflow.Access.load(member)
 
-        if scope.role == "parent" and Instantflow.Enrollment.guardian?(scope, ticket.id),
-          do:
-            Phoenix.PubSub.broadcast(
-              Instantflow.PubSub,
-              "organization:#{scope.organization_id}:user:#{scope.user_id}",
-              :enrollments_changed
-            )
+        if LegacyAccess.parent_portal?(scope, version) and
+             LegacyAccess.guardian?(scope, ticket, version),
+           do:
+             Phoenix.PubSub.broadcast(
+               Instantflow.PubSub,
+               "organization:#{scope.organization_id}:user:#{scope.user_id}",
+               :enrollments_changed
+             )
 
         if Policy.discover?(scope, ticket, version),
           do: Phoenix.PubSub.broadcast(Instantflow.PubSub, list_topic(scope), :requests_changed)
@@ -247,9 +269,7 @@ defmodule Instantflow.WorkflowRuntime do
     end
   end
 
-  defp apply_command(actor, %{"operation" => "create"} = command) do
-    if actor.role == "parent", do: Repo.rollback(:forbidden)
-
+  defp apply_command(actor, %{"operation" => "create"} = command, origin) do
     workflow =
       Repo.one(
         from w in Workflow,
@@ -267,12 +287,12 @@ defmodule Instantflow.WorkflowRuntime do
           limit: 1
       )
 
-    unless version &&
-             Enum.any?(
-               version.definition["creation"]["roles"],
-               &Instantflow.Access.role?(actor, version.bindings["roles"][&1])
-             ),
-           do: Repo.rollback(:forbidden)
+    unless version && Policy.create?(actor, version),
+      do: Repo.rollback(:forbidden)
+
+    if Instantflow.WorkflowCatalog.Workspaces.operational?(version.definition) and
+         origin != :operations,
+       do: Repo.rollback(:workspace_required)
 
     entry = Enum.find(version.definition["stages"], & &1["initial"])
 
@@ -299,7 +319,7 @@ defmodule Instantflow.WorkflowRuntime do
     ticket
   end
 
-  defp apply_command(actor, command) do
+  defp apply_command(actor, command, _origin) do
     ticket =
       Repo.one(
         from t in Ticket,
@@ -351,7 +371,7 @@ defmodule Instantflow.WorkflowRuntime do
       {:error, errors} -> Repo.rollback({:invalid_values, errors})
     end
 
-    if "finance" in version.definition["capabilities"] do
+    if Capabilities.enabled?(version.definition, "finance") do
       hold = Repo.get_by(Instantflow.Finance.Hold, ticket_id: ticket.id)
       sensitive = Enum.any?(definition["fields"], &(&1["type"] == "money"))
 
@@ -360,6 +380,15 @@ defmodule Instantflow.WorkflowRuntime do
     end
 
     Instantflow.PrivateDocuments.validate_values!(actor, ticket, definition, c["values"])
+
+    Instantflow.Participants.Directory.validate_values!(
+      actor,
+      ticket,
+      version,
+      definition,
+      c["values"]
+    )
+
     Instantflow.Finance.validate_values!(version, sections, section, c["values"])
 
     section
@@ -380,6 +409,8 @@ defmodule Instantflow.WorkflowRuntime do
 
     unless transition && Policy.transition?(actor, ticket, version, transition),
       do: Repo.rollback(:forbidden)
+
+    Instantflow.Operations.validate_transition!(ticket, version, transition)
 
     readable_keys =
       version.definition["sections"]
@@ -402,6 +433,8 @@ defmodule Instantflow.WorkflowRuntime do
 
     values =
       for s <- sections, {key, value} <- s.values, into: %{}, do: {s.key <> "." <> key, value}
+
+    Instantflow.Participants.Directory.require_current!(ticket, version, sections)
 
     Instantflow.PrivateDocuments.require_ready!(
       ticket,
@@ -529,7 +562,8 @@ defmodule Instantflow.WorkflowRuntime do
 
   defp command_access?(actor, ticket, version) do
     Policy.discover?(actor, ticket, version) or
-      (actor.role == "parent" and Instantflow.Enrollment.guardian?(actor, ticket.id))
+      (LegacyAccess.parent_portal?(actor, version) and
+         LegacyAccess.guardian?(actor, ticket, version))
   end
 
   defp command_shape(c) do

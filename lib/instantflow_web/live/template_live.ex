@@ -13,7 +13,8 @@ defmodule InstantflowWeb.TemplateLive do
     "actions" => "Ação simulada",
     "roles" => "Papel simbólico",
     "bindings" => "Vínculo de departamento",
-    "views" => "Visualização"
+    "views" => "Visualização",
+    "participants" => "Relacionamento verificado"
   }
   @field_labels %{
     "short_text" => "Texto curto",
@@ -25,8 +26,8 @@ defmodule InstantflowWeb.TemplateLive do
     "boolean" => "Sim/não",
     "single_choice" => "Escolha única",
     "multiple_choice" => "Múltipla escolha",
-    "directory_reference" => "Referência de diretório (reservado)",
-    "attachment" => "Arquivo (reservado)"
+    "directory_reference" => "Referência de participante ou sujeito",
+    "attachment" => "Documento privado"
   }
 
   def mount(_, _, socket) do
@@ -39,6 +40,7 @@ defmodule InstantflowWeb.TemplateLive do
          conflict: nil,
          export: nil,
          graph_focus: "",
+         selected_page_key: nil,
          collection: "stages",
          parent: nil,
          original: nil,
@@ -138,6 +140,139 @@ defmodule InstantflowWeb.TemplateLive do
       Map.merge(d.definition, Map.take(p, ~w(name description template_version))),
       d.bindings
     )
+  end
+
+  def handle_event("workspace-labels", %{"workspace" => params}, socket) do
+    draft = socket.assigns.draft
+
+    interface =
+      Instantflow.WorkflowCatalog.Workspaces.configuration(draft.definition)
+      |> Map.put("labels", Map.take(params, ~w(resource resources catalog actor destination)))
+
+    persist(
+      socket,
+      Map.put(
+        draft.definition,
+        "interface",
+        Map.merge(Map.get(draft.definition, "interface", %{}), interface)
+      ),
+      draft.bindings
+    )
+  end
+
+  def handle_event("pick-page", %{"key" => key}, socket) do
+    {:noreply, socket |> assign(:selected_page_key, key) |> load_review()}
+  end
+
+  def handle_event("new-page", _, socket) do
+    params =
+      interface_page(socket.assigns.draft.definition, nil)
+      |> Map.merge(%{"key" => "", "label" => "", "blocks" => ["records"]})
+
+    {:noreply,
+     assign(socket,
+       selected_page_key: "",
+       interface_page_form: to_form(params, as: :interface_page)
+     )}
+  end
+
+  def handle_event("save-interface-page", %{"interface_page" => params}, socket) do
+    draft = socket.assigns.draft
+    interface = Instantflow.WorkflowCatalog.Workspaces.configuration(draft.definition)
+
+    page = %{
+      "key" => params["key"],
+      "label" => params["label"],
+      "blocks" => List.wrap(params["blocks"]) |> Enum.reject(&(&1 == ""))
+    }
+
+    pages =
+      if Enum.any?(interface["pages"], &(&1["key"] == page["key"])),
+        do:
+          Enum.map(interface["pages"], fn old ->
+            if old["key"] == page["key"], do: page, else: old
+          end),
+        else: interface["pages"] ++ [page]
+
+    interface = Map.put(interface, "pages", pages)
+
+    access =
+      Map.new(~w(view configure operate), fn key ->
+        {key,
+         List.wrap(params["access_" <> key] || draft.definition["creation"]["roles"])
+         |> Enum.reject(&(&1 == ""))}
+      end)
+
+    interface = Map.put(interface, "access", access)
+
+    interface =
+      if params["close_transition"] in [nil, ""],
+        do: Map.delete(interface, "lifecycle"),
+        else: Map.put(interface, "lifecycle", %{"close_transition" => params["close_transition"]})
+
+    requires_operations =
+      Enum.any?(pages, fn p ->
+        Enum.any?(
+          p["blocks"],
+          &(&1 in Instantflow.WorkflowCatalog.Workspaces.operational_blocks())
+        )
+      end)
+
+    capabilities = draft.definition["capabilities"]
+
+    capabilities =
+      if requires_operations,
+        do:
+          Enum.filter(
+            Instantflow.WorkflowCatalog.Capabilities.supported(),
+            &(&1 in capabilities or &1 == "operations")
+          ),
+        else: capabilities
+
+    definition =
+      draft.definition |> Map.put("interface", interface) |> Map.put("capabilities", capabilities)
+
+    persist(assign(socket, :selected_page_key, page["key"]), definition, draft.bindings)
+  end
+
+  def handle_event("move-interface-block", %{"index" => raw, "direction" => direction}, socket) do
+    draft = socket.assigns.draft
+    config = Instantflow.WorkflowCatalog.Workspaces.configuration(draft.definition)
+    page_key = socket.assigns.selected_page_key || hd(config["pages"])["key"]
+
+    with {index, ""} <- Integer.parse(raw), true <- direction in ["up", "down"] do
+      pages =
+        Enum.map(config["pages"], fn page ->
+          if page["key"] == page_key do
+            target = index + if(direction == "up", do: -1, else: 1)
+
+            if index >= 0 and target >= 0 and index < length(page["blocks"]) and
+                 target < length(page["blocks"]) do
+              blocks = page["blocks"]
+
+              Map.put(
+                page,
+                "blocks",
+                blocks
+                |> List.replace_at(index, Enum.at(blocks, target))
+                |> List.replace_at(target, Enum.at(blocks, index))
+              )
+            else
+              page
+            end
+          else
+            page
+          end
+        end)
+
+      persist(
+        socket,
+        Map.put(draft.definition, "interface", Map.put(config, "pages", pages)),
+        draft.bindings
+      )
+    else
+      _ -> {:noreply, socket}
+    end
   end
 
   def handle_event("bindings", %{"mapping" => p}, socket) do
@@ -266,6 +401,12 @@ defmodule InstantflowWeb.TemplateLive do
       unsaved: false,
       conflict: nil,
       export: nil,
+      interface_pages: Instantflow.WorkflowCatalog.Workspaces.pages(d),
+      interface_page_form:
+        to_form(interface_page(d, socket.assigns.selected_page_key), as: :interface_page),
+      interface_blocks: Instantflow.WorkflowCatalog.Workspaces.blocks(),
+      close_options: Enum.map(d["transitions"], &{&1["label"], &1["key"]}),
+      workspace_form: to_form(Instantflow.WorkflowCatalog.Workspaces.labels(d), as: :workspace),
       metadata_form: to_form(Map.take(d, ~w(name description template_version)), as: :metadata),
       mapping_form: to_form(%{}, as: :mapping),
       advanced_form: to_form(%{"json" => Interchange.encode(d)}, as: :advanced),
@@ -383,6 +524,32 @@ defmodule InstantflowWeb.TemplateLive do
   defp valid_parent?(d, "actions", p), do: Enum.any?(d["transitions"], &(&1["key"] == p))
   defp valid_parent?(_, _, _), do: true
 
+  defp load_review(socket) do
+    {:ok, review} = Templates.review(socket.assigns.current_scope, socket.assigns.draft.id)
+    load(socket, review)
+  end
+
+  defp interface_page(definition, key) do
+    page =
+      Enum.find(Instantflow.WorkflowCatalog.Workspaces.pages(definition), &(&1["key"] == key)) ||
+        hd(Instantflow.WorkflowCatalog.Workspaces.pages(definition))
+
+    params =
+      Enum.reduce(~w(view configure operate), page, fn action, values ->
+        Map.put(
+          values,
+          "access_" <> action,
+          get_in(definition, ["interface", "access", action]) || definition["creation"]["roles"]
+        )
+      end)
+
+    Map.put(
+      params,
+      "close_transition",
+      Instantflow.WorkflowCatalog.Workspaces.close_transition(definition)
+    )
+  end
+
   defp prune_bindings(b, d),
     do: %{
       "roles" => Map.take(b["roles"], Enum.map(d["role_requirements"], & &1["key"])),
@@ -409,6 +576,7 @@ defmodule InstantflowWeb.TemplateLive do
   defp classification_label(_), do: "Interna"
   defp scope_label("assigned_user"), do: "Pessoa atribuída ao formulário"
   defp scope_label("guardian"), do: "Responsável verificado"
+  defp scope_label("participant"), do: "Participante com relacionamento verificado"
   defp scope_label("workflow_department"), do: "Departamento fixo do fluxo"
   defp scope_label("requester"), do: "Próprio solicitante"
   defp scope_label(_), do: "Departamento atribuído"
@@ -455,6 +623,136 @@ defmodule InstantflowWeb.TemplateLive do
             phx-click="reload"
             data-confirm="Suas alterações locais serão descartadas. Recarregar?"
           >Recarregar versão salva</button>
+        </section>
+        <section
+          class="card template-section"
+          id="workspace-configuration"
+        >
+          <h2>Interface gerada pelo processo</h2>
+          <p>
+            Defina páginas e componha seus blocos. Publicar gera os endereços dentro deste processo, sem criar telas no código.
+          </p>
+          <div class="process-page-tabs">
+            <button
+              :for={page <- @interface_pages}
+              id={"edit-interface-#{page["key"]}"}
+              class="btn"
+              phx-click="pick-page"
+              phx-value-key={page["key"]}
+            >{page["label"]}</button><button id="new-interface-page" class="btn" phx-click="new-page">Nova página</button>
+          </div>
+          <.form for={@interface_page_form} id="interface-page-form" phx-submit="save-interface-page">
+            <.input
+              field={@interface_page_form[:key]}
+              label="Chave da página"
+              required
+              pattern="[a-z][a-z0-9_]{0,63}"
+              maxlength="64"
+            />
+            <.input
+              field={@interface_page_form[:label]}
+              label="Nome da página"
+              required
+              maxlength="80"
+            />
+            <.input
+              field={@interface_page_form[:blocks]}
+              type="select"
+              multiple
+              label="Blocos da página"
+              options={
+                Enum.map(
+                  @interface_blocks,
+                  &{Instantflow.WorkflowCatalog.Workspaces.block_label(&1), &1}
+                )
+              }
+            />
+            <.input
+              field={@interface_page_form[:close_transition]}
+              type="select"
+              label="Transição usada no fechamento de atendimentos"
+              options={@close_options}
+              prompt="Não se aplica"
+            />
+            <.input
+              :for={
+                {key, label} <- [
+                  {"view", "Papéis que consultam os blocos"},
+                  {"configure", "Papéis que configuram catálogo e recursos"},
+                  {"operate", "Papéis que operam atendimentos e fechamento"}
+                ]
+              }
+              name={"interface_page[access_#{key}][]"}
+              id={"interface-access-#{key}"}
+              type="select"
+              multiple
+              label={label}
+              options={@role_options}
+              value={@interface_page_form.params["access_" <> key] || []}
+            />
+            <button id="save-interface-page" class="btn" disabled={@draft.published_version_id != nil}>Salvar página</button>
+          </.form>
+          <ol id="interface-block-order">
+            <li :for={{block, index} <- Enum.with_index(@interface_page_form.params["blocks"] || [])}>
+              {Instantflow.WorkflowCatalog.Workspaces.block_label(block)}<button
+                id={"move-block-up-#{index}"}
+                class="btn"
+                phx-click="move-interface-block"
+                phx-value-index={index}
+                phx-value-direction="up"
+                disabled={@draft.published_version_id != nil}
+              >Subir</button><button
+                id={"move-block-down-#{index}"}
+                class="btn"
+                phx-click="move-interface-block"
+                phx-value-index={index}
+                phx-value-direction="down"
+                disabled={@draft.published_version_id != nil}
+              >Descer</button>
+            </li>
+          </ol>
+          <.form
+            for={@workspace_form}
+            id="workspace-labels-form"
+            phx-submit="workspace-labels"
+            class="operations-form"
+          >
+            <.input
+              field={@workspace_form[:resource]}
+              label="Recurso (singular)"
+              maxlength="80"
+              required
+            />
+            <.input
+              field={@workspace_form[:resources]}
+              label="Recursos (plural)"
+              maxlength="80"
+              required
+            />
+            <.input
+              field={@workspace_form[:catalog]}
+              label="Catálogo de itens"
+              maxlength="80"
+              required
+            />
+            <.input
+              field={@workspace_form[:actor]}
+              label="Responsável pelo atendimento"
+              maxlength="80"
+              required
+            />
+            <.input
+              field={@workspace_form[:destination]}
+              label="Destino do lote"
+              maxlength="80"
+              required
+            />
+            <button
+              id="save-workspace-labels"
+              class="btn"
+              disabled={@draft.published_version_id != nil}
+            >Salvar nomes</button>
+          </.form>
         </section>
         <section class="card template-section">
           <h2>Etapas e caminhos</h2><p>
@@ -631,6 +929,12 @@ defmodule InstantflowWeb.TemplateLive do
         </div>
         <section class="card template-section">
           <h2>Editar itens</h2>
+          <.link
+            :if={Instantflow.WorkflowCatalog.Capabilities.enabled?(@draft.definition, "finance")}
+            id="configure-process-budgets"
+            navigate={~p"/o/#{@current_scope.organization.slug}/orcamentos"}
+            class="btn"
+          >Configurar contas de orçamento para os vínculos deste processo</.link>
           <.form for={@picker} id="authoring-picker" phx-submit="pick">
             <div class="template-grid">
               <.input
@@ -691,6 +995,36 @@ defmodule InstantflowWeb.TemplateLive do
                   label="Papel pode criar solicitações"
                 />
               </div>
+              <div :if={@collection == "participants"}>
+                <.input
+                  field={@item_form[:kind]}
+                  type="select"
+                  label="Tipo de participante"
+                  options={[
+                    {"Externo", "external"},
+                    {"Solicitante", "requester"},
+                    {"Sujeito", "subject"}
+                  ]}
+                />
+                <.input
+                  field={@item_form[:candidate_roles]}
+                  type="select"
+                  multiple
+                  label="Papéis elegíveis para o relacionamento (sem conceder acesso)"
+                  options={@role_options}
+                />
+                <.input
+                  field={@item_form[:manager_roles]}
+                  type="select"
+                  multiple
+                  label="Papéis que verificam o relacionamento"
+                  options={@role_options}
+                />
+                <.input
+                  field={@item_form[:department_binding]}
+                  label="Chave do departamento verificador"
+                />
+              </div>
               <div :if={@collection == "sections"}>
                 <.input
                   field={@item_form[:classification]}
@@ -714,8 +1048,47 @@ defmodule InstantflowWeb.TemplateLive do
                   label="Moeda (apenas para dinheiro)"
                   maxlength="3"
                 /><p>
-                  Referências de diretório permanecem bloqueadas. Arquivos exigem envio privado, vínculo autorizado e revisão manual.
+                  Referências exigem um relacionamento declarado e verificado. Arquivos exigem envio privado, vínculo autorizado e revisão manual.
                 </p>
+                <.input
+                  field={@item_form[:reference_target]}
+                  type="select"
+                  label="Alvo (apenas para referência de diretório)"
+                  options={[
+                    {"Não configurado", ""},
+                    {"Participante", "participant"},
+                    {"Sujeito autenticado", "subject"}
+                  ]}
+                />
+                <.input
+                  field={@item_form[:reference_relationship]}
+                  label="Chave do relacionamento de referência"
+                />
+                <.input
+                  field={@item_form[:document_reviewers]}
+                  type="select"
+                  multiple
+                  label="Papéis revisores (apenas para documento privado)"
+                  options={@role_options}
+                />
+                <.input
+                  field={@item_form[:document_department]}
+                  label="Chave do departamento revisor do documento"
+                />
+                <.input
+                  field={@item_form[:document_max_bytes]}
+                  type="number"
+                  label="Limite do documento em bytes"
+                  min="1"
+                  max="5242880"
+                />
+                <.input
+                  field={@item_form[:document_media_types]}
+                  type="select"
+                  multiple
+                  label="Formatos do documento"
+                  options={[{"PDF", "application/pdf"}, {"PNG", "image/png"}, {"JPEG", "image/jpeg"}]}
+                />
               </div>
               <div :if={@collection == "access"}>
                 <.input field={@item_form[:role]} type="select" label="Papel" options={@role_options} /><.input
@@ -726,6 +1099,7 @@ defmodule InstantflowWeb.TemplateLive do
                     {"Próprio solicitante", "requester"},
                     {"Departamento atribuído", "assigned_department"},
                     {"Responsável verificado", "guardian"},
+                    {"Participante verificado", "participant"},
                     {"Pessoa atribuída", "assigned_user"},
                     {"Departamento fixo do fluxo", "workflow_department"}
                   ]}
@@ -737,6 +1111,11 @@ defmodule InstantflowWeb.TemplateLive do
                   options={@stage_options}
                 />
               </div>
+              <.input
+                :if={@collection == "access"}
+                field={@item_form[:relationship]}
+                label="Chave do relacionamento (escopo participante)"
+              />
               <.input
                 :if={@collection in ["access", "transitions"]}
                 field={@item_form[:department_binding]}

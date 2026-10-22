@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-21",
+  "status": "local_synthetic_acceptance_only",
+  "base_revision": "11b432bc53838515fb63d68e07ce81d28d824be5",
+  "branch": "codex/restaurant-operations",
+  "checks": {
+    "mix_precommit": {
+      "tests": 183,
+      "failures": 0,
+      "exit_code": 0
+    },
+    "python_runner": {
+      "tests": 17,
+      "failures": 0
+    },
+    "python_deploy": {
+      "tests": 8,
+      "failures": 0
+    },
+    "assets_build": "passed",
+    "browser": [
+      "organization process navigation without automatic school links",
+      "declared process pages and preserved table visit",
+      "accent-insensitive local dropdown: agua mineral matches Água mineral",
+      "Enter selects first match and focuses quantity without adding an item",
+      "selected product can be added to and removed from the unsent batch"
+    ],
+    "preview_data_preservation": {
+      "comparison": "all row payloads equal before and after migration, excluding added workflow_id",
+      "rows": {
+        "products": 3,
+        "resources": 8,
+        "sessions": 2,
+        "batches": 3,
+        "lines": 3,
+        "receipts": 17,
+        "day_closes": 0
+      }
+    },
+    "git_diff_check": "passed"
+  },
+  "limitations": [
+    "Seven reusable UI blocks form a bounded vocabulary.",
+    "Specialized legacy guardian, confidential-case, document and finance adapters still need reusable equivalents.",
+    "Unsent item batches are session-local and do not survive reload or restart.",
+    "Physical Windows USB POS-80 output remains unverified.",
+    "Inventory impact is an estimated product-unit consumption view.",
+    "Real-customer launch gates remain open."
+  ],
+  "historical_evidence": "restaurant-local.json records the earlier increment; its source hashes are historical, not final-tree evidence.",
+  "files_sha256": {
+    "assets/js/product_picker.js": "cf58817ef37155be4d9ccc96277d3f6e152a1f745122da9579504dd36444aef6",
+    "lib/instantflow/operations.ex": "d929f1ffdb7a4a0bd7e2014fa9d8366737e9a5730ff26c64b7c42935a86d53aa",
+    "lib/instantflow/workflow_catalog/workspaces.ex": "71e7258bace03064f2d00c52504ad90ea6cd96df0681806c626ae65d1c5ae9bd",
+    "lib/instantflow/workflow_catalog/definition.ex": "8d08322795fe2d6e9cfc533dd5f60111a3e9038acba94e4825f93377b30971fd",
+    "lib/instantflow/workflow_catalog/templates.ex": "ab0d1f927319d1d6f9145552a56f4430004dc639baadf2126ec679ad5dd05500",
+    "lib/instantflow/workflow_runtime.ex": "073188e8d43929aa1c1e4b65eb7833fa3ebcbcd3dc71025b1b4d65da7bd1a5c5",
+    "lib/instantflow_web/live/process_live.ex": "e36755a019bf10f616e82acea54bd1f20a360684b2170183ef7a62853273ab69",
+    "lib/instantflow_web/live/processes_live.ex": "511af8c519630836ebe1add1361e7b73c8d84ad441c83d3589e01e19adf4ee40",
+    "lib/instantflow_web/live/template_live.ex": "013a35c03b57246decd7952aff1b05af951d312ca45b5b5b7c8372c72d221f33",
+    "lib/instantflow_web/components/layouts.ex": "a6bed1fdffbf875b1d9b9b0ac4c77da26b645421200dffae6ecff6a8fdd5fb51",
+    "lib/instantflow_web/router.ex": "ef621e1224c29e5a3e7994897118484914379673031b0793b0ee628874cc0ae2",
+    "priv/templates/workflow-1.0.schema.json": "aa9347851b682dbe4122135dd5bbca4dced5d17d359d40d9c2e8333870dee2c8",
+    "priv/repo/migrations/20261021193830_scope_operational_records_to_workflows.exs": "53225dd4da7929d8e9dbcafdb36149fb044cac0abe87f35cabe8dfa44f94be1a",
+    "test/instantflow/modular_processes_test.exs": "5453584bbec7ce9af888f4c6f4866ae42e5a23c96a5bf5e1eb4eebb834448b43",
+    "test/instantflow/process_migration_test.exs": "8cfac9fd3c3241020949724d1c6a8d04bf15c4f35b273b6cb6b1b112f5e7e78a",
+    "test/instantflow_web/live/processes_live_test.exs": "5edca844904996f45ab79924671e3436221cabf1f41c6700e52b918e19511c10"
+  }
+}

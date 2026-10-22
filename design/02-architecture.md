@@ -4,6 +4,8 @@
 
 ## Proposed architecture
 
+The [builder architecture contract](../docs/builder-architecture-contract.md) refines the planned Sprints 09–11 target: context ownership and dependency direction, capability execution, pinned/live binding lifetime, publication diagnostics and incremental cross-domain recreation. Existing school-specific services below are migration sources and compatibility paths; their presence does not establish that generated processes are already independent of them.
+
 A modular Phoenix monolith using LiveView, Ecto, and PostgreSQL. The workflow core is sector-independent; domain modules and templates supply specialized records and terminology. Context functions own authorization and business rules. LiveViews render authorized projections and call commands. JavaScript may manage focus, panel expansion, draft warnings, and pending indicators; it cannot authoritatively approve, spend, change stages, or grant access.
 
 | Context | Responsibility |

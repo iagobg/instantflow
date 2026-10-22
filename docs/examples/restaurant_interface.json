@@ -1,0 +1,51 @@
+{
+  "interface": {
+    "pages": [
+      {
+        "key": "setup",
+        "label": "Preparação",
+        "blocks": [
+          "catalog",
+          "resources"
+        ]
+      },
+      {
+        "key": "service",
+        "label": "Atendimento",
+        "blocks": [
+          "items",
+          "batches",
+          "settlement"
+        ]
+      },
+      {
+        "key": "results",
+        "label": "Resultados",
+        "blocks": [
+          "daily_summary"
+        ]
+      }
+    ],
+    "labels": {
+      "resource": "Mesa",
+      "resources": "Mesas",
+      "catalog": "Cardápio",
+      "actor": "Garçom",
+      "destination": "Destino de preparo"
+    },
+    "lifecycle": {
+      "close_transition": "settle"
+    },
+    "access": {
+      "view": [
+        "operator"
+      ],
+      "configure": [
+        "operator"
+      ],
+      "operate": [
+        "operator"
+      ]
+    }
+  }
+}

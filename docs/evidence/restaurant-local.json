@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-21",
+  "status": "local_synthetic_acceptance_only",
+  "base_revision": "11b432bc53838515fb63d68e07ce81d28d824be5",
+  "branch": "codex/restaurant-operations",
+  "checks": {
+    "mix_precommit": {
+      "tests": 170,
+      "failures": 0
+    },
+    "python_runner": {
+      "tests": 17,
+      "failures": 0
+    },
+    "python_deploy": {
+      "tests": 8,
+      "failures": 0
+    },
+    "assets_build": "passed",
+    "browser": "menu, split destinations, attributed tickets, print-request state, narrow viewport, two-tab committed refresh"
+  },
+  "limitations": [
+    "physical Windows POS-80 output unverified",
+    "unsent cart is session-local",
+    "inventory is product-unit estimate",
+    "Sprints 09\u201311 launch gates remain open"
+  ],
+  "files_sha256": {
+    "assets/css/app.css": "d5519d6b5ca7ef1d1863f0141e37e6b18316687550e973d4b095becec5e165b4",
+    "assets/js/app.js": "0d18f81112dae74eb2e63329f659c3fcebf6d6c42cc4ebea9b364259a58433ed",
+    "assets/js/operations_print.js": "4bbdbcc3c4805142f07fa57567ff4c28b071c6f96c64c541e3ae21753ee033b3",
+    "lib/instantflow/operations.ex": "dc87de68232535c88d44d862ee32d7161ae0d7f62dbd7f35780b94fc9a8adcf2",
+    "lib/instantflow/operations/batch.ex": "fd0c370dd495d2d03ed651ce4571cb61f434ac179c7c1e79a2f306c9c6a40c1d",
+    "lib/instantflow/operations/day_close.ex": "4dff792d749f2f0a1e6ae19c398322d4e4fa35d020ed0654438edd714b93c321",
+    "lib/instantflow/operations/line.ex": "3b532ed9b122a0e1f5b632d50ec1d10f8366d9ae06f6053db0f68e2cbc9a209e",
+    "lib/instantflow/operations/product.ex": "1dbe1593e923ef0145e27c54b2980425fa37ad4dc7335887120f69fd7f34cd68",
+    "lib/instantflow/operations/receipt.ex": "d96560da7cf0b334178d5e8721dbba33228689211826ec2e4fa7a5ccb57b7aac",
+    "lib/instantflow/operations/resource.ex": "5f4766feb48c5575ef2804d94fa4655cf9df3e98fe2b203a4c98d9d8553ddc4e",
+    "lib/instantflow/operations/session.ex": "6c58f096a35b729ab3b30528f5d3bcbf68eb07085c8f9e635ee0b5603966805f",
+    "lib/instantflow/workflow_runtime.ex": "26e39ce3de7be10a8e537598b4930e4d3bb442e52e002c68802939e07d365933",
+    "lib/instantflow_web/components/layouts.ex": "71dc0ef5130a3ee41ad7c76d8cc6294d5d8642c43f2dae6270abda3061595114",
+    "lib/instantflow_web/live/operations_live.ex": "c72bd8cede9df9591553dcb633287c46768b8cbc128890e3886fe8eb19382fbb",
+    "lib/instantflow_web/router.ex": "b05642641ffdb18e7132406472b12b0077e8a189dc04ac1e83aa446a73260220",
+    "lib/instantflow_web/user_auth.ex": "1717b77cc56b3cc4c67be06569d0347a5a59d027b1916047843549025c1e5151",
+    "priv/repo/migrations/20261021190401_add_operational_catalog_and_service_sessions.exs": "5c62ee6b9a18b41be9b1d5b9ccf85d13e20b4c9db21ab4e467cd79e12730c1d4",
+    "priv/workflows/resource_service.json": "cedea895fdeda51f4181b967288af31db51b28864d8f7b975b6e21ae339a25f9",
+    "test/instantflow/operations_test.exs": "65096bcbcaab13b40ee3425b5996e8b185fe0ac1fa5895c6161026d46d43f156",
+    "test/instantflow/runtime_role_test.exs": "a6707537f25d77c8b7cace4420ff67637e8b7a53eeb372289b313923d3212f2c",
+    "test/instantflow_web/live/operations_live_test.exs": "71c63338a5c098567bc2ccc51b1c24b20fbfa034ca38cb89f4a3fa89081eb695",
+    "test/support/operations_fixtures.ex": "716c140f7985ef7426834da6caa2d2015650856b66e27bfb7a91de961a79ef18"
+  }
+}

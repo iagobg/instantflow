@@ -20,7 +20,10 @@ defmodule InstantflowWeb.TemplatesLive do
   end
 
   def handle_event("new", %{"workflow" => p}, socket) do
-    open_result(socket, Templates.new(socket.assigns.current_scope, p["key"], p["name"]))
+    open_result(
+      socket,
+      Templates.new(socket.assigns.current_scope, p["key"], p["name"], p["type"] || "form")
+    )
   end
 
   def handle_event("clone", %{"id" => id}, socket) do
@@ -161,8 +164,24 @@ defmodule InstantflowWeb.TemplatesLive do
       </div>
       <div class="template-grid">
         <section class="card">
-          <h2>Criar um processo</h2>
+          <h2>Criar um processo</h2><p>
+            Escolha uma estrutura inicial. Os exemplos são copiáveis e só aparecem na organização após publicação.
+          </p>
           <.form for={@new_form} id="new-workflow-form" phx-submit="new">
+            <.input
+              field={@new_form[:type]}
+              type="select"
+              label="Estrutura inicial"
+              options={[
+                {"Formulário e aprovações", "form"},
+                {"Atendimento com catálogo, recursos e lotes", "item_service"},
+                {"Pedidos de restaurante (exemplo)", "restaurant"},
+                {"Matrícula com documentos (exemplo)", "enrollment"},
+                {"Ocorrência confidencial (exemplo)", "incident"},
+                {"Compra com orçamento (exemplo)", "requisition"},
+                {"Viagem com aprovações (exemplo)", "field_trip"}
+              ]}
+            />
             <.input
               field={@new_form[:key]}
               label="Chave do modelo"

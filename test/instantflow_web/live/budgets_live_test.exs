@@ -33,7 +33,15 @@ defmodule InstantflowWeb.BudgetsLiveTest do
   } do
     f = finance_fixture()
 
-    for actor <- [staff_fixture("parent"), f.requester] do
+    parent = staff_fixture("parent")
+
+    assert {:error, {:redirect, %{to: "/o/horizonte/processos"}}} =
+             live(login(conn, parent), ~p"/o/horizonte/orcamentos")
+
+    assert {:error, :forbidden} =
+             Finance.allocate(parent, f.account.id, 900, "Forjado", Ecto.UUID.generate())
+
+    for actor <- [f.requester] do
       {:ok, view, _} = live(login(conn, actor), ~p"/o/horizonte/orcamentos")
       assert has_element?(view, "#budget-count", "0 conta(s)")
       refute has_element?(view, "#budget-accounts tr")

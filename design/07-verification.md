@@ -39,3 +39,9 @@ Document setup, migrations, seeds/reset, adapters, deployment, environment varia
 Document organization bootstrap/suspension, runtime versus migration DB roles, fair job dispatch, quota configuration, and shared-database recovery. Rehearse whole-database restore separately from any tenant-selective export/restore; do not imply one can safely substitute for the other.
 
 A sprint is Done only with acceptance evidence, passing checks, no blocking defect, and updated progression. Passing tests does not resolve business decisions.
+
+## Modular-builder gate before pilot engineering
+
+Under D-25–27, Sprints 09–11 add a distinct architecture acceptance gate before Sprint 12. Existing school demonstration evidence is preserved; it does not prove editor-only recreation. From an empty synthetic organization, configure the four school workflows, restaurant service and an additional non-school participant/resource process under independent keys through supported editor/import/local-binding interfaces. Exercise their full supported staff/external/restricted experiences, republish while existing records stay pinned, and verify no process-key-selected screen or developer database edit is required.
+
+Participant/reference/document rules, configured projections, finance/communications, explicit operational limits and bounded authorized read models must pass their sprint-specific privacy, migration, concurrency and scale checks. Populated migration/recovery must preserve existing relationships, files, operational snapshots, audit and receipts. Record unresolved scope explicitly; no isolation or data-loss defect can be accepted as a cosmetic limitation. See [Sprint 11](../sprint_plan/sprint_11.md) for the final gate and [roadmap](../sprint_plan/first_customer_roadmap.md) for separate pilot activation and post-launch evaluation requirements.

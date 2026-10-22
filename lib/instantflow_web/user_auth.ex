@@ -57,11 +57,36 @@ defmodule InstantflowWeb.UserAuth do
               {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
 
             fresh ->
-              if socket.view in [InstantflowWeb.TemplateLive, InstantflowWeb.TemplatesLive] and
-                   fresh.role != "admin",
-                 do:
-                   {:halt, Phoenix.LiveView.redirect(socket, to: "/o/#{fresh.organization.slug}")},
-                 else: {:cont, Phoenix.Component.assign(socket, :current_scope, fresh)}
+              feature =
+                case socket.view do
+                  InstantflowWeb.EnrollmentLive -> :enrollment
+                  InstantflowWeb.IncidentsLive -> :incident
+                  InstantflowWeb.BudgetsLive -> :finance
+                  _ -> nil
+                end
+
+              configured? =
+                feature == nil ||
+                  Instantflow.WorkflowCatalog.LegacyWorkspaces.available?(fresh, feature)
+
+              if !configured?,
+                do:
+                  {:halt,
+                   Phoenix.LiveView.redirect(socket,
+                     to: "/o/#{fresh.organization.slug}/processos"
+                   )},
+                else:
+                  if(
+                    socket.view in [
+                      InstantflowWeb.TemplateLive,
+                      InstantflowWeb.TemplatesLive
+                    ] and
+                      fresh.role != "admin",
+                    do:
+                      {:halt,
+                       Phoenix.LiveView.redirect(socket, to: "/o/#{fresh.organization.slug}")},
+                    else: {:cont, Phoenix.Component.assign(socket, :current_scope, fresh)}
+                  )
           end
         end
 
@@ -92,7 +117,9 @@ defmodule InstantflowWeb.UserAuth do
                    InstantflowWeb.EnrollmentLive,
                    InstantflowWeb.BudgetsLive,
                    InstantflowWeb.IncidentsLive,
-                   InstantflowWeb.CalculationsLive
+                   InstantflowWeb.CalculationsLive,
+                   InstantflowWeb.ProcessLive,
+                   InstantflowWeb.ProcessesLive
                  ],
                  do: send(self(), :reconcile)
 
@@ -113,7 +140,9 @@ defmodule InstantflowWeb.UserAuth do
                        InstantflowWeb.EnrollmentLive,
                        InstantflowWeb.BudgetsLive,
                        InstantflowWeb.IncidentsLive,
-                       InstantflowWeb.CalculationsLive
+                       InstantflowWeb.CalculationsLive,
+                       InstantflowWeb.ProcessLive,
+                       InstantflowWeb.ProcessesLive
                      ],
                      do: {:cont, socket},
                      else: {:halt, socket}

@@ -599,3 +599,39 @@ footer {
 /* Empty state for streamed collections without a CSS utility build. */
 .stream-empty { display: none; }
 .stream-empty:only-child { display: block; }
+
+/* Operational views share the workflow command layer and the existing visual tokens. */
+.operations-form { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.operations-form .form-field { flex: 1 1 160px; margin: 0; }
+.operations-menu { max-height: 360px; overflow: auto; }
+.operations-product { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--if-border); }
+.operations-product strong { min-width: 150px; }
+.operations-product span { flex: 1; }
+.operations-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 16px 0; }
+.operations-table { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--if-border); border-radius: 12px; }
+.operations-batch { padding: 16px 0; border-bottom: 1px solid var(--if-border); }
+.operations-batch .btn { margin: 8px 8px 8px 0; }
+#operation-print { display: none; }
+.operations-quick-product { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; white-space: normal; min-height: 100px; }
+@media print {
+  @page { size: auto; margin: 3mm; }
+  body, .app-shell, .workspace, main { display: block !important; margin: 0 !important; padding: 0 !important; min-width: 0 !important; background: white !important; }
+  .sidebar, .topbar, footer, .skip-link, main > :not(#operations-workspace), #operations-workspace > :not(#operation-print) { display: none !important; }
+  #operation-print, #operation-print * { color: black !important; background: white !important; }
+  #operation-print { display: block !important; width: 72mm; font: 12pt monospace; overflow-wrap: anywhere; }
+  #operation-print h1 { font: bold 18pt monospace; }
+  #operation-print p { margin: 3mm 0; }
+  #operation-print .print-line { border-top: 1px dashed black; padding: 3mm 0; break-inside: avoid; }
+}
+
+.product-picker { position: relative; flex: 2 1 260px; }
+.product-picker .form-field { margin-bottom: 4px; }
+#product-selection-status { font-size: 12px; margin: 4px 0; }
+#product-suggestions { position: absolute; z-index: 20; left: 0; right: 0; top: 82px; max-height: 300px; overflow: auto; margin: 0; padding: 6px; list-style: none; background: var(--if-bg); border: 1px solid var(--if-border); border-radius: 10px; box-shadow: 0 10px 24px #0003; }
+#product-suggestions button { display: block; width: 100%; border: 0; padding: 12px; text-align: left; color: var(--if-text); background: transparent; cursor: pointer; }
+#product-suggestions button[aria-selected="true"], #product-suggestions button:hover { background: var(--if-accent-subtle); outline: 1px solid var(--if-border); border-radius: 6px; }
+
+.process-page-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.process-page-tabs [aria-current="page"] { border-color: var(--if-accent-text); color: var(--if-accent-text); }
+#process-records dl > div { display: flex; gap: 12px; margin: 6px 0; }
+#process-records dt { font-weight: 600; }

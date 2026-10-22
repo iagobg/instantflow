@@ -1,7 +1,8 @@
 defmodule Instantflow.WorkflowCatalog.Authoring do
   @moduledoc "Fixed, typed authoring controls over the declarative contract. No dynamic atoms or executable code."
   alias Instantflow.WorkflowCatalog.{Definition, Interchange}
-  @collections ~w(stages sections fields access transitions actions roles bindings views)
+
+  @collections ~w(stages sections fields access transitions actions roles bindings views participants)
   @types %{
     key: :string,
     label: :string,
@@ -13,6 +14,15 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
     scope: :string,
     department_binding: :string,
     assignment_key: :string,
+    relationship: :string,
+    manager_roles: {:array, :string},
+    candidate_roles: {:array, :string},
+    reference_target: :string,
+    reference_relationship: :string,
+    document_reviewers: {:array, :string},
+    document_department: :string,
+    document_max_bytes: :integer,
+    document_media_types: {:array, :string},
     guardian_roles: {:array, :string},
     read: :boolean,
     edit_stages: {:array, :string},
@@ -54,8 +64,23 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
       classification: item["classification"] || "internal",
       role: item["role"],
       scope: item["scope"] || "requester",
-      department_binding: item["department_binding"],
+      department_binding:
+        item["department_binding"] ||
+          get_in(item, ["managers", Access.at(0), "department_binding"]),
       assignment_key: item["assignment_key"],
+      relationship: item["relationship"],
+      manager_roles: for(a <- item["managers"] || [], do: a["role"]),
+      candidate_roles: item["candidate_roles"] || [],
+      reference_target: get_in(item, ["reference", "target"]),
+      reference_relationship: get_in(item, ["reference", "relationship"]),
+      document_reviewers:
+        for(a <- get_in(item, ["document_policy", "reviewers"]) || [], do: a["role"]),
+      document_department:
+        get_in(item, ["document_policy", "reviewers", Access.at(0), "department_binding"]),
+      document_max_bytes: get_in(item, ["document_policy", "max_bytes"]) || 5_242_880,
+      document_media_types:
+        get_in(item, ["document_policy", "media_types"]) ||
+          ~w(application/pdf image/png image/jpeg),
       guardian_roles: for(a <- item["actors"] || [], a["scope"] == "guardian", do: a["role"]),
       read: Map.get(item, "read", true),
       edit_stages: item["edit_stages"] || [],
@@ -137,6 +162,11 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
                 ),
               else: result
 
+          result =
+            if collection == "fields" and item["document_policy"],
+              do: Map.update!(result, "capabilities", &Enum.uniq(&1 ++ ["documents"])),
+              else: result
+
           {:ok, result}
       end
     else
@@ -171,7 +201,11 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
   def items(d, "access", parent), do: find_parent(d["sections"], parent)["access"]
   def items(d, "actions", parent), do: find_parent(d["transitions"], parent)["actions"]
   def items(d, "roles", _), do: d["role_requirements"]
+  def items(d, "participants", _), do: Map.get(d, "participants", [])
   def items(d, c, _) when c in @collections, do: d[c]
+
+  def identity(%{"scope" => "participant"} = item, "access"),
+    do: item["role"] <> ":participant:" <> item["relationship"]
 
   def identity(item, "access"), do: item["role"] <> ":" <> item["scope"]
   def identity(item, "actions"), do: item["type"] <> ":" <> item["behavior"]
@@ -188,6 +222,14 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
   end
 
   defp put_items(d, "roles", _, items), do: Map.put(d, "role_requirements", items)
+  defp put_items(d, "participants", _, []), do: Map.delete(d, "participants")
+
+  defp put_items(d, "participants", _, items) do
+    d
+    |> Map.put("participants", items)
+    |> Map.update!("capabilities", &Enum.uniq(&1 ++ ["participants"]))
+  end
+
   defp put_items(d, collection, _, items), do: Map.put(d, collection, items)
 
   defp update_members(list, key, true), do: Enum.uniq(list ++ [key])
@@ -198,6 +240,30 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
     do: Map.merge(base(v), %{"initial" => v.initial, "terminal" => v.terminal})
 
   defp build("roles", v, _, _), do: base(v)
+
+  defp build("participants", v, old, _) do
+    managers =
+      if Enum.all?(old["managers"] || [], &(&1["scope"] == "workflow_department")) do
+        Enum.map(
+          v.manager_roles,
+          &%{
+            "role" => &1,
+            "scope" => "workflow_department",
+            "department_binding" => v.department_binding
+          }
+        )
+      else
+        # Imported assigned-department managers retain their declared semantics.
+        old["managers"]
+      end
+
+    Map.merge(base(v), %{
+      "kind" => v.kind,
+      "managers" => managers,
+      "candidate_roles" => v.candidate_roles
+    })
+  end
+
   defp build("bindings", v, old, _), do: Map.put(base(v), "type", old["type"] || "department")
 
   defp build("sections", v, old, _),
@@ -220,10 +286,42 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
         })
       )
 
-  defp build("fields", v, _, _) do
+  defp build("fields", v, old, _) do
     field = Map.put(base(v), "type", v.type)
 
     cond do
+      v.type == "attachment" and v.document_reviewers != [] ->
+        old_policy = old["document_policy"]
+
+        policy =
+          if old_policy &&
+               Enum.any?(old_policy["reviewers"], &(&1["scope"] != "workflow_department")) do
+            old_policy
+          else
+            %{
+              "reviewers" =>
+                Enum.map(
+                  v.document_reviewers,
+                  &%{
+                    "role" => &1,
+                    "scope" => "workflow_department",
+                    "department_binding" => v.document_department
+                  }
+                ),
+              "max_bytes" => v.document_max_bytes,
+              "media_types" => v.document_media_types
+            }
+          end
+
+        Map.put(field, "document_policy", policy)
+
+      v.type == "directory_reference" and v.reference_target not in [nil, ""] ->
+        Map.put(field, "reference", %{
+          "target" => v.reference_target,
+          "relationship" => v.reference_relationship,
+          "cardinality" => "one"
+        })
+
       v.type in ~w(single_choice multiple_choice) ->
         Map.put(field, "options", String.split(v.options || "", "\n", trim: true))
 
@@ -244,6 +342,7 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
     }
 
     case v.scope do
+      "participant" -> Map.put(item, "relationship", v.relationship)
       "workflow_department" -> Map.put(item, "department_binding", v.department_binding)
       "assigned_user" -> Map.put(item, "assignment_key", v.assignment_key)
       _ -> item
@@ -260,7 +359,10 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
       Enum.map(v.requester_roles, &%{"role" => &1, "scope" => "requester"}) ++
         Enum.map(v.department_roles, &%{"role" => &1, "scope" => "assigned_department"}) ++
         Enum.map(v.guardian_roles, &%{"role" => &1, "scope" => "guardian"}) ++
-        Enum.filter(old["actors"] || [], &(&1["scope"] in ~w(workflow_department assigned_user)))
+        Enum.filter(
+          old["actors"] || [],
+          &(&1["scope"] in ~w(workflow_department assigned_user participant))
+        )
 
     item =
       Map.merge(base(v), %{

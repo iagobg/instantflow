@@ -2,7 +2,7 @@
 
 [Design index](../design/index.md)
 
-Status: Sprints 00–08 complete · Updated: 2026-10-21
+Status: Sprints 00–09 complete; Sprints 10–11 architecture priority; Sprints 12–15 customer delivery planned · Updated: 2026-10-21
 
 Dependency-ordered increments without duration estimates. Sprints 00 and 01 retain their original single-organization evidence. Sprint 01A has migrated and verified the multi-organization foundation before Sprint 02, preserving existing records.
 
@@ -18,8 +18,28 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 | [06](sprint_06.md) | Confidential incident collaboration | 05; D-06 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [07](sprint_07.md) | Integrated demonstration and delivery | 06; D-09 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [08](sprint_08.md) | Optional isolated Python calculations | 07; D-16, D-17; host activation gate | Done | 5/5 | 2026-10-21 / 2026-10-21 |
+| [09](sprint_09.md) | Shared builder contracts, participants, references and document policies | Existing 01A–08; D-25–28 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
+| [10](sprint_10.md) | Generated participant experiences and reusable projections | 09; D-06–07, D-25–27 | Planned | 0/4 | — / — |
+| [11](sprint_11.md) | Cross-domain contracts, scalable reads and builder acceptance | 09–10; D-09, D-14, D-25–27 | Planned | 0/5 | — / — |
+| [12](sprint_12.md) | Pilot scope, isolation and account access | 11 architecture gate; D-21–23, D-27 | Planned | 0/3 | — / — |
+| [13](sprint_13.md) | Organization onboarding and first workflow | 12; D-22, D-27 | Planned | 0/3 | — / — |
+| [14](sprint_14.md) | Operations, data lifecycle and pilot launch readiness | 13; D-21, D-23 | Planned | 0/3 | — / — |
+| [15](sprint_15.md) | Customer pilot evaluation | 14; actual observation period | Planned | 0/1 | — / — |
 
 ## Tracking
+
+Sprint 10's [pre-execution sequence and checkpoints](sprint_10.md#execution-order-and-checkpoints)
+incorporate the corrected Sprint 09 contracts under D-29. Deliver the first
+participant slice with bounded queries before expanding views, finance and
+communications. Sprint 10 owns bounded reads for its new/migrated surfaces;
+Sprint 11 completes residual paths and load acceptance. The four Sprint 10 task
+IDs, Planned status and 0/4 count are unchanged.
+
+The [builder architecture contract](../docs/builder-architecture-contract.md) and D-28 establish the remediation sequence. Sprint 09 now completes the shared execution/binding boundary, participants, references, document policies and populated migration/recovery with [implementation evidence](../docs/participants-and-documents.md). Sprint 10 introduces bounded projections and explicit correction resets; Sprint 11 completes scale, compatibility and full school replacement. Sprint 11 cleanup does not defer modular design until the end.
+
+Architecture Sprints 09–11 precede pilot feature work, following the [modularity review](../docs/modularity-review.md) and D-25–27. They cover participant/reference/document policies, generated projections and supporting capabilities, operational contracts, scalable reads, maintainable boundaries and complete recreation of the original school examples plus restaurant/non-school processes. The local structural refactor is baseline evidence; remaining tasks stay unchecked until their own acceptance passes.
+
+The preserved first-customer plan moves to Sprints 12–15, coordinated by the [shared roadmap, traceability mapping and activation checklist](first_customer_roadmap.md). Sprint 11 is the architecture prerequisite; Sprints 12–14 gate live pilot activation. Sprint 15 evaluates actual use without keeping completed engineering sprints open. Shared-database controls and academic Python restrictions remain in force. Planning does not authorize deployment or real customer processing.
 
 The user reopened Sprint 08 on 2026-10-21, selected the synthetic trip calculator and explicitly approved gVisor sharing their private Oracle ARM VPS with Phoenix/PostgreSQL. The [readiness assessment](../docs/python-readiness.md) records the revised host boundary and operating defaults. The actual A1 isolation, service recovery and deployed-release application rehearsal passed; execution is enabled in this private deployment, with disabled defaults elsewhere. Sprint 08 is Done. Sprint 08 is a post-proof-of-concept extension, not a requirement for completing Sprints 00–07. Do not add Python execution to the completed Sprint 01 or delay Sprint 02 for it.
 
@@ -28,3 +48,7 @@ Statuses: Planned → Ready → In progress → Review → Done. Blocked require
 Check tasks only with evidence. Derive counts from task checkboxes; acceptance criteria are an additional gate. Record actual dates, evidence links, and remaining defects when status changes. Completed task counts alone do not mean Done.
 
 All sprints use [shared completion rules](../design/07-verification.md). Scope changes update this index, the sprint, and the design register.
+
+## Priority reorganization — 2026-10-21
+
+At the user's request, the remaining modularity findings are now explicit higher-priority Sprints 09–11 rather than an informal checkpoint. Previously planned Sprints 09–12 become 12–15 with scope and local evidence preserved; the [roadmap mapping](first_customer_roadmap.md#scope-tracking) resolves older identifiers. Completed Sprints 00–08 are unchanged. No sprint is marked started or complete by this planning update. D-27 records the ordering; the next implementation increment is Sprint 09.

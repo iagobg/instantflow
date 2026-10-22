@@ -712,5 +712,16 @@
         "request.destination"
       ]
     }
-  ]
+  ],
+  "interface": {
+    "pages": [
+      {
+        "key": "overview",
+        "label": "Acompanhamento",
+        "blocks": [
+          "records"
+        ]
+      }
+    ]
+  }
 }

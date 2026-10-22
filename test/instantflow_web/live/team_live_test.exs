@@ -81,9 +81,9 @@ defmodule InstantflowWeb.TeamLiveTest do
     assert Instantflow.Repo.aggregate(Instantflow.Identity.Invitation, :count) == 0
   end
 
-  test "overview links to workflow requests", %{conn: conn} do
+  test "overview links to installed processes", %{conn: conn} do
     {:ok, view, _} = live(login(conn, staff_fixture()), ~p"/o/horizonte")
     assert has_element?(view, "#main-content")
-    assert has_element?(view, "a[href='/o/horizonte/solicitacoes']", "Abrir solicitações")
+    assert has_element?(view, "a[href='/o/horizonte/processos']", "Abrir processos")
   end
 end

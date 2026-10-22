@@ -34,12 +34,21 @@ defmodule Instantflow.WorkflowCatalog.Templates do
 
   def get(actor, id), do: authorized(actor, fn _ -> draft!(id) end)
 
-  def new(actor, key, name) do
+  def new(actor, key, name, type \\ "form") do
     authorized(actor, fn a ->
-      definition = starter(key, name)
+      definition = starter(key, name, type)
       validate!(definition, :complete)
       workflow = new_workflow!(a, definition)
-      insert_draft!(a, workflow, definition, nil, nil, "created")
+
+      bindings =
+        if Instantflow.WorkflowCatalog.Workspaces.operational?(definition),
+          do: %{
+            "roles" => %{"operator" => ["admin"]},
+            "departments" => %{"service_department" => a.department_id}
+          },
+          else: @empty_bindings
+
+      insert_draft!(a, workflow, definition, nil, nil, "created", bindings)
     end)
   end
 
@@ -191,8 +200,12 @@ defmodule Instantflow.WorkflowCatalog.Templates do
       base = if draft.base_version_id, do: version!(draft.base_version_id), else: nil
       validation = Definition.validate(draft.definition)
 
-      mapped? =
-        WorkflowCatalog.valid_bindings?(draft.definition, draft.bindings, a.organization_id)
+      mapping_errors =
+        Instantflow.WorkflowCatalog.Bindings.errors(
+          draft.definition,
+          draft.bindings,
+          a.organization_id
+        )
 
       %{
         draft: draft,
@@ -208,7 +221,7 @@ defmodule Instantflow.WorkflowCatalog.Templates do
             :ok -> []
             {:error, errors} -> errors
           end ++
-            if(mapped?, do: [], else: ["Resolva todos os mapeamentos locais antes de publicar."]),
+            mapping_errors,
         warnings: warnings(draft.definition),
         roles: role_preview(draft.definition)
       }
@@ -352,6 +365,32 @@ defmodule Instantflow.WorkflowCatalog.Templates do
       details: details
     })
   end
+
+  def starter(key, name, "form"), do: starter(key, name)
+
+  def starter(key, name, type)
+      when type in ~w(item_service restaurant enrollment incident requisition field_trip) do
+    file = if type in ~w(item_service restaurant), do: "resource_service", else: type
+
+    definition =
+      Application.app_dir(:instantflow, "priv/workflows/#{file}.json")
+      |> File.read!()
+      |> Jason.decode!()
+      |> Map.put("template_key", key)
+      |> Map.put("name", name)
+
+    if type == "item_service" do
+      put_in(
+        definition,
+        ["interface", "labels"],
+        Instantflow.WorkflowCatalog.Workspaces.labels(%{"interface" => %{"labels" => %{}}})
+      )
+    else
+      definition
+    end
+  end
+
+  def starter(_, _, _), do: Repo.rollback(:unsupported_workspace)
 
   def starter(key, name) do
     %{
