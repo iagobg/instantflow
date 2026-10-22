@@ -155,3 +155,12 @@ paths, operational contract extraction, compatibility and populated replacement 
 Historical enrollment/guardian URLs and pinned inferred-reset adapters remain documented
 compatibility paths. Existing templates are not silently migrated or installed into
 unrelated organizations. This local completion authorizes no deployment or customer launch.
+
+## Architecture review corrections
+
+The [independent review](sprint10-architecture-review.md) reproduced a direct-document
+projection bypass and a multiple-select browser-payload failure. The
+[resolution](sprint10-review-resolution.md) adds pinned participant release checks at
+the download authorization entry point and shared generated-form conversion, with
+maintained direct-URL, revocation, pinning, selection/clearing and forged-option tests.
+Its evidence supplements the initial completion result without changing Sprint 11 scope.

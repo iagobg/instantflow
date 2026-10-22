@@ -39,7 +39,7 @@ IDs are unchanged. All four tasks are complete (4/4). Sprint 10 started and fini
 and [generated-experience recreation matrix](../docs/sprint10-generated-experiences.md)
 record the implementation sequence. Final validation passes 268 tests, asset build
 and whitespace checks; [completion evidence](../docs/evidence/sprint10-complete.json)
-records the exact sources and logs. Sprint 11 is next and remains Planned.
+records the exact sources and logs. The [review correction evidence](../docs/evidence/sprint10-review-resolution.json) supplements that checkpoint: direct-download release and browser multiple-choice corrections pass 273 tests, asset build and whitespace checks. Sprint 11 is next and remains Planned.
 
 The [builder architecture contract](../docs/builder-architecture-contract.md) and D-28 establish the remediation sequence. Sprint 09 now completes the shared execution/binding boundary, participants, references, document policies and populated migration/recovery with [implementation evidence](../docs/participants-and-documents.md). Sprint 10 introduces bounded projections and explicit correction resets; Sprint 11 completes scale, compatibility and full school replacement. Sprint 11 cleanup does not defer modular design until the end.
 

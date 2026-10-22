@@ -729,33 +729,7 @@ defmodule InstantflowWeb.RequestLive do
     Map.new(values, fn {key, value} ->
       field = Enum.find(definition["fields"], &(&1["key"] == key))
 
-      cast =
-        case {field && field["type"], value} do
-          {"multiple_choice", ""} ->
-            []
-
-          {type, ""} when type not in ["short_text", "long_text"] ->
-            nil
-
-          {type, value}
-          when type in ["integer", "money", "directory_reference"] and is_binary(value) ->
-            case Integer.parse(value) do
-              {number, ""} -> number
-              _ -> value
-            end
-
-          {"boolean", "true"} ->
-            true
-
-          {"boolean", "false"} ->
-            false
-
-          {"multiple_choice", values} when is_list(values) ->
-            Enum.reject(values, &(&1 == ""))
-
-          _ ->
-            value
-        end
+      cast = InstantflowWeb.FieldValues.cast(field && field["type"], value)
 
       {key, cast}
     end)

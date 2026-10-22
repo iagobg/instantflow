@@ -118,7 +118,7 @@ defmodule InstantflowWeb.ParticipantLive do
           socket.assigns.page_key,
           socket.assigns.record_id,
           field.section,
-          %{field.key => cast(field.type, value)},
+          %{field.key => InstantflowWeb.FieldValues.cast(field.type, value)},
           observed,
           socket.assigns.command_key
         )
@@ -281,18 +281,6 @@ defmodule InstantflowWeb.ParticipantLive do
   end
 
   defp number(_), do: nil
-  defp cast(type, "") when type not in ~w(short_text long_text), do: nil
-  defp cast("boolean", "true"), do: true
-  defp cast("boolean", "false"), do: false
-
-  defp cast(type, value) when type in ~w(integer money) and is_binary(value) do
-    case Integer.parse(value) do
-      {n, ""} -> n
-      _ -> value
-    end
-  end
-
-  defp cast(_, value), do: value
   defp input_type("long_text"), do: "textarea"
   defp input_type(type) when type in ~w(integer money), do: "number"
   defp input_type(type) when type in ~w(boolean single_choice multiple_choice), do: "select"

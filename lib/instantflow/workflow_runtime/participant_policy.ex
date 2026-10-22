@@ -22,4 +22,14 @@ defmodule Instantflow.WorkflowRuntime.ParticipantPolicy do
         &Instantflow.WorkflowRuntime.Policy.actor?(scope, ticket, version, &1)
       )
   end
+
+  def document_released?(scope, ticket, version, section_key, field_key) do
+    pages = Instantflow.WorkflowCatalog.ParticipantPages.pages(version.definition)
+
+    pages == [] or staff_workspace?(scope, version) or
+      Enum.any?(pages, fn page ->
+        (section_key <> "." <> field_key) in page["participant"]["documents"] and
+          allowed?(scope, ticket, version, page)
+      end)
+  end
 end

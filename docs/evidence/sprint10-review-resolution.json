@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-22",
+  "status": "review_corrections_complete",
+  "base_revision": "aff310a506392f47b5f9abd8bb6df3cc853fb960",
+  "review": "docs/sprint10-architecture-review.md",
+  "resolution": "docs/sprint10-review-resolution.md",
+  "checks": [
+    {
+      "name": "mix precommit",
+      "status": "passed",
+      "result": "273 tests, 0 failures; seed 489669",
+      "log": ".local/sprint10-review-precommit.log",
+      "sha256": "7caf292147f4acabeb8b6ac19d0ca92f84bc1a4682de286a75e4acd9e250190a"
+    },
+    {
+      "name": "focused document/browser-payload regressions",
+      "status": "passed",
+      "result": "15 tests, 0 failures; seed 199162",
+      "log": ".local/sprint10-review-focused.log",
+      "sha256": "4c5e79eddbecb023006eb31b37f6009480156d846403812efe9ba0cdd3970a13"
+    },
+    {
+      "name": "mix assets.build",
+      "status": "passed",
+      "result": "JavaScript and CSS bundles built",
+      "log": ".local/sprint10-review-assets.log",
+      "sha256": "21df94db69995ea766e48f16861ac65d173ac147842bd84b3bee18238bdae505"
+    },
+    {
+      "name": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "findings_resolved": [
+    {
+      "finding": "Direct document download bypasses participant release selection",
+      "resolution": "Download-specific document policy also requires current admission to an applicable pinned page selecting the exact field for participant-only identities. Existing underlying and staff/historical policies remain authoritative.",
+      "coverage": [
+        "empty selection denies context and HTTP",
+        "exact selected versus unselected fields",
+        "new publication retains old-record pinning",
+        "relationship revocation",
+        "page-admission grant removal despite retained section access",
+        "legitimate staff and scoped parent staff downloads",
+        "existing historical document regressions"
+      ]
+    },
+    {
+      "finding": "Multiple-choice browser submissions contain an empty hidden-input sentinel",
+      "resolution": "Both generated renderers use FieldValues.cast/2; empty sentinel values are removed without accepting forged nonempty options or changing runtime validation.",
+      "coverage": [
+        "participant and staff forms",
+        "actual hidden-input payload selection",
+        "clearing every option",
+        "forged nonempty option rejected"
+      ]
+    }
+  ],
+  "scope": "Targeted Sprint 10 acceptance corrections. Sprint 11 cross-domain, supporting-query scale and populated compatibility work remain unchanged.",
+  "source_sha256": {
+    "docs/sprint10-architecture-review.md": "a4c6d337c20405961130d70b762a500696d8ff8a19b58639dc2cd0b75184cc9a",
+    "docs/sprint10-generated-experiences.md": "e194d66ae91f1794b0872876a8f5fefe34e297317625b734db6bcee6a4e7aca8",
+    "docs/sprint10-review-resolution.md": "0afeeaa51dfb0e4bbe9ecc49be2205be584a34d5f5c6880b6fcc6157a0391958",
+    "lib/instantflow/private_document_policy.ex": "31377bf4e07d7e28a9cc36fb02d60d69dbd1f7804437d13467796bf56d28be45",
+    "lib/instantflow/private_documents.ex": "777c6d4df4cbbdebd62b6fcc245ae68f5ee6045e41cc35db5f0fab72f7ebe511",
+    "lib/instantflow/workflow_runtime/participant_policy.ex": "5d57f9b9e6779ae3e3a1009d3a27751a1585b6b8a646cdf66e7ee5be11b852fa",
+    "lib/instantflow_web/field_values.ex": "0a1d4bfbc0502fccc68a789bce2a9c2cb0647e4874ffb5e754755ee24fbbc58e",
+    "lib/instantflow_web/live/participant_live.ex": "551da45d2e41f177085211a5f7baea43c8056fd9e2223f454157fd7daf3f79ec",
+    "lib/instantflow_web/live/request_live.ex": "05c627ac28316f2048a3931832c5a40cbb784aa9bfe46ac17a58a454f0d6f912",
+    "sprint_plan/sprint_10.md": "f1f1717c6492188d0469188036a444130e4e8c9284c35e9bb4f6a86f2fd5df14",
+    "sprint_plan/sprint_index.md": "c97c9753d54ac5356c479956280a387496eb5051d9f9818199cf36de92f6e610",
+    "test/instantflow_web/live/sprint10_review_regressions_test.exs": "36a1f306d75597a186b6785b88655a3cda2bc081cad481e0f2b1334cd0a1fcc5"
+  }
+}

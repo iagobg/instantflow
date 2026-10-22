@@ -14,6 +14,17 @@ defmodule Instantflow.PrivateDocuments.Policy do
       else: LegacyPolicy.allowed?(actor, ticket, version, section, field, permission)
   end
 
+  def download_allowed?(actor, ticket, version, section, field) do
+    allowed?(actor, ticket, version, section, field, :read) and
+      Instantflow.WorkflowRuntime.ParticipantPolicy.document_released?(
+        actor,
+        ticket,
+        version,
+        section["key"],
+        field
+      )
+  end
+
   def reviewer?(actor, ticket, version, section, field, uploader) do
     case declaration(section, field) do
       nil ->

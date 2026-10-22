@@ -177,7 +177,7 @@ defmodule Instantflow.PrivateDocuments do
       d = document!(a, key)
       section = section!(version, d.section_key, d.field_key)
 
-      unless allowed?(a, ticket, version, section, d.field_key, :read) and ready?(d) and
+      unless Policy.download_allowed?(a, ticket, version, section, d.field_key) and ready?(d) and
                Policy.file?(section, d.field_key, d.media_type, d.size),
              do: Repo.rollback(:not_found)
 
