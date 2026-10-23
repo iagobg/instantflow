@@ -1,8 +1,10 @@
 # Sprint 13 — Organization onboarding and first workflow
 
-[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Planned · Dependencies: Sprint 12; Sprints 09–11 architecture acceptance; D-22, D-27
+[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Deferred · Dependencies: Sprint 12; Sprints 09–11 architecture acceptance; D-22, D-27
 
 Goal: let an invited administrator configure and complete the selected process, with understandable collaboration and the integrations it requires. Use synthetic acceptance fixtures until Sprint 14 launch readiness is accepted.
+
+Deferred by user direction on 2026-10-23. Preserve this scope for later customer delivery; do not execute it as the next increment. The active priority is the [school demo milestone](demo_readiness.md). Resumption requires an explicit priority decision.
 
 ## Tasks
 
@@ -41,7 +43,7 @@ Goal: let an invited administrator configure and complete the selected process, 
 ## Progress
 
 Actual start / finish: not started / not finished  
-Tasks: 0/3. Status: Planned. No implementation or customer-readiness claim is made by this plan.  
+Tasks: 0/3. Status: Deferred. No implementation or customer-readiness claim is made by this plan.  
 Planning date: 2026-10-21. Record dated evidence and remaining defects before changing status.
 
 ## Authorized restaurant implementation increment — 2026-10-21

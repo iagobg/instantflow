@@ -1,8 +1,10 @@
 # First customer roadmap
 
-[Sprint index](sprint_index.md) · Status: Planned · Planning date: 2026-10-21
+[Sprint index](sprint_index.md) · Status: Deferred · Planning date: 2026-10-21
 
 Goal: serve one real organization through one supported workflow and evaluate actual use. This roadmap coordinates the architecture prerequisites in Sprints 09–11 and customer delivery in Sprints 12–15; it is not itself a sprint. It preserves the original pilot scope and does not authorize deployment, purchases, external communications or customer-data processing now.
+
+Sprints 12–15 are shelved as of 2026-10-23. Their scope and launch gates remain preserved, but the next priority is the [school demo milestone](demo_readiness.md). Demo acceptance does not satisfy customer launch acceptance.
 
 ## Delivery sequence
 

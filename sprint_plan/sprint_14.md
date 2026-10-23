@@ -1,8 +1,10 @@
 # Sprint 14 — Operations, data lifecycle and pilot launch readiness
 
-[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Planned · Dependencies: Sprint 13; S12-T01 pilot contract; D-21, D-23
+[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Deferred · Dependencies: Sprint 13; S12-T01 pilot contract; D-21, D-23
 
 Goal: establish dependable operation and pass the shared customer activation checklist. Completion does not wait for the observation period or commercial outcome measured in Sprint 15.
+
+Deferred by user direction on 2026-10-23. Preserve this scope for later customer delivery; do not execute it as the next increment. The active priority is the [school demo milestone](demo_readiness.md). Resumption requires an explicit priority decision.
 
 ## Tasks
 
@@ -41,7 +43,7 @@ Goal: establish dependable operation and pass the shared customer activation che
 ## Progress
 
 Actual start / finish: not started / not finished  
-Tasks: 0/3. Status: Planned. No implementation or customer-readiness claim is made by this plan.  
+Tasks: 0/3. Status: Deferred. No implementation or customer-readiness claim is made by this plan.  
 Planning date: 2026-10-21. Record dated evidence and remaining defects before changing status.
 
 ## Planning reorganization — 2026-10-21

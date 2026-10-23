@@ -1,12 +1,24 @@
 import Config
 
+demo_database = System.get_env("INSTANTFLOW_DEMO_DATABASE")
+
+if demo_database && demo_database != "instantflow_demo" do
+  raise "INSTANTFLOW_DEMO_DATABASE must be instantflow_demo"
+end
+
+if demo_database &&
+     (System.get_env("OPERATOR_DATABASE_URL") ||
+        System.get_env("MIGRATION_DATABASE") not in [nil, "instantflow_demo"]) do
+  raise "Demo mode cannot use an operator URL or another migration database"
+end
+
 # Configure your database
 config :instantflow, Instantflow.Repo,
   username: System.get_env("PGUSER", "instantflow_runtime"),
   password: System.get_env("RUNTIME_DB_PASSWORD", "instantflow-runtime-local-only"),
   hostname: System.get_env("PGHOST", "localhost"),
   port: String.to_integer(System.get_env("PGPORT", "55432")),
-  database: "instantflow_dev",
+  database: demo_database || "instantflow_dev",
   template: "template0",
   stacktrace: true,
   show_sensitive_data_on_connection_error: false,
@@ -19,7 +31,7 @@ config :instantflow, Instantflow.OperatorRepo,
   password: System.get_env("MIGRATION_PGPASSWORD", "instantflow-local-only"),
   hostname: System.get_env("PGHOST", "localhost"),
   port: String.to_integer(System.get_env("PGPORT", "55432")),
-  database: System.get_env("MIGRATION_DATABASE") || "instantflow_dev",
+  database: demo_database || System.get_env("MIGRATION_DATABASE") || "instantflow_dev",
   template: "template0",
   stacktrace: true,
   show_sensitive_data_on_connection_error: false,

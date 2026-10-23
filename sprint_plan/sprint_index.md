@@ -2,7 +2,7 @@
 
 [Design index](../design/index.md)
 
-Status: Sprints 00–11 complete; Sprints 12–15 customer delivery planned · Updated: 2026-10-23
+Status: Sprints 00–11 complete; Sprints 12–15 deferred; school demo milestone is the active planning priority · Updated: 2026-10-23
 
 Dependency-ordered increments without duration estimates. Sprints 00 and 01 retain their original single-organization evidence. Sprint 01A has migrated and verified the multi-organization foundation before Sprint 02, preserving existing records.
 
@@ -21,10 +21,14 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 | [09](sprint_09.md) | Shared builder contracts, participants, references and document policies | Existing 01A–08; D-25–28 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [10](sprint_10.md) | Generated participant experiences and reusable projections | 09; D-06–07, D-25–27 | Done | 4/4 | 2026-10-22 / 2026-10-22 |
 | [11](sprint_11.md) | Cross-domain contracts, scalable reads and builder acceptance | corrected 09–10; D-09, D-14, D-25–30 | Done | 5/5 | 2026-10-22 / 2026-10-23 |
-| [12](sprint_12.md) | Pilot scope, isolation and account access | 11 architecture gate; D-21–23, D-27 | Planned | 0/3 | — / — |
-| [13](sprint_13.md) | Organization onboarding and first workflow | 12; D-22, D-27 | Planned | 0/3 | — / — |
-| [14](sprint_14.md) | Operations, data lifecycle and pilot launch readiness | 13; D-21, D-23 | Planned | 0/3 | — / — |
-| [15](sprint_15.md) | Customer pilot evaluation | 14; actual observation period | Planned | 0/1 | — / — |
+| [12](sprint_12.md) | Pilot scope, isolation and account access | 11 architecture gate; D-21–23, D-27 | Deferred | 0/3 | — / — |
+| [13](sprint_13.md) | Organization onboarding and first workflow | 12; D-22, D-27 | Deferred | 0/3 | — / — |
+| [14](sprint_14.md) | Operations, data lifecycle and pilot launch readiness | 13; D-21, D-23 | Deferred | 0/3 | — / — |
+| [15](sprint_15.md) | Customer pilot evaluation | 14; actual observation period | Deferred | 0/1 | — / — |
+
+## Active priority
+
+[School demo readiness and execution plan](demo_readiness.md): populated fictional school, builder-to-publication proof, published flow overview and authorized stage boards. Planned; not implemented by this assessment. Sprints 12–15 remain shelved until explicitly resumed.
 
 ## Tracking
 
@@ -137,5 +141,4 @@ Checkpoint 7d7b5d8 completes bounded participant/message discovery. All 25 backe
 cases, connected-browser completion, supported/historical restoration and 346-test
 precommit pass; assets and runner/deployment checks pass. The intermittent
 test-client invalid-session observation remains documented and unexplained.
-Next is Sprint 12; customer activation still requires Sprints 12–14, with Sprint 15
-reserved for actual post-launch observation.
+Next is the [school demo milestone](demo_readiness.md). Sprints 12–15 are deferred; customer activation still requires their preserved launch gates.

@@ -1,8 +1,10 @@
 # Sprint 12 — Pilot scope, isolation and account access
 
-[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Planned · Dependencies: Sprint 11 architecture acceptance; existing Sprints 01A–08; D-21–23, D-27
+[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Deferred · Dependencies: Sprint 11 architecture acceptance; existing Sprints 01A–08; D-21–23, D-27
 
 Goal: define the first customer workflow, protect the shared demo/customer boundary and make account access recoverable. Completion enables onboarding work in Sprint 13; it does not enable customer launch.
+
+Deferred by user direction on 2026-10-23. Preserve this scope for later customer delivery; do not execute it as the next increment. The active priority is the [school demo milestone](demo_readiness.md). Resumption requires an explicit priority decision.
 
 ## Tasks
 
@@ -38,7 +40,7 @@ Goal: define the first customer workflow, protect the shared demo/customer bound
 ## Progress
 
 Actual start / finish: not started / not finished  
-Tasks: 0/3. Status: Planned. No implementation or customer-readiness claim is made by this plan.  
+Tasks: 0/3. Status: Deferred. No implementation or customer-readiness claim is made by this plan.  
 Planning date: 2026-10-21. Record dated evidence and remaining defects before changing status.
 
 ## Restaurant discovery update — 2026-10-21

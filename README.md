@@ -34,6 +34,11 @@ The demonstration includes Escola Horizonte and Escola Aurora. The same `admin@e
 
 The enrollment parent portal and private files are implemented. All four school reference workflows are implemented; integrated verification and delivery are complete in Sprint 07. This application is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
 
+For the current school demo milestone, use the [isolated school demo setup](docs/school-demo.md).
+Its first D01 checkpoint prepares eight populated purchasing cases in instantflow_demo,
+with explicit presenter grants and a restricted comparison account. Other demo scenarios
+and the shared flow/stage-board presentation remain in progress.
+
 ## Prerequisites and setup
 
 Pinned runtime: Erlang/OTP 28.5.0.2 and Elixir 1.19.5 (OTP 28), recorded in `.tool-versions`. Phoenix, LiveView, Ecto and all transitive dependencies are pinned by `mix.lock`. The application uses PostgreSQL 16; `compose.yaml` pins 16.15 and exposes it on loopback port 55432.

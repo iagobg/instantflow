@@ -1,6 +1,6 @@
 # InstantFlow design
 
-Status: Sprints 00–09 complete; private academic Python deployment verified and enabled; Sprints 10–11 architecture priority; Sprints 12–15 customer delivery planned · Updated: 2026-10-21
+Status: Sprints 00–11 complete; school demo milestone is the active planning priority; Sprints 12–15 deferred · Updated: 2026-10-23
 
 Build a general-purpose, multi-organization workflow platform using Elixir and Phoenix LiveView. Organizations across different sectors configure their own processes, forms, permissions, and live dashboards. Four school workflows provide the initial demonstration, including cross-department collaboration and an external-participant portal illustrated by parent access.
 
@@ -14,6 +14,8 @@ Build a general-purpose, multi-organization workflow platform using Elixir and P
 - Cover enrollment, field trips, incidents, and purchasing.
 
 The user confirmed template import/export and an LLM authoring guide in Sprint 03. They use the same validated model as the editor.
+
+The current delivery priority is the [school demo milestone](../sprint_plan/demo_readiness.md), using the common builder and runtime.
 
 ## Document map
 

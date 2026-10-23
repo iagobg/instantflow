@@ -1,8 +1,10 @@
 # Sprint 15 — Customer pilot evaluation
 
-[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Planned · Dependencies: Sprint 14; actual pilot use through the agreed review date
+[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Deferred · Dependencies: Sprint 14; actual pilot use through the agreed review date
 
 Goal: decide whether the delivered workflow creates enough customer value to continue, change or stop. This observation/review increment is separate from engineering readiness; it begins after a permitted launch and does not block completion of Sprints 12–14.
+
+Deferred by user direction on 2026-10-23. Preserve this scope for later customer delivery; do not execute it as the next increment. The active priority is the [school demo milestone](demo_readiness.md). Resumption requires an explicit priority decision.
 
 ## Tasks
 
@@ -23,7 +25,7 @@ Goal: decide whether the delivered workflow creates enough customer value to con
 ## Progress
 
 Actual start / finish: not started / not finished  
-Tasks: 0/1. Status: Planned. No implementation or customer-readiness claim is made by this plan.  
+Tasks: 0/1. Status: Deferred. No implementation or customer-readiness claim is made by this plan.  
 Planning date: 2026-10-21. Record dated evidence and remaining defects before changing status.
 
 ## Planning reorganization — 2026-10-21
