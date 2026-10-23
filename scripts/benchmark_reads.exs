@@ -28,7 +28,15 @@ defmodule Instantflow.ReadBenchmark do
              dimensions.used_versions in 1..dimensions.versions and
              dimensions.hidden in [0, 9, 99] and dimensions.width in [1, 10, 50] and
              dimensions.shape in ["equal", "uneven"] and
-             ((is_nil(adapter) and dimensions.surface in ["view", "options", "search", "catalog"]) or
+             ((is_nil(adapter) and
+                 dimensions.surface in [
+                   "view",
+                   "options",
+                   "search",
+                   "catalog",
+                   "creation",
+                   "navigation"
+                 ]) or
                 (not is_nil(adapter) and dimensions.surface == adapter.surface())),
            do: raise("unsupported benchmark dimensions")
 
@@ -113,6 +121,19 @@ defmodule Instantflow.ReadBenchmark do
       dimensions: dimensions,
       verified_row_counts: row_counts,
       source_revision: System.cmd("git", ["rev-parse", "HEAD"]) |> elem(0) |> String.trim(),
+      compiled_read_md5:
+        Map.new(
+          [
+            Projections,
+            Workspaces,
+            Instantflow.Delivery.Curated,
+            Instantflow.WorkflowRuntime.PolicyQuery
+          ],
+          fn module ->
+            Code.ensure_loaded!(module)
+            {inspect(module), module.module_info(:md5) |> Base.encode16(case: :lower)}
+          end
+        ),
       environment: %{
         elixir: System.version(),
         otp: to_string(:erlang.system_info(:otp_release)),
@@ -129,7 +150,7 @@ defmodule Instantflow.ReadBenchmark do
         fetched_payload_bytes: 4_194_304
       },
       limitations:
-        "Synthetic bulk fixtures; actual runtime login, tenant gates and pool 10. Fresh application per case; fixture insertion warms PostgreSQL/OS caches. Cold is first actor read. Full VM sampled every 1ms includes pools, tasks and off-heap; phase growth is reported both whole and divided by 50 concurrent workers (an aggregate, not a per-worker maximum). Individual caller heap sampled at query boundaries. JSON encoding of fetched rows measures decoded data volume, not PostgreSQL protocol bytes. SQL plans and pure policy compilation are separate post-load probes to avoid timing interference. Browser measured separately. No serving database writes."
+        "Synthetic bulk fixtures; actual runtime login, tenant gates and pool 10. Fresh application per case; fixture insertion warms PostgreSQL/OS caches. Cold is first actor read. Full VM sampled every 1ms includes pools, tasks and off-heap; phase growth is reported both whole and divided by 50 concurrent workers (an aggregate, not a per-worker maximum). Individual caller heap sampled at query boundaries. JSON encoding of fetched rows measures decoded data volume, not PostgreSQL protocol bytes. TCP counters report actual aggregate PostgreSQL protocol bytes, with the per-request mean explicitly separated from decoded per-request maxima. SQL plans and pure policy compilation are separate post-load probes to avoid timing interference. Browser measured separately. No serving database writes."
     }
 
     path = System.get_env("READ_REPORT", ".local/read-benchmark.json")
@@ -199,7 +220,10 @@ defmodule Instantflow.ReadBenchmark do
               number: n,
               definition: put_in(definition, ["stages", Access.at(0), "label"], "Pinned #{n}"),
               bindings: %{
-                "roles" => %{"requester" => ["external"], "reviewer" => ["staff"]},
+                "roles" => %{
+                  "requester" => if(d.surface == "creation", do: ["staff"], else: ["external"]),
+                  "reviewer" => ["staff"]
+                },
                 "departments" => %{"review_department" => dep.id}
               },
               published_by_id: first.user_id,
@@ -305,6 +329,7 @@ defmodule Instantflow.ReadBenchmark do
 
   defp rounds(clients, runtime, d, n, adapter) do
     :erlang.garbage_collect()
+    wire_before = tcp_counters()
     baseline = :erlang.memory(:total)
     parent = self()
     sampler = spawn_link(fn -> sample_memory(parent, baseline) end)
@@ -322,6 +347,7 @@ defmodule Instantflow.ReadBenchmark do
       )
       |> Enum.flat_map(fn {:ok, samples} -> samples end)
 
+    wire_after = tcp_counters()
     send(sampler, :finish)
 
     receive do
@@ -331,9 +357,63 @@ defmodule Instantflow.ReadBenchmark do
           vm_baseline_bytes: baseline,
           vm_peak_bytes: peak,
           vm_growth_bytes: max(peak - baseline, 0),
+          postgres_wire: wire_delta(wire_before, wire_after, length(samples)),
           vm_growth_per_concurrent_worker_bytes: div(max(peak - baseline, 0), 50)
         }
     end
+  end
+
+  defp tcp_counters do
+    port = Repo.config()[:port] || 5432
+
+    {output, 0} =
+      System.cmd(System.find_executable("ss"), ["-Htinp", "dst", ":" <> to_string(port)])
+
+    marker = "pid=" <> System.pid() <> ","
+
+    sockets =
+      output
+      |> String.split("
+",
+        trim: true
+      )
+      |> Enum.chunk_every(2)
+      |> Enum.filter(fn [socket | _] -> String.contains?(socket, marker) end)
+
+    Enum.reduce(sockets, %{received: 0, sent: 0, connections: length(sockets)}, fn lines, acc ->
+      info = Enum.join(lines, " ")
+
+      parse = fn label ->
+        case Regex.run(Regex.compile!(label <> ":([0-9]+)"), info) do
+          [_, number] -> String.to_integer(number)
+          nil -> 0
+        end
+      end
+
+      %{
+        acc
+        | received: acc.received + parse.("bytes_received"),
+          sent: acc.sent + parse.("bytes_sent")
+      }
+    end)
+  end
+
+  defp wire_delta(before, after_counters, requests) do
+    received = after_counters.received - before.received
+    sent = after_counters.sent - before.sent
+
+    %{
+      scope:
+        "All PostgreSQL TCP sockets owned by this benchmark VM, including idle app/operator pools; aggregate phase counters, not a per-request maximum",
+      connections_before: before.connections,
+      connections_after: after_counters.connections,
+      valid:
+        received >= 0 and sent >= 0 and before.connections == after_counters.connections and
+          before.connections > 0,
+      received_protocol_bytes: received,
+      sent_protocol_bytes: sent,
+      mean_received_bytes_per_request: received / requests
+    }
   end
 
   defp sample_memory(parent, peak) do
@@ -418,6 +498,8 @@ defmodule Instantflow.ReadBenchmark do
             "search" -> Projections.search(actor, %{"workflow_id" => workflow})
             "options" -> Views.options(actor)
             "catalog" -> Workspaces.installed(actor)
+            "creation" -> Instantflow.WorkflowCatalog.available(actor)
+            "navigation" -> Workspaces.navigation(actor)
           end
         end
       end)
@@ -456,10 +538,15 @@ defmodule Instantflow.ReadBenchmark do
       bytes = :erlang.external_size(rows)
 
       if plans = Process.get(:read_plans) do
-        if metadata[:source] && String.starts_with?(metadata.query, "SELECT") do
+        if String.starts_with?(metadata.query, "SELECT") and
+             not String.contains?(metadata.query, [
+               "set_config(",
+               "current_setting(",
+               "pg_advisory_"
+             ]) do
           Process.put(
             :read_plans,
-            Map.put(plans, {metadata.source, metadata.query}, metadata.params)
+            Map.put(plans, {metadata[:source] || "derived", metadata.query}, metadata.params)
           )
         end
       end

@@ -22,9 +22,12 @@ defmodule Instantflow.WorkflowRuntime.Projections do
   @doc "Internal query for capability aggregates; caller must hold the tenant authorization gate."
   def authorized_query(scope, workflow_id) do
     predicate =
-      Enum.reduce(versions(%{"workflow_id" => workflow_id}), dynamic(false), fn version, acc ->
+      versions(%{"workflow_id" => workflow_id}, :policy)
+      |> PolicyQuery.groups()
+      |> Enum.reduce(dynamic(false), fn [version | _] = equivalent, acc ->
         rule = PolicyQuery.discover(scope, version)
-        dynamic([ticket: t], ^acc or (t.workflow_version_id == ^version.id and ^rule))
+        ids = Enum.map(equivalent, & &1.id)
+        dynamic([ticket: t], ^acc or (t.workflow_version_id in ^ids and ^rule))
       end)
 
     from t in Ticket,
@@ -68,10 +71,13 @@ defmodule Instantflow.WorkflowRuntime.Projections do
     Tenant.read(
       actor,
       fn scope ->
-        versions = versions(filters)
+        versions = versions(filters, :policy)
 
         predicate =
-          Enum.reduce(versions, dynamic(false), fn version, acc ->
+          Enum.reduce(PolicyQuery.groups(versions), dynamic(false), fn [version | _] = equivalent,
+                                                                       acc ->
+            ids = Enum.map(equivalent, & &1.id)
+
             Enum.reduce(
               Instantflow.WorkflowCatalog.ParticipantPages.pages(version.definition),
               acc,
@@ -80,20 +86,28 @@ defmodule Instantflow.WorkflowRuntime.Projections do
                 key = page["key"]
 
                 dynamic(
-                  [ticket: t, page: p],
+                  [ticket: t],
                   ^acc or
-                    (t.workflow_version_id == ^version.id and
-                       fragment("?->>'key'", p.value) == ^key and ^rule)
+                    (t.workflow_version_id in ^ids and
+                       fragment("?->>'key'", parent_as(:page).value) == ^key and ^rule)
                 )
               end
             )
           end)
 
-        query =
+        admitted =
           from t in Ticket,
             as: :ticket,
-            join: v in Version,
-            on: v.id == t.workflow_version_id,
+            where: t.organization_id == ^scope.organization_id,
+            where: t.workflow_version_id == parent_as(:discovery_version).id,
+            where: ^predicate,
+            select: 1
+
+        ids = Enum.map(versions, & &1.id)
+
+        query =
+          from v in Version,
+            as: :discovery_version,
             join:
               p in fragment(
                 "jsonb_array_elements(?->'interface'->'pages') WITH ORDINALITY",
@@ -101,12 +115,12 @@ defmodule Instantflow.WorkflowRuntime.Projections do
               ),
             as: :page,
             on: true,
-            where: t.organization_id == ^scope.organization_id,
-            where: ^predicate,
-            distinct: [t.workflow_id, fragment("?->>'key'", p.value)],
-            order_by: [t.workflow_id, fragment("?->>'key'", p.value), desc: v.number, desc: v.id],
+            where: v.id in ^ids,
+            where: exists(subquery(admitted)),
+            distinct: [v.workflow_id, fragment("?->>'key'", p.value)],
+            order_by: [v.workflow_id, fragment("?->>'key'", p.value), desc: v.number, desc: v.id],
             select: %{
-              workflow_id: t.workflow_id,
+              workflow_id: v.workflow_id,
               key: fragment("?->>'key'", p.value),
               label: fragment("?->>'label'", p.value),
               process_label: fragment("?->>'name'", v.definition),
@@ -160,28 +174,40 @@ defmodule Instantflow.WorkflowRuntime.Projections do
     Tenant.read(
       actor,
       fn scope ->
-        versions = versions(filters)
+        versions = versions(filters, :policy)
 
         predicate =
-          Enum.reduce(versions, dynamic(false), fn version, acc ->
+          Enum.reduce(PolicyQuery.groups(versions), dynamic(false), fn [version | _] = equivalent,
+                                                                       acc ->
+            ids = Enum.map(equivalent, & &1.id)
+
             Enum.reduce(version.definition["views"], acc, fn view, acc ->
               rule = view_policy(scope, version, view["key"])
               key = view["key"]
 
               dynamic(
-                [ticket: t, declared_view: v],
+                [ticket: t],
                 ^acc or
-                  (t.workflow_version_id == ^version.id and fragment("?->>'key'", v.value) == ^key and
+                  (t.workflow_version_id in ^ids and
+                     fragment("?->>'key'", parent_as(:declared_view).value) == ^key and
                      ^rule)
               )
             end)
           end)
 
-        query =
+        admitted =
           from t in Ticket,
             as: :ticket,
-            join: version in Version,
-            on: version.id == t.workflow_version_id,
+            where: t.organization_id == ^scope.organization_id,
+            where: t.workflow_version_id == parent_as(:discovery_version).id,
+            where: ^predicate,
+            select: 1
+
+        ids = Enum.map(versions, & &1.id)
+
+        query =
+          from version in Version,
+            as: :discovery_version,
             join:
               view in fragment(
                 "jsonb_array_elements(?->'views') WITH ORDINALITY",
@@ -189,17 +215,17 @@ defmodule Instantflow.WorkflowRuntime.Projections do
               ),
             as: :declared_view,
             on: true,
-            where: t.organization_id == ^scope.organization_id,
-            where: ^predicate,
-            distinct: [t.workflow_id, fragment("?->>'key'", view.value)],
+            where: version.id in ^ids,
+            where: exists(subquery(admitted)),
+            distinct: [version.workflow_id, fragment("?->>'key'", view.value)],
             order_by: [
-              t.workflow_id,
+              version.workflow_id,
               fragment("?->>'key'", view.value),
               desc: version.number,
               desc: version.id
             ],
             select: %{
-              workflow_id: t.workflow_id,
+              workflow_id: version.workflow_id,
               key: fragment("?->>'key'", view.value),
               type: fragment("?->>'type'", view.value),
               urgency?: fragment("?->'urgency' IS NOT NULL", view.value),
@@ -264,7 +290,7 @@ defmodule Instantflow.WorkflowRuntime.Projections do
   defp option_filter(query, _, _), do: query
 
   defp fetch_page(scope, filters, view_key) do
-    versions = versions(filters)
+    versions = versions(filters, if(is_binary(view_key), do: :full, else: :policy))
     by_id = Map.new(versions, &{&1.id, &1})
 
     # Group only identical declarations/bindings within this fresh scoped read.
@@ -272,8 +298,8 @@ defmodule Instantflow.WorkflowRuntime.Projections do
     # Keep every actual version for rendering; no permission result is cached.
     predicate =
       versions
-      |> Enum.group_by(&{Map.delete(&1.definition, "stages"), &1.bindings})
-      |> Enum.reduce(dynamic(false), fn {_, [version | _] = equivalent}, acc ->
+      |> PolicyQuery.groups()
+      |> Enum.reduce(dynamic(false), fn [version | _] = equivalent, acc ->
         rule = view_policy(scope, version, view_key)
         ids = Enum.map(equivalent, & &1.id)
         dynamic([ticket: t], ^acc or (t.workflow_version_id in ^ids and ^rule))
@@ -420,7 +446,7 @@ defmodule Instantflow.WorkflowRuntime.Projections do
       Instantflow.WorkflowRuntime.ParticipantPolicy.staff_workspace?(scope, version)
   end
 
-  defp versions(filters) do
+  defp versions(filters, mode) do
     # Only record-bearing pins participate in record discovery/count/projection.
     # Latest publications for creation remain owned by the workspace catalog.
     referenced =
@@ -440,30 +466,52 @@ defmodule Instantflow.WorkflowRuntime.Projections do
         do: where(query, [v], v.workflow_id == ^positive_integer(filters["workflow_id"], 0)),
         else: query
 
-    # Fetch repeated immutable bodies once, with each pin's own stage descriptors.
-    # Grouping is local to this RLS-scoped query, never a cross-request cache.
+    # Discovery and participant status pages compile section policies, not field
+    # schemas. Do not transfer field definitions that those reads cannot use.
+    body =
+      if mode == :policy do
+        dynamic(
+          [v],
+          fragment(
+            "jsonb_set(? - ARRAY['stages','transitions','description','role_requirements','bindings','format_version','template_key','template_version','locale']::text[], '{sections}', (SELECT COALESCE(jsonb_agg(s.value - 'fields'), '[]'::jsonb) FROM jsonb_array_elements(?->'sections') AS s(value)))",
+            v.definition,
+            v.definition
+          )
+        )
+      else
+        dynamic([v], fragment("? - 'stages'", v.definition))
+      end
+
+    selection = %{
+      organization_id: dynamic([v], v.organization_id),
+      workflow_id: dynamic([v], v.workflow_id),
+      bindings: dynamic([v], v.bindings),
+      body: body,
+      pins:
+        dynamic(
+          [v],
+          fragment(
+            "jsonb_agg(jsonb_build_object('id', ?, 'number', ?, 'stages', ?->'stages'))",
+            v.id,
+            v.number,
+            v.definition
+          )
+        )
+    }
+
+    # Fetch repeated immutable bodies once, with each actual pin's stages.
     query
     |> exclude(:order_by)
-    |> group_by([v], [
-      v.organization_id,
-      v.workflow_id,
-      v.bindings,
-      fragment("? - 'stages'", v.definition)
-    ])
-    |> select([v], {
-      v.organization_id,
-      v.workflow_id,
-      v.bindings,
-      fragment("? - 'stages'", v.definition),
-      fragment(
-        "jsonb_agg(jsonb_build_object('id', ?, 'number', ?, 'stages', ?->'stages'))",
-        v.id,
-        v.number,
-        v.definition
-      )
-    })
+    |> group_by(^[:organization_id, :workflow_id, :bindings, body])
+    |> select(^selection)
     |> Repo.all()
-    |> Enum.flat_map(fn {org, workflow, bindings, body, pins} ->
+    |> Enum.flat_map(fn %{
+                          organization_id: org,
+                          workflow_id: workflow,
+                          bindings: bindings,
+                          body: body,
+                          pins: pins
+                        } ->
       Enum.map(pins, fn pin ->
         %Version{
           id: pin["id"],

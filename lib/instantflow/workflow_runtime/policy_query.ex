@@ -11,6 +11,19 @@ defmodule Instantflow.WorkflowRuntime.PolicyQuery do
   alias Instantflow.Collaboration.Assignment
   alias Instantflow.Participants.Relationship
 
+  @doc "Group identical read-policy declarations within a fresh scoped query; never caches authority."
+  def groups(versions) do
+    versions
+    |> Enum.group_by(fn version ->
+      {Map.take(
+         version.definition,
+         ~w(sections participants interface views creation role_requirements)
+       ), version.bindings}
+    end)
+    |> Map.values()
+    |> Enum.sort_by(fn group -> group |> Enum.map(& &1.id) |> Enum.min() end)
+  end
+
   def discover(scope, version) do
     version.definition["sections"]
     |> Enum.reduce(dynamic(false), fn section, acc ->

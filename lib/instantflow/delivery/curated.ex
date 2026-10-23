@@ -295,7 +295,7 @@ defmodule Instantflow.Delivery.Curated do
     Tenant.read(
       actor,
       fn scope ->
-        query = inbox_query(scope, workflow_id)
+        {query, _pins} = inbox_query(scope, workflow_id)
 
         query =
           if is_integer(params["ticket_id"]),
@@ -346,13 +346,21 @@ defmodule Instantflow.Delivery.Curated do
     Tenant.read(
       actor,
       fn scope ->
+        {messages, pins} = inbox_query(scope, nil)
+
+        admitted =
+          from [ticket: t] in messages,
+            where: t.workflow_version_id == parent_as(:discovery_version).id,
+            select: 1
+
         query =
-          from [ticket: t] in inbox_query(scope, nil),
-            join: v in Version,
-            on: v.id == t.workflow_version_id,
-            distinct: t.workflow_id,
-            order_by: [t.workflow_id, desc: v.number, desc: v.id],
-            select: %{id: t.workflow_id, label: fragment("?->>'name'", v.definition)}
+          from v in Version,
+            as: :discovery_version,
+            where: v.id in ^pins,
+            where: exists(subquery(admitted)),
+            distinct: v.workflow_id,
+            order_by: [v.workflow_id, desc: v.number, desc: v.id],
+            select: %{id: v.workflow_id, label: fragment("?->>'name'", v.definition)}
 
         total = Repo.aggregate(query, :count)
         pages = max(1, ceil(total / 25))
@@ -419,10 +427,34 @@ defmodule Instantflow.Delivery.Curated do
         do: where(query, [v], v.workflow_id == ^workflow_id),
         else: query
 
-    versions = Repo.all(query)
+    versions =
+      Repo.all(
+        from v in query,
+          select: %Version{
+            id: v.id,
+            organization_id: v.organization_id,
+            workflow_id: v.workflow_id,
+            bindings: fragment("jsonb_build_object('roles', ?->'roles')", v.bindings),
+            definition:
+              fragment(
+                "jsonb_build_object('participants', ?->'participants', 'communications', ?->'communications')",
+                v.definition,
+                v.definition
+              )
+          }
+      )
 
     rule =
-      Enum.reduce(versions, dynamic(false), fn version, acc ->
+      versions
+      |> Enum.group_by(
+        &{Communications.specs(&1.definition), &1.definition["participants"],
+         &1.bindings["roles"]}
+      )
+      |> Map.values()
+      |> Enum.sort_by(fn group -> group |> Enum.map(& &1.id) |> Enum.min() end)
+      |> Enum.reduce(dynamic(false), fn [version | _] = equivalent, acc ->
+        ids = Enum.map(equivalent, & &1.id)
+
         Enum.reduce(Communications.specs(version.definition), acc, fn spec, acc ->
           roles = candidate_roles(version, spec["recipient_relationship"])
 
@@ -430,7 +462,7 @@ defmodule Instantflow.Delivery.Curated do
             dynamic(
               [message: m, ticket: t, relationship: r],
               ^acc or
-                (t.workflow_version_id == ^version.id and
+                (t.workflow_version_id in ^ids and
                    r.relationship == ^spec["recipient_relationship"] and
                    fragment("?->>'release' = ?", m.payload, ^spec["key"]))
             )
@@ -466,9 +498,12 @@ defmodule Instantflow.Delivery.Curated do
           ),
         where: ^rule
 
-    if is_integer(workflow_id),
-      do: where(query, [ticket: t], t.workflow_id == ^workflow_id),
-      else: query
+    query =
+      if is_integer(workflow_id),
+        do: where(query, [ticket: t], t.workflow_id == ^workflow_id),
+        else: query
+
+    {query, Enum.map(versions, & &1.id)}
   end
 
   defp recipient?(version, relationship),
