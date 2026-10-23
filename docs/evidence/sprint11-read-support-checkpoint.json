@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-23",
+  "base_revision": "e07ea2aeafe1f1bc89c7cf967e26eff60a7dbf62",
+  "scope": "Checkpoint 2: referenced-pin record-policy loading and page-local projection predicates with tenant/version lookup index; full T02 remains open.",
+  "environment": {
+    "os": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "runtime": "Elixir 1.19.5 / OTP 28.5.0.2",
+    "database": "Local PostgreSQL, actual instantflow_runtime login, pool 10"
+  },
+  "validation": {
+    "precommit": {
+      "tests": 292,
+      "failures": 0,
+      "seed": 500951,
+      "log": ".local/sprint11-read-precommit.log"
+    },
+    "quantitative_regression_before": {
+      "tests": 6,
+      "failures": 1,
+      "seed": 47490,
+      "fetched_catalog_rows_before_growth": 1,
+      "after_idle_growth": 101,
+      "log": ".local/sprint11-read-regression-before.log"
+    },
+    "focused_after": {
+      "tests": 7,
+      "failures": 0,
+      "seed": 979128,
+      "log": ".local/sprint11-read-regression-after.log"
+    },
+    "python_runner_syntax_and_help": {
+      "passed": true
+    },
+    "diff_check": {
+      "exit_code": 0
+    }
+  },
+  "measurements": {
+    "phases": [
+      "before",
+      "after (query change before indexing)",
+      "indexed"
+    ],
+    "cases_per_phase": 13,
+    "total_case_reports": 39,
+    "organizations_per_case": 10,
+    "tickets_per_case": 10000,
+    "staff_and_concurrent_callers": 50,
+    "first_projection_requests_per_case": 50,
+    "warmup_requests_per_case": 100,
+    "measured_warm_requests_per_case": 1000,
+    "record_shape": [
+      "equal",
+      "70% busy tenant"
+    ],
+    "case_dimensions": "Declared in docs/sprint11-read-support-checkpoint.md before query tuning; exact per-case dimensions retained in each JSON.",
+    "maximum_indexed_tenant_warm_backend_p95_ms": 277.59,
+    "backend_target_ms": 500,
+    "full_T02_acceptance": false
+  },
+  "observations": {
+    "idle_100_versions": {
+      "catalog_rows_before": 100,
+      "catalog_rows_indexed": 1,
+      "sql_bytes_before": 20079,
+      "sql_bytes_indexed": 665,
+      "warm_backend_p95_ms_before": 181.51,
+      "warm_backend_p95_ms_indexed": 36.031
+    },
+    "idle_100_processes_global_view_options": {
+      "catalog_rows_before": 100,
+      "catalog_rows_indexed": 1,
+      "sql_bytes_before": 23266,
+      "sql_bytes_indexed": 633,
+      "warm_backend_p95_ms_before": 130.92,
+      "warm_backend_p95_ms_indexed": 44.087
+    },
+    "active_100_pins": "Catalog/predicate cost still grows with referenced versions; retained all slower measurements and unindexed phase.",
+    "fixture_failure": "Uneven bulk setup exceeded 65535 bind parameters before timing; batched inserts, unchanged dimensions; failed log retained."
+  },
+  "baseline_projections_sha256": "277f3a322e762a2b5ff08b5df4730f707ff99fa768369e8dd5df69ba79f5754a",
+  "read_limits": {
+    "page_size": 25,
+    "policy_before_pagination": true,
+    "supported_pin_semantics_preserved": true,
+    "current_revocation_gate_preserved": true,
+    "new_policy_cache_added": false
+  },
+  "limitations": [
+    "First projections after setup, not cold PostgreSQL/OS storage",
+    "Caller heap sampled at query boundaries, excluding complete BEAM/pool/off-heap memory",
+    "Returned row external-term bytes are not wire bytes",
+    "Only one catalog query plan measured separately; complete planning/policy compilation remains open",
+    "Browser timing, full process/version/visibility/width combinations, operational aggregates and installed-process creation catalog remain open",
+    "Known intermittent LiveView reload not established as fixed"
+  ],
+  "sprint": {
+    "status": "In progress",
+    "complete": 1,
+    "total": 5
+  },
+  "serving_database_migrated": false,
+  "deployment_performed": false,
+  "destructive_reset_performed": false,
+  "source_sha256": {
+    "lib/instantflow/workflow_runtime/projections.ex": "9453e297f42bf9e3dc5484c5d5925fe018507f4336974831d3cf33bc2941dc14",
+    "test/instantflow/workflow_runtime/projections_test.exs": "e40fe574eb67d6a8b25cc38819052ac3a377b9736b6313099c3d62cabee9b09a",
+    "priv/repo/migrations/20261023040903_index_ticket_policy_version_lookup.exs": "5a856d2fb706907adad0c71b72302d4276e1401b1f9611101585e3e6502fbee3",
+    "scripts/benchmark_reads.exs": "916e144bed97dec4ea8575bbbbbd12ad83754e84b5b8331434a1e864292d0dea",
+    "scripts/benchmark_read_matrix.py": "9a0c372e8cb9a66fd3eaefbf96c11a384c3da22a297f1f82576a088fc73c8fb4",
+    "scripts/explain_read_lookup.exs": "0fbefec20bdc319184e826290c04808664701e2d4d71f2504b420b79fc736581",
+    "docs/sprint11-read-support-checkpoint.md": "bc283b1202f7d591fcd81fab6ffa089356bbda0efa62d5825c7a85ed0028272f",
+    "docs/evidence/sprint11-read-support-before.json": "03154b179f7058a90538304b394802b79ba80a196506f4ded23d9ac4fa6005cb",
+    "docs/evidence/sprint11-read-support-after.json": "5a3bc5cdd408670b832d360e5229fb9f8b180059098856b76da4d143703a4c2f",
+    "docs/evidence/sprint11-read-support-indexed.json": "486563b405c1258e3aaf12bf6c165326af7de91a374d58cfe7dc8a7ab3098b65",
+    "docs/evidence/sprint11-read-support-query-plans.json": "dce9bd50ff6841ce3e21c69818e2526cb2a813b286e2ee74f8a686e795fb0d0f",
+    "sprint_plan/sprint_11.md": "8b3735df9139dfeb33cc6757782a967aa4c2cb9e5f86ddd1b61d33e3f8b20758",
+    "sprint_plan/sprint_index.md": "994d24e76562f2ee3773fa606b758bc2bf9393b26289490447e9723ab02282fd"
+  },
+  "log_sha256": {
+    ".local/sprint11-read-precommit.log": "b644925bb0d10418f8caa59bbafd6135268b82c4f4aa61a0d60989cbeb6bd3be",
+    ".local/sprint11-read-regression-before.log": "ebe70ea6bbdc1f8d04e512b8a929c0b140f540d09d74ed86b4d19db751d3654e",
+    ".local/sprint11-read-regression-after.log": "81474fc63851ca21bc4b73fe4bfac313e6e3e99b59c9a65580619180b3de18c8",
+    ".local/sprint11-read-before-summary.log": "72ef46b5631290996bc771a90b4796de7bcf4302733b050059b468f397a5cd32",
+    ".local/sprint11-read-after-summary.log": "c5e8647ab9493d516690d8a1aef7d992f034ae49c0bc8e3bc25308c0cf693907",
+    ".local/sprint11-read-indexed-summary.log": "6c3b5e8bfa44139421b828f494ded37f2340577b9ee8ef7f0c27724c97786b5a",
+    ".local/sprint11-read-uneven-fixture-parameter-failure.log": "01455bfffeb0134989a55ce2555a130733c806a8623caa96c2b0e75a19dba5aa",
+    ".local/sprint11-read-exists-plan-before-index.log": "2829c444a823ed644c1dbaf2134f83258b3b0a8e9d33ae8fd4b68b9a55d78401",
+    ".local/sprint11-read-exists-plan-indexed.log": "39f205e594e4ab3dfdffad4d1831053a16cbbcf6fad150f2d2529a300e0501b4"
+  }
+}

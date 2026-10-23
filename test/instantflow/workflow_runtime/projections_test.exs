@@ -70,6 +70,96 @@ defmodule Instantflow.WorkflowRuntime.ProjectionsTest do
     assert Views.options(f.unrelated) == []
   end
 
+  test "idle publications and unrelated empty processes do not expand record policy loading" do
+    f = fixture()
+    id = create(f.clerk, f.version)
+    link(f.admin, f.visitor, id)
+
+    before =
+      measured(fn -> Views.search(f.visitor, f.version.workflow_id, "participant_work") end)
+
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    changed =
+      put_in(
+        f.definition,
+        ["stages", Access.at(0), "label"],
+        "Unused stage until a record pins it"
+      )
+
+    rows =
+      for number <- 2..101 do
+        %{
+          organization_id: f.admin.organization_id,
+          workflow_id: f.version.workflow_id,
+          number: number,
+          definition: changed,
+          bindings: f.bindings,
+          published_by_id: f.admin.user_id,
+          inserted_at: now,
+          updated_at: now
+        }
+      end
+
+    Repo.insert_all(Instantflow.WorkflowCatalog.Version, rows)
+
+    for number <- 1..30 do
+      workflow =
+        Repo.insert!(%Instantflow.WorkflowCatalog.Workflow{
+          organization_id: f.admin.organization_id,
+          key: "idle_process_#{number}",
+          name: "Unused process"
+        })
+
+      Repo.insert!(%Instantflow.WorkflowCatalog.Version{
+        organization_id: f.admin.organization_id,
+        workflow_id: workflow.id,
+        number: 1,
+        definition: Map.put(f.definition, "template_key", workflow.key),
+        bindings: f.bindings,
+        published_by_id: f.admin.user_id
+      })
+    end
+
+    after_growth =
+      measured(fn -> Views.search(f.visitor, f.version.workflow_id, "participant_work") end)
+
+    assert after_growth.result == before.result
+    assert catalog_rows(after_growth) == catalog_rows(before)
+    assert catalog_rows(after_growth) == 1
+    assert max_sql_bytes(after_growth) == max_sql_bytes(before)
+    options = measured(fn -> Views.options(f.visitor) end)
+    assert catalog_rows(options) == 1
+    assert Enum.all?(options.result, &(&1.workflow_id == f.version.workflow_id))
+
+    latest = create(f.clerk, f.version)
+    link(f.admin, f.visitor, latest)
+    mixed = measured(fn -> Views.search(f.visitor, f.version.workflow_id, "participant_work") end)
+    assert mixed.result.total == 2
+    assert catalog_rows(mixed) == 2
+    assert Enum.map(mixed.result.rows, & &1.id) == [latest, id]
+    assert hd(mixed.result.rows).stage_label == "Unused stage until a record pins it"
+    assert List.last(mixed.result.rows).stage_label != hd(mixed.result.rows).stage_label
+
+    {:ok, _} =
+      Participants.command(
+        f.admin,
+        BuilderFixtures.participant_command(latest, f.visitor.id, "revoke", 2)
+      )
+
+    assert Views.search(f.visitor, f.version.workflow_id, "participant_work").total == 1
+  end
+
+  defp catalog_rows(measurement) do
+    measurement.queries
+    |> Enum.filter(&(&1[:source] == "workflow_versions"))
+    |> Enum.map(&length(&1.result.rows))
+    |> Enum.sum()
+  end
+
+  defp max_sql_bytes(measurement),
+    do: measurement.queries |> Enum.map(&byte_size(&1.query)) |> Enum.max()
+
   test "query policy matches command policy and current revocation for participant and staff grants" do
     f = fixture()
     id = create(f.clerk, f.version)
@@ -253,7 +343,8 @@ defmodule Instantflow.WorkflowRuntime.ProjectionsTest do
 
   @doc false
   def capture(_, _, metadata, pid) do
-    if self() == pid, do: send(pid, {:projection_query, Map.take(metadata, [:query, :result])})
+    if self() == pid,
+      do: send(pid, {:projection_query, Map.take(metadata, [:query, :result, :source])})
   end
 
   defp drain(acc) do

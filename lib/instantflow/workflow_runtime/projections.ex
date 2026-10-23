@@ -7,7 +7,8 @@ defmodule Instantflow.WorkflowRuntime.Projections do
   is post stage/query filter. Search covers only ID and pinned process name.
   Ordering is descending ticket ID, including across versions. Page size is 25.
   Only readable section rows for the selected page are fetched, in one batch.
-  Catalog definitions are compiled once per version, never once per ticket.
+  Catalog definitions are compiled once per referenced version, never once per ticket.
+  Section and assignment projection predicates use only selected page versions.
   All operations hold the shared authorization gate, so revocation fences the
   whole projection. No configured view grants underlying record authority.
   """
@@ -356,7 +357,19 @@ defmodule Instantflow.WorkflowRuntime.Projections do
   end
 
   defp versions(filters) do
-    query = from v in Version, order_by: [desc: v.number, desc: v.id]
+    # Only record-bearing pins participate in record discovery/count/projection.
+    # Latest publications for creation remain owned by the workspace catalog.
+    referenced =
+      from t in Ticket,
+        where:
+          t.workflow_version_id == parent_as(:version).id and
+            t.organization_id == parent_as(:version).organization_id
+
+    query =
+      from v in Version,
+        as: :version,
+        where: exists(subquery(referenced)),
+        order_by: [desc: v.number, desc: v.id]
 
     query =
       if filters["workflow_id"],
@@ -367,10 +380,13 @@ defmodule Instantflow.WorkflowRuntime.Projections do
   end
 
   defp project(scope, result, key) do
+    page_versions =
+      Map.take(result.versions, Enum.map(result.tickets, & &1.workflow_version_id))
+
     # This OR predicate permits only readable sections of already authorized page
     # records. Hidden content never leaves the database, even for projection.
     predicate =
-      Enum.reduce(result.versions, dynamic(false), fn {id, version}, acc ->
+      Enum.reduce(page_versions, dynamic(false), fn {id, version}, acc ->
         ids = result.tickets |> Enum.filter(&(&1.workflow_version_id == id)) |> Enum.map(& &1.id)
 
         Enum.reduce(version.definition["sections"], acc, fn section, acc ->
@@ -402,7 +418,7 @@ defmodule Instantflow.WorkflowRuntime.Projections do
       |> Map.new()
 
     assignment_rule =
-      Enum.reduce(result.versions, dynamic(false), fn {version_id, version}, acc ->
+      Enum.reduce(page_versions, dynamic(false), fn {version_id, version}, acc ->
         view = ConfiguredQueries.view(version, key)
         section = view && view["assignment_section"]
 

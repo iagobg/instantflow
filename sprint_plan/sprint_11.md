@@ -168,3 +168,12 @@ now verifies historical unpaid/paid values, replacement publication, same-proces
 resource reuse and day closure. This replaces the initial empty-operational-table
 limitation for that case; full T05 recreation and other acceptance gates remain
 open. Task progress remains 1/5, In progress.
+
+Read-support checkpoint — 2026-10-23: after committing checkpoint 1 as e07ea2a,
+T02 now prunes unused record pins, limits projection predicates to the selected
+page and indexes tenant/version lookup. Thirteen declared backend cases were
+retained across pre-change, unindexed and indexed phases, with tenant-level
+results, mixed pins and 70% uneven load. The
+[read-support report](../docs/sprint11-read-support-checkpoint.md) records limits,
+trade-offs and remaining supporting-volume/browser/memory gates. Full T02 and
+T03–T05 remain open; progress stays 1/5. Commit each validated execution checkpoint.

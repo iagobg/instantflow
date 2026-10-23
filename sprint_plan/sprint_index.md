@@ -81,3 +81,9 @@ The 2026-10-23 [Sprint 11 checkpoint-review corrections](../docs/sprint11-first-
 resolve the two reproduced retirement lifecycle gaps with populated operational
 migration/restore and generated-page regressions. Sprint 11 remains In progress,
 1/5; the wider architecture gate is not closed by this correction.
+
+Sprint 11's next [read-support checkpoint](../docs/sprint11-read-support-checkpoint.md)
+measures and removes idle-publication/empty-process overhead from the shared
+record query service and adds its tenant/version index. All three measurement
+phases are retained. Full T02 scale/browser/BEAM acceptance and T03–T05 remain
+open; status stays In progress, 1/5.
