@@ -95,3 +95,9 @@ T05 full recreation/recovery remain open. Sprint 11 stays In progress, 1/5.
 Previously observed intermittent LiveView token/reload behavior remains unexplained;
 passing tests do not establish its cause or resolution. No serving migration,
 deployment or destructive reset was performed.
+
+## Following authorization checkpoint
+
+The subsequent [participant release matrix](sprint11-participant-release-checkpoint.md)
+adds the multiple-page exact-field, subject-only, scoped-grant, mixed-publication,
+HTTP and relationship-revocation evidence that remained outside this scalar slice.

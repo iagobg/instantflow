@@ -120,3 +120,12 @@ política declarada, seleção exata do campo e nova autorização ao baixar. Me
 selecionam somente valores escalares: não inclua anexos ou referências locais.
 Filtros/ordenação não aceitam texto longo, múltipla escolha, arquivos ou referências;
 a fonte de calendário deve ser data ou instante. A seleção nunca concede permissão.
+
+Quando houver várias páginas de participação, qualquer página atualmente admitida
+da versão fixada pode liberar o arquivo exato selecionado por ela. A primeira
+página não precisa listar todos os documentos. Uma página não admitida não libera
+seus arquivos, e selecionar um campo nunca concede leitura da seção. O acesso
+interno continua exigindo seus próprios papéis e escopos explícitos. Revogar o
+vínculo remove páginas, arquivos e mensagens do destinatário; revogar somente um
+papel de página não substitui a verificação independente do vínculo para entregas.
+Veja a [matriz de liberação](../docs/sprint11-participant-release-checkpoint.md).

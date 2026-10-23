@@ -200,3 +200,11 @@ controls fix missing optional boolean/single-choice clearing; all eleven field
 types have synchronized schema/authoring/surface publication checks. The
 [matrix and evidence](../docs/sprint11-field-surface-checkpoint.md) record the
 bounded T03/T04 scope. Broader T02–T05 gates remain open; progress stays 1/5.
+
+Participant-release checkpoint — 2026-10-23: after field/surface commit a37ca1a,
+multiple-page exact-file release now has maintained HTTP/context/UI/query evidence,
+including omitted fields, unreadable sections, subject-only identities, scoped
+staff grants, live revocation, old/new pins and cross-process/tenant denial. The
+[release matrix](../docs/sprint11-participant-release-checkpoint.md) preserves the
+independent curated-recipient boundary. No policy implementation change was needed.
+Remaining T02–T05 gates stay open; progress is 1/5, In progress.

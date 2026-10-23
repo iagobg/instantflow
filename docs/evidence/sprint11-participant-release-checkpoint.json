@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-23",
+  "base_revision": "a37ca1a06dc088f13e66dd02c87488f9b765a241",
+  "scope": "T03 multiple-page participant authorization and release parity; existing policy implementation verified unchanged",
+  "validation": {
+    "focused": {
+      "tests": 25,
+      "failures": 0,
+      "seed": 241625,
+      "log": ".local/sprint11-participant-release-focused.log"
+    },
+    "precommit": {
+      "tests": 327,
+      "failures": 0,
+      "seed": 355920,
+      "exit_code": 0,
+      "log": ".local/sprint11-participant-release-precommit.log"
+    },
+    "assets": {
+      "exit_code": 0,
+      "log": ".local/sprint11-participant-release-assets.log"
+    },
+    "diff_check": {
+      "exit_code": 0
+    }
+  },
+  "covered": [
+    "Second admitted page releases its exact selected document despite first page selecting none",
+    "Omitted and non-admitted-page documents deny direct context and HTTP download",
+    "Page selecting an unreadable section returns no field/document/upload metadata and releases no file",
+    "Forged rendered upload creates neither document nor receipt",
+    "Live page-only grant/revocation; remaining section authority does not release gated file",
+    "Explicit scoped staff grant/readback/revocation; parent label alone has no authority",
+    "Subject-only identity with page role and unrelated identity deny discovery/list/detail/upload/file",
+    "Old supported pin remains admitted after latest page admission changes; new record denied; exact mixed-version count",
+    "Relationship revocation removes live pages, discovery/counts/files/uploads and curated inbox",
+    "Curated delivery remains eligible after page-only grant loss under fresh releasing-author and verified-recipient authority",
+    "Cross-process row/detail mismatch and same global user in another tenant deny HTTP/context file access"
+  ],
+  "fixture_boundary": "Only organization/membership isolation scaffolding uses direct inserts; workflows, relationships, uploads, reviews and releases use supported contexts. This is not full editor-only T05 recreation.",
+  "sprint": {
+    "status": "In progress",
+    "complete": 1,
+    "total": 5
+  },
+  "remaining": [
+    "T02 complete supporting volumes/browser/BEAM",
+    "T03 remaining capability/mixed-version/local-binding acceptance",
+    "T04 residual cohesion",
+    "T05 full builder recreation/populated recovery and unresolved intermittent LiveView token/reload observation"
+  ],
+  "policy_implementation_changed": false,
+  "serving_database_migrated": false,
+  "deployment_performed": false,
+  "source_sha256": {
+    "test/instantflow_web/live/sprint11_participant_release_matrix_test.exs": "81c657c00854af92e0c1cc29052bbda8eac3c75c4e9e92268e913f01b90ec828",
+    "lib/instantflow/workflow_runtime/participant_policy.ex": "5d57f9b9e6779ae3e3a1009d3a27751a1585b6b8a646cdf66e7ee5be11b852fa",
+    "lib/instantflow/workflow_runtime/participant_pages.ex": "8261c18dcc07699fd92ef64dcf1f83562d4eb03b4cbefe554bde10cb048a4bfc",
+    "lib/instantflow/private_document_policy.ex": "dd1c0ab6a8e0d8fcfd21fa1dfb389168eed716b04dd4288d664fcf411f334b93",
+    "lib/instantflow/delivery/curated.ex": "1e2f70ec2b3470ba754addcbef8d2bae734bbd1b78dbd0f07d43b58aecf0b39c",
+    "docs/sprint11-participant-release-checkpoint.md": "e4ab9b4e55fa33f4573d2da07c845f1d65857edd2f26d91706e69929ec9b1919",
+    "docs/sprint11-field-surface-checkpoint.md": "977ce46ffbe98e27af38350d832fcf9e477daa40c9faccc01700bcc4105124c0",
+    "design/workflow_authoring_guide.pt-BR.md": "9bc95348413022738424af0ba9a6e77061b6c6c7dd593692270d65ae549fa5de",
+    "sprint_plan/sprint_11.md": "0a1d2f0380f1e0a2b8ff006ff372796e19bb9eae2ac44c5c19038fc9f44ae1aa",
+    "sprint_plan/sprint_index.md": "6c9878c1aec4b0edc191de030d94b1fdf6a8e914e34f2b31a3f284a85015f6ff"
+  },
+  "log_sha256": {
+    ".local/sprint11-participant-release-focused.log": "2cbe70547c10e39632f09b15fc143613873bebb2a7ee6b10698619436c541647",
+    ".local/sprint11-participant-release-precommit.log": "acb13daa4c4fd0f601372186ab0c09257013b99ead51e57286030d3da7448474",
+    ".local/sprint11-participant-release-assets.log": "52374bd43e871167243919320481697ed6e5ce73bdaea32f4f4a25adeeae4222"
+  }
+}
