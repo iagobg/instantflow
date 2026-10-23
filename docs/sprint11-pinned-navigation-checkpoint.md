@@ -16,7 +16,11 @@ Session links now resolve the actual session/ticket/version with current tenant
 and pinned-view authority. Operations.version_for_visit performs that minimal
 resolution without loading batches, lines or a whole installed-process catalog.
 Operations.visit shares its resolution, and Operations.workspace can accept a
-session ID to authorize the catalog/read data against that pin. Explicit process
+session ID for a narrow historical projection. As corrected by the
+[three-checkpoint review resolution](sprint11-three-checkpoints-review-resolution.md),
+that projection includes the requested session and the item-entry catalog, with
+no resource occupancy or process-wide report. Shared reads stay on the current
+workspace and require its current permission. Explicit process
 ownership is checked; a valid session ID cannot be attached to a different process.
 These methods run inside the existing Tenant read gate and fresh grant lookup.
 

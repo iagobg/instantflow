@@ -85,20 +85,22 @@ defmodule Instantflow.Operations do
     Tenant.read(actor, fn scope ->
       latest = workspace_version!(workflow_id)
 
-      version =
+      {session, version} =
         if session_id do
-          find!(Session, session_id, latest.workflow_id) |> session_version!()
+          resolve_visit!(scope, session_id, latest.workflow_id)
         else
-          latest
+          permit!(scope, latest, "view")
+          {nil, latest}
         end
 
-      permit!(scope, version, "view")
       workflow_id = version.workflow_id
+      archived? = Instantflow.WorkflowCatalog.Retirement.retired?(version.id)
+      shared? = version.id == latest.id and (is_nil(session) or not archived?)
 
       %{
         version: version,
-        current?: version.id == latest.id,
-        archived?: Instantflow.WorkflowCatalog.Retirement.retired?(version.id),
+        current?: shared?,
+        archived?: archived?,
         labels: Workspaces.labels(version.definition),
         products:
           Repo.all(
@@ -106,15 +108,25 @@ defmodule Instantflow.Operations do
               where: p.workflow_id == ^workflow_id,
               order_by: [p.category, p.name]
           ),
+        # A pinned session authorizes its own history and the catalog needed for
+        # item entry. Shared occupancy and daily totals require current admission.
         resources:
-          Repo.all(from r in Resource, where: r.workflow_id == ^workflow_id, order_by: r.name),
-        sessions:
-          Repo.all(
-            from s in Session,
-              where: s.workflow_id == ^workflow_id and s.status == "open",
-              order_by: s.id
+          if(shared?,
+            do:
+              Repo.all(from r in Resource, where: r.workflow_id == ^workflow_id, order_by: r.name),
+            else: []
           ),
-        report: report!(date, workflow_id)
+        sessions:
+          if(shared?,
+            do:
+              Repo.all(
+                from s in Session,
+                  where: s.workflow_id == ^workflow_id and s.status == "open",
+                  order_by: s.id
+              ),
+            else: [session]
+          ),
+        report: if(shared?, do: report!(date, workflow_id))
       }
     end)
   end

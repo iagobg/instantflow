@@ -186,3 +186,10 @@ pre-capability session rows retain read-only captured batches. The
 [navigation checkpoint](../docs/sprint11-pinned-navigation-checkpoint.md) records
 rendered checkout and denial regressions. Wider T02–T05 acceptance remains open;
 progress stays 1/5. Each validated checkpoint is committed.
+
+Three-checkpoint review correction — 2026-10-23: historical operational reads now
+return only the authorized session and item-entry catalog, without shared resource
+occupancy or daily reports. The
+[resolution](../docs/sprint11-three-checkpoints-review-resolution.md) records
+current-only session exclusion, rendered item entry/handoff/settlement, revocation
+and isolation regressions. T02–T05 remain open; progress stays 1/5, In progress.

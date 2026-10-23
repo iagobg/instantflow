@@ -93,3 +93,10 @@ keeps supported old session URLs and payment rules working after publication
 changes while enforcing current grants, process ownership and current-workspace
 setup boundaries. This is an incremental T03 checkpoint; status remains In
 progress, 1/5.
+
+Three-checkpoint review correction — 2026-10-23: historical operational reads now
+return only the authorized session and item-entry catalog, without shared resource
+occupancy or daily reports. The
+[resolution](../docs/sprint11-three-checkpoints-review-resolution.md) records
+current-only session exclusion, rendered item entry/handoff/settlement, revocation
+and isolation regressions. T02–T05 remain open; progress stays 1/5, In progress.

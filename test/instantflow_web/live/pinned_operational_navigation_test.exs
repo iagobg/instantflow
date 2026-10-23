@@ -42,6 +42,46 @@ defmodule InstantflowWeb.PinnedOperationalNavigationTest do
         put_in(original.bindings, ["roles", "operator"], ["admin"])
       )
 
+    {:ok, %{"id" => private_resource}} =
+      operation(f.actor, "add_resource", %{
+        "workflow_id" => latest.workflow_id,
+        "name" => "Current private resource"
+      })
+
+    {:ok, %{"id" => private_session}} =
+      operation(f.actor, "open_session", %{
+        "workflow_id" => latest.workflow_id,
+        "resource_id" => private_resource,
+        "responsible_actor" => "Current private actor",
+        "business_date" => Operations.today(f.actor)
+      })
+
+    assert Operations.workspace(operator, Operations.today(operator), latest.workflow_id) == nil
+    assert Operations.visit(operator, private_session, latest.workflow_id) == nil
+
+    historical =
+      Operations.workspace(operator, Operations.today(operator), original.workflow_id, id)
+
+    assert Enum.map(historical.sessions, & &1.id) == [id]
+    assert historical.resources == []
+    assert historical.report == nil
+    assert Enum.any?(historical.products, &(&1.id == f.soup))
+
+    # Historical pages are narrow even for an administrator who can separately
+    # read the current workspace. The old pin never grants shared projections.
+    admin_history =
+      Operations.workspace(f.actor, Operations.today(f.actor), original.workflow_id, id)
+
+    assert Enum.map(admin_history.sessions, & &1.id) == [id]
+    assert admin_history.resources == []
+    assert admin_history.report == nil
+
+    current_workspace =
+      Operations.workspace(f.actor, Operations.today(f.actor), latest.workflow_id)
+
+    assert Enum.any?(current_workspace.sessions, &(&1.id == private_session))
+    assert current_workspace.report.open_count == 2
+
     other = install_operations(f.actor, "another_counter", "Another counter")
     assert Operations.version_for_visit(operator, id, other.workflow_id) == nil
 
@@ -66,6 +106,28 @@ defmodule InstantflowWeb.PinnedOperationalNavigationTest do
 
     assert {:error, {:live_redirect, _}} =
              live(login(build_conn(), operator), ~p"/o/horizonte/processos/#{latest.workflow_id}")
+
+    product = Enum.find(historical.products, &(&1.id == f.soup))
+
+    view
+    |> form("#add-item-form", item: %{quantity: "1", notes: "Pinned item entry"})
+    |> render_submit(%{
+      "item" => %{
+        "product_id" => to_string(product.id),
+        "product_revision" => to_string(product.revision)
+      }
+    })
+
+    assert has_element?(view, "#cart-total", "R$ 25,50")
+
+    view
+    |> form("#submit-batch-form", batch: %{responsible_actor: "Pinned operator"})
+    |> render_submit()
+
+    assert has_element?(view, "#fulfillment-batches", product.name)
+    visit = Operations.visit(operator, id, original.workflow_id)
+    assert visit.total == 2550
+    for batch <- visit.batches, do: view |> element("#handoff-#{batch.id}") |> render_click()
 
     before_receipts = Repo.aggregate(Instantflow.Operations.Receipt, :count)
     {:ok, _} = Access.revoke(f.actor, grant.id)

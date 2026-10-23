@@ -1,0 +1,90 @@
+{
+  "date": "2026-10-23",
+  "base_revision": "b6b636223e893d3762b6ec8bc299035010dc5987",
+  "review": "docs/sprint11-three-checkpoints-review.md",
+  "finding": "P2: Old-session admission releases current-only session data",
+  "correction": [
+    "Resolve the requested session through fresh pinned-view admission and process ownership",
+    "Historical workspace returns only the requested session and item-entry catalog",
+    "Do not query or return historical-page resource occupancy or process-wide report",
+    "LiveView clears consumption for the absent report; current workspace reauthorizes shared reads"
+  ],
+  "red": {
+    "tests": 2,
+    "failures": 1,
+    "seed": 239865,
+    "assertion": "Historical session IDs contain only the requested session",
+    "log": ".local/sprint11-projection-before.log"
+  },
+  "validation": {
+    "focused": {
+      "tests": 17,
+      "failures": 0,
+      "seed": 524033,
+      "log": ".local/sprint11-projection-focused.log"
+    },
+    "precommit": {
+      "tests": 294,
+      "failures": 0,
+      "seed": 984831,
+      "exit_code": 0,
+      "log": ".local/sprint11-projection-precommit.log"
+    },
+    "assets": {
+      "exit_code": 0,
+      "log": ".local/sprint11-projection-assets.log"
+    },
+    "original_review_probe": {
+      "tests": 1,
+      "failures": 0,
+      "seed": 831618,
+      "log": ".local/sprint11-projection-review-probe.log"
+    },
+    "diff_check": {
+      "exit_code": 0
+    },
+    "rendered_historical_flow": [
+      "Catalog item entry and R$ 25,50 total",
+      "Batch submission and handoff",
+      "Current grant revocation redirects and denies settlement without receipt growth",
+      "Regrant restores rendered checkout with pinned Pix",
+      "Latest session exposes cash only"
+    ],
+    "context_projection": [
+      "Denied newer-session direct read and current workspace",
+      "Historical staff and admin projections contain only their requested session",
+      "Historical resource rows empty and report nil",
+      "Separately admitted current workspace retains occupancy and report"
+    ]
+  },
+  "sprint": {
+    "status": "In progress",
+    "complete": 1,
+    "total": 5,
+    "remaining": [
+      "Full T02 supporting-volume/browser/BEAM evidence",
+      "Remaining T03 contract/surface/public-entry matrix",
+      "T04 ownership cleanup",
+      "T05 recreation; intermittent LiveView token/reload cause unresolved"
+    ]
+  },
+  "serving_database_migrated": false,
+  "deployment_performed": false,
+  "source_sha256": {
+    "lib/instantflow/operations.ex": "056069e672d65c67d78b00f1ea6969bfc125ff23759e9777d7209410fefdc874",
+    "lib/instantflow_web/live/process_live.ex": "52526fadb37b561bdbba9c6a7604bf38961e2d19324a796f9dfbf24f1df56f34",
+    "test/instantflow_web/live/pinned_operational_navigation_test.exs": "e3e5f9287da9b53f2f20ddc53897cf9ae9ae85285bacb9117d354c472fb57c63",
+    "docs/sprint11-three-checkpoints-review.md": "6d79d54dabb2c09bf04eaa182649bb529a26e7a574dbfb20b8ecff2b4213490f",
+    "docs/sprint11-three-checkpoints-review-resolution.md": "95c271e410e5ce3cbe77e90a372c671ae5125dbb8c32853c1bd8bbaaa4987d06",
+    "docs/sprint11-pinned-navigation-checkpoint.md": "4a694e47df8e25ecf814e72fde28c9bf713c4a930af334074cf9fa1edab7a239",
+    "sprint_plan/sprint_11.md": "b14143c28fe1327df959869526b4684fd155ea30aea7d3c3c75a02349e095de8",
+    "sprint_plan/sprint_index.md": "973eed68f4db71e625fb863a83670406d7b79f084088ba11a6416b1e0479e145"
+  },
+  "log_sha256": {
+    ".local/sprint11-projection-before.log": "45d176866fb76d0dab36fcf7bce0bbf26ffedff57c02e631984866e358ec813a",
+    ".local/sprint11-projection-focused.log": "bce1272a75c46940a5112d0c1424fc15601c7c4c1e05bd798d73a8cdd4c13146",
+    ".local/sprint11-projection-precommit.log": "9191754a5232c30715bd763bc706df066a22bfc9938330befe366cce96d723d9",
+    ".local/sprint11-projection-assets.log": "a8feb9ed972f6bfe3f8fa5d908e94831cbd8e0eb353711ae7af54af9f8a23c36",
+    ".local/sprint11-projection-review-probe.log": "552c7656141f64b8bba8b58946ee5404546c04a55827080bbc39e196ab56f861"
+  }
+}

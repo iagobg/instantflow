@@ -598,7 +598,10 @@ defmodule InstantflowWeb.ProcessLive do
         |> stream(:batches, if(visit, do: visit.batches, else: []), reset: true)
         |> stream(
           :consumption,
-          Enum.map(data.report.consumption, &Map.put(&1, :id, &1.product_id)),
+          Enum.map(
+            if(data.report, do: data.report.consumption, else: []),
+            &Map.put(&1, :id, &1.product_id)
+          ),
           reset: true
         )
         |> then(fn s ->
