@@ -130,5 +130,54 @@
     "guard_depth": 8,
     "guard_arguments": 20,
     "actions_per_transition": 10
-  }
+  },
+  "capability_contracts": [
+    {
+      "id": "core",
+      "version": 1,
+      "dependencies": [],
+      "conflicts": []
+    },
+    {
+      "id": "finance",
+      "version": 1,
+      "dependencies": [
+        "core"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "operations",
+      "version": 1,
+      "dependencies": [
+        "core"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "documents",
+      "version": 1,
+      "dependencies": [
+        "core"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "participants",
+      "version": 1,
+      "dependencies": [
+        "core"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "communications",
+      "version": 1,
+      "dependencies": [
+        "core",
+        "participants"
+      ],
+      "conflicts": []
+    }
+  ]
 }

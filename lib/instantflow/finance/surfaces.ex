@@ -33,6 +33,7 @@ defmodule Instantflow.Finance.Surfaces do
 
           %{
             summaries: summaries,
+            setup_error: if(allowed? and is_nil(current), do: :invalid_budget),
             scope: spec["scope"],
             can_create?: scope.role == "admin",
             can_allocate?:
@@ -111,6 +112,7 @@ defmodule Instantflow.Finance.Surfaces do
   def empty,
     do: %{
       summaries: [],
+      setup_error: nil,
       scope: "process",
       can_create?: false,
       can_allocate?: false,

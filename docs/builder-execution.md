@@ -174,3 +174,5 @@ Full school portal replacement and richer generated experiences remain Sprints
 
 [Local evidence](evidence/sprint09-local.json) identifies the working-tree base,
 changed-source hashes and checks. All data is synthetic and databases are isolated.
+
+Sprint 11 follow-up, 2026-10-23: the [D-32 disposition register](sprint11-legacy-disposition-inventory.md) supersedes earlier executable legacy allowlists. The [contract and ownership acceptance](sprint11-contract-ownership-checkpoint.md) records enforced capability dependencies, synchronized portable metadata, pure authoring panels and fail-closed local binding repair. Historical data retention does not restore retired commands.

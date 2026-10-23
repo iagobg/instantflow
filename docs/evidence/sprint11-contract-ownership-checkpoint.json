@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-23",
+  "base_revision": "ef4e96e",
+  "tasks_completed": [
+    "S11-T03",
+    "S11-T04"
+  ],
+  "precommit": {
+    "tests": 342,
+    "failures": 0,
+    "seed": 295089
+  },
+  "assets": "pass",
+  "sha256": {
+    "lib/instantflow/workflow_catalog/capabilities.ex": "6f8d0c7eb91faa9c46b2a91d7a40317d67ff3bb01960df5017c83bb4c97da902",
+    "lib/instantflow/workflow_catalog/definition.ex": "2cb2a8171b4ca70b5835a08d841802fdd88519f2f48dbdd9becdb58fa82f8e1e",
+    "lib/instantflow_web/components/authoring_panels.ex": "cc16b495277a83bbdafb9c9e123de311759d73381dd97467894d29ff501aed14",
+    "test/instantflow/workflow_catalog/capability_matrix_test.exs": "f9b1ddab616c4192e9719218705902259c0592edf7d54eb109a9da20f1312bae",
+    "test/instantflow_web/live/sprint11_binding_lifecycle_test.exs": "8fb5fd5b3b49a310dad522ef257d2a860f501089c3b24d3d7e238b78103969a8",
+    ".local/sprint11-contract-ownership-precommit.log": "1efcb95f6c38b3a6358e061771277657b9ff8ac2894ec9437c8670004f49de28",
+    ".local/sprint11-contract-ownership-assets.log": "859ce19c2c269846b8b1b8af5f9e73bced95e8d69e2298ee07331f5b12eac6d8"
+  }
+}

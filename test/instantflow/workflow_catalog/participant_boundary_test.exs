@@ -22,7 +22,7 @@ defmodule Instantflow.WorkflowCatalog.ParticipantBoundaryTest do
   test "shared generated components render projections without reading or mutating contexts" do
     root = Path.expand("../../../lib/instantflow_web/components", __DIR__)
 
-    for name <- ~w(layouts process_components field_input pagination_controls) do
+    for name <- ~w(layouts process_components field_input pagination_controls authoring_panels) do
       source = File.read!(Path.join(root, name <> ".ex"))
       refute source =~ ~r/(Repo|Tenant)\./
       refute source =~ ~r/Workspaces\.(navigation|installed|get|search)/

@@ -85,3 +85,5 @@ does not require reactivating every old write API. See the
 [Sprint 11 disposition gate](../sprint_plan/sprint_11.md#mid-sprint-compatibility-policy--d-32).
 
 Sprint 09 establishes contracts and a participant/document vertical slice. Sprint 10 adds generated experiences using that protocol and bounded query interface. Sprint 11 completes performance measurement, operational generalization, legacy replacement and full recreation/preservation. Every new capability ships its own cohesive boundary and tests; S11 extraction is residual cleanup, not permission to accumulate domain coupling. Pilot activation remains governed by Sprints 12–14.
+
+Sprint 11 follow-up, 2026-10-23: the [D-32 disposition register](sprint11-legacy-disposition-inventory.md) supersedes earlier executable legacy allowlists. The [contract and ownership acceptance](sprint11-contract-ownership-checkpoint.md) records enforced capability dependencies, synchronized portable metadata, pure authoring panels and fail-closed local binding repair. Historical data retention does not restore retired commands.

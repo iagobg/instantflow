@@ -2,7 +2,7 @@
 
 [Design index](../design/index.md)
 
-Status: Sprints 00–10 complete; Sprint 11 in progress; Sprints 12–15 customer delivery planned · Updated: 2026-10-22
+Status: Sprints 00–10 complete; Sprint 11 in progress; Sprints 12–15 customer delivery planned · Updated: 2026-10-23
 
 Dependency-ordered increments without duration estimates. Sprints 00 and 01 retain their original single-organization evidence. Sprint 01A has migrated and verified the multi-organization foundation before Sprint 02, preserving existing records.
 
@@ -20,7 +20,7 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 | [08](sprint_08.md) | Optional isolated Python calculations | 07; D-16, D-17; host activation gate | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [09](sprint_09.md) | Shared builder contracts, participants, references and document policies | Existing 01A–08; D-25–28 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [10](sprint_10.md) | Generated participant experiences and reusable projections | 09; D-06–07, D-25–27 | Done | 4/4 | 2026-10-22 / 2026-10-22 |
-| [11](sprint_11.md) | Cross-domain contracts, scalable reads and builder acceptance | corrected 09–10; D-09, D-14, D-25–30 | In progress | 1/5 | 2026-10-22 / — |
+| [11](sprint_11.md) | Cross-domain contracts, scalable reads and builder acceptance | corrected 09–10; D-09, D-14, D-25–30 | In progress | 3/5 | 2026-10-22 / — |
 | [12](sprint_12.md) | Pilot scope, isolation and account access | 11 architecture gate; D-21–23, D-27 | Planned | 0/3 | — / — |
 | [13](sprint_13.md) | Organization onboarding and first workflow | 12; D-22, D-27 | Planned | 0/3 | — / — |
 | [14](sprint_14.md) | Operations, data lifecycle and pilot launch readiness | 13; D-21, D-23 | Planned | 0/3 | — / — |
@@ -44,7 +44,7 @@ Sprint 11's [execution checkpoints](sprint_11.md#execution-checkpoints-after-spr
 incorporate the corrected Sprint 10 review under D-30: early restaurant composition,
 public-entry authorization parity, real form-payload coverage and version/process
 scale measurements. Existing bounded projections are the baseline. Its five tasks
-and feature scope are unchanged. Execution started on 2026-10-22. The [first operational checkpoint](../docs/sprint11-operational-checkpoint.md) records the initial slice; the [retirement checkpoint](../docs/sprint11-retirement-checkpoint.md) completes T01 and the D-32 inventory dispositions, with populated recovery and transferred security/business assertions. Current status is In progress, 1/5; T02–T05 remain open.
+and feature scope are unchanged. Execution started on 2026-10-22. The [first operational checkpoint](../docs/sprint11-operational-checkpoint.md) records the initial slice; the [retirement checkpoint](../docs/sprint11-retirement-checkpoint.md) completes T01 and the D-32 inventory dispositions, with populated recovery and transferred security/business assertions. Current status is In progress, 3/5; T02 and T05 remain open. The [contract/ownership acceptance](../docs/sprint11-contract-ownership-checkpoint.md) completes T03 and T04.
 
 Sprint 10's [pre-execution sequence and checkpoints](sprint_10.md#execution-order-and-checkpoints)
 incorporate the corrected Sprint 09 contracts under D-29. Deliver the first

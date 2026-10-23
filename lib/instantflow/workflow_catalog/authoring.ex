@@ -26,7 +26,6 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
     document_department: :string,
     document_max_bytes: :integer,
     document_media_types: {:array, :string},
-    guardian_roles: {:array, :string},
     read: :boolean,
     edit_stages: {:array, :string},
     options: :string,
@@ -99,7 +98,6 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
       document_media_types:
         get_in(item, ["document_policy", "media_types"]) ||
           ~w(application/pdf image/png image/jpeg),
-      guardian_roles: for(a <- item["actors"] || [], a["scope"] == "guardian", do: a["role"]),
       read: Map.get(item, "read", true),
       edit_stages: item["edit_stages"] || [],
       options: Enum.join(item["options"] || [], "\n"),
@@ -448,7 +446,6 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
     actors =
       Enum.map(v.requester_roles, &%{"role" => &1, "scope" => "requester"}) ++
         Enum.map(v.department_roles, &%{"role" => &1, "scope" => "assigned_department"}) ++
-        Enum.map(v.guardian_roles, &%{"role" => &1, "scope" => "guardian"}) ++
         Enum.filter(
           old["actors"] || [],
           &(&1["scope"] in ~w(workflow_department assigned_user participant))

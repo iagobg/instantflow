@@ -11,6 +11,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
     with :ok <- bounded(definition),
          :ok <- schema(definition),
          :ok <- shape(definition),
+         :ok <- Capabilities.validate(definition),
          :ok <- Diagnostics.validate(definition),
          :ok <- references(definition),
          :ok <- graph(definition),

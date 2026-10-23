@@ -102,6 +102,27 @@ defmodule Instantflow.WorkflowCatalog.Capabilities do
   def enabled?(definition, capability),
     do: capability in @supported and capability in Map.get(definition, "capabilities", [])
 
+  def validate(%{"capabilities" => capabilities}) do
+    errors =
+      capabilities
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {id, index} ->
+        contract = descriptor(id)
+        path = "modelo.capabilities[#{index}]"
+
+        Enum.flat_map(contract.dependencies, fn dependency ->
+          if dependency in capabilities, do: [], else: ["#{path}: #{id} exige #{dependency}."]
+        end) ++
+          Enum.flat_map(contract.conflicts, fn conflict ->
+            if conflict in capabilities,
+              do: ["#{path}: #{id} não pode combinar com #{conflict}."],
+              else: []
+          end)
+      end)
+
+    if errors == [], do: :ok, else: {:error, errors}
+  end
+
   def valid?(capabilities) when is_list(capabilities),
     do:
       "core" in capabilities and Enum.uniq(capabilities) == capabilities and

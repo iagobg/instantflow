@@ -9,6 +9,9 @@ defmodule InstantflowWeb.ProcessComponents do
     ~H"""
     <section id="process-finance-setup" class="card">
       <h2>Configuração financeira local</h2>
+      <p :if={@finance_surface.setup_error} id="process-finance-setup-error" role="alert">
+        {InstantflowWeb.RuntimeErrors.message(@finance_surface.setup_error)}
+      </p>
       <.form
         :if={@finance_surface.can_create?}
         for={@finance_account_form}
@@ -55,6 +58,13 @@ defmodule InstantflowWeb.ProcessComponents do
     ~H"""
     <section id="process-finance-summary" class="card">
       <h2>Resumo financeiro autorizado</h2>
+      <p
+        :if={not is_nil(@finance_surface.setup_error) and "finance_setup" not in @blocks}
+        id="process-finance-summary-error"
+        role="alert"
+      >
+        {InstantflowWeb.RuntimeErrors.message(@finance_surface.setup_error)}
+      </p>
       <p>
         {if @finance_surface.scope == "process",
           do: "Somente registros autorizados deste processo",

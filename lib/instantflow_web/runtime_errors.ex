@@ -36,7 +36,11 @@ defmodule InstantflowWeb.RuntimeErrors do
   def message(:account_exists), do: "Já existe uma conta com este nome neste departamento."
 
   def message(:insufficient_budget), do: "Saldo insuficiente para reservar este valor."
-  def message(:invalid_budget), do: "Orçamento indisponível nesta organização."
+
+  def message(:invalid_budget),
+    do:
+      "Orçamento indisponível nesta organização. Peça à administração para revisar o mapeamento local; registros existentes mantêm a conta da sua publicação."
+
   def message(:invalid_amount), do: "Informe um valor positivo em centavos."
 
   def message(:renew_finance_review),
@@ -55,15 +59,15 @@ defmodule InstantflowWeb.RuntimeErrors do
     do: "A situação financeira foi alterada. Atualize e revise a solicitação."
 
   def message(:attachment_not_ready),
-    do: "O documento obrigatório ainda não foi liberado pela secretaria."
+    do: "O documento obrigatório ainda não foi liberado pela equipe autorizada."
 
   def message(:invalid_attachment),
-    do: "Documento indisponível para este formulário e esta escola."
+    do: "Documento indisponível para este formulário e esta organização."
 
   def message(:invalid_file), do: "Envie um PDF, PNG ou JPEG fictício de até 5 MB."
 
   def message(:quota),
-    do: "Limite de documentos desta matrícula atingido. Exclua um documento antes de reenviar."
+    do: "Limite de documentos deste registro atingido. Exclua um documento antes de reenviar."
 
   def message(:invalid_state), do: "O documento já foi revisado ou expirou. Atualize a página."
 

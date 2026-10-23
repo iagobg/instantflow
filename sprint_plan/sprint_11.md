@@ -79,7 +79,7 @@ These are execution/evidence checkpoints, not additional permission gates. The [
   - Vary published-version count, installed-process count, hidden-to-visible record ratio and selected projection width independently of ticket count. Measure catalog loading/policy compilation, SQL predicate size/planning cost, fetched rows/bytes and application memory as well as query count. Constant query count and a 25-record page are not evidence that supporting work is bounded. Include mixed old versions and unrelated processes; any cache must preserve pinned semantics and current revocation.
   - Before tuning, record numeric read-latency/memory budgets and the version/process distributions used alongside D-09's command/update targets in design/07-verification.md. Report per-tenant results and cold/warm runs. Do not silently lower a target or change the workload after seeing a failure; retain the failed result and justify any changed acceptance target.
 
-- [ ] S11-T03 Stabilize capability, authoring and compatibility contracts.
+- [x] S11-T03 Stabilize capability, authoring and compatibility contracts.
   - Complete the capability descriptors and publication checks introduced in S09-T05: dependencies/conflicts, graph reachability, effect/reset targets, typed projection references, local binding readiness and version support. Report path-specific diagnostics consistently through editor/import. Test ordinary definitions with no optional capabilities and all supported combinations.
   - Verify one ordered transaction across composed effects with failure injected after an earlier effect; assert complete rollback of state, finance, operations, receipts and outbox intent. Verify replay after revocation and asynchronous stale-result rejection. No capability may recursively start a second runtime transition for the same command.
   - Exercise mixed-version lists and direct links after stages, fields, pages, accounts and operational settings change. Use pinned labels/policies and preserve old closing/reset behavior without granting revoked authority. Missing or archived local bindings must produce an actionable, fail-closed setup state.
@@ -90,7 +90,7 @@ These are execution/evidence checkpoints, not additional permission gates. The [
   - Complete the D-32 disposition register and retire unneeded legacy URL/data/command paths. For evidenced consumers, define migration, read-only retention or a narrowly scoped drain adapter. Remove process-key dispatch from ordinary generated paths; preserve supported pinned records without silently rewriting immutable JSON. Do not equate retained history with permanent execution support.
   - Keep example content and installation separate from the platform core. Document extension rules and supported/deferred capabilities in the authoring guide and README.
 
-- [ ] S11-T04 Separate remaining editor and command responsibilities where behavior changed.
+- [x] S11-T04 Separate remaining editor and command responsibilities where behavior changed.
   - Enforce the context ownership/dependency rules and reviewed legacy allowlist established in Sprint 09. Remove residual example-service dependencies from migrated generic commands, policy, projections and UI; record each remaining compatibility dependency and its retirement condition. T04 is residual integration cleanup; T01–T03 and earlier sprints must already preserve cohesive boundaries.
   - Extract cohesive authoring panels, validation helpers and runtime/context command implementations touched by Sprints 09–11, with explicit inputs and server-authoritative contexts. Keep reusable templates free of queries and mutations.
   - Centralize repeated supported-contract, generated-route, formatting and authorization-projection decisions where an owner is identifiable; avoid moving duplication into pass-through abstractions with no responsibility.
@@ -123,7 +123,7 @@ These are execution/evidence checkpoints, not additional permission gates. The [
 ## Progress
 
 Actual start / finish: 2026-10-22 / not finished  
-Tasks: 1/5. Status: In progress. The 190-test structural-review result is historical baseline evidence, not completion of this gate.  
+Tasks: 3/5. Status: In progress. The 190-test structural-review result is historical baseline evidence, not completion of this gate.  
 Planning date: 2026-10-21. Record dated evidence and remaining defects before changing status.  
 Priority: architecture gate before pilot engineering. Handoff: verified reusable builder foundation for Sprint 12, with operational reliability and real-customer acceptance still open.
 
@@ -223,3 +223,9 @@ curated discovery prunes unused message versions. The
 [discovery report](../docs/sprint11-discovery-checkpoint.md) records later-page
 interaction, current-grant/pinned-history parity, pure layout ownership and atomic
 publication invalidation. Final T02 measurements and remaining T03–T05 work stay open.
+
+Contract/ownership acceptance — 2026-10-23: T03 and T04 are complete. The
+[acceptance matrix](../docs/sprint11-contract-ownership-checkpoint.md) records all
+32 capability combinations, publication diagnostics, pinned account writes and
+unavailable-binding repair, pure authoring panels and the prior security/form
+matrices. Full precommit passes 342 tests. Progress: 3/5; T02 and T05 remain open.
