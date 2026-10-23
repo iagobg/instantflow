@@ -2,6 +2,7 @@ defmodule InstantflowWeb.RequestLive do
   use InstantflowWeb, :live_view
   alias Instantflow.{Delivery, WorkflowRuntime}
   alias Instantflow.Collaboration.{Editor, Presence}
+  import InstantflowWeb.FieldInput, only: [field_input: 1]
   alias InstantflowWeb.RuntimeErrors
 
   def mount(%{"id" => raw_id} = params, session, socket) do
@@ -741,24 +742,13 @@ defmodule InstantflowWeb.RequestLive do
   defp participant_status("verified"), do: "Verificado"
   defp participant_status("revoked"), do: "Revogado"
   defp participant_status(_), do: "Aguardando verificação"
-  defp field_type("long_text"), do: "textarea"
-  defp field_type(type) when type in ["money", "integer"], do: "number"
-  defp field_type("date"), do: "date"
-  defp field_type("directory_reference"), do: "select"
-  defp field_type(type) when type in ["boolean", "single_choice", "multiple_choice"], do: "select"
-  defp field_type(_), do: "text"
-
-  defp options(%{"type" => "boolean"}),
-    do: [{"Não informado", ""}, {"Sim", "true"}, {"Não", "false"}]
-
-  defp options(field), do: Map.get(field, "options", [])
 
   defp field_options(%{"type" => "directory_reference"} = field, data, section),
     do: [
       {"Não informado", ""} | Map.get(data.reference_options, section <> "." <> field["key"], [])
     ]
 
-  defp field_options(field, _, _), do: options(field)
+  defp field_options(field, _, _), do: Map.get(field, "options", [])
 
   defp format_field(%{"type" => "directory_reference"} = field, value, data, section) do
     if is_nil(value),
@@ -893,20 +883,16 @@ defmodule InstantflowWeb.RequestLive do
                 value={@editors[section.key].stage_revision}
               />
               <input type="hidden" name="observed[key]" value={@editors[section.key].key} />
-              <.input
+              <.field_input
                 :for={field <- definition["fields"]}
                 field={@forms[section.key][field["key"]]}
                 id={"section-#{section.key}-#{field["key"]}"}
                 label={field["label"]}
-                type={field_type(field["type"])}
-                multiple={field["type"] == "multiple_choice"}
+                type={field["type"]}
                 disabled={
                   field["type"] == "attachment" or
                     (field["type"] == "directory_reference" and field["reference"] == nil)
                 }
-                min={if field["type"] == "money", do: 0}
-                step={if field["type"] in ~w(integer money), do: 1}
-                placeholder={if field["type"] == "datetime", do: "2026-10-20T14:00:00-03:00"}
                 options={field_options(field, @data, section.key)}
               /><button
                 class="btn primary"

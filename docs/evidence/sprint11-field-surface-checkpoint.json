@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-23",
+  "base_revision": "6651f74",
+  "scope": "T03 scalar field/surface matrix and touched T04 shared generated controls; wider tasks remain open",
+  "delivered": [
+    "Shared pure field control owner used by ordinary and participant forms",
+    "Blank optional single-choice selectors on both forms and participant boolean selector",
+    "Nine scalar types roundtrip typed editor, local mapping, export/import, rendered form, view and delivered snapshot",
+    "Eleven field types have schema/authoring vocabulary and surface validation checks",
+    "Unsupported participant and message file/local-reference sources fail import and publication"
+  ],
+  "reproduced": {
+    "tests": 18,
+    "failures": 3,
+    "seed": 811467,
+    "failures_are": [
+      "staff single_choice missing blank option",
+      "participant single_choice missing blank option",
+      "participant boolean missing blank option"
+    ],
+    "log": ".local/sprint11-field-matrix-before.log"
+  },
+  "validation": {
+    "focused": {
+      "tests": 45,
+      "failures": 0,
+      "seed": 67810,
+      "log": ".local/sprint11-field-matrix-focused.log"
+    },
+    "contract": {
+      "tests": 13,
+      "failures": 0,
+      "seed": 380044,
+      "log": ".local/sprint11-field-contract.log"
+    },
+    "precommit": {
+      "tests": 325,
+      "failures": 0,
+      "seed": 932154,
+      "exit_code": 0,
+      "log": ".local/sprint11-field-matrix-precommit.log"
+    },
+    "assets": {
+      "exit_code": 0,
+      "log": ".local/sprint11-field-matrix-assets.log"
+    },
+    "diff_check": {
+      "exit_code": 0
+    }
+  },
+  "regressions": [
+    "Empty, typed, invalid, cleared and reloaded values",
+    "Explicit true and false; duplicate and unknown choices",
+    "Numeric boundaries, invalid dates and missing instant offset",
+    "Hidden multi-select transport sentinel checked against rendered form controls",
+    "View typed values and clearing",
+    "Pending message content withheld; delivered snapshot remains immutable after clearing",
+    "Document, directory and collaboration conflict/draft controls retained"
+  ],
+  "sprint": {
+    "status": "In progress",
+    "complete": 1,
+    "total": 5
+  },
+  "remaining": [
+    "T02 complete supporting-volume/browser/BEAM evidence",
+    "T03 multiple-page authorization and remaining mixed-capability/version/binding acceptance",
+    "T04 residual ownership cleanup",
+    "T05 complete builder recreation/recovery and unresolved intermittent LiveView token/reload observation"
+  ],
+  "serving_database_migrated": false,
+  "deployment_performed": false,
+  "source_sha256": {
+    "lib/instantflow_web/components/field_input.ex": "0a03bd1addedd6a89d20150b07d8d35a3248bda3b4a7faa5aeffc72d530522af",
+    "lib/instantflow_web/live/request_live.ex": "6c76e0b168b7f4a1dcbc68291bf5fa299a7f26c0bf23900d3caf520fac2526af",
+    "lib/instantflow_web/live/participant_live.ex": "1107121ab27e42178a15772b3994aa6f4d62b6910516dd3943c777690c926305",
+    "test/instantflow_web/live/sprint11_field_surface_matrix_test.exs": "79f6fdb6bcf2d3f5b8ade411dae1f60ebcdfa582f4a5868befbe428b6615aef0",
+    "test/instantflow/workflow_catalog/field_surface_contract_test.exs": "5406f9c1fd543f265197514a962dd7f11364d99a28a0a99dcaf7e5d08d1b20f4",
+    "docs/sprint11-field-surface-checkpoint.md": "98877a375a854919778fa4e5cc86e886d0950a2aaecfc20d67873b8a99e76daf",
+    "design/workflow_authoring_guide.pt-BR.md": "5ea48a3ca993b814867cf32112cc22377fe622e44ad6a7fae3dedac8280a789c",
+    "README.md": "2e874d8f8a18bdd8dc1005bf5af971f0b349c126e90c0aa7d5f6b0573e8e02a0",
+    "sprint_plan/sprint_11.md": "ac83b29dbdbc67e9b535f7176e28e64aa0b1b414c4d6520ff3f12548b8061864",
+    "sprint_plan/sprint_index.md": "ec1b4713fc9f4f4f8d2862b8907039d8a18c0be18d54ac36d15eb65011a034ec"
+  },
+  "log_sha256": {
+    ".local/sprint11-field-matrix-before.log": "a1fefc857a6302d7964e654729349dd0ad5595f78b1a33b8059e1324e3197ff2",
+    ".local/sprint11-field-matrix-focused.log": "f86051f3cd93c4e9c176b440862a180293175706e46d49ce9be3543ba4f5101a",
+    ".local/sprint11-field-contract.log": "39e67456d2e247279aaeb2f0b15751c0b2da0d9bd71bbb5d59fd96e7ddf7cdcf",
+    ".local/sprint11-field-matrix-precommit.log": "1fd5be0ad55c39fa6b1e9fa052b2fe11af281b005e5a89955a5ad05399d3e9d3",
+    ".local/sprint11-field-matrix-assets.log": "42301b962c0c79e0e376d5a49cc057409c724a8f0bda4c16e2307c5f6dba2c54"
+  }
+}

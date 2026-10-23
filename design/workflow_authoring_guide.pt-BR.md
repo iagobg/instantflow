@@ -104,3 +104,19 @@ capturados nas colunas históricas permanecem preservados. Novas publicações
 operacionais exigem contrato e transição de fechamento explícitos. Versões
 históricas classificadas pelo operador ficam somente para leitura; não reative
 convites, rotas ou efeitos descontinuados para recuperar os dados.
+
+## Campos e superfícies verificadas no Sprint 11
+
+Consulte a [matriz de suporte e evidências](../docs/sprint11-field-surface-checkpoint.md)
+antes de escolher campos para formulários, visualizações ou mensagens. Formulários
+internos e de participantes compartilham os nove tipos escalares. Escolha única e
+sim/não permitem “Não informado”; texto vazio e múltipla escolha vazia continuam
+sujeitos às regras de obrigatoriedade da transição. Dinheiro usa centavos inteiros
+não negativos em BRL. Instantes exigem ISO 8601 com deslocamento explícito.
+
+Referências de diretório ficam no seletor interno com vínculo declarado; não são
+editáveis no formulário de participante. Anexos usam o fluxo de documentos com
+política declarada, seleção exata do campo e nova autorização ao baixar. Mensagens
+selecionam somente valores escalares: não inclua anexos ou referências locais.
+Filtros/ordenação não aceitam texto longo, múltipla escolha, arquivos ou referências;
+a fonte de calendário deve ser data ou instante. A seleção nunca concede permissão.

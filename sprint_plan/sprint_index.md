@@ -100,3 +100,10 @@ occupancy or daily reports. The
 [resolution](../docs/sprint11-three-checkpoints-review-resolution.md) records
 current-only session exclusion, rendered item entry/handoff/settlement, revocation
 and isolation regressions. T02–T05 remain open; progress stays 1/5, In progress.
+
+Field/surface checkpoint — 2026-10-23: nine scalar types now pass rendered ordinary
+and participant form, typed view and immutable-message roundtrips. Shared generated
+controls fix missing optional boolean/single-choice clearing; all eleven field
+types have synchronized schema/authoring/surface publication checks. The
+[matrix and evidence](../docs/sprint11-field-surface-checkpoint.md) record the
+bounded T03/T04 scope. Broader T02–T05 gates remain open; progress stays 1/5.

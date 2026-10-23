@@ -1,5 +1,6 @@
 defmodule InstantflowWeb.ParticipantLive do
   use InstantflowWeb, :live_view
+  import InstantflowWeb.FieldInput, only: [field_input: 1]
   alias Instantflow.WorkflowRuntime.{ParticipantPages, Projections}
   alias Instantflow.{Delivery, WorkflowRuntime}
 
@@ -281,13 +282,6 @@ defmodule InstantflowWeb.ParticipantLive do
   end
 
   defp number(_), do: nil
-  defp input_type("long_text"), do: "textarea"
-  defp input_type(type) when type in ~w(integer money), do: "number"
-  defp input_type(type) when type in ~w(boolean single_choice multiple_choice), do: "select"
-  defp input_type("date"), do: "date"
-  defp input_type(_), do: "text"
-  defp options(%{type: "boolean"}), do: [{"Sim", "true"}, {"Não", "false"}]
-  defp options(field), do: field.options
   defp display(nil), do: "—"
   defp display(values) when is_list(values), do: Enum.join(values, ", ")
   defp display(value), do: to_string(value)
@@ -344,13 +338,12 @@ defmodule InstantflowWeb.ParticipantLive do
                   phx-submit="save"
                 >
                   <input type="hidden" name="ref" value={field.ref} />
-                  <.input
+                  <.field_input
                     field={@forms[field.ref][:value]}
                     id={"participant-input-#{field.ref}"}
                     label={field.label}
-                    type={input_type(field.type)}
-                    options={options(field)}
-                    multiple={field.type == "multiple_choice"}
+                    type={field.type}
+                    options={field.options}
                   />
                   <button id={"participant-save-#{field.ref}"} class="btn">Salvar</button>
                 </.form>
