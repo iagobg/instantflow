@@ -474,10 +474,7 @@ defmodule Instantflow.Operations do
 
   def default_workflow(actor) do
     Tenant.read(actor, fn scope ->
-      case Enum.filter(
-             Workspaces.latest(),
-             &(operational_version?(&1) and Workspaces.allowed?(scope, &1, "view"))
-           ) do
+      case Workspaces.operational_candidates(scope) do
         [version] -> version.workflow_id
         _ -> nil
       end
@@ -534,7 +531,7 @@ defmodule Instantflow.Operations do
   end
 
   defp workspace_version!(nil) do
-    case Enum.filter(Workspaces.latest(), &operational_version?(&1)) do
+    case Workspaces.operational_candidates(nil) do
       [version] -> version
       _ -> Repo.rollback(:workspace_required)
     end

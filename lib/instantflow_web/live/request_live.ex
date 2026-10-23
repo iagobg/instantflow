@@ -775,6 +775,7 @@ defmodule InstantflowWeb.RequestLive do
     <Layouts.app
       flash={@flash}
       current_scope={@current_scope}
+      navigation={@workspace_navigation}
       unsaved={@dirty or (@reason.params["reason"] || "") != ""}
     >
       <.link navigate={

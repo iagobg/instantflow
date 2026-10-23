@@ -340,20 +340,40 @@ defmodule Instantflow.Delivery.Curated do
     )
   end
 
-  def options(actor) do
+  def options(actor), do: discovery(actor).rows
+
+  def discovery(actor, params \\ %{}) do
     Tenant.read(
       actor,
       fn scope ->
-        Repo.all(
+        query =
           from [ticket: t] in inbox_query(scope, nil),
+            join: v in Version,
+            on: v.id == t.workflow_version_id,
             distinct: t.workflow_id,
-            order_by: t.workflow_id,
-            limit: 100,
-            select: t.workflow_id
-        )
-        |> Enum.map(&%{id: &1, label: "Mensagens compartilhadas"})
+            order_by: [t.workflow_id, desc: v.number, desc: v.id],
+            select: %{id: t.workflow_id, label: fragment("?->>'name'", v.definition)}
+
+        total = Repo.aggregate(query, :count)
+        pages = max(1, ceil(total / 25))
+
+        requested =
+          case Integer.parse(to_string(params["page"] || "1")) do
+            {n, ""} when n > 0 -> min(n, pages)
+            _ -> 1
+          end
+
+        rows =
+          Repo.all(
+            from item in subquery(query),
+              order_by: item.id,
+              limit: 25,
+              offset: ^((requested - 1) * 25)
+          )
+
+        %{rows: rows, total: total, page: requested, pages: pages}
       end,
-      []
+      %{rows: [], total: 0, page: 1, pages: 1}
     )
   end
 
@@ -379,10 +399,27 @@ defmodule Instantflow.Delivery.Curated do
   end
 
   defp inbox_query(scope, workflow_id) do
-    versions =
-      Repo.all(
-        from v in Version, where: fragment("jsonb_exists(?, 'communications')", v.definition)
-      )
+    referenced =
+      from m in Message,
+        join: t in Ticket,
+        on: t.id == m.ticket_id,
+        where:
+          t.workflow_version_id == parent_as(:version).id and
+            m.recipient_membership_id == ^scope.id,
+        select: 1
+
+    query =
+      from v in Version,
+        as: :version,
+        where: fragment("jsonb_exists(?, 'communications')", v.definition),
+        where: exists(subquery(referenced))
+
+    query =
+      if is_integer(workflow_id),
+        do: where(query, [v], v.workflow_id == ^workflow_id),
+        else: query
+
+    versions = Repo.all(query)
 
     rule =
       Enum.reduce(versions, dynamic(false), fn version, acc ->

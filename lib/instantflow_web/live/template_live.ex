@@ -744,7 +744,12 @@ defmodule InstantflowWeb.TemplateLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope} unsaved={@unsaved}>
+    <Layouts.app
+      flash={@flash}
+      current_scope={@current_scope}
+      navigation={@workspace_navigation}
+      unsaved={@unsaved}
+    >
       <div :if={@draft} id="workflow-editor">
         <section id="participant-preview" class="card">
           <h2>Prévia sintética de participação</h2>

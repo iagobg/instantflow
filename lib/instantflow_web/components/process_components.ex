@@ -2,6 +2,7 @@ defmodule InstantflowWeb.ProcessComponents do
   @moduledoc "Reusable process block templates. Contexts and LiveViews own queries, authorization and commands."
   use InstantflowWeb, :html
   import InstantflowWeb.ProcessRoutes
+  import InstantflowWeb.PaginationControls
   alias Instantflow.Operations
 
   def finance_setup_block(assigns) do
@@ -126,6 +127,12 @@ defmodule InstantflowWeb.ProcessComponents do
           options={[{"Minhas atribuições", "me"}, {"Sem responsável", "unassigned"}]}
         />
       </.form>
+      <.pagination
+        id="record-view-browser"
+        event="record-view-page"
+        info={@record_views}
+        label="visualização(ões)"
+      />
       <p id="process-record-count">{@record_total} registro(s) disponível(is)</p>
       <p id="process-urgency-status" role="status" aria-live="polite">
         {@record_urgent} registro(s) com maior urgência em aberto.
@@ -196,37 +203,7 @@ defmodule InstantflowWeb.ProcessComponents do
       <.input field={@form[:query]} id={@id <> "-query"} label={@label} maxlength="100" />
       <button id={@id <> "-filter"} class="btn">Buscar</button>
     </.form>
-    <.operational_pager id={@id} kind={@kind} info={@info} />
-    """
-  end
-
-  attr :id, :string, required: true
-  attr :kind, :string, required: true
-  attr :info, :map, required: true
-
-  def operational_pager(assigns) do
-    ~H"""
-    <p id={@id <> "-count"}>{@info.total} resultado(s) · Página {@info.page} de {@info.pages}</p>
-    <nav :if={@info.pages > 1} id={@id <> "-pagination"} aria-label="Páginas de resultados">
-      <button
-        type="button"
-        class="btn"
-        id={@id <> "-previous"}
-        phx-click="operational-page"
-        phx-value-kind={@kind}
-        phx-value-page={@info.page - 1}
-        disabled={@info.page <= 1}
-      >Anterior</button>
-      <button
-        type="button"
-        class="btn"
-        id={@id <> "-next"}
-        phx-click="operational-page"
-        phx-value-kind={@kind}
-        phx-value-page={@info.page + 1}
-        disabled={@info.page >= @info.pages}
-      >Próxima</button>
-    </nav>
+    <.pagination event="operational-page" id={@id} kind={@kind} info={@info} />
     """
   end
 
@@ -497,7 +474,12 @@ defmodule InstantflowWeb.ProcessComponents do
   def batches_block(assigns) do
     ~H"""
     <section class="card template-section">
-      <.operational_pager id="batch-browser" kind="batches" info={@read_pages.batches} />
+      <.pagination
+        event="operational-page"
+        id="batch-browser"
+        kind="batches"
+        info={@read_pages.batches}
+      />
       <div id="fulfillment-batches" phx-update="stream">
         <article :for={{id, batch} <- @streams.batches} id={id} class="operations-batch">
           <h3>
@@ -646,7 +628,12 @@ defmodule InstantflowWeb.ProcessComponents do
       <h3>Consumo estimado de produtos</h3><p>
         Quantidades pedidas, incluindo o histórico arquivado e excluindo cancelamentos. Não confirma entrega nem representa saldo de estoque, ingredientes ou perdas de preparo.
       </p>
-      <.operational_pager id="consumption-browser" kind="consumption" info={@read_pages.consumption} />
+      <.pagination
+        event="operational-page"
+        id="consumption-browser"
+        kind="consumption"
+        info={@read_pages.consumption}
+      />
       <div id="estimated-consumption" phx-update="stream">
         <p :for={{id, row} <- @streams.consumption} id={id}>
           {row.name}: {row.quantity} unidade(s)

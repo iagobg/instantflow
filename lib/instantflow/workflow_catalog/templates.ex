@@ -99,11 +99,7 @@ defmodule Instantflow.WorkflowCatalog.Templates do
       draft = editable!(id, expected_revision)
       base = if draft.base_version_id, do: version!(draft.base_version_id).number, else: 0
 
-      version =
-        case WorkflowCatalog.publish(a, draft.definition, draft.bindings, base) do
-          {:ok, version} -> version
-          {:error, reason} -> Repo.rollback(reason)
-        end
+      version = WorkflowCatalog.publish_scoped!(a, draft.definition, draft.bindings, base)
 
       saved =
         draft
@@ -124,6 +120,7 @@ defmodule Instantflow.WorkflowCatalog.Templates do
 
       version
     end)
+    |> WorkflowCatalog.notify_publication()
   end
 
   # An existing target must be selected by ID. Names never choose update targets.

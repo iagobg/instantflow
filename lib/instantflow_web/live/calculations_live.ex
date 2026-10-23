@@ -168,7 +168,7 @@ defmodule InstantflowWeb.CalculationsLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app flash={@flash} current_scope={@current_scope} navigation={@workspace_navigation}>
       <div class="page-heading">
         <h1>Cálculos Python</h1><p>Demonstração universitária · somente dados sintéticos</p>
       </div>

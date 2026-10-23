@@ -42,6 +42,7 @@ defmodule InstantflowWeb.ProcessLive do
        resource_search_form: to_form(%{}, as: :browse),
        record_filters: %{},
        record_view: nil,
+       record_view_page: 1,
        finance_account_form: to_form(%{}, as: :finance_account),
        finance_allocation_form: to_form(%{}, as: :finance_allocation),
        record_form: to_form(%{}, as: :record_filter),
@@ -160,6 +161,18 @@ defmodule InstantflowWeb.ProcessLive do
     {:noreply,
      socket
      |> assign(:read_filters, Map.put(socket.assigns.read_filters, kind <> "_page", page))
+     |> load()}
+  end
+
+  def handle_event("record-view-page", %{"page" => page}, socket) do
+    {:noreply,
+     socket
+     |> assign(
+       record_view_page: page,
+       record_view: nil,
+       record_filters: %{},
+       record_form: to_form(%{}, as: :record_filter)
+     )
      |> load()}
   end
 
@@ -498,6 +511,7 @@ defmodule InstantflowWeb.ProcessLive do
   def handle_event(event, _, socket) when event in ["heartbeat", "reconcile"],
     do: {:noreply, load(socket)}
 
+  def handle_info(:workspaces_changed, socket), do: {:noreply, load(socket)}
   def handle_info(:reconcile, socket), do: {:noreply, load(socket)}
   def handle_info(:requests_changed, socket), do: {:noreply, load(socket)}
   def handle_info(:operations_changed, socket), do: {:noreply, load(socket)}
@@ -685,10 +699,16 @@ defmodule InstantflowWeb.ProcessLive do
   end
 
   defp load_records(socket, version) do
-    views =
+    discovery =
       if "records" in socket.assigns.blocks,
-        do: Views.options(socket.assigns.current_scope, %{"workflow_id" => version.workflow_id}),
-        else: []
+        do:
+          Views.discovery(socket.assigns.current_scope, %{
+            "workflow_id" => version.workflow_id,
+            "page" => socket.assigns.record_view_page
+          }),
+        else: %{rows: [], total: 0, page: 1, pages: 1}
+
+    views = discovery.rows
 
     selected = Enum.find(views, &(&1.key == socket.assigns.record_view)) || List.first(views)
 
@@ -723,15 +743,13 @@ defmodule InstantflowWeb.ProcessLive do
       record_assignments?: result.assignment?,
       record_page: result.page,
       record_pages: result.pages,
+      record_views: Map.delete(discovery, :rows),
       record_view_options: Enum.map(views, &{&1.view_label, &1.key}),
       record_stage_options: Enum.map(result.stages, &{&1.label, &1.id}),
       record_view_type: if(selected, do: selected.type, else: "table"),
       can_create_record:
         !Workspaces.operational?(version.definition) &&
-          Enum.any?(
-            WorkflowCatalog.available(socket.assigns.current_scope),
-            &(&1.workflow_id == version.workflow_id)
-          )
+          WorkflowCatalog.creatable?(socket.assigns.current_scope, version.workflow_id)
     )
     |> stream(:process_records, result.rows, reset: true)
   end
@@ -810,7 +828,12 @@ defmodule InstantflowWeb.ProcessLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope} unsaved={map_size(@cart) > 0}>
+    <Layouts.app
+      flash={@flash}
+      current_scope={@current_scope}
+      navigation={@workspace_navigation}
+      unsaved={map_size(@cart) > 0}
+    >
       <div class="page-heading">
         <div>
           <p class="eyebrow">PROCESSO DA ORGANIZAÇÃO</p><h1>{@process_name}</h1><p>

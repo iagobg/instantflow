@@ -1,5 +1,6 @@
 defmodule InstantflowWeb.RequestsLive do
   use InstantflowWeb, :live_view
+  import InstantflowWeb.PaginationControls
   alias Instantflow.{WorkflowCatalog, WorkflowRuntime}
   alias Instantflow.WorkflowCatalog.Views
 
@@ -18,6 +19,7 @@ defmodule InstantflowWeb.RequestsLive do
        create_key: Ecto.UUID.generate(),
        filters: %{},
        selected_view: "",
+       view_options_page: 1,
        view_form: to_form(%{}, as: :view),
        filter_form: to_form(%{}, as: :filter),
        form: to_form(%{}, as: :request)
@@ -36,6 +38,13 @@ defmodule InstantflowWeb.RequestsLive do
     {:noreply,
      socket |> assign(:filters, Map.put(socket.assigns.filters, "page", page)) |> load()}
   end
+
+  def handle_event("view-options-page", %{"page" => page}, socket),
+    do:
+      {:noreply,
+       socket
+       |> assign(view_options_page: page, selected_view: "", view_form: to_form(%{}, as: :view))
+       |> load()}
 
   def handle_event("configured-view", %{"view" => %{"key" => key}}, socket) do
     {:noreply,
@@ -72,7 +81,7 @@ defmodule InstantflowWeb.RequestsLive do
   end
 
   def handle_info(event, socket)
-      when event in [:requests_changed, :reconcile, :permissions_changed],
+      when event in [:requests_changed, :reconcile, :permissions_changed, :workspaces_changed],
       do: {:noreply, load(socket)}
 
   defp load(socket) do
@@ -99,7 +108,10 @@ defmodule InstantflowWeb.RequestsLive do
   end
 
   defp load_view(socket) do
-    options = Views.options(socket.assigns.current_scope)
+    discovery =
+      Views.discovery(socket.assigns.current_scope, %{"page" => socket.assigns.view_options_page})
+
+    options = discovery.rows
     selected = Enum.find(options, &(&1.id == socket.assigns.selected_view))
 
     result =
@@ -120,6 +132,7 @@ defmodule InstantflowWeb.RequestsLive do
 
     socket
     |> assign(
+      view_discovery: Map.delete(discovery, :rows),
       view_options: Enum.map(options, &{&1.label, &1.id}),
       view_columns: result.columns,
       view_total: result.total,
@@ -143,7 +156,7 @@ defmodule InstantflowWeb.RequestsLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app flash={@flash} current_scope={@current_scope} navigation={@workspace_navigation}>
       <div class="page-heading">
         <div>
           <p class="eyebrow">TRABALHO EM FLUXO</p><h1>Solicitações</h1><p>
@@ -154,6 +167,12 @@ defmodule InstantflowWeb.RequestsLive do
       <div id="requests-connection" phx-hook="Collaboration" phx-update="ignore"></div>
       <section :if={@has_workflows} class="card create-request">
         <h2>Começar uma solicitação</h2>
+        <p>
+          Escolha um fluxo abaixo ou <.link
+            id="all-creatable-processes"
+            navigate={~p"/o/#{@current_scope.organization.slug}/processos"}
+          >busque todos os processos disponíveis</.link>.
+        </p>
         <.form for={@form} id="new-request-form" phx-submit="create">
           <.input
             field={@form[:workflow_id]}
@@ -170,6 +189,12 @@ defmodule InstantflowWeb.RequestsLive do
           >Nova solicitação <.icon name="hero-arrow-right" /></button>
         </.form>
       </section>
+      <.pagination
+        id="global-view-browser"
+        event="view-options-page"
+        info={@view_discovery}
+        label="visualização(ões)"
+      />
       <section class="card requests-list">
         <div class="list-heading">
           <h2>Acompanhamento</h2><span id="requests-count" class="badge">{@result.total} disponíveis</span>

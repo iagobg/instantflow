@@ -29,7 +29,7 @@ defmodule InstantflowWeb.MessagesLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app flash={@flash} current_scope={@current_scope} navigation={@workspace_navigation}>
       <.link navigate={~p"/o/#{@current_scope.organization.slug}/processos"}>Processos</.link>
       <h1>Mensagens compartilhadas</h1>
       <p id="message-count">{@data.total} mensagem(ns) · Simulação de entrega</p>

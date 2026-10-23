@@ -215,3 +215,11 @@ in SQL without per-session query growth. Complete closure snapshots remain store
 The [read checkpoint](../docs/sprint11-operational-read-checkpoint.md) records later-page
 selection/printing, cart retention, row/query bounds and bigint monetary checks.
 T02 full discovery/load/browser/VM evidence and remaining T03–T05 work stay open.
+
+Discovery checkpoint — 2026-10-23: process/creation selection now authorizes before
+SQL pages; direct workspace lookup and navigation no longer reload every installed
+definition. Existing Projections owns bounded participant/view option pages, and
+curated discovery prunes unused message versions. The
+[discovery report](../docs/sprint11-discovery-checkpoint.md) records later-page
+interaction, current-grant/pinned-history parity, pure layout ownership and atomic
+publication invalidation. Final T02 measurements and remaining T03–T05 work stay open.

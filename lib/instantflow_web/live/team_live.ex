@@ -121,7 +121,7 @@ defmodule InstantflowWeb.TeamLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app flash={@flash} current_scope={@current_scope} navigation={@workspace_navigation}>
       <div class="page-heading">
         <div>
           <p class="eyebrow">ADMINISTRAÇÃO</p><h1>Equipe e convites</h1><p>

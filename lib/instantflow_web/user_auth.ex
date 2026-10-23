@@ -65,7 +65,14 @@ defmodule InstantflowWeb.UserAuth do
                   fresh.role != "admin",
                 do:
                   {:halt, Phoenix.LiveView.redirect(socket, to: "/o/#{fresh.organization.slug}")},
-                else: {:cont, Phoenix.Component.assign(socket, :current_scope, fresh)}
+                else:
+                  {:cont,
+                   socket
+                   |> Phoenix.Component.assign(:current_scope, fresh)
+                   |> Phoenix.Component.assign(
+                     :workspace_navigation,
+                     Instantflow.WorkflowCatalog.Workspaces.navigation(fresh)
+                   )}
               )
           end
         end
@@ -73,6 +80,10 @@ defmodule InstantflowWeb.UserAuth do
         socket =
           socket
           |> Phoenix.Component.assign(:current_scope, scope)
+          |> Phoenix.Component.assign(
+            :workspace_navigation,
+            Instantflow.WorkflowCatalog.Workspaces.navigation(scope)
+          )
           |> Phoenix.LiveView.attach_hook(:validate_session, :handle_event, fn _, _, socket ->
             validate.(socket)
           end)
@@ -82,6 +93,19 @@ defmodule InstantflowWeb.UserAuth do
               else: {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
           end)
           |> Phoenix.LiveView.attach_hook(:tenant_lifecycle, :handle_info, fn
+            :workspaces_changed, socket ->
+              case validate.(socket) do
+                {:halt, socket} ->
+                  {:halt, socket}
+
+                {:cont, socket} ->
+                  if socket.view in [
+                       InstantflowWeb.ProcessesLive,
+                       InstantflowWeb.ProcessLive,
+                       InstantflowWeb.RequestsLive
+                     ], do: {:cont, socket}, else: {:halt, socket}
+              end
+
             :access_revoked, socket ->
               case validate.(socket) do
                 {:halt, socket} -> {:halt, socket}

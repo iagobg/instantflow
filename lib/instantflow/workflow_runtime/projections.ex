@@ -62,11 +62,13 @@ defmodule Instantflow.WorkflowRuntime.Projections do
     )
   end
 
-  def participant_options(actor) do
+  def participant_options(actor), do: participant_discovery(actor).rows
+
+  def participant_discovery(actor, filters \\ %{}) do
     Tenant.read(
       actor,
       fn scope ->
-        versions = versions(%{})
+        versions = versions(filters)
 
         predicate =
           Enum.reduce(versions, dynamic(false), fn version, acc ->
@@ -87,35 +89,36 @@ defmodule Instantflow.WorkflowRuntime.Projections do
             )
           end)
 
-        ids =
-          Repo.all(
-            from t in Ticket,
-              as: :ticket,
-              join: v in Version,
-              on: v.id == t.workflow_version_id,
-              join: p in fragment("jsonb_array_elements(?->'interface'->'pages')", v.definition),
-              as: :page,
-              on: true,
-              where: t.organization_id == ^scope.organization_id,
-              where: ^predicate,
-              distinct: true,
-              select: {t.workflow_version_id, fragment("?->>'key'", p.value)}
-          )
-
-        Enum.flat_map(versions, fn version ->
-          for page <- Instantflow.WorkflowCatalog.ParticipantPages.pages(version.definition),
-              {version.id, page["key"]} in ids do
-            %{
-              id: "#{version.workflow_id}:#{page["key"]}",
-              workflow_id: version.workflow_id,
-              key: page["key"],
-              label: page["label"]
+        query =
+          from t in Ticket,
+            as: :ticket,
+            join: v in Version,
+            on: v.id == t.workflow_version_id,
+            join:
+              p in fragment(
+                "jsonb_array_elements(?->'interface'->'pages') WITH ORDINALITY",
+                v.definition
+              ),
+            as: :page,
+            on: true,
+            where: t.organization_id == ^scope.organization_id,
+            where: ^predicate,
+            distinct: [t.workflow_id, fragment("?->>'key'", p.value)],
+            order_by: [t.workflow_id, fragment("?->>'key'", p.value), desc: v.number, desc: v.id],
+            select: %{
+              workflow_id: t.workflow_id,
+              key: fragment("?->>'key'", p.value),
+              label: fragment("?->>'label'", p.value),
+              process_label: fragment("?->>'name'", v.definition),
+              position: fragment("?::int", p.ordinality),
+              version_number: v.number
             }
-          end
-        end)
-        |> Enum.uniq_by(& &1.id)
+
+        query = option_filter(query, filters, :participant)
+        result = option_page(query, filters)
+        %{result | rows: Enum.map(result.rows, &Map.put(&1, :id, "#{&1.workflow_id}:#{&1.key}"))}
       end,
-      []
+      empty_options()
     )
   end
 
@@ -151,7 +154,9 @@ defmodule Instantflow.WorkflowRuntime.Projections do
     )
   end
 
-  def options(actor, filters \\ %{}) do
+  def options(actor, filters \\ %{}), do: view_discovery(actor, filters).rows
+
+  def view_discovery(actor, filters \\ %{}) do
     Tenant.read(
       actor,
       fn scope ->
@@ -172,42 +177,91 @@ defmodule Instantflow.WorkflowRuntime.Projections do
             end)
           end)
 
-        ids =
-          Repo.all(
-            from t in Ticket,
-              as: :ticket,
-              join: version in Version,
-              on: version.id == t.workflow_version_id,
-              join: view in fragment("jsonb_array_elements(?->'views')", version.definition),
-              as: :declared_view,
-              on: true,
-              where: t.organization_id == ^scope.organization_id,
-              where: ^predicate,
-              distinct: true,
-              select: {t.workflow_version_id, fragment("?->>'key'", view.value)}
-          )
-
-        versions
-        |> Enum.flat_map(fn version ->
-          version.definition["views"]
-          |> Enum.filter(&({version.id, &1["key"]} in ids))
-          |> Enum.map(fn view ->
-            %{
-              id: "#{version.workflow_id}:#{view["key"]}",
-              workflow_id: version.workflow_id,
-              key: view["key"],
-              type: view["type"],
-              urgency?: not is_nil(view["urgency"]),
-              view_label: view["label"],
-              label: "#{version.definition["name"]} · #{view["label"]}"
+        query =
+          from t in Ticket,
+            as: :ticket,
+            join: version in Version,
+            on: version.id == t.workflow_version_id,
+            join:
+              view in fragment(
+                "jsonb_array_elements(?->'views') WITH ORDINALITY",
+                version.definition
+              ),
+            as: :declared_view,
+            on: true,
+            where: t.organization_id == ^scope.organization_id,
+            where: ^predicate,
+            distinct: [t.workflow_id, fragment("?->>'key'", view.value)],
+            order_by: [
+              t.workflow_id,
+              fragment("?->>'key'", view.value),
+              desc: version.number,
+              desc: version.id
+            ],
+            select: %{
+              workflow_id: t.workflow_id,
+              key: fragment("?->>'key'", view.value),
+              type: fragment("?->>'type'", view.value),
+              urgency?: fragment("?->'urgency' IS NOT NULL", view.value),
+              view_label: fragment("?->>'label'", view.value),
+              process_label: fragment("?->>'name'", version.definition),
+              position: fragment("?::int", view.ordinality),
+              version_number: version.number
             }
-          end)
-        end)
-        |> Enum.uniq_by(& &1.id)
+
+        query = option_filter(query, filters, :view)
+        result = option_page(query, filters)
+
+        %{
+          result
+          | rows:
+              Enum.map(result.rows, fn row ->
+                row
+                |> Map.put(:id, "#{row.workflow_id}:#{row.key}")
+                |> Map.put(:label, "#{row.process_label} · #{row.view_label}")
+              end)
+        }
       end,
-      []
+      empty_options()
     )
   end
+
+  defp empty_options, do: %{rows: [], total: 0, page: 1, pages: 1}
+
+  defp option_page(query, filters) do
+    total = Repo.aggregate(query, :count)
+    pages = max(1, ceil(total / @page_size))
+    page = min(positive_integer(filters["page"], 1), pages)
+
+    rows =
+      Repo.all(
+        from option in subquery(query),
+          order_by: [
+            asc: option.workflow_id,
+            desc: option.version_number,
+            asc: option.position,
+            asc: option.key
+          ],
+          limit: @page_size,
+          offset: ^((page - 1) * @page_size)
+      )
+
+    %{rows: rows, total: total, page: page, pages: pages}
+  end
+
+  defp option_filter(query, %{"query" => term}, kind) when is_binary(term) do
+    term = "%" <> String.slice(String.trim(term), 0, 100) <> "%"
+
+    case kind do
+      :participant ->
+        from [page: p] in query, where: ilike(fragment("?->>'label'", p.value), ^term)
+
+      :view ->
+        from [declared_view: v] in query, where: ilike(fragment("?->>'label'", v.value), ^term)
+    end
+  end
+
+  defp option_filter(query, _, _), do: query
 
   defp fetch_page(scope, filters, view_key) do
     versions = versions(filters)

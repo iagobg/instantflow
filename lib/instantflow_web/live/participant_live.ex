@@ -288,7 +288,7 @@ defmodule InstantflowWeb.ParticipantLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app flash={@flash} current_scope={@current_scope} navigation={@workspace_navigation}>
       <h1>{@page_title}</h1>
       <.link
         id="participant-processes"

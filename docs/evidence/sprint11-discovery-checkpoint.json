@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-23",
+  "base_revision": "7ef5634101fd88e367be013889c68869af6c0640",
+  "scope": "T02 bounded process/creation/participant/view/inbox discovery and touched T04 pure navigation, shared pagination, single-owner publication",
+  "lookup_regression": {
+    "before_max_fetched_rows": 60,
+    "after_max_fetched_rows": 1,
+    "fixture_visible": 55,
+    "fixture_hidden": 5,
+    "log": ".local/sprint11-discovery-before.log"
+  },
+  "bounds": {
+    "workspace_page": 25,
+    "creation_shortcuts": 25,
+    "navigation_labels": 25,
+    "participant_options": 25,
+    "view_options": 25,
+    "inbox_entries": 25,
+    "operational_default_candidates": 2
+  },
+  "authorization": [
+    "Current mapped roles selected in SQL before paging/counts",
+    "Historical participant/communications declarations keep staff discovery fence",
+    "Retired latest publications excluded from creation",
+    "Targeted create authority and actual grant revocation",
+    "Pinned participant/file release and exact mixed-version counts retained",
+    "Curated recipient/relationship boundary unchanged; prune versions without recipient message references"
+  ],
+  "ownership": [
+    "Layout templates receive navigation, no query reads",
+    "Authenticated lifecycle owns fresh small navigation projection",
+    "Version and draft publication share transaction-scoped catalog implementation",
+    "Publication invalidation after owning public transaction",
+    "Pure shared accessible pagination controls"
+  ],
+  "validation": {
+    "focused_authoring": {
+      "tests": 22,
+      "failures": 0,
+      "seed": 763394,
+      "log": ".local/sprint11-discovery-final-focused.log"
+    },
+    "focused_projection": {
+      "tests": 27,
+      "failures": 0,
+      "seed": 229312,
+      "log": ".local/sprint11-discovery-pages-focused.log"
+    },
+    "initial_full": {
+      "tests": 337,
+      "failures": 1,
+      "seed": 723536,
+      "log": ".local/sprint11-discovery-first-failure.log",
+      "finding": "Alphabetical view-key order changed incident default from declared triage to board"
+    },
+    "ordering_correction": {
+      "tests": 14,
+      "failures": 0,
+      "seed": 421586,
+      "log": ".local/sprint11-discovery-ordering.log",
+      "fix": "Preserve declared ordinality within newest admitted pin with deterministic outer ordering"
+    },
+    "precommit": {
+      "tests": 337,
+      "failures": 0,
+      "seed": 723536,
+      "log": ".local/sprint11-discovery-precommit.log"
+    },
+    "assets": {
+      "exit_code": 0,
+      "log": ".local/sprint11-discovery-assets.log"
+    },
+    "diff_check": {
+      "exit_code": 0
+    }
+  },
+  "sprint": {
+    "status": "In progress",
+    "complete": 1,
+    "total": 5
+  },
+  "remaining": [
+    "T02 final supporting-volume/browser/VM/planning/policy measurements",
+    "T03 remaining capability/local-binding audit",
+    "T04 remaining cohesive authoring panels",
+    "T05 full recreation and populated recovery"
+  ],
+  "serving_database_migrated": false,
+  "deployment_performed": false,
+  "source_sha256": {
+    "lib/instantflow/delivery/curated.ex": "6f24f50d12418f699362501af552249a3936f9d55b35c100b2b883744fba0596",
+    "lib/instantflow/operations.ex": "d1dec76b72e735742b722e75812d9196f65081a3cdd4e177a089329096537dc3",
+    "lib/instantflow/workflow_catalog.ex": "d4f377b7745a58bb311848510e42fd85598e26539a0a2c8a145976b88f848bd3",
+    "lib/instantflow/workflow_catalog/templates.ex": "1e329340ae53bb2caad74cf1e02b15f06ac85dfd318b754688c1949275007cb6",
+    "lib/instantflow/workflow_catalog/views.ex": "e22d971a5b072e97db8b40680631d2d0e4f68dca58102c1fa18f87f1f2ea93d2",
+    "lib/instantflow/workflow_catalog/workspaces.ex": "9926b8b1a1f6ed98be1b3d1454d2c1f22035b867bf01a36e98475d126349c1e4",
+    "lib/instantflow/workflow_runtime/projections.ex": "b9758057aaf5e6ee039c6ab2785e3dd6c0d2f900481e9d0acf6b64ef270e9d7f",
+    "lib/instantflow_web/components/layouts.ex": "eae78e56e0dba43813c33973633cfed5f4e2e687ee48141324c56cf6442cae8f",
+    "lib/instantflow_web/components/process_components.ex": "a87587b39210d48006f40b64bea6e647f6b09822f1a00f316a3e30dcdac9aae6",
+    "lib/instantflow_web/live/calculations_live.ex": "e7ee5624d5c03f1baf8bb9cff1b0118a24004e0927796c39878e473753bfb8aa",
+    "lib/instantflow_web/live/home_live.ex": "986a532cccf6c6437f58deb2fa1b312e788d29f383e3e6871043c7c96cd944f9",
+    "lib/instantflow_web/live/messages_live.ex": "d6b5e7e687c54d994156b9af06882f7b36f3b104610135ab8522776a4a363435",
+    "lib/instantflow_web/live/participant_live.ex": "edc0410d470188f9e082265ba4986f055ba3a23f517eb27a2b157703d0f46c5f",
+    "lib/instantflow_web/live/process_live.ex": "f692a477bfb8973fb5cda2b87b777b96d48000037a2c701d6fe606c54a0615bd",
+    "lib/instantflow_web/live/processes_live.ex": "23edaafcd71b9fc64414522f1a4875ebc1f5f602fff4eb73eaa92cdfe953985d",
+    "lib/instantflow_web/live/request_live.ex": "4055f46cea07bf23d50057b7c32c0bfd99b80a46726062187c1f9043f00a20f6",
+    "lib/instantflow_web/live/requests_live.ex": "69c26ea214c8a39e0592524722b2744f56cbec08b9b897ab609df504681d9c71",
+    "lib/instantflow_web/live/team_live.ex": "6a3c418abc4234aa234e066661fdbae6e128ee13854db72739b771a967a0b711",
+    "lib/instantflow_web/live/template_live.ex": "de01f100d9e5ff0ffc901cc434422932f58935e344e71c2374b0b0efebe82481",
+    "lib/instantflow_web/live/templates_live.ex": "90e3328bb3c3b93551bb04abd0045dfca5234af43b801e92a017434951ce6988",
+    "lib/instantflow_web/user_auth.ex": "71309415e137c573f48b453ac8cdca8731689c9a0f1ae1653bf4e16ff69ec93f",
+    "sprint_plan/sprint_11.md": "b4322be56379d0047b2f6dfb54a140e5eeca96d966dac76b5345a3573f540910",
+    "sprint_plan/sprint_index.md": "620399b39c08bb16b1d4dcf49bcac2d9f7724c3b82d14fa87f7a495e5f4f2f37",
+    "test/instantflow/workflow_catalog/participant_boundary_test.exs": "1885db22776624bc50f351a4eb72abf5b15249a11bbaadfc8ab0638d6fc4dba5",
+    "lib/instantflow_web/components/pagination_controls.ex": "2b037f2a360eeddb48e275639e288a1a6ff63889f21fe99f5ccf3dd1863a3a31",
+    "test/instantflow/workflow_catalog/workspace_discovery_test.exs": "b040b7081349d6887ff405bb8fc7a519700f03c43e38aed5d1d5e636896771c9",
+    "test/instantflow_web/live/discovery_pagination_live_test.exs": "e64a357d6922c91afdae277bbe2260d523b56e82403e93e24649355dcdd8e62b",
+    "docs/sprint11-discovery-checkpoint.md": "7f8e7c0a0d01862cc12503a35dcae7eca05b3a84689624256459065ec6dac3d6"
+  },
+  "log_sha256": {
+    ".local/sprint11-discovery-before.log": "59156ad967910933e135dee8a3a1ef7eb3b45875a9cfe52f8a042f11ebb247f6",
+    ".local/sprint11-discovery-final-focused.log": "511d3c4b7ca0f4d475b66abedbd773f8eccd450246acf86585665fffd9990da3",
+    ".local/sprint11-discovery-pages-focused.log": "38169ca46ad9c59068c0c32331d5fe2de6dda9392247a7a733039ffbc890cf55",
+    ".local/sprint11-discovery-first-failure.log": "1fdfd50a13179b48084d571e4274604dffcefc209b57ab8d78431c012a60ef7c",
+    ".local/sprint11-discovery-ordering.log": "1251e62d322b674c349f9afce7164a652fc5362f732ee3554a7d04a0654f4e90",
+    ".local/sprint11-discovery-precommit.log": "88af05af755bbb86cdc0c0de3e655204c46a4ca626ecc5fa6df244dfe79b902c",
+    ".local/sprint11-discovery-assets.log": "dfe073a7ad1faf0d7b010f544df762d7cf08dd0f6ec5fb86e365b35ad2842bed"
+  }
+}

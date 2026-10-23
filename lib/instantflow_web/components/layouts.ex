@@ -3,19 +3,11 @@ defmodule InstantflowWeb.Layouts do
   embed_templates "layouts/*"
   attr :flash, :map, required: true
   attr :current_scope, :any, default: nil
+  attr :navigation, :list, default: []
   attr :unsaved, :boolean, default: false
   slot :inner_block, required: true
 
   def app(assigns) do
-    assigns =
-      assign(
-        assigns,
-        :navigation,
-        if(assigns.current_scope,
-          do: Instantflow.WorkflowCatalog.Workspaces.navigation(assigns.current_scope)
-        )
-      )
-
     ~H"""
     <a href="#main-content" class="skip-link">Pular para o conteúdo</a>
     <div class={if @current_scope, do: "app-shell", else: "auth-shell"}>
