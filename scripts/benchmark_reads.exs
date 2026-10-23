@@ -1,11 +1,12 @@
 defmodule Instantflow.ReadBenchmark do
   @moduledoc false
+  require Ecto.Query
   alias Instantflow.{Repo, OperatorRepo, Identity}
   alias Instantflow.Identity.{Organization, Department, Membership, User}
   alias Instantflow.WorkflowCatalog.{Workflow, Version, Definition, Views, Workspaces}
   alias Instantflow.WorkflowRuntime.{Ticket, Section, Projections}
 
-  def run do
+  def run(adapter \\ nil) do
     for key <- [:delivery_worker, :calculation_worker, :calculation_execution],
         do: Application.put_env(:instantflow, key, false)
 
@@ -19,7 +20,7 @@ defmodule Instantflow.ReadBenchmark do
       width: number("READ_WIDTH", 1),
       iterations: number("READ_ITERATIONS", 20),
       shape: System.get_env("READ_SHAPE", "equal"),
-      surface: System.get_env("READ_SURFACE", "view")
+      surface: System.get_env("READ_SURFACE", if(adapter, do: adapter.surface(), else: "view"))
     }
 
     unless dimensions.iterations in 1..1000 and dimensions.versions in [1, 10, 100] and
@@ -27,7 +28,8 @@ defmodule Instantflow.ReadBenchmark do
              dimensions.used_versions in 1..dimensions.versions and
              dimensions.hidden in [0, 9, 99] and dimensions.width in [1, 10, 50] and
              dimensions.shape in ["equal", "uneven"] and
-             dimensions.surface in ["view", "options", "search", "catalog"],
+             ((is_nil(adapter) and dimensions.surface in ["view", "options", "search", "catalog"]) or
+                (not is_nil(adapter) and dimensions.surface == adapter.surface())),
            do: raise("unsupported benchmark dimensions")
 
     config = OperatorRepo.config() |> Keyword.take([:username, :password, :hostname, :port])
@@ -72,7 +74,14 @@ defmodule Instantflow.ReadBenchmark do
       })
       |> Ecto.Changeset.get_change(:password_hash)
 
-    clients = Enum.flat_map(1..10, &populate(&1, hash, dimensions))
+    clients =
+      Enum.flat_map(1..10, fn index ->
+        if adapter,
+          do: adapter.populate(index, hash, dimensions),
+          else: populate(index, hash, dimensions)
+      end)
+
+    if adapter, do: adapter.prepare()
 
     row_counts = %{
       tickets: OperatorRepo.aggregate(Ticket, :count),
@@ -94,9 +103,10 @@ defmodule Instantflow.ReadBenchmark do
         nil
       )
 
-    cold = rounds(clients, runtime, dimensions, 1)
-    _warmup = rounds(clients, runtime, dimensions, 2)
-    warm = rounds(clients, runtime, dimensions, dimensions.iterations)
+    cold = rounds(clients, runtime, dimensions, 1, adapter)
+    _warmup = rounds(clients, runtime, dimensions, 2, adapter)
+    warm = rounds(clients, runtime, dimensions, dimensions.iterations, adapter)
+    diagnostics = diagnostics(hd(clients), dimensions, adapter)
 
     report = %{
       database: database,
@@ -111,6 +121,7 @@ defmodule Instantflow.ReadBenchmark do
         pool_size: 10
       },
       cold: summarize(cold),
+      diagnostics: diagnostics,
       warm: summarize(warm),
       limits: %{
         backend_p95_ms: 500,
@@ -118,7 +129,7 @@ defmodule Instantflow.ReadBenchmark do
         fetched_payload_bytes: 4_194_304
       },
       limitations:
-        "Backend supporting-volume checkpoint, not full T02 acceptance. Fresh application per invocation; PostgreSQL/OS caches are not flushed and fixture insertion warms them. Cold denotes each actor's first projection after fixture setup. Memory is observed caller-process heap at query boundaries, excluding pool processes/off-heap allocations. Fetched term bytes use Erlang external_size of returned row terms, not wire bytes. SQL bytes include the whole parameterized statement. Browser, complete policy-compilation time, full BEAM peak and actual wire bytes remain unmeasured. No serving database writes. Synthetic bulk fixture setup; reads use the actual runtime login and tenant authorization gates."
+        "Synthetic bulk fixtures; actual runtime login, tenant gates and pool 10. Fresh application per case; fixture insertion warms PostgreSQL/OS caches. Cold is first actor read. Full VM sampled every 1ms includes pools, tasks and off-heap; phase growth is reported both whole and divided by 50 concurrent workers (an aggregate, not a per-worker maximum). Individual caller heap sampled at query boundaries. JSON encoding of fetched rows measures decoded data volume, not PostgreSQL protocol bytes. SQL plans and pure policy compilation are separate post-load probes to avoid timing interference. Browser measured separately. No serving database writes."
     }
 
     path = System.get_env("READ_REPORT", ".local/read-benchmark.json")
@@ -292,21 +303,96 @@ defmodule Instantflow.ReadBenchmark do
     ])
   end
 
-  defp rounds(clients, runtime, d, n) do
-    clients
-    |> Task.async_stream(
-      fn {actor, workflow, expected} ->
-        Repo.put_dynamic_repo(runtime)
-        Enum.map(1..n, fn _ -> measure(actor, workflow, expected, d.surface) end)
-      end,
-      max_concurrency: 50,
-      timeout: :infinity,
-      ordered: false
-    )
-    |> Enum.flat_map(fn {:ok, samples} -> samples end)
+  defp rounds(clients, runtime, d, n, adapter) do
+    :erlang.garbage_collect()
+    baseline = :erlang.memory(:total)
+    parent = self()
+    sampler = spawn_link(fn -> sample_memory(parent, baseline) end)
+
+    samples =
+      clients
+      |> Task.async_stream(
+        fn {actor, workflow, expected} ->
+          Repo.put_dynamic_repo(runtime)
+          Enum.map(1..n, fn _ -> measure(actor, workflow, expected, d.surface, adapter) end)
+        end,
+        max_concurrency: 50,
+        timeout: :infinity,
+        ordered: false
+      )
+      |> Enum.flat_map(fn {:ok, samples} -> samples end)
+
+    send(sampler, :finish)
+
+    receive do
+      {:vm_peak, peak} ->
+        %{
+          samples: samples,
+          vm_baseline_bytes: baseline,
+          vm_peak_bytes: peak,
+          vm_growth_bytes: max(peak - baseline, 0),
+          vm_growth_per_concurrent_worker_bytes: div(max(peak - baseline, 0), 50)
+        }
+    end
   end
 
-  defp measure(actor, workflow, expected, surface) do
+  defp sample_memory(parent, peak) do
+    current = max(peak, :erlang.memory(:total))
+
+    receive do
+      :finish -> send(parent, {:vm_peak, current})
+    after
+      1 -> sample_memory(parent, current)
+    end
+  end
+
+  defp diagnostics({actor, workflow, expected}, d, adapter) do
+    Process.put(:read_plans, %{})
+    _ = measure(actor, workflow, expected, d.surface, adapter)
+    captured = Process.delete(:read_plans)
+
+    Instantflow.Tenant.read(actor, fn scope ->
+      versions =
+        Repo.all(
+          Ecto.Query.from(v in Version,
+            where:
+              v.workflow_id == ^workflow and
+                v.id in subquery(Ecto.Query.from(t in Ticket, select: t.workflow_version_id))
+          )
+        )
+
+      timings =
+        for _ <- 1..100 do
+          {us, _} =
+            :timer.tc(fn ->
+              Enum.map(versions, &Instantflow.WorkflowRuntime.PolicyQuery.discover(scope, &1))
+            end)
+
+          us / 1000
+        end
+
+      plans =
+        Enum.map(captured, fn {{source, sql}, params} ->
+          [[plan]] = Repo.query!("EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) " <> sql, params).rows
+
+          %{
+            source: source,
+            sql_bytes: byte_size(sql),
+            planning_ms: hd(plan)["Planning Time"],
+            execution_ms: hd(plan)["Execution Time"],
+            plan: plan
+          }
+        end)
+
+      %{
+        policy_versions: length(versions),
+        policy_compile_p95_ms: Enum.at(Enum.sort(timings), 94),
+        plans: plans
+      }
+    end)
+  end
+
+  defp measure(actor, workflow, expected, surface, adapter) do
     :erlang.garbage_collect()
     {:memory, before_memory} = Process.info(self(), :memory)
 
@@ -316,6 +402,7 @@ defmodule Instantflow.ReadBenchmark do
       version_term_bytes: 0,
       fetched_rows: 0,
       fetched_term_bytes: 0,
+      fetched_json_bytes: 0,
       max_sql_bytes: 0,
       query_time_ms: 0.0,
       observed_peak_memory_bytes: before_memory
@@ -323,11 +410,15 @@ defmodule Instantflow.ReadBenchmark do
 
     {us, result} =
       :timer.tc(fn ->
-        case surface do
-          "view" -> Views.search(actor, workflow, "requests")
-          "search" -> Projections.search(actor, %{"workflow_id" => workflow})
-          "options" -> Views.options(actor)
-          "catalog" -> Workspaces.installed(actor)
+        if adapter do
+          adapter.read(actor, workflow, expected)
+        else
+          case surface do
+            "view" -> Views.search(actor, workflow, "requests")
+            "search" -> Projections.search(actor, %{"workflow_id" => workflow})
+            "options" -> Views.options(actor)
+            "catalog" -> Workspaces.installed(actor)
+          end
         end
       end)
 
@@ -337,9 +428,13 @@ defmodule Instantflow.ReadBenchmark do
     metrics = Process.delete(:read_metrics)
 
     count =
-      if surface == "view",
-        do: length(result.rows),
-        else: if(surface == "search", do: length(result.tickets), else: length(result))
+      if adapter do
+        result.returned_rows
+      else
+        if surface == "view",
+          do: length(result.rows),
+          else: if(surface == "search", do: length(result.tickets), else: length(result))
+      end
 
     Map.merge(metrics, %{
       organization_id: actor.organization_id,
@@ -359,6 +454,16 @@ defmodule Instantflow.ReadBenchmark do
         end
 
       bytes = :erlang.external_size(rows)
+
+      if plans = Process.get(:read_plans) do
+        if metadata[:source] && String.starts_with?(metadata.query, "SELECT") do
+          Process.put(
+            :read_plans,
+            Map.put(plans, {metadata.source, metadata.query}, metadata.params)
+          )
+        end
+      end
+
       {:memory, memory} = Process.info(self(), :memory)
       version? = metadata[:source] == "workflow_versions"
 
@@ -369,6 +474,7 @@ defmodule Instantflow.ReadBenchmark do
           version_term_bytes: metrics.version_term_bytes + if(version?, do: bytes, else: 0),
           fetched_rows: metrics.fetched_rows + length(rows),
           fetched_term_bytes: metrics.fetched_term_bytes + bytes,
+          fetched_json_bytes: metrics.fetched_json_bytes + byte_size(Jason.encode!(rows)),
           max_sql_bytes: max(metrics.max_sql_bytes, byte_size(metadata.query)),
           query_time_ms:
             metrics.query_time_ms +
@@ -378,13 +484,16 @@ defmodule Instantflow.ReadBenchmark do
     end
   end
 
-  defp summarize(samples) do
+  defp summarize(phase) do
+    samples = phase.samples
+
     per_tenant =
       samples
       |> Enum.group_by(& &1.organization_id)
       |> Map.new(fn {id, rows} -> {to_string(id), stats(rows)} end)
 
     %{
+      vm: Map.drop(phase, [:samples]),
       requests: length(samples),
       overall: stats(samples),
       per_tenant: per_tenant,
@@ -404,6 +513,7 @@ defmodule Instantflow.ReadBenchmark do
       max_sql_bytes: max_metric(rows, :max_sql_bytes),
       max_fetched_rows: max_metric(rows, :fetched_rows),
       max_fetched_term_bytes: max_metric(rows, :fetched_term_bytes),
+      max_fetched_json_bytes: max_metric(rows, :fetched_json_bytes),
       max_observed_memory_growth_bytes: max_metric(rows, :observed_memory_growth_bytes),
       max_returned_rows: max_metric(rows, :returned_rows)
     }
@@ -421,4 +531,4 @@ defmodule Instantflow.ReadBenchmark do
   defp number(key, default), do: System.get_env(key, to_string(default)) |> String.to_integer()
 end
 
-Instantflow.ReadBenchmark.run()
+unless System.get_env("READ_BENCHMARK_LIBRARY") == "true", do: Instantflow.ReadBenchmark.run()

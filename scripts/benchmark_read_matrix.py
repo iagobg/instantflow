@@ -19,7 +19,8 @@ profiles=[
  ('hidden-9',{'READ_HIDDEN':'9'}),('hidden-99',{'READ_HIDDEN':'99'}),
  ('width-10',{'READ_WIDTH':'10'}),('width-50',{'READ_WIDTH':'50'}),
  ('uneven',{'READ_SHAPE':'uneven'}),
- ('uneven-mixed-100',{'READ_SHAPE':'uneven','READ_VERSIONS':'100','READ_USED_VERSIONS':'100'})
+ ('uneven-mixed-100',{'READ_SHAPE':'uneven','READ_VERSIONS':'100','READ_USED_VERSIONS':'100'}),
+ ('combined',{'READ_SHAPE':'uneven','READ_VERSIONS':'100','READ_USED_VERSIONS':'100','READ_PROCESSES':'100','READ_HIDDEN':'99','READ_WIDTH':'50'})
 ]
 for name,settings in profiles:
  path='.local/sprint11-read-'+name+'-'+phase

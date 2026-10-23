@@ -48,5 +48,5 @@ defmodule InstantflowWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
-  plug InstantflowWeb.Router
+  plug InstantflowWeb.RouterConnection
 end

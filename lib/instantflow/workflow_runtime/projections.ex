@@ -267,10 +267,16 @@ defmodule Instantflow.WorkflowRuntime.Projections do
     versions = versions(filters)
     by_id = Map.new(versions, &{&1.id, &1})
 
+    # Group only identical declarations/bindings within this fresh scoped read.
+    # Stage descriptors affect pinned display/count labels, not view admission.
+    # Keep every actual version for rendering; no permission result is cached.
     predicate =
-      Enum.reduce(versions, dynamic(false), fn version, acc ->
+      versions
+      |> Enum.group_by(&{Map.delete(&1.definition, "stages"), &1.bindings})
+      |> Enum.reduce(dynamic(false), fn {_, [version | _] = equivalent}, acc ->
         rule = view_policy(scope, version, view_key)
-        dynamic([ticket: t], ^acc or (t.workflow_version_id == ^version.id and ^rule))
+        ids = Enum.map(equivalent, & &1.id)
+        dynamic([ticket: t], ^acc or (t.workflow_version_id in ^ids and ^rule))
       end)
 
     base =
@@ -386,17 +392,21 @@ defmodule Instantflow.WorkflowRuntime.Projections do
            ))
 
     if visible? && generic_surface?(scope, version) do
+      # A section permission applies to every selected field in that section.
+      # Compile it once, keeping builtin-column visibility semantics unchanged.
       columns =
-        Enum.reduce(view["columns"], dynamic(false), fn
-          builtin, _acc when builtin in ~w(stage assigned_department) ->
-            dynamic(true)
-
-          ref, acc ->
-            [section_key, _] = String.split(ref, ".")
+        if Enum.any?(view["columns"], &(&1 in ~w(stage assigned_department))) do
+          dynamic(true)
+        else
+          view["columns"]
+          |> Enum.map(&(String.split(&1, ".") |> hd()))
+          |> Enum.uniq()
+          |> Enum.reduce(dynamic(false), fn section_key, acc ->
             section = Enum.find(version.definition["sections"], &(&1["key"] == section_key))
             rule = PolicyQuery.section(scope, version, section)
             dynamic(^acc or ^rule)
-        end)
+          end)
+        end
 
       discover = PolicyQuery.discover(scope, version)
       dynamic(^discover and ^columns)
@@ -430,7 +440,42 @@ defmodule Instantflow.WorkflowRuntime.Projections do
         do: where(query, [v], v.workflow_id == ^positive_integer(filters["workflow_id"], 0)),
         else: query
 
-    Repo.all(query)
+    # Fetch repeated immutable bodies once, with each pin's own stage descriptors.
+    # Grouping is local to this RLS-scoped query, never a cross-request cache.
+    query
+    |> exclude(:order_by)
+    |> group_by([v], [
+      v.organization_id,
+      v.workflow_id,
+      v.bindings,
+      fragment("? - 'stages'", v.definition)
+    ])
+    |> select([v], {
+      v.organization_id,
+      v.workflow_id,
+      v.bindings,
+      fragment("? - 'stages'", v.definition),
+      fragment(
+        "jsonb_agg(jsonb_build_object('id', ?, 'number', ?, 'stages', ?->'stages'))",
+        v.id,
+        v.number,
+        v.definition
+      )
+    })
+    |> Repo.all()
+    |> Enum.flat_map(fn {org, workflow, bindings, body, pins} ->
+      Enum.map(pins, fn pin ->
+        %Version{
+          id: pin["id"],
+          organization_id: org,
+          workflow_id: workflow,
+          number: pin["number"],
+          bindings: bindings,
+          definition: Map.put(body, "stages", pin["stages"])
+        }
+      end)
+    end)
+    |> Enum.sort_by(&{&1.number, &1.id}, :desc)
   end
 
   defp project(scope, result, key) do
@@ -508,10 +553,16 @@ defmodule Instantflow.WorkflowRuntime.Projections do
       )
       |> Map.new(fn {id, section, name} -> {{id, section}, name} end)
 
+    fields_by_version =
+      Map.new(page_versions, fn {id, v} ->
+        {id, Instantflow.WorkflowCatalog.Definition.fields(v.definition)}
+      end)
+
     rows =
       Enum.map(result.tickets, fn ticket ->
         version = Map.fetch!(result.versions, ticket.workflow_version_id)
         view = Enum.find(version.definition["views"], &(&1["key"] == key))
+        fields = Map.fetch!(fields_by_version, version.id)
 
         cells =
           Enum.flat_map(view["columns"], fn
@@ -530,7 +581,7 @@ defmodule Instantflow.WorkflowRuntime.Projections do
             ref ->
               [section_key, field_key] = String.split(ref, ".")
               values = Map.get(sections, {ticket.id, section_key})
-              field = Instantflow.WorkflowCatalog.Definition.fields(version.definition)[ref]
+              field = fields[ref]
 
               if values,
                 do: [%{key: ref, label: field["label"], value: values[field_key]}],
@@ -548,16 +599,13 @@ defmodule Instantflow.WorkflowRuntime.Projections do
             projected_value(sections, ticket.id, view["urgency"] && view["urgency"]["field"]),
           date_kind:
             if(view["calendar_field"],
-              do:
-                Instantflow.WorkflowCatalog.Definition.fields(version.definition)[
-                  view["calendar_field"]
-                ]["type"]
+              do: fields[view["calendar_field"]]["type"]
             ),
           date:
             projected_value(sections, ticket.id, view["calendar_field"]) ||
               Enum.find_value(cells, fn cell ->
                 field =
-                  Instantflow.WorkflowCatalog.Definition.fields(version.definition)[cell.key]
+                  fields[cell.key]
 
                 if field && field["type"] == "date", do: cell.value
               end),

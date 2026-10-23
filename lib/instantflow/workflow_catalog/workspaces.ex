@@ -45,7 +45,7 @@ defmodule Instantflow.WorkflowCatalog.Workspaces do
           where: old.workflow_id == parent_as(:workspace).workflow_id,
           where:
             fragment(
-              "jsonb_exists(?, 'communications') OR EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(?->'interface'->'pages', '[]'::jsonb)) p WHERE jsonb_exists(p, 'participant'))",
+              "jsonb_exists(?, 'communications') OR jsonb_path_exists(?, '$.interface.pages[*].participant')",
               old.definition,
               old.definition
             ),

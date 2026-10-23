@@ -51,3 +51,9 @@ operational definitions require an explicit closing transition and contract.
 Guardian scopes and missing-contract runtime fallbacks cannot be published.
 Historical source data is preserved without re-enabling old mutation APIs; see
 the [retirement register](sprint11-legacy-disposition-inventory.md).
+
+## Current shared contracts — Sprint 11
+
+The [D-32 register](sprint11-legacy-disposition-inventory.md) and [contract acceptance](sprint11-contract-ownership-checkpoint.md) supersede the historical reserved-reference/guardian paragraphs above. Ordinary directory references use explicit verified participant/subject contracts; participant-form directory references and unsupported message sources remain unavailable. Communications requires participants; incomplete draft dependencies show indexed diagnostics and block publication. New definitions cannot use retired guardian scopes or missing operational/document contracts.
+
+A missing finance account fails closed with an actionable setup error. Correct its local mapping and publish a new version; existing records retain their original immutable account mapping. There is no supported account archive/delete feature. Generated lists show at most 80 characters for long text and link to the complete authorized record. Preview length never changes stored fields or immutable messages.

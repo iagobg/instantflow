@@ -148,11 +148,7 @@ defmodule InstantflowWeb.RequestsLive do
   defp cell(row, key),
     do: Enum.find_value(row.cells, "—", fn c -> if c.key == key, do: display(c.value) end)
 
-  defp display(nil), do: "—"
-  defp display(true), do: "Sim"
-  defp display(false), do: "Não"
-  defp display(list) when is_list(list), do: Enum.join(list, ", ")
-  defp display(value), do: to_string(value)
+  defp display(value), do: InstantflowWeb.ProjectionDisplay.preview(value)
 
   def render(assigns) do
     ~H"""
@@ -275,6 +271,9 @@ defmodule InstantflowWeb.RequestsLive do
         </.form>
         <p id="configured-view-count">
           {@view_total} resultado(s) autorizados · até 25 por página, conforme os filtros acima.
+        </p>
+        <p id="configured-preview-note" class="small-text">
+          Textos longos mostram até 80 caracteres. Abra o registro para ver o conteúdo completo.
         </p>
         <div :if={@board?} class="table-scroll">
           <div

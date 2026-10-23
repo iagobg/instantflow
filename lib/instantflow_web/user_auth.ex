@@ -32,6 +32,20 @@ defmodule InstantflowWeb.UserAuth do
   end
 
   def on_mount(:authenticated, params, session, socket) do
+    Instantflow.Tenant.with_connection(fn -> mount_authenticated(params, session, socket) end)
+  end
+
+  @doc "Validate the current session and run a composite parameter read in one connection lease."
+  def with_validated_scope(socket, fun) do
+    Instantflow.Tenant.with_connection(fn ->
+      case socket.private.validate_scope.(socket) do
+        {:cont, fresh} -> fun.(fresh)
+        {:halt, stopped} -> {:noreply, stopped}
+      end
+    end)
+  end
+
+  defp mount_authenticated(params, session, socket) do
     user = Identity.user_for_token(session["user_token"])
     slug = params["organization_slug"]
 
@@ -52,33 +66,37 @@ defmodule InstantflowWeb.UserAuth do
         end
 
         validate = fn socket ->
-          case Identity.scope_for_token(session["user_token"], scope.organization_id) do
-            nil ->
-              {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
+          Instantflow.Tenant.with_connection(fn ->
+            case Identity.scope_for_token(session["user_token"], scope.organization_id) do
+              nil ->
+                {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
 
-            fresh ->
-              if(
-                socket.view in [
-                  InstantflowWeb.TemplateLive,
-                  InstantflowWeb.TemplatesLive
-                ] and
-                  fresh.role != "admin",
-                do:
-                  {:halt, Phoenix.LiveView.redirect(socket, to: "/o/#{fresh.organization.slug}")},
-                else:
-                  {:cont,
-                   socket
-                   |> Phoenix.Component.assign(:current_scope, fresh)
-                   |> Phoenix.Component.assign(
-                     :workspace_navigation,
-                     Instantflow.WorkflowCatalog.Workspaces.navigation(fresh)
-                   )}
-              )
-          end
+              fresh ->
+                if(
+                  socket.view in [
+                    InstantflowWeb.TemplateLive,
+                    InstantflowWeb.TemplatesLive
+                  ] and
+                    fresh.role != "admin",
+                  do:
+                    {:halt,
+                     Phoenix.LiveView.redirect(socket, to: "/o/#{fresh.organization.slug}")},
+                  else:
+                    {:cont,
+                     socket
+                     |> Phoenix.Component.assign(:current_scope, fresh)
+                     |> Phoenix.Component.assign(
+                       :workspace_navigation,
+                       Instantflow.WorkflowCatalog.Workspaces.navigation(fresh)
+                     )}
+                )
+            end
+          end)
         end
 
         socket =
           socket
+          |> Phoenix.LiveView.put_private(:validate_scope, validate)
           |> Phoenix.Component.assign(:current_scope, scope)
           |> Phoenix.Component.assign(
             :workspace_navigation,
@@ -88,9 +106,18 @@ defmodule InstantflowWeb.UserAuth do
             validate.(socket)
           end)
           |> Phoenix.LiveView.attach_hook(:tenant_params, :handle_params, fn params, _, socket ->
-            if params["organization_slug"] == slug,
-              do: validate.(socket),
-              else: {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
+            cond do
+              params["organization_slug"] != slug ->
+                {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
+
+              socket.view == InstantflowWeb.ProcessLive ->
+                # ProcessLive validates inside the same connection lease as its
+                # composite projection, avoiding another pool wait between them.
+                {:cont, socket}
+
+              true ->
+                validate.(socket)
+            end
           end)
           |> Phoenix.LiveView.attach_hook(:tenant_lifecycle, :handle_info, fn
             :workspaces_changed, socket ->

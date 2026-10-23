@@ -168,7 +168,12 @@ defmodule Instantflow.GuardianMigrationTest do
       assert snapshot(all_tables) == migrated
 
       assert_raise RuntimeError, ~r/forward-only/, fn ->
-        Ecto.Migrator.run(OperatorRepo, migrations, :down, step: 1, log: false)
+        Ecto.Migrator.down(
+          OperatorRepo,
+          20_261_022_175_214,
+          Instantflow.Repo.Migrations.RetireSyntheticLegacyExecution,
+          log: false
+        )
       end
     after
       Repo.put_dynamic_repo(previous_runtime)

@@ -229,3 +229,5 @@ Contract/ownership acceptance — 2026-10-23: T03 and T04 are complete. The
 32 capability combinations, publication diagnostics, pinned account writes and
 unavailable-binding repair, pure authoring panels and the prior security/form
 matrices. Full precommit passes 342 tests. Progress: 3/5; T02 and T05 remain open.
+
+Scale/recovery implementation checkpoint — 2026-10-23: the [checkpoint](../docs/sprint11-scale-recovery-checkpoint.md) records compact pinned bodies, fresh composite web reads, exact twelve-process coexistence and all-table supported backup restoration. Full precommit passes 345 tests; runner/deployment/assets pass. Failed load/browser phases remain retained. T02 final browser/participant/message evidence and T05 consolidated acceptance remain open; progress stays 3/5.

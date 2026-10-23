@@ -136,7 +136,8 @@ defmodule Instantflow.WorkflowRuntime.ProjectionsTest do
     link(f.admin, f.visitor, latest)
     mixed = measured(fn -> Views.search(f.visitor, f.version.workflow_id, "participant_work") end)
     assert mixed.result.total == 2
-    assert catalog_rows(mixed) == 2
+    assert catalog_rows(mixed) == 1
+    # One shared body still expands into both distinct immutable stage pins.
     assert Enum.map(mixed.result.rows, & &1.id) == [latest, id]
     assert hd(mixed.result.rows).stage_label == "Unused stage until a record pins it"
     assert List.last(mixed.result.rows).stage_label != hd(mixed.result.rows).stage_label

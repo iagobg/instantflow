@@ -93,7 +93,7 @@ defmodule InstantflowWeb.ProcessComponents do
         phx-click="record-create"
         phx-disable-with="Iniciando…"
       >Iniciar registro</button>
-      <p :if={@record_view_options == []} id="process-record-views-empty">
+      <p :if={!@records_loading? && @record_view_options == []} id="process-record-views-empty">
         Este processo ainda não tem uma visualização de registros configurada.
       </p>
       <.form
@@ -143,7 +143,15 @@ defmodule InstantflowWeb.ProcessComponents do
         info={@record_views}
         label="visualização(ões)"
       />
-      <p id="process-record-count">{@record_total} registro(s) disponível(is)</p>
+      <p id="process-record-preview-note" class="small-text">
+        Textos longos mostram até 80 caracteres. Abra o registro para ver o conteúdo completo.
+      </p>
+      <p :if={@records_loading?} id="process-record-loading" role="status">
+        Carregando registros autorizados…
+      </p>
+      <p :if={!@records_loading?} id="process-record-count">
+        {@record_total} registro(s) disponível(is)
+      </p>
       <p id="process-urgency-status" role="status" aria-live="polite">
         {@record_urgent} registro(s) com maior urgência em aberto.
       </p>
@@ -681,14 +689,13 @@ defmodule InstantflowWeb.ProcessComponents do
   end
 
   defp cell(row, key) do
-    case Enum.find(row.cells, &(&1.key == key)) do
-      nil -> "—"
-      %{value: nil} -> "—"
-      %{value: value} when is_list(value) -> Enum.join(value, ", ")
-      %{value: true} -> "Sim"
-      %{value: false} -> "Não"
-      %{value: value} -> to_string(value)
-    end
+    value =
+      case Enum.find(row.cells, &(&1.key == key)) do
+        nil -> nil
+        cell -> cell.value
+      end
+
+    InstantflowWeb.ProjectionDisplay.preview(value)
   end
 
   defp money(cents), do: Operations.money(cents)

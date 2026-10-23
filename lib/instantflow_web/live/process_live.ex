@@ -48,7 +48,7 @@ defmodule InstantflowWeb.ProcessLive do
        record_form: to_form(%{}, as: :record_filter),
        workflow_id: nil,
        labels: Instantflow.WorkflowCatalog.Workspaces.labels(%{}),
-       date: Operations.today(socket.assigns.current_scope),
+       date: nil,
        visit_id: nil,
        visit: nil,
        operational_archived?: false,
@@ -63,23 +63,20 @@ defmodule InstantflowWeb.ProcessLive do
            as: :product
          ),
        resource_form: to_form(%{}, as: :resource),
-       open_form:
-         to_form(
-           %{"business_date" => Date.to_iso8601(Operations.today(socket.assigns.current_scope))},
-           as: :visit
-         ),
+       open_form: to_form(%{}, as: :visit),
        item_form: to_form(%{"quantity" => "1"}, as: :item),
        batch_form: to_form(%{}, as: :batch),
        checkout_form: to_form(%{}, as: :checkout),
-       day_form:
-         to_form(%{"date" => Date.to_iso8601(Operations.today(socket.assigns.current_scope))},
-           as: :day
-         )
+       day_form: to_form(%{}, as: :day)
      )
      |> stream(:cart_items, [])}
   end
 
   def handle_params(params, _, socket) do
+    InstantflowWeb.UserAuth.with_validated_scope(socket, &load_params(params, &1))
+  end
+
+  defp load_params(params, socket) do
     id = number(params["id"])
 
     workflow_id =
@@ -132,7 +129,7 @@ defmodule InstantflowWeb.ProcessLive do
              |> then(fn state ->
                stream(state, :cart_items, Map.values(state.assigns.cart), reset: true)
              end)
-             |> load()}
+             |> load(version)}
 
           true ->
             {:noreply,
@@ -525,13 +522,17 @@ defmodule InstantflowWeb.ProcessLive do
   end
 
   defp load(socket) do
-    version =
+    load(
+      socket,
       page_version(
         socket.assigns.current_scope,
         socket.assigns.workflow_id,
         socket.assigns.visit_id
       )
+    )
+  end
 
+  defp load(socket, version) do
     if version == nil do
       push_navigate(socket,
         to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/processos"
@@ -540,6 +541,20 @@ defmodule InstantflowWeb.ProcessLive do
       page =
         Enum.find(Workspaces.pages(version.definition), &(&1["key"] == socket.assigns.page_key)) ||
           hd(Workspaces.pages(version.definition))
+
+      socket =
+        if is_nil(socket.assigns.date) and
+             (socket.assigns.visit_id || Workspaces.operational?(version.definition)) do
+          today = Operations.today(socket.assigns.current_scope)
+
+          assign(socket,
+            date: today,
+            open_form: to_form(%{"business_date" => Date.to_iso8601(today)}, as: :visit),
+            day_form: to_form(%{"date" => Date.to_iso8601(today)}, as: :day)
+          )
+        else
+          socket
+        end
 
       data =
         if socket.assigns.visit_id || Workspaces.operational?(version.definition),
@@ -699,8 +714,10 @@ defmodule InstantflowWeb.ProcessLive do
   end
 
   defp load_records(socket, version) do
+    ready? = connected?(socket)
+
     discovery =
-      if "records" in socket.assigns.blocks,
+      if ready? and "records" in socket.assigns.blocks,
         do:
           Views.discovery(socket.assigns.current_scope, %{
             "workflow_id" => version.workflow_id,
@@ -713,7 +730,7 @@ defmodule InstantflowWeb.ProcessLive do
     selected = Enum.find(views, &(&1.key == socket.assigns.record_view)) || List.first(views)
 
     result =
-      if selected && "records" in socket.assigns.blocks do
+      if (ready? and selected) && "records" in socket.assigns.blocks do
         Views.search(
           socket.assigns.current_scope,
           version.workflow_id,
@@ -736,6 +753,7 @@ defmodule InstantflowWeb.ProcessLive do
 
     socket
     |> assign(
+      records_loading?: not ready? and "records" in socket.assigns.blocks,
       record_columns: result.columns,
       record_total: result.total,
       record_filter_options: result.filters,
@@ -748,7 +766,7 @@ defmodule InstantflowWeb.ProcessLive do
       record_stage_options: Enum.map(result.stages, &{&1.label, &1.id}),
       record_view_type: if(selected, do: selected.type, else: "table"),
       can_create_record:
-        !Workspaces.operational?(version.definition) &&
+        ready? && !Workspaces.operational?(version.definition) &&
           WorkflowCatalog.creatable?(socket.assigns.current_scope, version.workflow_id)
     )
     |> stream(:process_records, result.rows, reset: true)

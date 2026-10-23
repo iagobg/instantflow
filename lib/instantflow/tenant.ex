@@ -4,6 +4,9 @@ defmodule Instantflow.Tenant do
   alias Instantflow.Repo
   alias Instantflow.Identity.{Membership, Organization, User}
 
+  @doc "Lease one pooled connection for a composite web read; each context still owns its authorization transaction."
+  def with_connection(fun) when is_function(fun, 0), do: Repo.checkout(fun)
+
   def transaction(%Membership{organization_id: id} = scope, fun) when is_integer(id) do
     scoped_transaction(scope, fun, :shared)
   end
