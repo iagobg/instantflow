@@ -81,14 +81,23 @@ defmodule Instantflow.Operations do
 
   def actor_name(row), do: row.waiter
 
-  def workspace(actor, date, workflow_id \\ nil) do
+  def workspace(actor, date, workflow_id \\ nil, session_id \\ nil) do
     Tenant.read(actor, fn scope ->
-      version = workspace_version!(workflow_id)
+      latest = workspace_version!(workflow_id)
+
+      version =
+        if session_id do
+          find!(Session, session_id, latest.workflow_id) |> session_version!()
+        else
+          latest
+        end
+
       permit!(scope, version, "view")
       workflow_id = version.workflow_id
 
       %{
         version: version,
+        current?: version.id == latest.id,
         archived?: Instantflow.WorkflowCatalog.Retirement.retired?(version.id),
         labels: Workspaces.labels(version.definition),
         products:
@@ -112,12 +121,7 @@ defmodule Instantflow.Operations do
 
   def visit(actor, id, workflow_id \\ nil) do
     Tenant.read(actor, fn scope ->
-      session =
-        if is_nil(workflow_id), do: Repo.get(Session, id), else: find!(Session, id, workflow_id)
-
-      unless session, do: Repo.rollback(:not_found)
-      version = session_version!(session)
-      permit!(scope, version, "view")
+      {session, version} = resolve_visit!(scope, id, workflow_id)
       batches = Repo.all(from b in Batch, where: b.session_id == ^session.id, order_by: b.id)
       ids = Enum.map(batches, & &1.id)
       lines = Repo.all(from l in Line, where: l.batch_id in ^ids, order_by: l.id)
@@ -134,6 +138,23 @@ defmodule Instantflow.Operations do
         total: total!(session.id)
       }
     end)
+  end
+
+  def version_for_visit(actor, id, workflow_id \\ nil) do
+    Tenant.read(actor, fn scope ->
+      {_session, version} = resolve_visit!(scope, id, workflow_id)
+      version
+    end)
+  end
+
+  defp resolve_visit!(scope, id, workflow_id) do
+    session =
+      if is_nil(workflow_id), do: command_row!(Session, id), else: find!(Session, id, workflow_id)
+
+    unless session, do: Repo.rollback(:not_found)
+    version = session_version!(session)
+    permit!(scope, version, "view")
+    {session, version}
   end
 
   # Runtime transitions cannot bypass checkout, including forged LiveView commands.

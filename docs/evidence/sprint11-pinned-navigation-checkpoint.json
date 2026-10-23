@@ -1,0 +1,112 @@
+{
+  "date": "2026-10-23",
+  "base_revision": "7f0e5ad8a0cee5cb986b40c1759c4f77172c9c73",
+  "scope": "Checkpoint 3: supported pinned operational pages across publication changes; full S11-T03 remains open.",
+  "reproduced_gap": {
+    "result_before": {
+      "tests": 1,
+      "failures": 1,
+      "seed": 220900,
+      "log": ".local/sprint11-pinned-navigation-before.log"
+    },
+    "behavior": "Supported old session URL redirected away after page removal and changed latest role mapping."
+  },
+  "delivered": [
+    "Minimal authorized pinned-session version lookup shared with visit reads",
+    "Session-scoped workspace read checks actual process ownership and current pinned-view grant",
+    "Generated pages, labels and payment choices resolve from the session pin on direct links and reconciliation",
+    "Current setup/new-work/report/finance surface blocks stay on the latest publication",
+    "Real grant revocation redirects the live page and denies forged settlement with unchanged receipt count",
+    "Pre-capability archived session rows retain read-only captured batches without enabling command defaults"
+  ],
+  "validation": {
+    "precommit": {
+      "tests": 294,
+      "failures": 0,
+      "seed": 411553,
+      "log": ".local/sprint11-pinned-navigation-precommit.log"
+    },
+    "precommit_invocation": "Mix.Task.run precommit with seed 411553 through temporary numeric-only clock probe",
+    "focused": {
+      "tests": 10,
+      "failures": 0,
+      "seed": 89588,
+      "log": ".local/sprint11-pinned-navigation-focused.log"
+    },
+    "asset_build": {
+      "exit_code": 0,
+      "log": ".local/sprint11-pinned-navigation-assets.log"
+    },
+    "diff_check": {
+      "exit_code": 0
+    },
+    "rendered_checkout": {
+      "old_pin_pix": true,
+      "latest_pin_cash_only": true,
+      "same_resource_reuse": true,
+      "cross_process_session_id_denial": true,
+      "revocation_then_regrant": true
+    },
+    "archived_history": {
+      "captured_amount_cents": 1200,
+      "write_controls_absent": true
+    }
+  },
+  "intermittent_observation": {
+    "first_full_run": {
+      "tests": 294,
+      "failures": 1,
+      "seed": 411553,
+      "log": ".local/sprint11-pinned-navigation-token-failure.log"
+    },
+    "affected_test": "IncidentsLiveTest restricted triage",
+    "error": "Invalid LiveView session verification in ClientProxy.put_view",
+    "isolated_same_seed": {
+      "tests": 3,
+      "failures": 0,
+      "seed": 411553,
+      "log": ".local/sprint11-pinned-navigation-token-recheck.log"
+    },
+    "full_same_seed_after": {
+      "tests": 294,
+      "failures": 0,
+      "seed": 411553,
+      "log": ".local/sprint11-pinned-navigation-precommit.log"
+    },
+    "numeric_clock_probe_event_count": 0,
+    "status": "Cause not established; no validation relaxation or retries added. Relationship to prior copied-trip reload not established."
+  },
+  "diagnostic_source_sha256": {
+    ".local/trace_clock_gate.exs": "d556b5e0a5a5a095b57ba83073162eb07005283fd7feb645e3878ded44574d2f"
+  },
+  "sprint": {
+    "status": "In progress",
+    "complete": 1,
+    "total": 5
+  },
+  "remaining": [
+    "Full T02 scale/browser/complete BEAM and payload evidence",
+    "Complete T03 field/surface/public-entry and mixed-version matrix",
+    "T04 residual ownership cleanup",
+    "T05 full builder recreation and intermittent token observation"
+  ],
+  "serving_database_migrated": false,
+  "deployment_performed": false,
+  "source_sha256": {
+    "lib/instantflow/operations.ex": "c00fb6a380de7da8116d9155216245db6623b8947e0c98eab1047eea02c46a7d",
+    "lib/instantflow_web/live/process_live.ex": "165ed1b16e68202b298dea37c3a792a399c525f83ce4fe216ac489b4e253224f",
+    "test/instantflow_web/live/pinned_operational_navigation_test.exs": "ca7b0b1893d02fc602803d24c23f46ec8458ac3038ea645137eb7957b391d950",
+    "docs/sprint11-pinned-navigation-checkpoint.md": "cf514cae752bb6319e26827c6f54d3f5a398c892ab6443cc2c85d2c7327d93a2",
+    "docs/process-composition.md": "4db869d9e3ffdfe54ee62700ec90974def38fbbd7cf058ecdc5a5fae63e7229e",
+    "sprint_plan/sprint_11.md": "60de881607b078655de34ed56e53e953fbc8931dd7b3c469cacb50035fc4bbe7",
+    "sprint_plan/sprint_index.md": "b528feb2588d8680c53546f08954a2f9ff6d543dc23e09ec4a3ac35412743be2"
+  },
+  "log_sha256": {
+    ".local/sprint11-pinned-navigation-before.log": "098cea22917d79cf24719bb4efd8de986794cc723a4d3b61154083cf45d6df42",
+    ".local/sprint11-pinned-navigation-focused.log": "1a2596d21860bcfa835c0ac7ff4ade18629e9d8a766d7cd1c0e99b88ad1e4c68",
+    ".local/sprint11-pinned-navigation-precommit.log": "e32c00e2f5cda5d36c124b3f24caa238698ad4696aa5a598581d64c23a340bb8",
+    ".local/sprint11-pinned-navigation-assets.log": "fecad3caabdfba142da46b5efd040b3883df40a7b4f57559fe6a355da559d60b",
+    ".local/sprint11-pinned-navigation-token-failure.log": "3769610e540232984c3c25ecb641944a3650fe83691f027317d6ca0ddf21caaa",
+    ".local/sprint11-pinned-navigation-token-recheck.log": "64cc3b16c877a8a460d4bfeac4fd1cf667ff958517296a3f2149f962eda8f308"
+  }
+}

@@ -63,3 +63,14 @@ and reusable curated simulated delivery. The [recreation matrix](sprint10-genera
 records independent school copies and the equipment desk using common pages. Historical
 adapters remain for pinned compatibility; Sprint 11 owns full populated replacement
 and residual read-path/load acceptance.
+
+## Session links across publications
+
+An operational session's direct page link follows the definition pinned at its
+opening, including old page names, labels and payment choices. Later publications
+control new sessions and shared process setup. On an older session page, use the
+current-process link for configuration or new work and the record-history link
+for that ticket's pinned forms and transitions. Every link and command still
+checks current grants; revocation removes an already open session page. Retired
+versions remain read-only, including captured pre-capability batch history.
+See the [Sprint 11 navigation evidence](sprint11-pinned-navigation-checkpoint.md).

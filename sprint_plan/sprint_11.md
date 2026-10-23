@@ -177,3 +177,12 @@ results, mixed pins and 70% uneven load. The
 [read-support report](../docs/sprint11-read-support-checkpoint.md) records limits,
 trade-offs and remaining supporting-volume/browser/memory gates. Full T02 and
 T03–T05 remain open; progress stays 1/5. Commit each validated execution checkpoint.
+
+Pinned-navigation checkpoint — 2026-10-23: after read-support commit 7f0e5ad,
+T03's generated operational session links now follow their actual supported pin
+after page/role/payment changes. Current revocation and process isolation remain
+enforced; current setup/new work stays with the latest publication. Archived
+pre-capability session rows retain read-only captured batches. The
+[navigation checkpoint](../docs/sprint11-pinned-navigation-checkpoint.md) records
+rendered checkout and denial regressions. Wider T02–T05 acceptance remains open;
+progress stays 1/5. Each validated checkpoint is committed.

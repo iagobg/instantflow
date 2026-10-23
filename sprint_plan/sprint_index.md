@@ -87,3 +87,9 @@ measures and removes idle-publication/empty-process overhead from the shared
 record query service and adds its tenant/version index. All three measurement
 phases are retained. Full T02 scale/browser/BEAM acceptance and T03–T05 remain
 open; status stays In progress, 1/5.
+
+Sprint 11's [pinned-navigation checkpoint](../docs/sprint11-pinned-navigation-checkpoint.md)
+keeps supported old session URLs and payment rules working after publication
+changes while enforcing current grants, process ownership and current-workspace
+setup boundaries. This is an incremental T03 checkpoint; status remains In
+progress, 1/5.

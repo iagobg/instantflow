@@ -48,6 +48,7 @@ defmodule InstantflowWeb.ProcessLive do
        visit_id: nil,
        visit: nil,
        operational_archived?: false,
+       current_workspace?: true,
        cart: %{},
        print_ticket: nil,
        command_key: Ecto.UUID.generate(),
@@ -82,7 +83,7 @@ defmodule InstantflowWeb.ProcessLive do
         Operations.workflow_for_visit(socket.assigns.current_scope, id) ||
         Operations.default_workflow(socket.assigns.current_scope)
 
-    case Workspaces.get(socket.assigns.current_scope, workflow_id) do
+    case page_version(socket.assigns.current_scope, workflow_id, id) do
       nil ->
         {:noreply,
          push_navigate(socket,
@@ -475,8 +476,19 @@ defmodule InstantflowWeb.ProcessLive do
   def handle_info(:budgets_changed, socket), do: {:noreply, load(socket)}
   def handle_info(:permissions_changed, socket), do: {:noreply, load(socket)}
 
+  defp page_version(scope, workflow_id, nil), do: Workspaces.get(scope, workflow_id)
+
+  defp page_version(scope, workflow_id, session_id) do
+    Operations.version_for_visit(scope, session_id, workflow_id)
+  end
+
   defp load(socket) do
-    version = Workspaces.get(socket.assigns.current_scope, socket.assigns.workflow_id)
+    version =
+      page_version(
+        socket.assigns.current_scope,
+        socket.assigns.workflow_id,
+        socket.assigns.visit_id
+      )
 
     if version == nil do
       push_navigate(socket,
@@ -487,6 +499,31 @@ defmodule InstantflowWeb.ProcessLive do
         Enum.find(Workspaces.pages(version.definition), &(&1["key"] == socket.assigns.page_key)) ||
           hd(Workspaces.pages(version.definition))
 
+      data =
+        if socket.assigns.visit_id || Workspaces.operational?(version.definition),
+          do:
+            Operations.workspace(
+              socket.assigns.current_scope,
+              socket.assigns.date,
+              socket.assigns.workflow_id,
+              socket.assigns.visit_id
+            )
+
+      # A historical session keeps its own pages and business actions. Shared
+      # process setup, discovery and new work remain on the current publication.
+      blocks =
+        cond do
+          data && data.archived? && socket.assigns.visit_id &&
+              not Workspaces.operational?(version.definition) ->
+            ["batches"]
+
+          data && not data.current? ->
+            Enum.filter(page["blocks"], &(&1 in ~w(items batches settlement)))
+
+          true ->
+            page["blocks"]
+        end
+
       socket =
         socket
         |> assign(
@@ -495,22 +532,13 @@ defmodule InstantflowWeb.ProcessLive do
           page_title: version.definition["name"],
           labels: Workspaces.labels(version.definition),
           pages: Workspaces.pages(version.definition),
-          blocks: page["blocks"],
+          blocks: blocks,
           page_key: page["key"],
           can_configure: Workspaces.allowed?(socket.assigns.current_scope, version, "configure"),
           can_operate: Workspaces.allowed?(socket.assigns.current_scope, version, "operate")
         )
         |> load_records(version)
         |> load_finance(version)
-
-      data =
-        if Workspaces.operational?(version.definition),
-          do:
-            Operations.workspace(
-              socket.assigns.current_scope,
-              socket.assigns.date,
-              socket.assigns.workflow_id
-            )
 
       if data do
         visit =
@@ -534,8 +562,9 @@ defmodule InstantflowWeb.ProcessLive do
         |> assign(
           authorized: true,
           operational_archived?: archived?,
+          current_workspace?: data.current?,
           can_configure:
-            not data.archived? and
+            data.current? and not data.archived? and
               Workspaces.allowed?(socket.assigns.current_scope, version, "configure"),
           workflow_id: data.version.workflow_id,
           product_catalog: Map.new(data.products, &{&1.id, &1}),
@@ -754,6 +783,12 @@ defmodule InstantflowWeb.ProcessLive do
         Seu perfil não tem acesso aos blocos operacionais deste processo.
       </p>
       <div id="operations-workspace">
+        <p :if={@visit && !@current_workspace?} id="pinned-session-rules" role="status">
+          Este atendimento usa as regras publicadas na abertura.
+          <.link navigate={~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}"}>
+            Abra o processo atual para novos atendimentos e configurações.
+          </.link>
+        </p>
         <p :if={@operational_archived?} id="archived-operations" role="status">
           Atendimento histórico arquivado. Os dados foram preservados e não aceitam novas alterações.
         </p>
