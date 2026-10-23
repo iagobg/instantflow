@@ -178,6 +178,58 @@ defmodule InstantflowWeb.ProcessComponents do
     """
   end
 
+  attr :id, :string, required: true
+  attr :kind, :string, required: true
+  attr :info, :map, required: true
+  attr :label, :string, required: true
+  attr :form, Phoenix.HTML.Form, required: true
+
+  def operational_controls(assigns) do
+    ~H"""
+    <.form
+      for={@form}
+      id={@id <> "-filters"}
+      phx-submit="operational-filter"
+      phx-value-kind={@kind}
+      class="operations-form"
+    >
+      <.input field={@form[:query]} id={@id <> "-query"} label={@label} maxlength="100" />
+      <button id={@id <> "-filter"} class="btn">Buscar</button>
+    </.form>
+    <.operational_pager id={@id} kind={@kind} info={@info} />
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :kind, :string, required: true
+  attr :info, :map, required: true
+
+  def operational_pager(assigns) do
+    ~H"""
+    <p id={@id <> "-count"}>{@info.total} resultado(s) · Página {@info.page} de {@info.pages}</p>
+    <nav :if={@info.pages > 1} id={@id <> "-pagination"} aria-label="Páginas de resultados">
+      <button
+        type="button"
+        class="btn"
+        id={@id <> "-previous"}
+        phx-click="operational-page"
+        phx-value-kind={@kind}
+        phx-value-page={@info.page - 1}
+        disabled={@info.page <= 1}
+      >Anterior</button>
+      <button
+        type="button"
+        class="btn"
+        id={@id <> "-next"}
+        phx-click="operational-page"
+        phx-value-kind={@kind}
+        phx-value-page={@info.page + 1}
+        disabled={@info.page >= @info.pages}
+      >Próxima</button>
+    </nav>
+    """
+  end
+
   def catalog_block(assigns) do
     ~H"""
     <details
@@ -225,6 +277,13 @@ defmodule InstantflowWeb.ProcessComponents do
           phx-click="new-product"
         >Novo produto</button>
       </.form>
+      <.operational_controls
+        id="catalog-setup"
+        kind="products"
+        form={@product_search_form}
+        info={@read_pages.products}
+        label={"Buscar em todo o catálogo: #{@labels["catalog"]}"}
+      />
       <div id="menu-products" phx-update="stream" class="operations-menu">
         <div :for={{id, product} <- @streams.products} id={id} class="operations-product">
           <strong>{product.name}</strong><span>{money(product.price)} · {product.category} · {product.destination}</span>
@@ -262,6 +321,13 @@ defmodule InstantflowWeb.ProcessComponents do
           "resource"
         ]}</button>
       </.form>
+      <.operational_controls
+        id="resource-browser"
+        kind="resources"
+        form={@resource_search_form}
+        info={@read_pages.resources}
+        label={"Buscar #{@labels["resources"]}"}
+      />
       <div id="service-resources" phx-update="stream" class="operations-tables">
         <div :for={{id, resource} <- @streams.resources} id={id} class="operations-table">
           <strong>{resource.name}</strong>
@@ -306,6 +372,16 @@ defmodule InstantflowWeb.ProcessComponents do
     ~H"""
     <section class="card template-section">
       <div :if={@visit.session.status == "open"}>
+        <.operational_controls
+          id="catalog-items"
+          kind="products"
+          form={@product_search_form}
+          info={@read_pages.products}
+          label={"Buscar em todo o catálogo: #{@labels["catalog"]}"}
+        />
+        <p>
+          Use a busca do catálogo para encontrar um produto; selecione nos resultados desta página.
+        </p>
         <.form for={@item_form} id="add-item-form" phx-submit="add-item" class="operations-form">
           <div
             id="product-picker"
@@ -421,6 +497,7 @@ defmodule InstantflowWeb.ProcessComponents do
   def batches_block(assigns) do
     ~H"""
     <section class="card template-section">
+      <.operational_pager id="batch-browser" kind="batches" info={@read_pages.batches} />
       <div id="fulfillment-batches" phx-update="stream">
         <article :for={{id, batch} <- @streams.batches} id={id} class="operations-batch">
           <h3>
@@ -569,6 +646,7 @@ defmodule InstantflowWeb.ProcessComponents do
       <h3>Consumo estimado de produtos</h3><p>
         Quantidades pedidas, incluindo o histórico arquivado e excluindo cancelamentos. Não confirma entrega nem representa saldo de estoque, ingredientes ou perdas de preparo.
       </p>
+      <.operational_pager id="consumption-browser" kind="consumption" info={@read_pages.consumption} />
       <div id="estimated-consumption" phx-update="stream">
         <p :for={{id, row} <- @streams.consumption} id={id}>
           {row.name}: {row.quantity} unidade(s)

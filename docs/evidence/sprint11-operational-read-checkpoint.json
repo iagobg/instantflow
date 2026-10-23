@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-23",
+  "base_revision": "822302e0bfa28371a63ca182f4d800bcb6f72f79",
+  "scope": "T02 operational read bounds and touched T04 SQL projection ownership; remaining tasks open",
+  "bounds": {
+    "catalog_products": 25,
+    "resources": 25,
+    "open_sessions_for_resource_page": 25,
+    "session_batches": 10,
+    "supported_lines_per_batch": 100,
+    "consumption_groups": 25,
+    "workspace_query_count_assertion": "less than 35 with 60 open sessions",
+    "workspace_fetched_rows_per_query_assertion": "at most 25 with 62 products and 61 resources"
+  },
+  "snapshot_policy": "Complete aggregated consumption remains stored by close_day command; interactive report pages omit the full stored array and page live aggregate rows.",
+  "monetary_regression_cents": 99900000000,
+  "validation": {
+    "red": {
+      "tests": 1,
+      "failures": 1,
+      "fetched_rows": 62,
+      "expected_maximum": 25,
+      "log": ".local/sprint11-operational-reads-before.log"
+    },
+    "focused": {
+      "tests": 16,
+      "failures": 0,
+      "seed": 972804,
+      "log": ".local/sprint11-operational-pages-focused.log"
+    },
+    "first_precommit": {
+      "tests": 331,
+      "failures": 1,
+      "seed": 290848,
+      "log": ".local/sprint11-operational-pages-first-failure.log"
+    },
+    "isolated_same_seed": {
+      "tests": 3,
+      "failures": 0,
+      "seed": 290848,
+      "log": ".local/sprint11-operational-pages-isolated.log"
+    },
+    "precommit": {
+      "tests": 331,
+      "failures": 0,
+      "seed": 290848,
+      "invocation": "MIX_ENV=test mix run --no-start numeric-only token age/clock probe invoking precommit",
+      "log": ".local/sprint11-operational-pages-precommit.log"
+    },
+    "asset_build": {
+      "exit_code": 0,
+      "log": ".local/sprint11-operational-pages-assets.log"
+    },
+    "diff_check": {
+      "exit_code": 0
+    }
+  },
+  "intermittent_observation": {
+    "test": "OrganizationLiveTest two tabs keep their own organization",
+    "error": "LiveView same-URL redirect on mounting second organization tab",
+    "invalid_age_clock_events": 0,
+    "status": "Cause not established. No assertion, token validation or retry change."
+  },
+  "diagnostic_sha256": {
+    ".local/sprint11-operational-clock-gate.exs": "f56ffd657aed33f9c80463aa210450eb428ab87a679d245402f405e9d315ccc2"
+  },
+  "sprint": {
+    "complete": 1,
+    "total": 5,
+    "status": "In progress"
+  },
+  "serving_database_migrated": false,
+  "deployment_performed": false,
+  "source_sha256": {
+    "lib/instantflow/operations.ex": "bf20a582f8dfc64207ddb436f376ce8349e0e52018952a6b4216d1e953a388f8",
+    "lib/instantflow/operations/read_model.ex": "804274b08a065c3aefc5bdc7e3a2ed879496d6d81889cf4d9e8f130ed1cb50dd",
+    "lib/instantflow_web/live/process_live.ex": "0b3505e47b2e9b60326b23a6e4932e857bd0bbe0695742566dd57e115c0be7e3",
+    "lib/instantflow_web/components/process_components.ex": "ff9512043dcd32134febe643e519384d8d9ce6f52ae16aed8a8693c9f235ba78",
+    "test/instantflow/operations_read_model_test.exs": "977c9a04e26ba20f2d8e47f5e69f73f1812c38fe4f91b766bdc02f52d96075cc",
+    "test/instantflow_web/live/operations_pagination_live_test.exs": "15a931c1c8ee8d79b239e1b3a38819c45ae95ee4e00a6a6171661ee8ff12791d",
+    "docs/sprint11-operational-read-checkpoint.md": "0f83af933376d15a9596b0c0a8521ad553b739eacb7ea26453b60841aacb328d",
+    "sprint_plan/sprint_11.md": "8d650c2a3b9d0734691cd768b1fd71c300b58d1a8ac6679067526c3a3a746832",
+    "sprint_plan/sprint_index.md": "4bb4c8f7adb86697de57e6428b50cae1a887a087226f0c055cf632231b3741a8"
+  },
+  "log_sha256": {
+    ".local/sprint11-operational-reads-before.log": "7066e393b4b67ab795a20212f1d0fc8078c6483923420582f350993909e2c7ed",
+    ".local/sprint11-operational-pages-focused.log": "d94afa8e6f68f83f10433fc1e0ff86d0dd0adb9b1dd25285f8bee1170715a15a",
+    ".local/sprint11-operational-pages-first-failure.log": "3516d1201316e247a8a8c1e48f5a052133b183a16fa3384c34b522eec2a2390b",
+    ".local/sprint11-operational-pages-isolated.log": "43befda6070d125401183325bde5b445f16ff01fba6eef80e741a1a352f9adee",
+    ".local/sprint11-operational-pages-precommit.log": "485d88f08a84e3e388ea53a205589700a4260762335dbe8c49dc62dac8ee153b",
+    ".local/sprint11-operational-pages-assets.log": "31512aacb51f0ca1ae43e7f9b48e554ac4c423ae3699d66473af0ccd7486ce1d"
+  }
+}

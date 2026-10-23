@@ -37,6 +37,9 @@ defmodule InstantflowWeb.ProcessLive do
        pages: [],
        blocks: [],
        page_key: "overview",
+       read_filters: %{},
+       product_search_form: to_form(%{}, as: :browse),
+       resource_search_form: to_form(%{}, as: :browse),
        record_filters: %{},
        record_view: nil,
        finance_account_form: to_form(%{}, as: :finance_account),
@@ -109,6 +112,11 @@ defmodule InstantflowWeb.ProcessLive do
             {:noreply,
              socket
              |> assign(
+               read_filters:
+                 if(socket.assigns.workflow_id == workflow_id and socket.assigns.visit_id == id,
+                   do: socket.assigns.read_filters,
+                   else: %{}
+                 ),
                visit_id: id,
                workflow_id: workflow_id,
                page_key: page["key"],
@@ -133,6 +141,26 @@ defmodule InstantflowWeb.ProcessLive do
              )}
         end
     end
+  end
+
+  def handle_event("operational-filter", %{"kind" => kind, "browse" => params}, socket)
+      when kind in ~w(products resources) do
+    query = String.slice(params["query"] || "", 0, 100)
+
+    filters =
+      socket.assigns.read_filters
+      |> Map.put(kind <> "_query", query)
+      |> Map.put(kind <> "_page", 1)
+
+    {:noreply, socket |> assign(:read_filters, filters) |> load()}
+  end
+
+  def handle_event("operational-page", %{"kind" => kind, "page" => page}, socket)
+      when kind in ~w(products resources consumption batches) do
+    {:noreply,
+     socket
+     |> assign(:read_filters, Map.put(socket.assigns.read_filters, kind <> "_page", page))
+     |> load()}
   end
 
   def handle_event("record-filters", %{"record_filter" => params}, socket) do
@@ -506,7 +534,8 @@ defmodule InstantflowWeb.ProcessLive do
               socket.assigns.current_scope,
               socket.assigns.date,
               socket.assigns.workflow_id,
-              socket.assigns.visit_id
+              socket.assigns.visit_id,
+              Map.put(socket.assigns.read_filters, "blocks", page["blocks"])
             )
 
       # A historical session keeps its own pages and business actions. Shared
@@ -547,7 +576,8 @@ defmodule InstantflowWeb.ProcessLive do
               Operations.visit(
                 socket.assigns.current_scope,
                 socket.assigns.visit_id,
-                socket.assigns.workflow_id
+                socket.assigns.workflow_id,
+                socket.assigns.read_filters
               )
 
         products = data.products
@@ -567,6 +597,24 @@ defmodule InstantflowWeb.ProcessLive do
             data.current? and not data.archived? and
               Workspaces.allowed?(socket.assigns.current_scope, version, "configure"),
           workflow_id: data.version.workflow_id,
+          read_pages:
+            data.pagination
+            |> Map.put(
+              :consumption,
+              if(data.report, do: data.report.pagination, else: Operations.ReadModel.empty_page())
+            )
+            |> Map.put(
+              :batches,
+              if(visit, do: visit.pagination, else: Operations.ReadModel.empty_page(10))
+            ),
+          product_search_form:
+            to_form(%{"query" => socket.assigns.read_filters["products_query"] || ""},
+              as: :browse
+            ),
+          resource_search_form:
+            to_form(%{"query" => socket.assigns.read_filters["resources_query"] || ""},
+              as: :browse
+            ),
           product_catalog: Map.new(data.products, &{&1.id, &1}),
           visit: visit,
           report: data.report,

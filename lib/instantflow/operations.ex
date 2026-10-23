@@ -2,6 +2,7 @@ defmodule Instantflow.Operations do
   @moduledoc "Tenant-local catalog, resource visits, immutable line snapshots and destination batches. All writes are audited idempotent commands."
   import Ecto.Query
   alias Instantflow.{Repo, Tenant, WorkflowRuntime}
+  alias Instantflow.Operations.ReadModel
   alias Instantflow.WorkflowCatalog.{Workspaces, OperationalContract, Version}
   alias Instantflow.Operations.{Product, Resource, Session, Batch, Line, Receipt, DayClose}
 
@@ -81,7 +82,7 @@ defmodule Instantflow.Operations do
 
   def actor_name(row), do: row.waiter
 
-  def workspace(actor, date, workflow_id \\ nil, session_id \\ nil) do
+  def workspace(actor, date, workflow_id \\ nil, session_id \\ nil, params \\ %{}) do
     Tenant.read(actor, fn scope ->
       latest = workspace_version!(workflow_id)
 
@@ -96,57 +97,47 @@ defmodule Instantflow.Operations do
       workflow_id = version.workflow_id
       archived? = Instantflow.WorkflowCatalog.Retirement.retired?(version.id)
       shared? = version.id == latest.id and (is_nil(session) or not archived?)
+      params = if is_map(params), do: params, else: %{}
+      blocks = Map.get(params, "blocks", ~w(catalog resources items daily_summary))
+
+      {products, product_page} =
+        if Enum.any?(blocks, &(&1 in ~w(catalog items))),
+          do: ReadModel.products(workflow_id, params),
+          else: {[], ReadModel.empty_page()}
+
+      {resources, resource_page} =
+        if shared? and "resources" in blocks,
+          do: ReadModel.resources(workflow_id, params),
+          else: {[], ReadModel.empty_page()}
 
       %{
         version: version,
         current?: shared?,
         archived?: archived?,
         labels: Workspaces.labels(version.definition),
-        products:
-          Repo.all(
-            from p in Product,
-              where: p.workflow_id == ^workflow_id,
-              order_by: [p.category, p.name]
-          ),
-        # A pinned session authorizes its own history and the catalog needed for
-        # item entry. Shared occupancy and daily totals require current admission.
-        resources:
-          if(shared?,
-            do:
-              Repo.all(from r in Resource, where: r.workflow_id == ^workflow_id, order_by: r.name),
-            else: []
-          ),
-        sessions:
-          if(shared?,
-            do:
-              Repo.all(
-                from s in Session,
-                  where: s.workflow_id == ^workflow_id and s.status == "open",
-                  order_by: s.id
-              ),
-            else: [session]
-          ),
-        report: if(shared?, do: report!(date, workflow_id))
+        products: products,
+        resources: resources,
+        sessions: if(shared?, do: ReadModel.sessions(workflow_id, resources), else: [session]),
+        pagination: %{products: product_page, resources: resource_page},
+        report:
+          if(shared? and "daily_summary" in blocks,
+            do: ReadModel.report(date!(date), workflow_id, params)
+          )
       }
     end)
   end
 
-  def visit(actor, id, workflow_id \\ nil) do
+  def visit(actor, id, workflow_id \\ nil, params \\ %{}) do
     Tenant.read(actor, fn scope ->
       {session, version} = resolve_visit!(scope, id, workflow_id)
-      batches = Repo.all(from b in Batch, where: b.session_id == ^session.id, order_by: b.id)
-      ids = Enum.map(batches, & &1.id)
-      lines = Repo.all(from l in Line, where: l.batch_id in ^ids, order_by: l.id)
+      {batches, pagination} = ReadModel.batches(session.id, params)
 
       %{
         session: session,
         version: version,
         archived?: Instantflow.WorkflowCatalog.Retirement.retired?(version.id),
-        batches:
-          Enum.map(
-            batches,
-            &Map.put(&1, :lines, Enum.filter(lines, fn l -> l.batch_id == &1.id end))
-          ),
+        batches: batches,
+        pagination: pagination,
         total: total!(session.id)
       }
     end)
@@ -468,68 +459,8 @@ defmodule Instantflow.Operations do
     %{"id" => close.id}
   end
 
-  defp report!(date, workflow_id) do
-    date = date!(date)
-
-    sessions =
-      Repo.all(
-        from s in Session, where: s.workflow_id == ^workflow_id and s.business_date == ^date
-      )
-
-    settled = Enum.filter(sessions, &(&1.status == "settled"))
-    open = Enum.filter(sessions, &(&1.status == "open"))
-    archived = Enum.filter(sessions, &(&1.status == "archived"))
-    session_ids = Enum.map(sessions, & &1.id)
-
-    lines =
-      Repo.all(
-        from l in Line,
-          join: b in Batch,
-          on: b.id == l.batch_id,
-          where: b.session_id in ^session_ids and b.kind == "order" and b.status != "cancelled",
-          select: l
-      )
-
-    consumption =
-      lines
-      |> Enum.group_by(& &1.product_id)
-      |> Enum.map(fn {id, lines} ->
-        %{
-          product_id: id,
-          name: List.last(lines).name,
-          quantity: Enum.sum(Enum.map(lines, & &1.quantity))
-        }
-      end)
-      |> Enum.sort_by(& &1.name)
-
-    %{
-      date: date,
-      sales: Enum.sum(Enum.map(settled, & &1.total)),
-      settled_count: length(settled),
-      open_count: length(open),
-      open_total: Enum.sum(Enum.map(open, &total!(&1.id))),
-      archived_count: length(archived),
-      archived_total: Enum.sum(Enum.map(archived, &total!(&1.id))),
-      payments:
-        Map.new(~w(cash card pix), fn method ->
-          {method,
-           settled
-           |> Enum.filter(&(&1.payment_method == method))
-           |> Enum.map(& &1.total)
-           |> Enum.sum()}
-        end),
-      cancellations:
-        Repo.one(
-          from l in Line,
-            join: b in Batch,
-            on: b.id == l.batch_id,
-            where: b.session_id in ^session_ids and b.kind == "order" and b.status == "cancelled",
-            select: fragment("COALESCE(SUM(? * ?), 0)::bigint", l.quantity, l.unit_price)
-        ),
-      consumption: consumption,
-      closed: Repo.get_by(DayClose, workflow_id: workflow_id, business_date: date)
-    }
-  end
+  defp report!(date, workflow_id),
+    do: ReadModel.report(date!(date), workflow_id, %{}, :snapshot)
 
   defp total!(session_id) do
     Repo.one(
@@ -537,7 +468,7 @@ defmodule Instantflow.Operations do
         join: b in Batch,
         on: b.id == l.batch_id,
         where: b.session_id == ^session_id and b.kind == "order" and b.status != "cancelled",
-        select: fragment("COALESCE(SUM(? * ?), 0)::bigint", l.quantity, l.unit_price)
+        select: fragment("COALESCE(SUM(?::bigint * ?), 0)::bigint", l.quantity, l.unit_price)
     )
   end
 

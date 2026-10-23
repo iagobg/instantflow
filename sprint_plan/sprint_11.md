@@ -208,3 +208,10 @@ staff grants, live revocation, old/new pins and cross-process/tenant denial. The
 [release matrix](../docs/sprint11-participant-release-checkpoint.md) preserves the
 independent curated-recipient boundary. No policy implementation change was needed.
 Remaining T02–T05 gates stay open; progress is 1/5, In progress.
+
+Operational read checkpoint — 2026-10-23: interactive catalog/resources, session
+batches and consumption now have explicit stable pages; full-day values aggregate
+in SQL without per-session query growth. Complete closure snapshots remain stored.
+The [read checkpoint](../docs/sprint11-operational-read-checkpoint.md) records later-page
+selection/printing, cart retention, row/query bounds and bigint monetary checks.
+T02 full discovery/load/browser/VM evidence and remaining T03–T05 work stay open.
