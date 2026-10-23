@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-23",
+  "base_revision": "71ecf2ef9efc882e468aafbcf2164c53fb4c974a",
+  "scope": "The two P2 findings in docs/sprint11-first-checkpoint-review.md; does not close the full sprint.",
+  "findings": {
+    "archived_open_sessions_block_replacement": {
+      "status": "addressed",
+      "disposition": "Audited unpaid archived session and pending-batch state; settled, handed and cancelled history preserved. Partial open-session uniqueness and all operational occupancy/closure queries agree.",
+      "regression": "test/instantflow/operational_retirement_migration_test.exs",
+      "restored_paid_sales_cents": 2500,
+      "restored_archived_unpaid_cents": 1500,
+      "same_process_replacement_resource_reuse_and_day_close": true
+    },
+    "opening_replay_checks_latest_version": {
+      "status": "addressed",
+      "disposition": "Authorize current grants against the receipt result session pinned version, then reject retirement; genuine new openings use latest publication. Digest mismatch and revocation remain enforced.",
+      "regression": "test/instantflow/operations_retirement_replay_test.exs",
+      "no_duplicate_sessions_or_receipts": true
+    }
+  },
+  "validation": {
+    "precommit": {
+      "tests": 291,
+      "failures": 0,
+      "seed": 317608,
+      "log": ".local/sprint11-review-precommit.log"
+    },
+    "focused": {
+      "tests": 14,
+      "failures": 0,
+      "seed": 418017,
+      "log": ".local/sprint11-review-focused.log"
+    },
+    "assets_build": {
+      "exit_code": 0,
+      "log": ".local/sprint11-review-assets.log"
+    },
+    "diff_check": {
+      "exit_code": 0
+    },
+    "populated_migration_restore": {
+      "organizations": 2,
+      "sessions": 4,
+      "batches": 10,
+      "retired_open_sessions_archived": 1,
+      "retired_pending_batches_archived": 2,
+      "untouched_supported_tenant": true,
+      "row_snapshot_comparisons": true,
+      "actual_pg_dump_pg_restore": true,
+      "runtime_role_rls_and_cross_tenant_denial": true,
+      "immutable_paid_values_receipts_lines_definitions_day_snapshots_preserved": true
+    },
+    "generated_liveview": {
+      "archived_unpaid_amount_visible_separately": true,
+      "released_resource_selectable": true,
+      "rendered_form_opens_replacement": true,
+      "archived_batch_status_and_no_handoff_checkout_controls": true
+    }
+  },
+  "migration": "priv/repo/migrations/20261023033124_archive_retired_operational_work.exs",
+  "oldest_session_lineage": {
+    "test": "test/instantflow/process_migration_test.exs",
+    "pre_capability_versions_classified_only_when_actual_sessions_exist": true,
+    "retained_unpaid_cents": 1200
+  },
+  "sprint_status": {
+    "status": "In progress",
+    "completed": 1,
+    "total": 5
+  },
+  "limitations": [
+    "Intermittent copied-trip LiveView reload not established as fixed",
+    "Full scale, form-surface/public-entry matrices and full recreation remain open",
+    "Local synthetic tests; no production/customer or physical printing acceptance"
+  ],
+  "serving_database_migrated": false,
+  "deployment_performed": false,
+  "destructive_reset_performed": false,
+  "source_sha256": {
+    "lib/instantflow/operations.ex": "2980e4062b243a1648d12727cb738edeb9fe49ce37cf409e24a2b89941251fa8",
+    "lib/instantflow_web/components/process_components.ex": "a3e27c72b96275436e02c020da4c90e3e98a36713cf0a2ebbde8af1bd219015c",
+    "lib/instantflow_web/live/process_live.ex": "fbf69217a6a43cda4fdd1b7437881ba70bcf34a1008346617c61ad02d808dcb1",
+    "priv/repo/migrations/20261023033124_archive_retired_operational_work.exs": "979896956c4f8bcf28af2f15451d19d18398423ace9f8a7455e7045eca12408a",
+    "test/instantflow/operations_retirement_replay_test.exs": "b10d46a1f74c003bd9cafd0a8e81c283330c7aa66275bd2b4d244d1cf6f37b9c",
+    "test/instantflow/operational_retirement_migration_test.exs": "8d5173ed02ea93e94b4ce8b752ccb22c6a73fe236678cb527990c661bd578ce1",
+    "test/instantflow/process_migration_test.exs": "ebb56505585c8e75796672acd9bcefc670fdf729fb003126548a75f72595e3fb",
+    "test/instantflow_web/live/archived_record_live_test.exs": "73a573acc36c4594924276bffdbd2bc31834d85d6046928220a8d1921bfffb75",
+    "docs/sprint11-first-checkpoint-review.md": "13ed9e7e77c3b1d6707e7d1644d68bee910d08d54ad9815585f17672fc379a8d",
+    "docs/sprint11-first-checkpoint-review-resolution.md": "7435a9105ea09249d8cbba50b00e0b1bea13554a67b56bbc97ac6e810c1d22dc",
+    "docs/sprint11-retirement-checkpoint.md": "ea3fbb8852a6703137f44e98f2b2b4bae0e9e63d5de8b2bd9441d6c4f429ef9e",
+    "docs/restaurant-pilot.md": "927d63946d015ea6c72931c5fe9a79167f694ba6a6c64856195dbb3a150ffc2c",
+    "sprint_plan/sprint_11.md": "f6778d3b23c2b29577d786c71408a83c5f4eb48da1d50b2c99096ae736d892f6",
+    "sprint_plan/sprint_index.md": "0076dc69c70027769165f93aef7752bd5d6afa7121a4ad414b8f1792407366d0"
+  },
+  "log_sha256": {
+    ".local/sprint11-review-focused.log": "8837d9785d5368ca87f0cf669da64ecad4879a844dbfb2f01b77d22adf6c695a",
+    ".local/sprint11-review-precommit.log": "a1590a606b06d0aaa3573bedea308b16c1e091b95f24cb48d818133645424d2c",
+    ".local/sprint11-review-assets.log": "7bc5cff0d1fdf610193d30ce3682151d7bfe85c6dc1b22d6714d84f175382161"
+  }
+}

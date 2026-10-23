@@ -1,0 +1,169 @@
+{
+  "environment": {
+    "cpu": "model name\t: 13th Gen Intel(R) Core(TM) i7-13700KF",
+    "memory": "MemTotal:       32769000 kB",
+    "os": "{:unix, :linux}",
+    "otp": "28",
+    "schedulers": 24,
+    "elixir": "1.19.5",
+    "runtime_pool": 10,
+    "postgres": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)"
+  },
+  "database": "instantflow_benchmark_a5b577792c",
+  "organizations": 10,
+  "samples": 50,
+  "per_organization": {
+    "1": {
+      "command_p95_ms": 58.815,
+      "operations": {
+        "save_proposal": {
+          "count": 5,
+          "p95_ms": 58.815
+        }
+      },
+      "visibility_p95_ms": 129,
+      "command_p50_ms": 54.654,
+      "search_p95_ms": 60.271
+    },
+    "10": {
+      "command_p95_ms": 63.423,
+      "operations": {
+        "save_proposal": {
+          "count": 5,
+          "p95_ms": 63.423
+        }
+      },
+      "visibility_p95_ms": 290,
+      "command_p50_ms": 61.989,
+      "search_p95_ms": 55.357
+    },
+    "2": {
+      "command_p95_ms": 58.521,
+      "operations": {
+        "save_proposal": {
+          "count": 5,
+          "p95_ms": 58.521
+        }
+      },
+      "visibility_p95_ms": 154,
+      "command_p50_ms": 53.815,
+      "search_p95_ms": 61.355
+    },
+    "3": {
+      "command_p95_ms": 53.734,
+      "operations": {
+        "save_proposal": {
+          "count": 5,
+          "p95_ms": 53.734
+        }
+      },
+      "visibility_p95_ms": 179,
+      "command_p50_ms": 47.039,
+      "search_p95_ms": 53.382
+    },
+    "4": {
+      "command_p95_ms": 60.13,
+      "operations": {
+        "save_proposal": {
+          "count": 5,
+          "p95_ms": 60.13
+        }
+      },
+      "visibility_p95_ms": 184,
+      "command_p50_ms": 54.809,
+      "search_p95_ms": 52.284
+    },
+    "5": {
+      "command_p95_ms": 52.048,
+      "operations": {
+        "save_proposal": {
+          "count": 5,
+          "p95_ms": 52.048
+        }
+      },
+      "visibility_p95_ms": 219,
+      "command_p50_ms": 50.04,
+      "search_p95_ms": 50.751
+    },
+    "6": {
+      "command_p95_ms": 56.519,
+      "operations": {
+        "save_proposal": {
+          "count": 5,
+          "p95_ms": 56.519
+        }
+      },
+      "visibility_p95_ms": 240,
+      "command_p50_ms": 49.534,
+      "search_p95_ms": 54.187
+    },
+    "7": {
+      "command_p95_ms": 51.429,
+      "operations": {
+        "save_proposal": {
+          "count": 5,
+          "p95_ms": 51.429
+        }
+      },
+      "visibility_p95_ms": 267,
+      "command_p50_ms": 47.856,
+      "search_p95_ms": 40.442
+    },
+    "8": {
+      "command_p95_ms": 58.721,
+      "operations": {
+        "save_proposal": {
+          "count": 5,
+          "p95_ms": 58.721
+        }
+      },
+      "visibility_p95_ms": 282,
+      "command_p50_ms": 50.706,
+      "search_p95_ms": 55.492
+    },
+    "9": {
+      "command_p95_ms": 62.204,
+      "operations": {
+        "save_proposal": {
+          "count": 5,
+          "p95_ms": 62.204
+        }
+      },
+      "visibility_p95_ms": 274,
+      "command_p50_ms": 59.469,
+      "search_p95_ms": 55.006
+    }
+  },
+  "verified_row_counts": {
+    "organizations": 10,
+    "tickets": 10000,
+    "staff": 50
+  },
+  "records": 10000,
+  "concurrent_staff": 50,
+  "command_mix": "proposal saves",
+  "load_shape": "Equal iterations per school",
+  "elapsed_ms": 496,
+  "poll_interval_ms": 250,
+  "dataset": "Per school: 700 requisitions, 100 trips, 100 enrollments, 100 incidents; 5 local actors. Synthetic bulk fixture stages; runtime writes use guarded commands.",
+  "totals": {
+    "command_p95_ms": 62.007,
+    "operations": {
+      "save_proposal": {
+        "count": 50,
+        "p95_ms": 62.007
+      }
+    },
+    "visibility_p95_ms": 282,
+    "command_p50_ms": 52.048,
+    "search_p95_ms": 60.264
+  },
+  "thresholds": {
+    "command_p95_ms": 500,
+    "committed_visibility_p95_ms": 1000
+  },
+  "accepted_command_target": true,
+  "visibility_target": true,
+  "limitations": "Local WSL backend and PubSub/requery benchmark. Includes pool wait. Excludes browser rendering/network, real providers and production-host certification. Generated database retained; no serving database altered.",
+  "acceptance_scope": "Retirement runner smoke only; one iteration, not Sprint 11 scale acceptance."
+}

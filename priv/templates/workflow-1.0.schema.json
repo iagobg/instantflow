@@ -292,6 +292,52 @@
             "view_roles"
           ],
           "additionalProperties": false
+        },
+        "operations": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "actor": {
+              "const": "captured_name"
+            },
+            "settlement": {
+              "const": "full_manual"
+            },
+            "reporting_timezone": {
+              "const": "organization"
+            },
+            "currency": {
+              "const": "BRL"
+            },
+            "consumption": {
+              "const": "estimated_product_units"
+            },
+            "payment_methods": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 3,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "cash",
+                  "card",
+                  "pix"
+                ]
+              }
+            }
+          },
+          "required": [
+            "version",
+            "actor",
+            "settlement",
+            "reporting_timezone",
+            "currency",
+            "payment_methods",
+            "consumption"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -619,7 +665,6 @@
           "enum": [
             "requester",
             "assigned_department",
-            "guardian",
             "workflow_department",
             "assigned_user",
             "participant"
@@ -670,7 +715,6 @@
           "enum": [
             "requester",
             "assigned_department",
-            "guardian",
             "workflow_department",
             "assigned_user",
             "participant"

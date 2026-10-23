@@ -4,6 +4,8 @@ InstantFlow is a general-purpose, multi-organization workflow platform built wit
 
 ## Current delivery
 
+Sprint 11 is in progress. Its operational contract and [legacy retirement checkpoint](docs/sprint11-retirement-checkpoint.md) now use explicit declarations, generic actor/participant commands and read-only historical retention. Old school routes, guardian writers, implicit file/reset rules, waiter payloads and the unbounded list API are retired. Full scale, contract matrices and builder recreation acceptance remain open.
+
 Sprint 09 is complete: invited external identities, scoped participant/subject verification, editable directory references, declared private-document policies and populated guardian migration/recovery now use shared builder contracts. Generic record controls manage relationships and document release. See [authoring, operation and acceptance evidence](docs/participants-and-documents.md). Generated participant projections and full school replacement remain in Sprints 10–11.
 
 The [modularity review](docs/modularity-review.md) records the builder contract, structural refactor, verified reuse and remaining domain dependencies. Complete school portal recreation through the editor remains an explicit architecture gap. The [sprint plan](sprint_plan/sprint_index.md) prioritizes that remediation in Sprints 09–11 before pilot delivery in Sprints 12–15.
@@ -14,11 +16,11 @@ Sprint 07 completes integrated verification and local delivery: [reproducible de
 
 Sprint 08 adds an immutable Python script catalogue, separate review/activation permissions, reference-only workflow bindings, durable asynchronous calculation runs and PT-BR status/retry controls. The synthetic trip example targets gVisor on the owner's private Oracle ARM VPS. Execution is disabled by default pending real-host isolation/recovery verification; see the [walkthrough and operator guide](docs/python-calculations.md).
 
-Sprint 06 adds confidential incidents, a restricted urgency dashboard, named counselor assignments, separate disciplinary/support work, confined private uploads and curated simulated guardian communication. Open **Ocorrências**. See [incident operations](docs/incidents.md).
+Sprint 06 adds confidential incidents, a restricted urgency dashboard, named counselor assignments, separate disciplinary/support work, confined private uploads and curated simulated guardian communication. Sprint 11 replaces its dedicated screen with generated process pages and explicit document policy. See [incident operations](docs/incidents.md).
 
-Sprint 05 adds shared-budget reservations, audited purchasing and reversals, partial receiving, field-trip prerequisites, live authorized budgets, calendar agendas and department assignments. Open **Orçamentos** and **Solicitações**. See [finance walkthrough and limits](docs/finance.md).
+Sprint 05 adds shared-budget reservations, audited purchasing and reversals, partial receiving, field-trip prerequisites, live authorized budgets, calendar agendas and department assignments. Use configured finance blocks and **Solicitações**; the dedicated budget route is retired. See [finance walkthrough and limits](docs/finance.md).
 
-Sprint 04 adds invitation-only guardian access, a separate parent enrollment projection, quarantined private documents, school-local verification, department handoffs and simulated payment/provisioning retry. Open **Matrículas**. See [enrollment and private documents](docs/enrollment.md) for the demo walkthrough, limits and setup.
+Sprint 04 adds invitation-only guardian access, a separate parent enrollment projection, quarantined private documents, school-local verification, department handoffs and simulated payment/provisioning retry. Sprint 11 replaces its invitation writer and screen with generic external invitations, explicit participants and generated family pages. See [enrollment and private documents](docs/enrollment.md) for the historical walkthrough and current replacement links.
 
 Sprint 03 delivers the workflow editor, revision-safe drafts, immutable publication, configured request tables/boards, JSON format 1.0 import/export, and a PT-BR authoring guide. Open **Modelos de fluxo** as a local administrator. See [editor and interchange](docs/template-editor.md) and the [authoring guide](design/workflow_authoring_guide.pt-BR.md).
 

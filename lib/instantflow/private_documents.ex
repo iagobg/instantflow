@@ -190,9 +190,18 @@ defmodule Instantflow.PrivateDocuments do
 
   def purge_expired(organization_id) do
     Tenant.raw(organization_id, fn ->
+      archived =
+        from t in Ticket,
+          join: r in "retired_workflow_versions",
+          on: r.version_id == t.workflow_version_id,
+          where: t.id == parent_as(:document).ticket_id,
+          select: 1
+
       Repo.update_all(
         from(d in Document,
-          where: d.expires_at <= ^now() and d.status in ["ready", "quarantined"]
+          as: :document,
+          where: d.expires_at <= ^now() and d.status in ["ready", "quarantined"],
+          where: not exists(subquery(archived))
         ),
         set: [status: "expired", content: <<>>]
       )
@@ -263,6 +272,8 @@ defmodule Instantflow.PrivateDocuments do
   end
 
   defp mutate!(actor, ticket, section, field, operation, key, payload, fun) do
+    Instantflow.WorkflowCatalog.Retirement.require_active!(ticket.workflow_version_id)
+
     if Policy.declaration(section, field) do
       unless is_binary(key) and byte_size(key) in 1..128, do: Repo.rollback(:invalid_command)
       operation = "document:" <> operation

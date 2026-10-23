@@ -272,6 +272,28 @@ defmodule InstantflowWeb.TemplateLive do
         do: Map.delete(interface, "lifecycle"),
         else: Map.put(interface, "lifecycle", %{"close_transition" => params["close_transition"]})
 
+    interface =
+      if "operations" in draft.definition["capabilities"] or
+           Enum.any?(pages, fn p ->
+             Enum.any?(
+               p["blocks"],
+               &(&1 in Instantflow.WorkflowCatalog.Interface.operational_blocks())
+             )
+           end) do
+        contract =
+          Instantflow.WorkflowCatalog.OperationalContract.resolve(draft.definition) ||
+            Instantflow.WorkflowCatalog.OperationalContract.defaults()
+
+        methods =
+          if Map.has_key?(params, "payment_methods"),
+            do: selections(params["payment_methods"]),
+            else: contract["payment_methods"]
+
+        Map.put(interface, "operations", Map.put(contract, "payment_methods", methods))
+      else
+        interface
+      end
+
     required =
       Enum.flat_map(pages, fn p ->
         Enum.map(p["blocks"], &Instantflow.WorkflowCatalog.Interface.required_capability/1)
@@ -637,6 +659,14 @@ defmodule InstantflowWeb.TemplateLive do
         )
       end)
 
+    params =
+      Map.put(
+        params,
+        "payment_methods",
+        (Instantflow.WorkflowCatalog.OperationalContract.resolve(definition) ||
+           Instantflow.WorkflowCatalog.OperationalContract.defaults())["payment_methods"]
+      )
+
     Map.put(
       params,
       "close_transition",
@@ -853,6 +883,22 @@ defmodule InstantflowWeb.TemplateLive do
               options={@close_options}
               prompt="Não se aplica"
             />
+            <fieldset
+              :if={"operations" in @draft.definition["capabilities"]}
+              id="operational-contract"
+            >
+              <legend>Contrato operacional v1</legend>
+              <p>
+                Responsável por nome registrado; recebimento manual integral em BRL; fuso da organização; consumo estimado de unidades.
+              </p>
+              <.input
+                field={@interface_page_form[:payment_methods]}
+                type="select"
+                multiple
+                label="Formas de pagamento aceitas"
+                options={[{"Dinheiro", "cash"}, {"Cartão", "card"}, {"Pix", "pix"}]}
+              />
+            </fieldset>
             <.input
               :for={
                 {key, label} <- [
@@ -1216,7 +1262,7 @@ defmodule InstantflowWeb.TemplateLive do
           <.link
             :if={Instantflow.WorkflowCatalog.Capabilities.enabled?(@draft.definition, "finance")}
             id="configure-process-budgets"
-            navigate={~p"/o/#{@current_scope.organization.slug}/orcamentos"}
+            href="#template-finance-account"
             class="btn"
           >Configurar contas de orçamento para os vínculos deste processo</.link>
           <.form for={@picker} id="authoring-picker" phx-submit="pick">

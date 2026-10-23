@@ -49,11 +49,13 @@ defmodule Instantflow.OperationsFixtures do
     %{actor: actor, resource: resource, soup: soup, asado: asado}
   end
 
-  def open_visit(f, date \\ Operations.today()) do
+  def open_visit(f, date \\ nil) do
+    date = date || Operations.today(f.actor)
+
     {:ok, %{"id" => id}} =
       operation(f.actor, "open_session", %{
         "resource_id" => f.resource,
-        "waiter" => "Carlos",
+        "responsible_actor" => "Carlos",
         "business_date" => Date.to_iso8601(date)
       })
 
@@ -61,7 +63,8 @@ defmodule Instantflow.OperationsFixtures do
   end
 
   def item(actor, id, quantity \\ 1) do
-    product = Enum.find(Operations.workspace(actor, Operations.today()).products, &(&1.id == id))
+    product =
+      Enum.find(Operations.workspace(actor, Operations.today(actor)).products, &(&1.id == id))
 
     %{
       "product_id" => id,

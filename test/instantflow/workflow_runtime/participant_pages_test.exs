@@ -47,7 +47,7 @@ defmodule Instantflow.WorkflowRuntime.ParticipantPagesTest do
              1
 
     assert WorkflowRuntime.search(f.visitor).total == 0
-    assert WorkflowRuntime.list(f.visitor) == []
+    assert WorkflowRuntime.search(f.visitor).tickets == []
     assert Instantflow.WorkflowCatalog.Views.options(f.visitor) == []
     observed = %{stage_revision: data.stage_revision, section_revision: hd(data.fields).revision}
 

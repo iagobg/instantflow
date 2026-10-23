@@ -1,5 +1,10 @@
 # Builder execution and participant contracts
 
+Current compatibility boundary (D-32, 2026-10-22): the historical adapter allowance
+described below is retired. The [disposition register](sprint11-legacy-disposition-inventory.md)
+records removed modules/APIs and frozen source data. Supported version pinning and
+current authorization remain required; retained provenance does not grant execution.
+
 Established 2026-10-21 in S09-T05 and extended through completed Sprint 09.
 See [acceptance contract](builder-architecture-contract.md) and
 [Sprint 09](../sprint_plan/sprint_09.md). The [participant/reference/document guide](participants-and-documents.md)

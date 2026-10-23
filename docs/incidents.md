@@ -1,5 +1,13 @@
 # Confidential incidents — synthetic demonstration
 
+**Historical Sprint 06 walkthrough.** Sprint 11 D-32 retired the dedicated
+Ocorrências route and Incidents context. Open the configured process in
+**Processos** and its generated record page; declared views provide urgency
+filtering. Files now use explicit document policies with an independent reviewer:
+the uploader cannot review their own file. The following description records
+the original screen behavior. See the [current checkpoint](sprint11-retirement-checkpoint.md)
+for replacement and preservation evidence.
+
 Open **Ocorrências** for the restricted urgency dashboard and **Solicitações** for section editing. All people, reports, attachments and communications must be fictional. This system does not guarantee emergency response.
 
 ## Demo roles and walkthrough

@@ -6,7 +6,8 @@
   "name": "Registro de ocorrências",
   "description": "Triagem restrita com orientação atribuída e comunicação curada simulada.",
   "capabilities": [
-    "core"
+    "core",
+    "documents"
   ],
   "role_requirements": [
     {
@@ -142,7 +143,22 @@
         {
           "key": "attachment",
           "label": "Anexo privado fictício (opcional)",
-          "type": "attachment"
+          "type": "attachment",
+          "document_policy": {
+            "reviewers": [
+              {
+                "role": "counselor",
+                "scope": "assigned_user",
+                "assignment_key": "support"
+              }
+            ],
+            "max_bytes": 5242880,
+            "media_types": [
+              "application/pdf",
+              "image/png",
+              "image/jpeg"
+            ]
+          }
         }
       ],
       "assignment": {

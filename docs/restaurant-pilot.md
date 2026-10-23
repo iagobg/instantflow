@@ -69,3 +69,15 @@ The generated interface and migration follow-up is documented in [process compos
 ## Sprint-plan reorganization — 2026-10-21
 
 D-27 prioritizes architecture Sprints 09–11 before the preserved pilot work in Sprints 12–15. Current task references above use the new numbering; historical machine-readable evidence retains its original identifiers and source hashes. See the [roadmap mapping](../sprint_plan/first_customer_roadmap.md#scope-tracking).
+
+## Retired operational history — Sprint 11
+
+After the forward archival migration, unpaid sessions pinned to retired versions
+are retained as archived, not settled. Their pending batches are archived without
+claiming manual delivery. The daily report shows their captured non-cancelled
+amount separately from open balances, paid sales and receipts; estimated requested
+units still include that history. Archived sessions release resources and do not
+block day closure. A current supported publication can open a new session on the
+same resource. Historical paid sessions, cancellation totals, receipts and prior
+day snapshots are preserved. See the [checkpoint review resolution](sprint11-first-checkpoint-review-resolution.md)
+for the populated migration/restore test and operator procedure.

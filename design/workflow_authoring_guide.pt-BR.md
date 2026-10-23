@@ -90,3 +90,17 @@ Cada item de `views` tem `key`, `label`, `type` (`table`, `board`, `calendar` ou
 7. Exporte apenas depois de revisar o conteúdo. A exportação contém a definição e um resumo SHA-256 para conferência; não contém mapeamentos reais, concessões, solicitações ou anexos. Rascunhos são identificados no arquivo e na tela. Rótulos e regras ainda podem revelar práticas internas.
 
 Novas solicitações usam a última versão publicada. Solicitações em andamento permanecem na versão original. Uma nova importação em outra organização cria uma instalação independente, sem sincronização de dados ou atualizações futuras.
+
+## Contrato operacional v1
+
+No painel da página operacional, selecione as formas de pagamento aceitas e salve
+antes de publicar. O contrato `interface.operations` declara nome do responsável
+capturado, recebimento manual integral em BRL, dinheiro/cartão/Pix, fuso atual da
+organização e consumo estimado de unidades de produto. Não oferece pagamentos
+parciais, estornos, depósitos ou controle de estoque. Atendimentos já abertos usam
+as regras da versão publicada na abertura, com permissões atuais. Novos comandos
+usam `responsible_actor`; a entrada antiga `waiter` foi descontinuada. Os nomes
+capturados nas colunas históricas permanecem preservados. Novas publicações
+operacionais exigem contrato e transição de fechamento explícitos. Versões
+históricas classificadas pelo operador ficam somente para leitura; não reative
+convites, rotas ou efeitos descontinuados para recuperar os dados.

@@ -57,9 +57,9 @@ defmodule Instantflow.ParticipantsTest do
 
     assert {:ok, data} = WorkflowRuntime.get(f.visitor, f.id)
     assert Enum.map(data.sections, & &1.key) == ["customer_details"]
-    assert Enum.map(WorkflowRuntime.list(f.visitor), & &1.id) == [f.id]
+    assert Enum.map(WorkflowRuntime.search(f.visitor).tickets, & &1.id) == [f.id]
     assert {:error, :not_found} = WorkflowRuntime.get(f.unrelated, f.id)
-    assert WorkflowRuntime.list(f.unrelated) == []
+    assert WorkflowRuntime.search(f.unrelated).tickets == []
     assert {:ok, internal} = WorkflowRuntime.get(f.admin, f.id)
     refute Enum.any?(internal.sections, &(&1.key == "customer_details"))
     refute Enum.any?(data.events, &String.starts_with?(&1.operation, "participant:"))

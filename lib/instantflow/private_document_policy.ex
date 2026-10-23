@@ -1,6 +1,5 @@
 defmodule Instantflow.PrivateDocuments.Policy do
   @moduledoc "Pinned, field-declared document permissions over current section/relationship authority."
-  alias Instantflow.PrivateDocuments.LegacyPolicy
   alias Instantflow.WorkflowRuntime.Policy, as: RecordPolicy
 
   def declaration(section, key) do
@@ -9,9 +8,8 @@ defmodule Instantflow.PrivateDocuments.Policy do
   end
 
   def allowed?(actor, ticket, version, section, field, permission) do
-    if declaration(section, field),
-      do: RecordPolicy.section?(actor, ticket, version, section, permission),
-      else: LegacyPolicy.allowed?(actor, ticket, version, section, field, permission)
+    not is_nil(declaration(section, field)) and
+      RecordPolicy.section?(actor, ticket, version, section, permission)
   end
 
   def download_allowed?(actor, ticket, version, section, field) do
@@ -28,7 +26,7 @@ defmodule Instantflow.PrivateDocuments.Policy do
   def reviewer?(actor, ticket, version, section, field, uploader) do
     case declaration(section, field) do
       nil ->
-        LegacyPolicy.reviewer?(actor, ticket, version, section)
+        false
 
       policy ->
         actor.user_id != uploader and
@@ -38,7 +36,7 @@ defmodule Instantflow.PrivateDocuments.Policy do
 
   def file?(section, field, type, size) do
     case declaration(section, field) do
-      nil -> true
+      nil -> false
       policy -> type in policy["media_types"] and size <= policy["max_bytes"]
     end
   end

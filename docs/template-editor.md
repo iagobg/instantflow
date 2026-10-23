@@ -33,3 +33,21 @@ Directory references remain reserved declarations with fail-closed non-null valu
 - `test/instantflow/runtime_role_test.exs`: deterministic overlapping draft saves/publications through independent non-owner connections, single accepted revision, one publication event, tenant RLS and pinned tickets.
 
 Run `mix precommit` and `mix assets.build`. Apply migrations with the operator repository; the migration is forward-only. Existing records and immutable workflow versions are preserved.
+
+## Sprint 11 operational settings
+
+For an operational process, the page panel exposes **Contrato operacional v1**.
+Choose one or more supported payment methods (Dinheiro, Cartão, Pix) and save the
+page before reviewing/publishing. Its fixed semantics are a captured responsible
+name, integral manual settlement in BRL, organization timezone and estimated
+product-unit consumption. Other currencies, split payments, refunds, deposits and
+stock accounting are unavailable. Existing sessions retain their published payment
+rules; new sessions use the new publication. See the
+[operational checkpoint](sprint11-operational-checkpoint.md) for compatibility,
+supported command payloads and remaining acceptance work.
+
+Under D-32, new attachment fields require explicit document policies and new
+operational definitions require an explicit closing transition and contract.
+Guardian scopes and missing-contract runtime fallbacks cannot be published.
+Historical source data is preserved without re-enabling old mutation APIs; see
+the [retirement register](sprint11-legacy-disposition-inventory.md).

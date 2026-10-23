@@ -1,13 +1,6 @@
 defmodule InstantflowWeb.HomeLive do
   use InstantflowWeb, :live_view
 
-  def mount(_params, _session, %{assigns: %{current_scope: %{role: "parent"}}} = socket),
-    do:
-      {:ok,
-       push_navigate(socket,
-         to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/matriculas"
-       )}
-
   def mount(_params, _session, socket), do: {:ok, assign(socket, :page_title, "Visão geral")}
 
   def render(assigns) do

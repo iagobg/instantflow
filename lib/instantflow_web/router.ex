@@ -55,16 +55,10 @@ defmodule InstantflowWeb.Router do
       live "/processos/:workflow_id/p/:page_key", ProcessLive, :index
       live "/processos/:workflow_id/p/:page_key/atendimentos/:id", ProcessLive, :show
       live "/processos/:workflow_id/registros/:id", RequestLive, :show
-      live "/operacao", ProcessLive, :index
-      live "/operacao/:id", ProcessLive, :show
       live "/equipe", TeamLive, :index
       live "/modelos", TemplatesLive, :index
       live "/modelos/:id", TemplateLive, :show
-      live "/ocorrencias", IncidentsLive, :index
-      live "/orcamentos", BudgetsLive, :index
       live "/calculos", CalculationsLive, :index
-      live "/matriculas", EnrollmentLive, :index
-      live "/matriculas/:id", EnrollmentLive, :show
       live "/solicitacoes", RequestsLive, :index
       live "/solicitacoes/:id", RequestLive, :show
     end

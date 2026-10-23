@@ -1,19 +1,16 @@
 defmodule Instantflow.WorkflowRuntime.Policy do
   @moduledoc "Deny-by-default role, department, relationship, stage, and section policies."
   alias Instantflow.Access
-  alias Instantflow.WorkflowRuntime.LegacyAccess
 
   def discover?(actor, ticket, version) do
-    not LegacyAccess.parent_portal?(actor, version) and
-      Enum.any?(version.definition["sections"], &section?(actor, ticket, version, &1, :read))
+    Enum.any?(version.definition["sections"], &section?(actor, ticket, version, &1, :read))
   end
 
   def create?(actor, version) do
-    not LegacyAccess.parent_portal?(actor, version) and
-      Enum.any?(
-        version.definition["creation"]["roles"],
-        &Access.role?(actor, Map.get(version.bindings["roles"], &1, []))
-      )
+    Enum.any?(
+      version.definition["creation"]["roles"],
+      &Access.role?(actor, Map.get(version.bindings["roles"], &1, []))
+    )
   end
 
   def section?(actor, ticket, version, section, mode, facts \\ :live)
@@ -42,44 +39,41 @@ defmodule Instantflow.WorkflowRuntime.Policy do
   end
 
   def actor?(actor, ticket, version, spec, facts \\ :live) do
-    (not LegacyAccess.parent_portal?(actor, version) or
-       LegacyAccess.guardian?(actor, ticket, version)) and
-      Enum.any?(Access.profiles(actor), fn profile ->
-        profile.role in Map.get(version.bindings["roles"], spec["role"], []) and
-          case spec["scope"] do
-            "participant" ->
-              if facts == :live,
-                do:
-                  Instantflow.Participants.linked?(actor, ticket, version, spec["relationship"]),
-                else: spec["relationship"] in facts.relationships
+    Enum.any?(Access.profiles(actor), fn profile ->
+      profile.role in Map.get(version.bindings["roles"], spec["role"], []) and
+        case spec["scope"] do
+          "participant" ->
+            if facts == :live,
+              do: Instantflow.Participants.linked?(actor, ticket, version, spec["relationship"]),
+              else: spec["relationship"] in facts.relationships
 
-            "assigned_user" ->
-              if facts == :live,
-                do:
-                  Instantflow.Collaboration.Assignments.assigned?(
-                    actor,
-                    ticket,
-                    version,
-                    spec["assignment_key"]
-                  ),
-                else: spec["assignment_key"] in facts.assignments
+          "assigned_user" ->
+            if facts == :live,
+              do:
+                Instantflow.Collaboration.Assignments.assigned?(
+                  actor,
+                  ticket,
+                  version,
+                  spec["assignment_key"]
+                ),
+              else: spec["assignment_key"] in facts.assignments
 
-            "requester" ->
-              actor.user_id == ticket.requester_id
+          "requester" ->
+            actor.user_id == ticket.requester_id
 
-            "guardian" ->
-              facts == :live and LegacyAccess.guardian?(actor, ticket, version)
+          "guardian" ->
+            false
 
-            "workflow_department" ->
-              profile.department_id == version.bindings["departments"][spec["department_binding"]]
+          "workflow_department" ->
+            profile.department_id == version.bindings["departments"][spec["department_binding"]]
 
-            "assigned_department" ->
-              profile.department_id == ticket.assigned_department_id
+          "assigned_department" ->
+            profile.department_id == ticket.assigned_department_id
 
-            _ ->
-              false
-          end
-      end)
+          _ ->
+            false
+        end
+    end)
   end
 
   def retry?(actor, ticket, version) do

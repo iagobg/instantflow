@@ -12,15 +12,11 @@ defmodule Instantflow.WorkflowRuntime.PolicyQuery do
   alias Instantflow.Participants.Relationship
 
   def discover(scope, version) do
-    if Instantflow.WorkflowRuntime.LegacyAccess.parent_portal?(scope, version) do
-      dynamic(false)
-    else
-      version.definition["sections"]
-      |> Enum.reduce(dynamic(false), fn section, acc ->
-        rule = section(scope, version, section)
-        dynamic(^acc or ^rule)
-      end)
-    end
+    version.definition["sections"]
+    |> Enum.reduce(dynamic(false), fn section, acc ->
+      rule = section(scope, version, section)
+      dynamic(^acc or ^rule)
+    end)
   end
 
   def section(scope, version, section) do
@@ -57,11 +53,6 @@ defmodule Instantflow.WorkflowRuntime.PolicyQuery do
         "participant" ->
           participant(scope, version, spec["relationship"])
 
-        "guardian" ->
-          if not Instantflow.WorkflowRuntime.LegacyAccess.legacy_definition?(version.definition),
-            do: dynamic(false),
-            else: relationship(scope, "legacy_guardian", true)
-
         "assigned_user" ->
           assignment(scope, version, spec["assignment_key"])
 
@@ -73,11 +64,11 @@ defmodule Instantflow.WorkflowRuntime.PolicyQuery do
 
   defp participant(scope, version, key) do
     if Enum.any?(Map.get(version.definition, "participants", []), &(&1["key"] == key)),
-      do: relationship(scope, key, false),
+      do: relationship(scope, key),
       else: dynamic(false)
   end
 
-  defp relationship(scope, key, legacy?) do
+  defp relationship(scope, key) do
     query =
       from r in Relationship,
         where:
@@ -85,9 +76,6 @@ defmodule Instantflow.WorkflowRuntime.PolicyQuery do
             r.ticket_id == parent_as(:ticket).id and
             r.workflow_id == parent_as(:ticket).workflow_id and r.relationship == ^key and
             r.status == "verified" and not is_nil(r.verified_at)
-
-    query =
-      if legacy?, do: where(query, [r], not is_nil(r.legacy_guardian_link_id)), else: query
 
     dynamic(exists(subquery(query)))
   end
@@ -98,7 +86,6 @@ defmodule Instantflow.WorkflowRuntime.PolicyQuery do
 
     eligible? =
       spec && scope.active &&
-        not Instantflow.WorkflowRuntime.LegacyAccess.parent_portal?(scope, version) &&
         Enum.any?(Access.profiles(scope), fn profile ->
           profile.role in version.bindings["roles"][spec["role"]] and
             profile.department_id == version.bindings["departments"][spec["department_binding"]]

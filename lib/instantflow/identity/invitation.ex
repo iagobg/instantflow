@@ -24,7 +24,7 @@ defmodule Instantflow.Identity.Invitation do
       message: "informe um e-mail válido"
     )
     |> validate_length(:email, max: 160, message: "deve ter no máximo 160 caracteres")
-    |> validate_inclusion(:role, ["admin", "staff", "parent", "external"],
+    |> validate_inclusion(:role, ["admin", "staff", "external"],
       message: "selecione um perfil válido"
     )
   end

@@ -345,7 +345,7 @@ defmodule Instantflow.RuntimeRoleTest do
                "workflow_id" => c.version.workflow_id
              })
 
-    assert length(WorkflowRuntime.list(c.a_scope)) == 1
+    assert length(WorkflowRuntime.search(c.a_scope).tickets) == 1
     Application.put_env(:instantflow, :max_pending_deliveries_per_organization, 1000)
 
     for number <- 1..3,
@@ -849,12 +849,12 @@ defmodule Instantflow.RuntimeRoleTest do
     end
   end
 
-  test "guardian, enrollment and private object tables enforce tenant RLS under the real runtime role",
+  test "participant, ticket and private object tables enforce tenant RLS under the real runtime role",
        c do
     f = enrollment_runtime(c)
 
     {:ok, document} =
-      Instantflow.Enrollment.upload(
+      Instantflow.EnrollmentFixtures.upload(
         f.parent,
         f.enrollment.id,
         "documento.pdf",
@@ -862,8 +862,8 @@ defmodule Instantflow.RuntimeRoleTest do
       )
 
     for table <- [
-          Instantflow.Enrollment.Record,
-          Instantflow.Enrollment.GuardianLink,
+          Instantflow.WorkflowRuntime.Ticket,
+          Instantflow.Participants.Relationship,
           Instantflow.Enrollment.Document
         ] do
       assert Repo.aggregate(table, :count) == 0
@@ -874,9 +874,11 @@ defmodule Instantflow.RuntimeRoleTest do
 
     assert_raise Ecto.ConstraintError, fn ->
       Tenant.raw(c.b.id, fn ->
-        Repo.insert!(%Instantflow.Enrollment.GuardianLink{
+        Repo.insert!(%Instantflow.Participants.Relationship{
           organization_id: c.b.id,
-          enrollment_id: f.enrollment.id,
+          workflow_id: f.version.workflow_id,
+          ticket_id: f.enrollment.id,
+          relationship: "family",
           membership_id: c.b_scope.id
         })
       end)
@@ -889,27 +891,13 @@ defmodule Instantflow.RuntimeRoleTest do
   test "two verified guardians overlap on one section and preserve one winning revision", c do
     f = enrollment_runtime(c)
 
-    {:ok, invitation} =
-      Instantflow.Enrollment.invite(
+    other =
+      Instantflow.BuilderFixtures.invite_external(
         c.a_scope,
-        f.enrollment.id,
         "second-parent#{c.a.id}@example.test"
       )
 
-    {:ok, user} =
-      Identity.accept_invitation(invitation.token, %{
-        "name" => "Segundo responsável",
-        "password" => "fictional-password-123"
-      })
-
-    other = Identity.scope(user.id, c.a.id)
-
-    [link] =
-      OperatorRepo.all(
-        from g in Instantflow.Enrollment.GuardianLink, where: g.membership_id == ^other.id
-      )
-
-    {:ok, _} = Instantflow.Enrollment.verify(c.a_scope, link.id, true)
+    Instantflow.EnrollmentFixtures.link(c.a_scope, other, f.enrollment.id)
     {:ok, data} = WorkflowRuntime.get(c.a_scope, f.enrollment.ticket_id)
 
     first =
@@ -918,25 +906,37 @@ defmodule Instantflow.RuntimeRoleTest do
       })
 
     second = %{first | "key" => "other-guardian", "values" => %{"student_name" => "Segundo"}}
+    receipts_before = count_receipts(data.ticket.id)
     results = race(c, data.ticket.id, [{f.parent, first}, {other, second}])
     assert Enum.count(results, &match?({:ok, _}, &1)) == 1
     assert {:error, :conflict} in results
-    assert {:ok, final} = Instantflow.Enrollment.get(f.parent, f.enrollment.id)
-    assert final.section_revision == 2
-    assert count_receipts(data.ticket.id) == 2
+    assert {:ok, final} = WorkflowRuntime.get(f.parent, f.enrollment.id)
+    assert Enum.find(final.sections, &(&1.key == "application")).revision == 2
+    assert count_receipts(data.ticket.id) == receipts_before + 1
   end
 
   test "guardian-link revocation commits before a queued parent mutation reauthorizes", c do
     f = enrollment_runtime(c)
     observer = self()
     supervisor = start_supervised!(Task.Supervisor)
+    receipts_before = count_receipts(f.enrollment.id)
 
     revoker =
       Task.Supervisor.async_nolink(supervisor, fn ->
         Repo.put_dynamic_repo(c.runtime)
 
         Repo.transaction(fn ->
-          result = Instantflow.Enrollment.verify(c.a_scope, f.link.id, false)
+          result =
+            Instantflow.Participants.command(
+              c.a_scope,
+              Instantflow.EnrollmentFixtures.relationship_command(
+                f.enrollment.id,
+                f.parent.id,
+                "revoke",
+                f.link.revision
+              )
+            )
+
           send(observer, :guardian_gate_held)
 
           receive do
@@ -953,14 +953,15 @@ defmodule Instantflow.RuntimeRoleTest do
       Task.Supervisor.async_nolink(supervisor, fn ->
         Repo.put_dynamic_repo(c.runtime)
 
-        Instantflow.Enrollment.save(
-          f.parent,
-          f.enrollment.id,
-          %{"student_name" => "Não deve salvar"},
-          1,
-          1,
-          "revoked-guardian"
-        )
+        WorkflowRuntime.command(f.parent, %{
+          "operation" => "save_section",
+          "ticket_id" => f.enrollment.id,
+          "section" => "application",
+          "values" => %{"student_name" => "Não deve salvar"},
+          "expected_stage_revision" => 1,
+          "expected_section_revision" => 1,
+          "key" => "revoked-family"
+        })
       end)
 
     connection =
@@ -973,38 +974,23 @@ defmodule Instantflow.RuntimeRoleTest do
     assert wait_for_waiters(connection, c.database, 1, 1000)
     send(revoker.pid, :commit)
     assert {:ok, {:ok, _}} = Task.await(revoker)
-    assert {:error, :not_found} = Task.await(command)
-    assert count_receipts(f.enrollment.ticket_id) == 1
-    assert Instantflow.Enrollment.list(f.parent) == []
+    assert {:error, :forbidden} = Task.await(command)
+    assert count_receipts(f.enrollment.ticket_id) == receipts_before + 1
+    assert {:error, :not_found} = Instantflow.EnrollmentFixtures.portal(f)
   end
 
   defp enrollment_runtime(c) do
     departments =
       Map.new(~w(admissions academic finance it), &{&1 <> "_department", c.a_scope.department_id})
 
-    {:ok, version} = Instantflow.Enrollment.install(c.a_scope, departments)
+    {:ok, version} = Instantflow.EnrollmentFixtures.install(c.a_scope, departments)
+    enrollment = Instantflow.EnrollmentFixtures.create_record(c.a_scope, version.workflow_id)
 
-    {:ok, enrollment} =
-      Instantflow.Enrollment.create(c.a_scope, version.workflow_id, Ecto.UUID.generate())
+    parent =
+      Instantflow.BuilderFixtures.invite_external(c.a_scope, "parent#{c.a.id}@example.test")
 
-    {:ok, invitation} =
-      Instantflow.Enrollment.invite(c.a_scope, enrollment.id, "parent#{c.a.id}@example.test")
-
-    {:ok, user} =
-      Identity.accept_invitation(invitation.token, %{
-        "name" => "Responsável fictício",
-        "password" => "fictional-password-123"
-      })
-
-    parent = Identity.scope(user.id, c.a.id)
-
-    [link] =
-      OperatorRepo.all(
-        from g in Instantflow.Enrollment.GuardianLink, where: g.membership_id == ^parent.id
-      )
-
-    {:ok, _} = Instantflow.Enrollment.verify(c.a_scope, link.id, true)
-    %{enrollment: enrollment, parent: parent, link: link}
+    link = Instantflow.EnrollmentFixtures.link(c.a_scope, parent, enrollment.id)
+    %{enrollment: enrollment, parent: parent, link: link, version: version}
   end
 
   defp collaborative_ticket(c, expected_version \\ 1) do
@@ -1247,7 +1233,7 @@ defmodule Instantflow.RuntimeRoleTest do
     counselor = Identity.scope(counselor.user_id, c.a.id)
 
     {:ok, version} =
-      Instantflow.Incidents.install(c.a_scope, %{
+      Instantflow.IncidentFixtures.install(c.a_scope, %{
         "dean_department" => dean.department_id,
         "support_department" => dean.department_id
       })
@@ -1312,7 +1298,9 @@ defmodule Instantflow.RuntimeRoleTest do
 
     counselor_b = Identity.scope(f.counselor.user_id, c.b.id)
     assert {:error, :not_found} = WorkflowRuntime.get(counselor_b, id)
-    assert Instantflow.Incidents.list(counselor_b, %{}).total == 0
+
+    assert Instantflow.WorkflowCatalog.Views.search(counselor_b, f.version.workflow_id, "triage").total ==
+             0
 
     assert {:error, :invalid_assignee} =
              Instantflow.IncidentFixtures.assign(f.dean, id, counselor_b.id, "Outro colégio")
@@ -1329,7 +1317,31 @@ defmodule Instantflow.RuntimeRoleTest do
                "%PDF-1.4 FICTICIO %%EOF"
              )
 
-    assert {:ok, _} = Instantflow.PrivateDocuments.review(f.counselor, file.object_key, true)
+    assert {:error, :forbidden} =
+             Instantflow.PrivateDocuments.review(f.counselor, file.object_key, true)
+
+    independent = reviewer(c, "document-reviewer")
+
+    {:ok, _} =
+      Instantflow.Access.grant(c.a_scope, independent.id, independent.department_id, "counselor")
+
+    assert {:ok, _} =
+             Instantflow.IncidentFixtures.assign(
+               f.dean,
+               id,
+               independent.id,
+               "Revisão independente"
+             )
+
+    assert {:ok, _} = Instantflow.PrivateDocuments.review(independent, file.object_key, true)
+
+    assert {:ok, _} =
+             Instantflow.IncidentFixtures.assign(
+               f.dean,
+               id,
+               f.counselor.id,
+               "Retomar acompanhamento"
+             )
 
     assert {:error, :not_found} =
              Instantflow.PrivateDocuments.download(counselor_b, file.object_key)
@@ -1597,8 +1609,8 @@ defmodule Instantflow.RuntimeRoleTest do
     open = %{
       "operation" => "open_session",
       "resource_id" => resource["id"],
-      "waiter" => "Carlos",
-      "business_date" => Date.to_iso8601(Operations.today())
+      "responsible_actor" => "Carlos",
+      "business_date" => Date.to_iso8601(Operations.today(actor))
     }
 
     supervisor = start_supervised!({Task.Supervisor, []})
@@ -1625,7 +1637,7 @@ defmodule Instantflow.RuntimeRoleTest do
     assert Enum.count(results, &match?({:ok, _}, &1)) == 1
     assert Enum.count(results, &(&1 == {:error, :occupied})) == 1
     {:ok, session} = Enum.find(results, &match?({:ok, _}, &1))
-    p = hd(Operations.workspace(actor, Operations.today()).products)
+    p = hd(Operations.workspace(actor, Operations.today(actor)).products)
 
     command = %{
       "operation" => "submit_batch",

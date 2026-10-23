@@ -14,15 +14,6 @@ defmodule InstantflowWeb.ProcessesLiveTest do
     refute has_element?(view, "#budgets-link")
     refute has_element?(view, "#records-link")
     refute has_element?(view, "a[href='/o/horizonte/operacao']")
-
-    for route <- [
-          "/o/horizonte/matriculas",
-          "/o/horizonte/ocorrencias",
-          "/o/horizonte/orcamentos"
-        ] do
-      assert {:error, {:redirect, %{to: "/o/horizonte/processos"}}} =
-               live(login(conn, actor), route)
-    end
   end
 
   test "restaurant gets only configured processes and independent workspace links", %{conn: conn} do
@@ -40,9 +31,6 @@ defmodule InstantflowWeb.ProcessesLiveTest do
     assert has_element?(view, "#process-link-#{a.workflow_id}", "Pedidos do restaurante")
     refute has_element?(view, "#enrollment-link")
     refute has_element?(view, "#records-link")
-
-    assert {:error, {:live_redirect, %{to: "/o/horizonte/processos"}}} =
-             live(login(conn, actor), ~p"/o/horizonte/operacao")
   end
 
   test "process creation exposes reusable starters and workspace names in the editor", %{

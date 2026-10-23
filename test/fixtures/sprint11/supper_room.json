@@ -1,0 +1,146 @@
+{
+  "format_version": "1.0",
+  "template_key": "supper_room",
+  "template_version": "0.1.0",
+  "locale": "pt-BR",
+  "name": "Serviço da sala",
+  "description": "Atendimentos por recurso, itens de catálogo e lotes por destino. Use o espaço operacional para abrir e fechar.",
+  "capabilities": [
+    "core",
+    "operations"
+  ],
+  "role_requirements": [
+    {
+      "key": "host",
+      "label": "Operador"
+    }
+  ],
+  "sections": [
+    {
+      "key": "visit_notes",
+      "label": "Atendimento",
+      "classification": "internal",
+      "access": [
+        {
+          "role": "host",
+          "scope": "requester",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "host",
+          "scope": "assigned_department",
+          "read": true,
+          "edit_stages": []
+        }
+      ],
+      "fields": [
+        {
+          "key": "memo",
+          "label": "Referência operacional",
+          "type": "short_text"
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "key": "serving",
+      "label": "Em atendimento",
+      "initial": true,
+      "terminal": false
+    },
+    {
+      "key": "paid",
+      "label": "Encerrado",
+      "initial": false,
+      "terminal": true
+    }
+  ],
+  "creation": {
+    "roles": [
+      "host"
+    ]
+  },
+  "transitions": [
+    {
+      "key": "complete_visit",
+      "label": "Encerrar pelo espaço operacional",
+      "from": "serving",
+      "to": "paid",
+      "actors": [
+        {
+          "role": "host",
+          "scope": "requester"
+        },
+        {
+          "role": "host",
+          "scope": "assigned_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": []
+    }
+  ],
+  "bindings": [
+    {
+      "key": "service_team",
+      "type": "department",
+      "label": "Departamento operacional"
+    }
+  ],
+  "assignment": {
+    "department_binding": "service_team"
+  },
+  "views": [
+    {
+      "key": "services",
+      "label": "Atendimentos",
+      "type": "table",
+      "columns": [
+        "stage"
+      ]
+    }
+  ],
+  "interface": {
+    "pages": [
+      {
+        "key": "service_desk",
+        "label": "Atendimento",
+        "blocks": [
+          "catalog",
+          "resources",
+          "items",
+          "batches",
+          "settlement",
+          "daily_summary"
+        ]
+      }
+    ],
+    "labels": {
+      "resource": "Mesa",
+      "resources": "Mesas",
+      "catalog": "Cardápio",
+      "actor": "Garçom",
+      "destination": "Destino de preparo"
+    },
+    "lifecycle": {
+      "close_transition": "complete_visit"
+    },
+    "operations": {
+      "version": 1,
+      "actor": "captured_name",
+      "settlement": "full_manual",
+      "reporting_timezone": "organization",
+      "currency": "BRL",
+      "payment_methods": [
+        "cash",
+        "card",
+        "pix"
+      ],
+      "consumption": "estimated_product_units"
+    }
+  }
+}

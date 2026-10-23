@@ -10,7 +10,15 @@ defmodule Instantflow.WorkflowCatalog.BuilderContractTest do
           ["operations", "core", "finance"],
           ["finance", "operations", "core"]
         ] do
-      composed = Map.put(definition, "capabilities", capabilities)
+      composed =
+        definition
+        |> Map.put("capabilities", capabilities)
+        |> put_in(
+          ["interface", "operations"],
+          Instantflow.WorkflowCatalog.OperationalContract.defaults()
+        )
+        |> put_in(["interface", "lifecycle"], %{"close_transition" => "finish"})
+
       assert :ok = Definition.validate(composed)
       assert {:ok, ^composed} = composed |> Interchange.encode() |> Interchange.decode()
     end

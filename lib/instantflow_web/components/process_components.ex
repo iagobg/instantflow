@@ -270,7 +270,7 @@ defmodule InstantflowWeb.ProcessComponents do
             id={"open-resource-#{resource.id}"}
             patch={session_path(@current_scope, @workflow_id, @pages, resource.session.id)}
             class="btn primary"
-          >Atendimento #{resource.session.id} · {resource.session.waiter}</.link>
+          >Atendimento #{resource.session.id} · {Instantflow.Operations.actor_name(resource.session)}</.link>
           <span :if={!resource.session}>Livre</span>
         </div>
       </div>
@@ -289,7 +289,12 @@ defmodule InstantflowWeb.ProcessComponents do
           prompt="Selecione"
           required
         />
-        <.input field={@open_form[:waiter]} label={@labels["actor"]} required maxlength="120" />
+        <.input
+          field={@open_form[:responsible_actor]}
+          label={@labels["actor"]}
+          required
+          maxlength="120"
+        />
         <.input field={@open_form[:business_date]} type="date" label="Dia operacional" required />
         <button id="open-visit" class="btn primary" phx-disable-with="Abrindo…">Abrir atendimento</button>
       </.form>
@@ -393,7 +398,7 @@ defmodule InstantflowWeb.ProcessComponents do
           class="operations-form"
         >
           <.input
-            field={@batch_form[:waiter]}
+            field={@batch_form[:responsible_actor]}
             label={"#{@labels["actor"]} deste lote"}
             required
             maxlength="120"
@@ -423,8 +428,9 @@ defmodule InstantflowWeb.ProcessComponents do
               do: "— CANCELAMENTO"}
           </h3>
           <p>
-            {status(batch.status)} · {@labels["actor"]}: {batch.waiter} · {Instantflow.LocalTime.format(
-              batch.inserted_at
+            {status(batch.status)} · {@labels["actor"]}: {Instantflow.Operations.actor_name(batch)} · {Instantflow.LocalTime.format(
+              batch.inserted_at,
+              @timezone
             )}
           </p>
           <p :if={batch.source_id}>Cancela o ticket #{batch.source_id}: {batch.reason}</p>
@@ -502,7 +508,7 @@ defmodule InstantflowWeb.ProcessComponents do
           field={@checkout_form[:payment_method]}
           type="select"
           label="Forma de pagamento recebida"
-          options={[{"Dinheiro", "cash"}, {"Cartão", "card"}, {"Pix", "pix"}]}
+          options={@payment_options}
           prompt="Selecione após receber"
           required
         />
@@ -545,8 +551,13 @@ defmodule InstantflowWeb.ProcessComponents do
       <p id="day-open">
         Contas abertas: {@report.open_count} · Saldo: {money(@report.open_total)}
       </p>
+      <p :if={@report.archived_count > 0} id="day-archived">
+        Atendimentos arquivados sem quitação: {@report.archived_count} · Valor histórico: {money(
+          @report.archived_total
+        )}. Não compõem vendas ou recebimentos; não ocupam recursos nem impedem o fechamento.
+      </p>
       <p :if={@report.closed} id="day-closed">
-        Dia encerrado em {Instantflow.LocalTime.format(@report.closed.inserted_at)}. Novos atendimentos devem usar um dia posterior.
+        Dia encerrado em {Instantflow.LocalTime.format(@report.closed.inserted_at, @timezone)}. Novos atendimentos devem usar um dia posterior.
       </p>
       <button
         :if={!@report.closed && @can_operate}
@@ -556,7 +567,7 @@ defmodule InstantflowWeb.ProcessComponents do
         data-confirm="Encerrar este dia e impedir novos lançamentos nesta data ou em datas anteriores?"
       >Encerrar dia operacional</button>
       <h3>Consumo estimado de produtos</h3><p>
-        Quantidades pedidas, excluindo cancelamentos. Não representa saldo de estoque, ingredientes ou perdas de preparo.
+        Quantidades pedidas, incluindo o histórico arquivado e excluindo cancelamentos. Não confirma entrega nem representa saldo de estoque, ingredientes ou perdas de preparo.
       </p>
       <div id="estimated-consumption" phx-update="stream">
         <p :for={{id, row} <- @streams.consumption} id={id}>
@@ -578,8 +589,11 @@ defmodule InstantflowWeb.ProcessComponents do
       <strong :if={@print_ticket.kind == "cancellation"}>CANCELAMENTO DO TICKET #{@print_ticket.source_id}</strong>
       <strong :if={@print_ticket.copy > 1}>REIMPRESSÃO · Cópia {@print_ticket.copy}</strong>
       <p>
-        {@visit.session.resource_name} · Atendimento #{@visit.session.id}<br />{@labels["actor"]}: {@print_ticket.waiter}<br />{Instantflow.LocalTime.format(
-          @print_ticket.inserted_at
+        {@visit.session.resource_name} · Atendimento #{@visit.session.id}<br />{@labels["actor"]}: {Instantflow.Operations.actor_name(
+          @print_ticket
+        )}<br />{Instantflow.LocalTime.format(
+          @print_ticket.inserted_at,
+          @timezone
         )}<br />Ticket #{@print_ticket.id}
       </p>
       <p :if={@print_ticket.reason}>{@print_ticket.reason}</p>
@@ -606,4 +620,5 @@ defmodule InstantflowWeb.ProcessComponents do
   defp status("pending"), do: "Aguardando entrega manual"
   defp status("handed"), do: "Entrega confirmada pelo operador"
   defp status("cancelled"), do: "Cancelado"
+  defp status("archived"), do: "Arquivado sem confirmação de entrega"
 end

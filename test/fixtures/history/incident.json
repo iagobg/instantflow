@@ -1,0 +1,455 @@
+{
+  "format_version": "1.0",
+  "template_key": "incident",
+  "template_version": "1.0.0",
+  "locale": "pt-BR",
+  "name": "Registro de ocorrências",
+  "description": "Triagem restrita com orientação atribuída e comunicação curada simulada.",
+  "capabilities": [
+    "core"
+  ],
+  "role_requirements": [
+    {
+      "key": "teacher",
+      "label": "Professor relator"
+    },
+    {
+      "key": "dean",
+      "label": "Direção"
+    },
+    {
+      "key": "counselor",
+      "label": "Orientação atribuída"
+    }
+  ],
+  "sections": [
+    {
+      "key": "report",
+      "label": "Relato factual",
+      "classification": "restricted",
+      "access": [
+        {
+          "role": "teacher",
+          "scope": "requester",
+          "read": true,
+          "edit_stages": [
+            "draft"
+          ]
+        },
+        {
+          "role": "dean",
+          "scope": "workflow_department",
+          "department_binding": "dean_department",
+          "read": true,
+          "edit_stages": []
+        },
+        {
+          "role": "counselor",
+          "scope": "assigned_user",
+          "assignment_key": "support",
+          "read": true,
+          "edit_stages": []
+        }
+      ],
+      "fields": [
+        {
+          "key": "facts",
+          "label": "Descrição factual fictícia",
+          "type": "long_text"
+        },
+        {
+          "key": "students",
+          "label": "Estudantes fictícios envolvidos",
+          "type": "short_text"
+        },
+        {
+          "key": "occurred_at",
+          "label": "Data e hora (UTC)",
+          "type": "datetime"
+        },
+        {
+          "key": "location",
+          "label": "Local",
+          "type": "short_text"
+        },
+        {
+          "key": "urgency",
+          "label": "Urgência",
+          "type": "single_choice",
+          "options": [
+            "Rotina",
+            "Prioritária",
+            "Urgente"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "discipline",
+      "label": "Triagem e resolução disciplinar",
+      "classification": "restricted",
+      "access": [
+        {
+          "role": "dean",
+          "scope": "workflow_department",
+          "department_binding": "dean_department",
+          "read": true,
+          "edit_stages": [
+            "triage",
+            "followup"
+          ]
+        }
+      ],
+      "fields": [
+        {
+          "key": "triage",
+          "label": "Análise de triagem",
+          "type": "long_text"
+        },
+        {
+          "key": "actions",
+          "label": "Medidas disciplinares",
+          "type": "long_text"
+        },
+        {
+          "key": "resolution",
+          "label": "Resolução",
+          "type": "long_text"
+        }
+      ]
+    },
+    {
+      "key": "support",
+      "label": "Acompanhamento confidencial",
+      "classification": "restricted",
+      "access": [
+        {
+          "role": "counselor",
+          "scope": "assigned_user",
+          "assignment_key": "support",
+          "read": true,
+          "edit_stages": [
+            "followup"
+          ]
+        }
+      ],
+      "fields": [
+        {
+          "key": "notes",
+          "label": "Notas privadas do orientador",
+          "type": "long_text"
+        },
+        {
+          "key": "attachment",
+          "label": "Anexo privado fictício (opcional)",
+          "type": "attachment"
+        }
+      ],
+      "assignment": {
+        "managers": [
+          {
+            "role": "dean",
+            "scope": "workflow_department",
+            "department_binding": "dean_department"
+          }
+        ],
+        "role": "counselor",
+        "department_binding": "support_department",
+        "stages": [
+          "triage",
+          "followup"
+        ]
+      }
+    },
+    {
+      "key": "communication",
+      "label": "Comunicação curada ao responsável (simulada)",
+      "classification": "restricted",
+      "access": [
+        {
+          "role": "dean",
+          "scope": "workflow_department",
+          "department_binding": "dean_department",
+          "read": true,
+          "edit_stages": [
+            "followup"
+          ]
+        }
+      ],
+      "fields": [
+        {
+          "key": "recipient",
+          "label": "Responsável fictício / referência do contato",
+          "type": "short_text"
+        },
+        {
+          "key": "message",
+          "label": "Mensagem pública curada; não copie notas privadas",
+          "type": "long_text"
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "key": "draft",
+      "label": "Registrada",
+      "initial": true,
+      "terminal": false
+    },
+    {
+      "key": "triage",
+      "label": "Triagem",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "followup",
+      "label": "Acompanhamento",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "communication",
+      "label": "Comunicação aos responsáveis (simulada)",
+      "initial": false,
+      "terminal": false
+    },
+    {
+      "key": "closed",
+      "label": "Encerrada",
+      "initial": false,
+      "terminal": true
+    },
+    {
+      "key": "cancelled",
+      "label": "Cancelada",
+      "initial": false,
+      "terminal": true
+    }
+  ],
+  "creation": {
+    "roles": [
+      "teacher"
+    ]
+  },
+  "transitions": [
+    {
+      "key": "submit",
+      "label": "Registrar ocorrência",
+      "from": "draft",
+      "to": "triage",
+      "actors": [
+        {
+          "role": "teacher",
+          "scope": "requester"
+        }
+      ],
+      "required_fields": [
+        "report.facts",
+        "report.students",
+        "report.occurred_at",
+        "report.location",
+        "report.urgency"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [],
+      "guard": null,
+      "history_visibility": "actors"
+    },
+    {
+      "key": "triage",
+      "label": "Concluir triagem",
+      "from": "triage",
+      "to": "followup",
+      "actors": [
+        {
+          "role": "dean",
+          "scope": "workflow_department",
+          "department_binding": "dean_department"
+        }
+      ],
+      "required_fields": [
+        "discipline.triage"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [],
+      "guard": null,
+      "history_visibility": "actors"
+    },
+    {
+      "key": "communicate",
+      "label": "Registrar comunicação simulada",
+      "from": "followup",
+      "to": "communication",
+      "actors": [
+        {
+          "role": "dean",
+          "scope": "workflow_department",
+          "department_binding": "dean_department"
+        }
+      ],
+      "required_fields": [
+        "discipline.resolution",
+        "communication.recipient",
+        "communication.message"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [
+        {
+          "type": "simulate_notification",
+          "behavior": "fail_once"
+        }
+      ],
+      "guard": null,
+      "history_visibility": "actors"
+    },
+    {
+      "key": "close",
+      "label": "Encerrar ocorrência",
+      "from": "communication",
+      "to": "closed",
+      "actors": [
+        {
+          "role": "dean",
+          "scope": "workflow_department",
+          "department_binding": "dean_department"
+        }
+      ],
+      "required_fields": [
+        "discipline.resolution",
+        "communication.message"
+      ],
+      "require_reason": false,
+      "kind": "forward",
+      "actions": [],
+      "guard": {
+        "op": "delivery_succeeded",
+        "kind": "simulate_notification"
+      },
+      "history_visibility": "actors"
+    },
+    {
+      "key": "cancel_draft",
+      "label": "Cancelar com motivo",
+      "from": "draft",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "teacher",
+          "scope": "requester"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": [],
+      "guard": null,
+      "history_visibility": "actors"
+    },
+    {
+      "key": "cancel_triage",
+      "label": "Cancelar com motivo",
+      "from": "triage",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "dean",
+          "scope": "workflow_department",
+          "department_binding": "dean_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": [],
+      "guard": null,
+      "history_visibility": "actors"
+    },
+    {
+      "key": "cancel_followup",
+      "label": "Cancelar com motivo",
+      "from": "followup",
+      "to": "cancelled",
+      "actors": [
+        {
+          "role": "dean",
+          "scope": "workflow_department",
+          "department_binding": "dean_department"
+        }
+      ],
+      "required_fields": [],
+      "require_reason": true,
+      "kind": "cancellation",
+      "actions": [],
+      "guard": null,
+      "history_visibility": "actors"
+    }
+  ],
+  "bindings": [
+    {
+      "key": "dean_department",
+      "type": "department",
+      "label": "Direção"
+    },
+    {
+      "key": "support_department",
+      "type": "department",
+      "label": "Orientação"
+    }
+  ],
+  "assignment": {
+    "department_binding": "dean_department"
+  },
+  "views": [
+    {
+      "key": "triage",
+      "label": "Triagem restrita por urgência",
+      "type": "table",
+      "columns": [
+        "stage",
+        "report.urgency",
+        "report.location"
+      ],
+      "filters": [
+        "report.urgency"
+      ],
+      "urgency": {
+        "field": "report.urgency",
+        "values": [
+          "Urgente",
+          "Prioritária",
+          "Rotina"
+        ]
+      },
+      "sort": {
+        "field": "urgency",
+        "direction": "asc"
+      },
+      "assignment_section": "support"
+    },
+    {
+      "key": "board",
+      "label": "Acompanhamento restrito",
+      "type": "board",
+      "columns": [
+        "stage",
+        "report.urgency"
+      ]
+    }
+  ],
+  "interface": {
+    "pages": [
+      {
+        "key": "overview",
+        "label": "Acompanhamento",
+        "blocks": [
+          "records"
+        ]
+      }
+    ]
+  }
+}

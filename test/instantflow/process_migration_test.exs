@@ -163,9 +163,16 @@ defmodule Instantflow.ProcessMigrationTest do
       assert :ok = Instantflow.HistoricalSchema.assert_defaults()
 
       for table <- tables do
+        expected =
+          if table in ~w(service_sessions fulfillment_batches) do
+            Enum.map(before[table], fn [row] -> [Map.put(row, "status", "archived")] end)
+          else
+            before[table]
+          end
+
         assert OperatorRepo.query!(
                  "SELECT to_jsonb(t) - 'workflow_id' FROM #{table} t ORDER BY id"
-               ).rows == before[table]
+               ).rows == expected
       end
 
       assert OperatorRepo.get!(Version, version.id).definition == definition
@@ -173,10 +180,14 @@ defmodule Instantflow.ProcessMigrationTest do
       assert OperatorRepo.get!(Instantflow.WorkflowRuntime.Ticket, ticket["ticket_id"]).workflow_version_id ==
                version.id
 
-      data = Operations.workspace(actor, Operations.today())
+      data = Operations.workspace(actor, Operations.today(actor))
       assert hd(data.products).price == 600
       assert Operations.visit(actor, visit).total == 1200
-      second = Operations.workspace(Identity.scope(user.id, b.id), Operations.today())
+      assert Operations.visit(actor, visit).archived?
+      assert data.report.archived_count == 1
+      assert data.report.archived_total == 1200
+      assert data.sessions == []
+      second = Operations.workspace(Identity.scope(user.id, b.id), Operations.today(actor))
       assert hd(second.products).name == "Sopa"
       assert second.version.definition["interface"]["pages"] != []
     after

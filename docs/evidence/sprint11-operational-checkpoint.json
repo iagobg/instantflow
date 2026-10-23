@@ -1,0 +1,112 @@
+{
+  "date": "2026-10-22",
+  "sprint": "11",
+  "status": "In progress",
+  "tasks_complete": 0,
+  "tasks_total": 5,
+  "checkpoint": "Initial T01/T03 operational slice; full sprint acceptance remains open",
+  "base_revision": "71ecf2ef9efc882e468aafbcf2164c53fb4c974a",
+  "environment": {
+    "os": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "runtime": "Elixir 1.19.5 / OTP 28.5.0.2",
+    "database": "Local synthetic PostgreSQL on port 55432",
+    "mix_home": ".local/mix"
+  },
+  "validation": {
+    "precommit": {
+      "exit_code": 0,
+      "tests": 281,
+      "failures": 0,
+      "seed": 926178,
+      "log": ".local/sprint11-precommit.log"
+    },
+    "assets_build": {
+      "exit_code": 0,
+      "log": ".local/sprint11-assets.log"
+    },
+    "diff_check": {
+      "exit_code": 0
+    },
+    "composed_checkpoint": {
+      "tests": 3,
+      "failures": 0,
+      "seed": 957318,
+      "log": ".local/sprint11-composed.log"
+    }
+  },
+  "inherited_changes_preserved": [
+    "design/08-decisions.md (D-30)",
+    "sprint_plan/sprint_11.md (pre-execution revision)",
+    "sprint_plan/sprint_index.md (D-30 tracking)",
+    "docs/sprint10-followup-review.md"
+  ],
+  "setup_interfaces": [
+    "Templates.import",
+    "TemplateLive mapping/page settings/publication forms",
+    "Templates.save/publish/clone",
+    "Operations.command",
+    "WorkflowRuntime.command",
+    "Finance commands",
+    "Access.grant/revoke"
+  ],
+  "generated_route": "/o/:slug/processos/:workflow_id/p/service_desk",
+  "covered": [
+    "portable v1 operational contract and unsupported semantics rejection",
+    "generic captured responsible actor with historical waiter payload/storage compatibility",
+    "organization timezone date/display boundary",
+    "pinned payment methods with current grants",
+    "independent-key editor mapping and rendered operational form payloads",
+    "two destinations and immutable captured prices",
+    "late operations/runtime/finance/outbox/audit/receipt rollback",
+    "idempotent settlement, revocation and resource reuse"
+  ],
+  "compatibility": [
+    "No stored-column migration or immutable published-definition rewrite",
+    "Absent operational declarations resolve to historical v1 defaults",
+    "Legacy waiter payload/storage and today/0 retained",
+    "Historical removed-page fallback remains open"
+  ],
+  "remaining": [
+    "T01/T03 remaining complete contract and public-entry/form matrices",
+    "T02 baseline and post-tuning scale evidence; residual operational/list/catalog read paths",
+    "T03/T04 mixed-version page/access fallback and transaction ownership audit",
+    "T05 full school/blank equipment recreation, independent concurrency and populated preservation",
+    "Browser-visible latency and physical printer acceptance are not established"
+  ],
+  "read_budgets_recorded_before_tuning": true,
+  "scale_measurements_complete": false,
+  "populated_restore_exercised": false,
+  "deployment_performed": false,
+  "source_sha256": {
+    "lib/instantflow/local_time.ex": "94a96dfe1345aa9752c672b7bb09a3b7079f884562d5bc6ee73b095e51ae2466",
+    "lib/instantflow/operations.ex": "e59248b51e11d7ad52315bfffd4862ee521572a42a0c5e987a2b443eaff90a8f",
+    "lib/instantflow/workflow_catalog/operational_contract.ex": "81cebdbc70620a196b752461e75b06e644c6b68766553cddd39fa11fa5655a30",
+    "lib/instantflow/workflow_catalog/capabilities.ex": "11b1502dc910b73408ed294a80af8d691ae36ee514212e5ebd7f3be0fd12db08",
+    "lib/instantflow/workflow_catalog/definition.ex": "da80eab53cee1d665431e91a92e16b457a227466a78172d6ce15286a9ee4bf5a",
+    "lib/instantflow_web/live/process_live.ex": "1577fbcadb08a405c6110b94b99dff6450918b9864fedd63e321301a0e907fc9",
+    "lib/instantflow_web/live/template_live.ex": "02d95c91008e517c9446bdf6735083c57d3b01e8a7456dab0885a48fbf142e4d",
+    "lib/instantflow_web/components/process_components.ex": "1d3110bd8969c62351ad3f0bc1608a51496bdf9aaaf828215091aad48dbc3e65",
+    "priv/templates/workflow-1.0.schema.json": "fd8eacd62cc4bbe6d123be4e3609cf2401f078d7f7ecd1471bc3e279b25e29bd",
+    "priv/templates/capabilities-1.0.json": "5a0bba4d8a007e2a0507208b47807e2b44679ac2c12cafc356b451ae45f66fb4",
+    "priv/workflows/resource_service.json": "b75d55998404f45827cf304322a5b5fcacf54b3f8a360003ff2573a6bec90e08",
+    "test/fixtures/sprint11/supper_room.json": "04389ff2fd6bd0c2aaedf11d7597a43ba2987e818a1edc8ff96ae1787998468c",
+    "test/instantflow/operational_contract_test.exs": "55c335b20c2a74389374d5bb6608c9d086d84e222813024d50416e83cc92d5f2",
+    "test/instantflow/sprint11_operational_checkpoint_test.exs": "c0931c7076e0e4b042309da02cd2e42856d2b85a2dc74881e4eeb85c7780e606",
+    "test/instantflow/local_time_test.exs": "f1845fd50385824fbf0d9b0c68079b6d27aa2a98a2ad5299766d049b6b38f85c",
+    "test/instantflow_web/live/sprint11_operational_authoring_test.exs": "1407a22679ee245c8ce5cd858e6bdccb4dfb105e00ff3e843f13f086e2a373bf",
+    "test/instantflow_web/live/operations_live_test.exs": "5014d0b5fb0787eef03c86997cb0ec401923a87e854c4764c443b7e093e706af",
+    "docs/sprint11-operational-checkpoint.md": "48f9206152135552021eb04015a0e9e287c291924d08b4680a3545b844b45e5d",
+    "design/07-verification.md": "ff87d83a4c257b13c0b72e3b62621f57d97ef63690969f0af026ee03b93b97a7",
+    "design/08-decisions.md": "ee3eab3031b09dbe6670a61146543d392847f640dec5f4f1d9b7b26c823791cc",
+    "sprint_plan/sprint_11.md": "b32c3598c699404ba23af2960e5773d663b87c3c073a4305f7741ee634dd6ae8",
+    "sprint_plan/sprint_index.md": "a293c4babade6a9f907c29bbb8a9079336923d3a310e948467d32f638610e291",
+    "README.md": "198abcde5637cba5caa8730d0fe424706159741f305ad4739b1aa08eeb8ff6c4",
+    "docs/template-editor.md": "d9c2ecb781366ae4d1026d93e63b09def39b381e51d72707d67a3ab849cd43d5",
+    "design/workflow_authoring_guide.pt-BR.md": "641c62c1dcd95d127770d1e250f5d6db062ff58d115c3231bef504ca2e910fc1"
+  },
+  "log_sha256": {
+    ".local/sprint11-precommit.log": "8069d32db83848feb00876da03a976d56346db05c5a81b742a3354ada5ecdd33",
+    ".local/sprint11-assets.log": "9bb8e4dcf248b6978dff121c4a7e9e6703a8ec106586d0f46b0443316910fa5e",
+    ".local/sprint11-composed.log": "056b01252f8f08ff86902d7d9b524f179981a8dfc4f1bbb2bbd9dde9cae9d53a"
+  }
+}

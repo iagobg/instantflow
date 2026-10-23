@@ -5,58 +5,91 @@ defmodule InstantflowWeb.BudgetsLiveTest do
   import Instantflow.FinanceFixtures
   alias Instantflow.{Finance, WorkflowCatalog.Views}
 
-  test "authorized viewers converge after committed allocations and lose totals after revocation",
-       %{conn: conn} do
-    f = finance_fixture()
-    conn = login(conn, f.finance)
-    {:ok, first, _} = live(conn, ~p"/o/horizonte/orcamentos")
-    {:ok, second, _} = live(conn, ~p"/o/horizonte/orcamentos")
-    assert has_element?(first, "#budget-accounts tr", "10000")
+  defp expose(f) do
+    definition =
+      Map.put(f.version.definition, "interface", %{
+        "pages" => [
+          %{
+            "key" => "finance",
+            "label" => "Financeiro",
+            "blocks" => ["finance_setup", "finance_summary"]
+          }
+        ],
+        "finance" => %{
+          "account_binding" => "shared_budget",
+          "scope" => "shared_account",
+          "view_roles" => ["finance"]
+        }
+      })
+
+    {:ok, version} =
+      Instantflow.WorkflowCatalog.publish(
+        f.admin,
+        definition,
+        f.version.bindings,
+        f.version.number
+      )
+
+    %{f | version: version}
+  end
+
+  test "authorized generated finance pages converge and revoke totals", %{conn: conn} do
+    f = finance_fixture() |> expose()
+    target = ~p"/o/horizonte/processos/#{f.version.workflow_id}/p/finance"
+    {:ok, first, _} = live(login(conn, f.finance), target)
+    {:ok, second, _} = live(login(build_conn(), f.finance), target)
+    assert has_element?(first, "#process-finance-accounts", "10000")
 
     first
-    |> form("#budget-allocation-form",
-      allocation: %{account_id: f.account.id, amount: "500", reason: "Complemento fictício"}
+    |> form("#process-finance-allocation",
+      finance_allocation: %{
+        account_id: f.account.id,
+        amount: "500",
+        reason: "Complemento fictício"
+      }
     )
     |> render_submit()
 
-    assert has_element?(first, "#budget-accounts tr", "10500")
-    assert has_element?(second, "#budget-accounts tr", "10500")
-    grants = Instantflow.Identity.scope(f.finance.user_id, f.finance.organization_id).grants
-    for grant <- grants, do: Instantflow.Access.revoke(f.admin, grant.id)
-    assert has_element?(second, "#budget-count", "0 conta(s)")
-    refute has_element?(second, "#budget-accounts tr")
-    refute has_element?(second, "#budget-allocation-form")
+    assert has_element?(first, "#process-finance-accounts", "10500")
+    assert has_element?(second, "#process-finance-accounts", "10500")
+
+    for grant <- Instantflow.Identity.scope(f.finance.user_id, f.finance.organization_id).grants do
+      assert {:ok, _} = Instantflow.Access.revoke(f.admin, grant.id)
+    end
+
+    assert_redirect(second, "/o/horizonte/processos")
   end
 
-  test "parent and unrelated staff cannot discover budget totals or forge allocations", %{
+  test "external identities and unrelated staff cannot discover totals or forge allocations", %{
     conn: conn
   } do
-    f = finance_fixture()
-
+    f = finance_fixture() |> expose()
     parent = staff_fixture("parent")
 
-    assert {:error, {:redirect, %{to: "/o/horizonte/processos"}}} =
-             live(login(conn, parent), ~p"/o/horizonte/orcamentos")
+    assert {:error, {:live_redirect, %{to: "/o/horizonte/processos"}}} =
+             live(login(conn, parent), ~p"/o/horizonte/processos/#{f.version.workflow_id}")
 
     assert {:error, :forbidden} =
              Finance.allocate(parent, f.account.id, 900, "Forjado", Ecto.UUID.generate())
 
-    for actor <- [f.requester] do
-      {:ok, view, _} = live(login(conn, actor), ~p"/o/horizonte/orcamentos")
-      assert has_element?(view, "#budget-count", "0 conta(s)")
-      refute has_element?(view, "#budget-accounts tr")
-      refute has_element?(view, "#budget-allocation-form")
+    {:ok, view, _} =
+      live(
+        login(build_conn(), f.requester),
+        ~p"/o/horizonte/processos/#{f.version.workflow_id}/p/finance"
+      )
 
-      render_hook(view, "allocate", %{
-        "allocation" => %{
-          "account_id" => to_string(f.account.id),
-          "amount" => "900",
-          "reason" => "Forjado"
-        }
-      })
+    refute has_element?(view, "#process-finance-accounts article")
+    refute has_element?(view, "#process-finance-allocation")
 
-      assert [%{allocated: 10_000}] = Finance.accounts(f.finance)
-    end
+    render_hook(view, "finance-allocate", %{
+      "finance_allocation" => %{
+        "account_id" => to_string(f.account.id),
+        "amount" => "900",
+        "reason" => "Forjado"
+      }
+    })
+
+    assert [%{allocated: 10_000}] = Finance.accounts(f.finance)
   end
 
   test "calendar presents permitted trip dates and assignment view includes the current department",

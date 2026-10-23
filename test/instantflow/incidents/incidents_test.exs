@@ -3,7 +3,7 @@ defmodule Instantflow.IncidentsTest do
   import Instantflow.IncidentFixtures
   import Instantflow.FinanceFixtures, only: [save: 4]
   import Instantflow.WorkflowFixtures, only: [transition: 3]
-  alias Instantflow.{Delivery, Incidents, PrivateDocuments, WorkflowRuntime}
+  alias Instantflow.{Delivery, PrivateDocuments, WorkflowRuntime}
   alias Instantflow.WorkflowCatalog.Views
 
   test "named counselor alone sees support notes; dean and teacher have separate projections" do
@@ -26,7 +26,7 @@ defmodule Instantflow.IncidentsTest do
       refute Enum.any?(data.events, &(&1.operation == "save:support"))
       refute inspect(data) =~ "SEGREDO_ORIENTACAO"
       refute inspect(Views.search(actor, f.version.workflow_id, "triage")) =~ "SEGREDO_ORIENTACAO"
-      refute inspect(Incidents.list(actor, %{})) =~ "SEGREDO_ORIENTACAO"
+      refute inspect(Views.search(actor, f.version.workflow_id, "triage")) =~ "SEGREDO_ORIENTACAO"
     end
 
     assert {:error, :not_found} = WorkflowRuntime.get(f.other_counselor, id)
@@ -104,7 +104,10 @@ defmodule Instantflow.IncidentsTest do
              )
 
     assert {:error, :not_found} = PrivateDocuments.download(f.counselor, file.object_key)
-    assert {:ok, _} = PrivateDocuments.review(f.counselor, file.object_key, true)
+    assert {:error, :forbidden} = PrivateDocuments.review(f.counselor, file.object_key, true)
+    assert {:ok, _} = assign(f.dean, id, f.other_counselor.id, "Revisão independente")
+    assert {:ok, _} = PrivateDocuments.review(f.other_counselor, file.object_key, true)
+    assert {:ok, _} = assign(f.dean, id, f.counselor.id, "Retomar acompanhamento")
     assert {:ok, %{content: ^pdf}} = PrivateDocuments.download(f.counselor, file.object_key)
     assert PrivateDocuments.list(f.dean, id) == []
     assert {:error, :not_found} = PrivateDocuments.download(f.dean, file.object_key)

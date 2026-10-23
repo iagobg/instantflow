@@ -4,6 +4,12 @@ defmodule Instantflow.HistoricalSchema do
 
   def prepare_seed do
     OperatorRepo.query!(
+      "CREATE TABLE retired_workflow_versions (version_id bigint PRIMARY KEY, organization_id bigint, reason text, inserted_at timestamp)"
+    )
+
+    OperatorRepo.query!("GRANT SELECT ON retired_workflow_versions TO instantflow_runtime")
+
+    OperatorRepo.query!(
       "ALTER TABLE transition_events ADD COLUMN details jsonb NOT NULL DEFAULT '{}'"
     )
 
@@ -13,6 +19,8 @@ defmodule Instantflow.HistoricalSchema do
   end
 
   def finish_seed do
+    %{rows: [[0]]} = OperatorRepo.query!("SELECT count(*) FROM retired_workflow_versions")
+    OperatorRepo.query!("DROP TABLE retired_workflow_versions")
     # All seed metadata must be historical empty defaults before stripping the
     # temporary client-compatibility columns; no authored data may be discarded.
     %{rows: [[0]]} =

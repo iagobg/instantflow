@@ -128,6 +128,19 @@
     },
     "lifecycle": {
       "close_transition": "settle"
+    },
+    "operations": {
+      "version": 1,
+      "actor": "captured_name",
+      "settlement": "full_manual",
+      "reporting_timezone": "organization",
+      "currency": "BRL",
+      "payment_methods": [
+        "cash",
+        "card",
+        "pix"
+      ],
+      "consumption": "estimated_product_units"
     }
   }
 }

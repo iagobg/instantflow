@@ -801,6 +801,9 @@ defmodule InstantflowWeb.RequestLive do
         Esta solicitação foi atualizada. Seu rascunho foi preservado.
       </div>
       <div id="request-connection" phx-hook="Collaboration" phx-update="ignore"></div>
+      <p :if={@data.archived?} id="archived-record" class="notice" role="status">
+        Versão histórica arquivada. Os dados e o histórico foram preservados; esta versão não aceita novas alterações.
+      </p>
       <button id="refresh-request" class="btn" phx-click="refresh">Atualizar mantendo rascunhos</button>
       <button :if={@stale} id="review-request" class="btn" phx-click="review">Confirmei a revisão dos dados atuais</button>
       <div class="request-detail-grid">
@@ -1199,7 +1202,7 @@ defmodule InstantflowWeb.RequestLive do
               </.form>
             </section>
           </div>
-          <section class="card">
+          <section :if={!@data.archived?} class="card">
             <h2>Próximos passos</h2><p>
               Salve o formulário antes de avançar. Cada ação respeita as permissões e condições do fluxo.
             </p><.form for={@reason} id="transition-form" phx-change="reason" phx-submit="transition">

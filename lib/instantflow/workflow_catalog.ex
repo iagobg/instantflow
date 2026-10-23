@@ -69,12 +69,18 @@ defmodule Instantflow.WorkflowCatalog do
       scope ->
         Repo.all(
           from v in Version,
+            left_join: retired in "retired_workflow_versions",
+            on: retired.version_id == v.id,
             where: v.organization_id == ^actor.organization_id,
             distinct: v.workflow_id,
             order_by: [asc: v.workflow_id, desc: v.number],
+            select: {v, retired.version_id},
             preload: [:workflow]
         )
-        |> Enum.filter(&Instantflow.WorkflowRuntime.Policy.create?(scope, &1))
+        |> Enum.filter(fn {version, retired} ->
+          is_nil(retired) and Instantflow.WorkflowRuntime.Policy.create?(scope, version)
+        end)
+        |> Enum.map(&elem(&1, 0))
     end
   end
 

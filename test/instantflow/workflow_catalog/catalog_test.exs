@@ -34,6 +34,6 @@ defmodule Instantflow.WorkflowCatalogTest do
     f = workflow_fixture()
     id = create_ticket(f)
     assert {:error, :not_found} = WorkflowRuntime.get(f.admin, id)
-    assert WorkflowRuntime.list(f.admin) == []
+    assert WorkflowRuntime.search(f.admin).tickets == []
   end
 end

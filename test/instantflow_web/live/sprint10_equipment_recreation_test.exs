@@ -66,8 +66,8 @@ defmodule InstantflowWeb.Sprint10EquipmentRecreationTest do
     {:ok, opened} =
       operation.("open_session", %{
         "resource_id" => resource["id"],
-        "waiter" => "Técnico",
-        "business_date" => Date.to_iso8601(Operations.today())
+        "responsible_actor" => "Técnico",
+        "business_date" => Date.to_iso8601(Operations.today(admin))
       })
 
     session = Operations.visit(admin, opened["id"], v.workflow_id).session
@@ -130,7 +130,7 @@ defmodule InstantflowWeb.Sprint10EquipmentRecreationTest do
     assert {:ok, %{"ids" => [batch]}} =
              operation.("submit_batch", %{
                "session_id" => session.id,
-               "waiter" => "Técnico",
+               "responsible_actor" => "Técnico",
                "lines" => [
                  %{
                    "product_id" => p.id,

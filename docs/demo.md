@@ -1,5 +1,13 @@
 # Integrated synthetic demonstration
 
+Sprint 11 D-32 replaces the old **Matrículas**, **Ocorrências**, **Orçamentos**
+and **Operação** URLs with declared pages reached through **Processos** and
+generic record pages. Historical guardian invitations are rejected; use external
+invitations and explicit participant verification. Apply forward migrations before
+seeding; retired school definitions receive supported new versions without
+rewriting historical records. Older domain-screen steps below are historical.
+See the [current retirement and recovery evidence](sprint11-retirement-checkpoint.md).
+
 This is a proof of concept for configured workflow collaboration. Use fictional people, documents, amounts and contact references. All payment, order, provisioning and communication effects are explicitly simulated.
 
 ## Prepare and choose a school

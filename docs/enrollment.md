@@ -1,5 +1,16 @@
 # Enrollment, guardians and private documents
 
+**Historical Sprint 04 walkthrough.** Sprint 11 D-32 retired the Enrollment
+context, guardian invitation writer and Matrículas routes described below.
+Current demos use **Processos**, the enrollment's generated staff page and
+`family_portal`, generic external invitations and explicit participant
+verification on the record. Attachments require a declared document policy.
+The forward migration preserves old records as read-only history; the seed
+publishes a supported replacement when the latest version is retired.
+See the [current retirement checkpoint](sprint11-retirement-checkpoint.md) and
+[participant/document guide](participants-and-documents.md). The remaining text
+records the original behavior rather than instructions for current entry points.
+
 Sprint 04 delivers the first school demonstration slice. Its template passes the same publication, graph, schema and semantic checks as editor/imported templates. Sequential stages use the generic workflow runtime and immutable version pinning; domain vocabulary and the external projection live in `Enrollment` and `priv/workflows/enrollment.json`.
 
 ## Setup and demonstration

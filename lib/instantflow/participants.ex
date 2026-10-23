@@ -31,6 +31,8 @@ defmodule Instantflow.Participants do
           unless manage?(scope, ticket, version, command["relationship"]),
             do: Repo.rollback(:forbidden)
 
+          Instantflow.WorkflowCatalog.Retirement.require_active!(version.id)
+
           member =
             Repo.get_by(Membership,
               id: command["membership_id"],

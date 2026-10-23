@@ -1,0 +1,23 @@
+{
+  "database": "instantflow_seed_retirement_200ab7046c",
+  "historical_source_rows_unchanged": true,
+  "repeat_seed_is_idempotent": true,
+  "all_school_examples_current": true,
+  "row_counts": {
+    "ticket_participants": [
+      [
+        8
+      ]
+    ],
+    "tickets": [
+      [
+        10
+      ]
+    ],
+    "workflow_versions": [
+      [
+        18
+      ]
+    ]
+  }
+}

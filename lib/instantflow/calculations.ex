@@ -223,7 +223,8 @@ defmodule Instantflow.Calculations do
     review = Repo.get_by(Instantflow.Calculations.Review, script_id: run.script_id)
     script = Catalogue.script!(run.script_id)
 
-    member.active and user.active and review.enabled and review.verified and
+    not Instantflow.WorkflowCatalog.Retirement.retired?(version.id) and
+      member.active and user.active and review.enabled and review.verified and
       Access.role?(actor, ["python_execute"]) and Access.role?(actor, script.allowed_roles) and
       Enum.all?(
         referenced_sections(version, run.spec),

@@ -195,10 +195,12 @@ defmodule Instantflow.Delivery do
         false
       )
 
-    if curated?, do: Instantflow.Delivery.Curated.retry(actor, id), else: legacy_retry(actor, id)
+    if curated?,
+      do: Instantflow.Delivery.Curated.retry(actor, id),
+      else: simulation_retry(actor, id)
   end
 
-  defp legacy_retry(actor, id) do
+  defp simulation_retry(actor, id) do
     Tenant.transaction(actor, fn actor ->
       message = Repo.get_by(Message, id: id, organization_id: actor.organization_id)
       unless message, do: Repo.rollback(:not_found)
@@ -218,6 +220,8 @@ defmodule Instantflow.Delivery do
         _ ->
           Repo.rollback(:forbidden)
       end
+
+      Instantflow.WorkflowCatalog.Retirement.require_active!(ticket.workflow_version_id)
 
       message =
         Repo.one!(

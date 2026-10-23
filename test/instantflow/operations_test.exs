@@ -13,7 +13,7 @@ defmodule Instantflow.OperationsTest do
       "operation" => "submit_batch",
       "key" => Ecto.UUID.generate(),
       "session_id" => visit,
-      "waiter" => "Ana",
+      "responsible_actor" => "Ana",
       "lines" => [item(f.actor, f.soup, 2), item(f.actor, f.asado)]
     }
 
@@ -43,7 +43,7 @@ defmodule Instantflow.OperationsTest do
              operation(f.actor, "submit_batch", Map.drop(command, ["key", "operation"]))
 
     assert {:error, :idempotency_mismatch} =
-             Operations.command(f.actor, Map.put(command, "waiter", "Outra pessoa"))
+             Operations.command(f.actor, Map.put(command, "responsible_actor", "Outra pessoa"))
   end
 
   test "handoff gates checkout, reprinting is separate, table reuse preserves the old visit and daily total" do
@@ -53,8 +53,8 @@ defmodule Instantflow.OperationsTest do
     assert {:error, :occupied} =
              operation(f.actor, "open_session", %{
                "resource_id" => f.resource,
-               "waiter" => "Carlos",
-               "business_date" => Date.to_iso8601(Operations.today())
+               "responsible_actor" => "Carlos",
+               "business_date" => Date.to_iso8601(Operations.today(f.actor))
              })
 
     assert {:ok, %{"ids" => [batch]}} =
@@ -84,7 +84,7 @@ defmodule Instantflow.OperationsTest do
     assert next != visit
     assert Operations.visit(f.actor, next).total == 0
     assert Operations.visit(f.actor, visit).session.total == 5100
-    report = Operations.workspace(f.actor, Operations.today()).report
+    report = Operations.workspace(f.actor, Operations.today(f.actor)).report
     assert report.sales == 5100
     assert report.payments["pix"] == 5100
     assert report.open_count == 1
@@ -142,18 +142,18 @@ defmodule Instantflow.OperationsTest do
                "payment_method" => "cash"
              })
 
-    assert Operations.workspace(f.actor, Operations.today()).report.consumption == []
+    assert Operations.workspace(f.actor, Operations.today(f.actor)).report.consumption == []
     assert Repo.aggregate(Line, :count) == 2
   end
 
   test "day close blocks outstanding earlier days and seals business dates without changing history" do
     f = operations_fixture()
-    yesterday = Date.add(Operations.today(), -1)
+    yesterday = Date.add(Operations.today(f.actor), -1)
     visit = open_visit(f, yesterday)
 
     assert {:error, :open_sessions} =
              operation(f.actor, "close_day", %{
-               "business_date" => Date.to_iso8601(Operations.today())
+               "business_date" => Date.to_iso8601(Operations.today(f.actor))
              })
 
     assert {:ok, _} =
@@ -172,7 +172,7 @@ defmodule Instantflow.OperationsTest do
     assert {:error, :day_closed} =
              operation(f.actor, "open_session", %{
                "resource_id" => f.resource,
-               "waiter" => "Carlos",
+               "responsible_actor" => "Carlos",
                "business_date" => Date.to_iso8601(yesterday)
              })
 
@@ -227,7 +227,7 @@ defmodule Instantflow.OperationsTest do
   test "non-admin and cross-tenant identifiers fail closed, including RLS and ownership constraints" do
     f = operations_fixture()
     other = staff_fixture("staff")
-    assert Operations.workspace(other, Operations.today()) == nil
+    assert Operations.workspace(other, Operations.today(f.actor)) == nil
     assert {:error, :forbidden} = operation(other, "add_resource", %{"name" => "Inválida"})
 
     org =
@@ -250,14 +250,14 @@ defmodule Instantflow.OperationsTest do
     actor = Instantflow.Identity.scope(membership.user_id, org.id)
     visit = open_visit(f)
     assert Operations.visit(actor, visit) == nil
-    assert Operations.workspace(actor, Operations.today()) == nil
+    assert Operations.workspace(actor, Operations.today(f.actor)) == nil
 
     assert {:error, :not_found} =
              operation(actor, "open_session", %{
                "workflow_id" => Operations.default_workflow(f.actor),
                "resource_id" => f.resource,
-               "waiter" => "Carlos",
-               "business_date" => Date.to_iso8601(Operations.today())
+               "responsible_actor" => "Carlos",
+               "business_date" => Date.to_iso8601(Operations.today(f.actor))
              })
 
     assert {:ok, []} = Tenant.transaction(actor, fn _ -> Repo.all(Product) end)

@@ -1,6 +1,6 @@
 defmodule Instantflow.GuardianMigrationTest do
   use ExUnit.Case, async: false
-  alias Instantflow.{Enrollment, Identity, OperatorRepo, PrivateDocuments, Repo}
+  alias Instantflow.{Identity, OperatorRepo, PrivateDocuments, Repo, WorkflowRuntime}
   alias Instantflow.Identity.{Department, Membership, Organization, User}
   alias Instantflow.Enrollment.{Document, GuardianLink}
   alias Instantflow.Participants.Relationship
@@ -48,7 +48,15 @@ defmodule Instantflow.GuardianMigrationTest do
 
       before = snapshot(tables)
       migrate(migrations, all: true, log: false)
-      assert Instantflow.HistoricalSchema.legacy_snapshot(tables) == before
+      stable = tables -- ["outbox_messages"]
+      assert Instantflow.HistoricalSchema.legacy_snapshot(stable) == Map.take(before, stable)
+
+      assert Enum.all?(
+               OperatorRepo.all(Instantflow.Delivery.Message),
+               &(&1.status == "cancelled")
+             )
+
+      assert OperatorRepo.query!("SELECT count(*) FROM retired_workflow_versions").rows == [[2]]
       assert :ok = Instantflow.HistoricalSchema.assert_defaults()
 
       mapped = OperatorRepo.all(Relationship)
@@ -62,10 +70,10 @@ defmodule Instantflow.GuardianMigrationTest do
       assert pending.status == "pending"
       assert revoked.status == "revoked"
       assert Enum.all?(mapped, &(&1.relationship == "legacy_guardian" and &1.revision == 1))
-      assert {:ok, _} = Enrollment.get(f.parent, f.record.id)
-      assert {:ok, document} = PrivateDocuments.download(f.parent, f.object_key)
-      assert document.content == f.bytes
-      assert {:error, _} = Enrollment.get(f.other_parent, f.record.id)
+      assert {:error, :not_found} = WorkflowRuntime.get(f.parent, f.record.ticket_id)
+      assert {:error, :not_found} = PrivateDocuments.download(f.parent, f.object_key)
+      assert OperatorRepo.get_by!(Document, object_key: f.object_key).content == f.bytes
+      assert {:error, :not_found} = WorkflowRuntime.get(f.other_parent, f.record.ticket_id)
       assert Repo.all(Relationship) == []
 
       assert {:ok, [other_mapping]} =
@@ -78,6 +86,12 @@ defmodule Instantflow.GuardianMigrationTest do
       # Freeze a backup after migration and verify every table, including mappings/audit.
       all_tables = tables ++ ~w(ticket_participants organization_events)
       migrated = snapshot(all_tables)
+
+      archive_rows =
+        OperatorRepo.query!(
+          "SELECT row_to_json(r) FROM retired_workflow_versions r ORDER BY version_id"
+        ).rows
+
       pg!("pg_dump", ["-Fc", "--no-owner", "-d", source, "-f", backup], config)
       Postgrex.query!(control, "CREATE DATABASE #{restored} TEMPLATE template0 ENCODING 'UTF8'")
       pg!("pg_restore", ["--exit-on-error", "--no-owner", "-d", restored, backup], config)
@@ -92,40 +106,66 @@ defmodule Instantflow.GuardianMigrationTest do
 
       OperatorRepo.put_dynamic_repo(restored_owner)
       assert snapshot(all_tables) == migrated
+
+      assert OperatorRepo.query!(
+               "SELECT row_to_json(r) FROM retired_workflow_versions r ORDER BY version_id"
+             ).rows == archive_rows
+
       restored_runtime = start_runtime(restored, :guardian_restored_runtime)
       Repo.put_dynamic_repo(restored_runtime)
-      assert {:ok, recovered} = PrivateDocuments.download(f.parent, f.object_key)
-      assert recovered.content == f.bytes
-      assert {:ok, other_file} = PrivateDocuments.download(f.other_parent, f.other_object_key)
-      assert other_file.content == f.bytes
+      assert {:error, :not_found} = PrivateDocuments.download(f.parent, f.object_key)
+      assert {:error, :not_found} = PrivateDocuments.download(f.other_parent, f.other_object_key)
+      assert OperatorRepo.get_by!(Document, object_key: f.object_key).content == f.bytes
+      assert OperatorRepo.get_by!(Document, object_key: f.other_object_key).content == f.bytes
+      assert {:ok, historical} = WorkflowRuntime.get(f.admin, f.record.ticket_id)
+      assert historical.archived?
+      assert historical.editable == []
+      assert historical.transitions == []
+      assert historical.assignments == []
+      refute historical.can_retry
+      assert {:ok, {0, nil}} = PrivateDocuments.purge_expired(f.admin.organization_id)
+      assert OperatorRepo.get_by!(Document, object_key: f.object_key).content == f.bytes
 
-      assert {:ok, _} = Enrollment.verify(f.admin, f.verified.id, false)
-      assert {:error, _} = Enrollment.get(f.parent, f.record.id)
-      assert {:error, _} = PrivateDocuments.download(f.parent, f.object_key)
-      current = OperatorRepo.get!(Relationship, verified.id)
-      assert current.status == "revoked" and current.revision == 2
-      assert {:ok, _} = Enrollment.get(f.other_parent, f.other_record.id)
-      assert {:ok, _} = PrivateDocuments.download(f.other_parent, f.other_object_key)
-      assert {:ok, _} = Enrollment.verify(f.admin, f.verified.id, true)
-      assert {:ok, _} = Enrollment.get(f.parent, f.record.id)
-      assert OperatorRepo.get!(Relationship, verified.id).revision == 3
+      assert {:error, :retired_version} =
+               WorkflowRuntime.command(f.admin, %{
+                 "operation" => "save_section",
+                 "ticket_id" => f.record.ticket_id,
+                 "section" => "application",
+                 "values" => %{"student_name" => "must not mutate"},
+                 "expected_stage_revision" => 1,
+                 "expected_section_revision" => 1,
+                 "key" => "archived-write"
+               })
 
-      # New post-upgrade invitation acceptance also creates a pending mapping.
-      {:ok, invitation} = Enrollment.invite(f.admin, f.record.id, "new-guardian@example.test")
+      assert_raise Postgrex.Error, fn ->
+        Instantflow.Tenant.transaction(f.admin, fn _ ->
+          Repo.update!(
+            Ecto.Changeset.change(Repo.get!(GuardianLink, f.verified.id), active: false)
+          )
+        end)
+      end
 
-      {:ok, user} =
-        Identity.accept_invitation(
-          invitation.token,
-          %{"name" => "Novo responsável", "password" => "fictional-password-123"}
-        )
+      assert OperatorRepo.get!(Relationship, verified.id).revision == 1
+      assert OperatorRepo.get!(Relationship, verified.id).status == "verified"
 
-      member = Identity.scope(user.id, f.admin.organization_id)
-      link = OperatorRepo.get_by!(GuardianLink, membership_id: member.id)
+      assert OperatorRepo.query!(
+               "SELECT count(*) FROM pg_trigger WHERE tgname='synchronize_participant'"
+             ).rows == [[0]]
 
-      assert OperatorRepo.get_by!(Relationship, legacy_guardian_link_id: link.id).status ==
-               "pending"
+      assert {:error, :retired_invitation} =
+               Identity.invite(f.admin, %{
+                 "email" => "old@example.test",
+                 "role" => "parent",
+                 "enrollment_id" => f.record.id,
+                 "department_id" => f.admin.department_id
+               })
 
-      assert {:error, _} = Enrollment.get(member, f.record.id)
+      for message <- OperatorRepo.all(Instantflow.Delivery.Message) do
+        assert {:ok, :already_processed} =
+                 Instantflow.Delivery.process(message.organization_id, message.id)
+      end
+
+      assert snapshot(all_tables) == migrated
 
       assert_raise RuntimeError, ~r/forward-only/, fn ->
         Ecto.Migrator.run(OperatorRepo, migrations, :down, step: 1, log: false)
@@ -193,8 +233,7 @@ defmodule Instantflow.GuardianMigrationTest do
     departments =
       Map.new(~w(admissions academic finance it), &{&1 <> "_department", department.id})
 
-    {:ok, version} = Enrollment.install(admin, departments)
-    {:ok, record} = Enrollment.create(admin, version.workflow_id, Ecto.UUID.generate())
+    record = historical_record(admin, departments)
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 
     verified =
@@ -244,7 +283,7 @@ defmodule Instantflow.GuardianMigrationTest do
       status: "ready",
       uploaded_by_id: parent_user.id,
       reviewed_by_id: admin_user.id,
-      expires_at: DateTime.add(now, 86400)
+      expires_at: DateTime.add(now, -86400)
     })
 
     OperatorRepo.insert!(%Membership{
@@ -262,10 +301,7 @@ defmodule Instantflow.GuardianMigrationTest do
         &{&1 <> "_department", other_department.id}
       )
 
-    {:ok, other_version} = Enrollment.install(other_admin, other_departments)
-
-    {:ok, other_record} =
-      Enrollment.create(other_admin, other_version.workflow_id, Ecto.UUID.generate())
+    other_record = historical_record(other_admin, other_departments)
 
     other_member =
       OperatorRepo.get_by!(Membership, organization_id: other_org.id, user_id: parent_user.id)
@@ -295,28 +331,31 @@ defmodule Instantflow.GuardianMigrationTest do
       status: "ready",
       uploaded_by_id: parent_user.id,
       reviewed_by_id: pending_user.id,
-      expires_at: DateTime.add(now, 86400)
+      expires_at: DateTime.add(now, -86400)
     })
 
     for {actor, enrollment, document_key, name} <- [
           {admin, record, object_key, "Estudante sintético A"},
           {other_admin, other_record, other_object_key, "Estudante sintético B"}
         ] do
-      {:ok, _} =
-        Instantflow.WorkflowRuntime.command(actor, %{
-          "operation" => "save_section",
-          "ticket_id" => enrollment.ticket_id,
-          "section" => "application",
-          "values" => %{
+      section =
+        OperatorRepo.get_by!(Instantflow.WorkflowRuntime.Section,
+          ticket_id: enrollment.ticket_id,
+          key: "application"
+        )
+
+      OperatorRepo.update!(
+        Ecto.Changeset.change(section,
+          values: %{
             "student_name" => name,
             "guardian_name" => "Responsável sintético",
             "school_year" => "6º ano",
             "document" => document_key
-          },
-          "expected_stage_revision" => 1,
-          "expected_section_revision" => 1,
-          "key" => Ecto.UUID.generate()
-        })
+          }
+        )
+      )
+
+      assert actor.organization_id == enrollment.organization_id
     end
 
     %{
@@ -333,6 +372,89 @@ defmodule Instantflow.GuardianMigrationTest do
       object_key: object_key,
       bytes: bytes
     }
+  end
+
+  # Historical records are seeded with the operator repository, never by reactivating retired application APIs.
+  defp historical_record(actor, departments) do
+    d = File.read!(Path.expand("../fixtures/history/enrollment.json", __DIR__)) |> Jason.decode!()
+
+    workflow =
+      OperatorRepo.insert!(%Instantflow.WorkflowCatalog.Workflow{
+        organization_id: actor.organization_id,
+        key: "enrollment",
+        name: d["name"]
+      })
+
+    version =
+      OperatorRepo.insert!(%Instantflow.WorkflowCatalog.Version{
+        organization_id: actor.organization_id,
+        workflow_id: workflow.id,
+        published_by_id: actor.user_id,
+        number: 1,
+        definition: d,
+        bindings: %{
+          "roles" => %{
+            "guardian" => ["parent"],
+            "admissions" => ["admin", "admissions"],
+            "academic" => ["head"],
+            "finance" => ["finance"],
+            "it" => ["it"]
+          },
+          "departments" => departments
+        }
+      })
+
+    ticket =
+      OperatorRepo.insert!(%Instantflow.WorkflowRuntime.Ticket{
+        organization_id: actor.organization_id,
+        workflow_id: workflow.id,
+        workflow_version_id: version.id,
+        requester_id: actor.user_id,
+        assigned_department_id: actor.department_id,
+        stage: "draft"
+      })
+
+    for section <- d["sections"] do
+      OperatorRepo.insert!(%Instantflow.WorkflowRuntime.Section{
+        organization_id: actor.organization_id,
+        ticket_id: ticket.id,
+        key: section["key"]
+      })
+    end
+
+    event =
+      OperatorRepo.insert!(%Instantflow.WorkflowRuntime.Event{
+        organization_id: actor.organization_id,
+        ticket_id: ticket.id,
+        actor_id: actor.user_id,
+        operation: "create",
+        to_stage: "draft",
+        revision: 1
+      })
+
+    OperatorRepo.insert!(%Instantflow.WorkflowRuntime.Receipt{
+      organization_id: actor.organization_id,
+      ticket_id: ticket.id,
+      actor_id: actor.user_id,
+      operation: "create",
+      key: "historical-create",
+      digest: :crypto.hash(:sha256, "historical"),
+      result: %{"ticket_id" => ticket.id, "revision" => 1}
+    })
+
+    OperatorRepo.insert!(%Instantflow.Delivery.Message{
+      organization_id: actor.organization_id,
+      ticket_id: ticket.id,
+      event_id: event.id,
+      key: "event:#{event.id}:0",
+      kind: "refresh",
+      behavior: "success"
+    })
+
+    OperatorRepo.insert!(%Instantflow.Enrollment.Record{
+      organization_id: actor.organization_id,
+      ticket_id: ticket.id
+    })
   end
 
   defp user(email),

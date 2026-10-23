@@ -43,19 +43,19 @@ defmodule Instantflow.ModularProcessesTest do
     assert {:ok, session} =
              make.(first.workflow_id, "open_session", %{
                "resource_id" => r1["id"],
-               "waiter" => "Operador",
-               "business_date" => Date.to_iso8601(Operations.today())
+               "responsible_actor" => "Operador",
+               "business_date" => Date.to_iso8601(Operations.today(actor))
              })
 
     assert {:error, :not_found} =
              make.(first.workflow_id, "open_session", %{
                "resource_id" => r2["id"],
-               "waiter" => "Operador",
-               "business_date" => Date.to_iso8601(Operations.today())
+               "responsible_actor" => "Operador",
+               "business_date" => Date.to_iso8601(Operations.today(actor))
              })
 
     assert Operations.visit(actor, session["id"], second.workflow_id) == nil
-    product = hd(Operations.workspace(actor, Operations.today(), first.workflow_id).products)
+    product = hd(Operations.workspace(actor, Operations.today(actor), first.workflow_id).products)
 
     assert {:ok, %{"ids" => [batch_id]}} =
              make.(first.workflow_id, "submit_batch", %{
@@ -72,18 +72,19 @@ defmodule Instantflow.ModularProcessesTest do
     assert {:error, :not_found} =
              make.(second.workflow_id, "print_ticket", %{"batch_id" => batch_id})
 
-    assert Operations.workspace(actor, Operations.today(), first.workflow_id).report.open_total ==
+    assert Operations.workspace(actor, Operations.today(actor), first.workflow_id).report.open_total ==
              2400
 
-    assert Operations.workspace(actor, Operations.today(), second.workflow_id).report.open_total ==
+    assert Operations.workspace(actor, Operations.today(actor), second.workflow_id).report.open_total ==
              0
 
     assert {:ok, _} =
              make.(second.workflow_id, "close_day", %{
-               "business_date" => Date.to_iso8601(Operations.today())
+               "business_date" => Date.to_iso8601(Operations.today(actor))
              })
 
-    assert Operations.workspace(actor, Operations.today(), first.workflow_id).report.closed == nil
+    assert Operations.workspace(actor, Operations.today(actor), first.workflow_id).report.closed ==
+             nil
 
     assert {:error, :workspace_required} =
              WorkflowRuntime.command(actor, %{
@@ -159,9 +160,8 @@ defmodule Instantflow.ModularProcessesTest do
     for {type, name} <- [{"enrollment", "Admissões"}, {"incident", "Casos reservados"}] do
       assert {:ok, draft} = Templates.new(actor, "custom_" <> type, name, type)
 
-      assert Workspaces.pages(draft.definition) == [
-               %{"key" => "overview", "label" => "Acompanhamento", "blocks" => ["records"]}
-             ]
+      assert Workspaces.pages(draft.definition) ==
+               Workspaces.pages(Instantflow.Examples.definition(type))
 
       assert draft.definition["name"] == name
       assert draft.definition["template_key"] == "custom_" <> type
@@ -197,8 +197,8 @@ defmodule Instantflow.ModularProcessesTest do
                "name" => "Balcão 01"
              })
 
-    assert Operations.workspace(actor, Operations.today(), version.workflow_id) != nil
-    assert Operations.workspace(other, Operations.today(), version.workflow_id) == nil
+    assert Operations.workspace(actor, Operations.today(actor), version.workflow_id) != nil
+    assert Operations.workspace(other, Operations.today(actor), version.workflow_id) == nil
 
     assert {:error, :forbidden} =
              Operations.command(other, %{

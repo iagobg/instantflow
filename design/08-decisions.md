@@ -168,3 +168,63 @@ routes must work for participants who cannot create records. The sprint's
 scenario mapping makes each original school behavior reviewable without example
 dispatch or hidden setup. No implementation completion or pilot activation is
 inferred from these clarifications.
+
+### D-30 — Sprint 11 acceptance after corrected Sprints 09–10 (2026-10-22)
+
+Retain Sprint 11's five tasks and feature boundary. Reuse the completed bounded
+projection service and shared participant authorization/form conversion rather
+than implementing a second version. Inventory residual legacy callers explicitly.
+Prove a small restaurant composition through common authoring and generated routes
+early, including late settlement rollback, before claiming full recreation.
+
+The two Sprint 10 review defects show that context correctness alone does not
+prove consistent public entry points or generated forms. Add a supported-field/
+surface matrix and direct-URL/event authorization parity, preserving pinning,
+current revocation, explicit staff grants and curated release semantics. Do not
+expand deferred field/surface combinations as an incidental acceptance change.
+
+Scale evidence must vary published versions and processes as well as records,
+measuring policy compilation and supporting-query cost beyond query count. Record
+numeric read/memory budgets before tuning alongside the existing D-09 targets;
+retain failures and justify target changes. These refinements establish evidence
+checkpoints, not new approval gates or customer-launch authorization.
+
+### D-31 — Begin Sprint 11 with explicit operational semantics (2026-10-22)
+
+The first T01/T03 increment declares `interface.operations` v1: captured actor
+name, full manual BRL settlement, a nonempty subset of cash/card/Pix, organization
+timezone and estimated product units. Missing declarations retain historical
+semantics. New APIs/forms use `responsible_actor`; old waiter payloads and storage
+remain adapters without rewriting records or receipt digests. Session commands
+and replay resolve the ticket's pinned contract and revalidate current grants.
+Editor/import/schema/runtime checks and late settlement rollback cover the early
+independent restaurant and composed finance checkpoint.
+
+Read budgets/distributions are fixed in verification before T02 tuning. The
+[checkpoint inventory](../docs/sprint11-operational-checkpoint.md) explicitly leaves
+supporting-volume measurements, residual read paths, complete public-entry/form
+matrices, removed-page fallback, full recreation and populated restoration open.
+Sprint 11 is In progress, 0/5; this decision does not close an architecture or
+customer activation gate.
+
+### D-32 — Evidence-based retirement of legacy execution (2026-10-22)
+
+The user identified the maintenance cost of compatibility for a system being
+sunset after Sprint 11 had started. Preserve the first operational checkpoint;
+audit its compatibility mappings rather than restarting the sprint. Blanket
+preservation of all historical execution is superseded by a T03/T04 disposition
+register and a T05 retirement gate in Sprint 11.
+
+Every adapter needs actual consumer/record evidence, required behavior, an owner,
+and a removal milestone or measurable condition. Synthetic-only dependencies are
+recreated with supported contracts and their runtime paths removed. Retained
+history preferably uses export/snapshots/read-only access. Active consumers may
+justify a small migration/drain adapter. Unknown consumers are investigated before
+acceptance; local fixture usage alone proves neither production need nor safe data
+deletion. New definitions must not acquire dependencies on retired behavior.
+
+Supported builder version pinning, live authorization, audit, idempotency and
+populated recovery remain required. Preservation of data is distinct from keeping
+obsolete write APIs available; pending jobs need an explicit disposition. Keep
+business/security coverage when replacing legacy tests. This is a compatibility
+scope revision, not authorization to delete user data or reset environments.

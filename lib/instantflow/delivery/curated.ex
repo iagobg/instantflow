@@ -30,6 +30,7 @@ defmodule Instantflow.Delivery.Curated do
       version = Repo.get!(Version, ticket.workflow_version_id)
       spec = Communications.find(version.definition, key)
       unless authorized?(scope, ticket, version, spec), do: Repo.rollback(:forbidden)
+      Instantflow.WorkflowCatalog.Retirement.require_active!(version.id)
 
       relationship =
         Repo.get_by(Relationship,
@@ -173,6 +174,8 @@ defmodule Instantflow.Delivery.Curated do
 
       unless authorized?(scope, ticket, version, spec) and eligible?(message),
         do: Repo.rollback(:forbidden)
+
+      Instantflow.WorkflowCatalog.Retirement.require_active!(version.id)
 
       if operation == "retry" do
         unless message.status == "failed", do: Repo.rollback(:not_failed)

@@ -2,10 +2,10 @@ defmodule Instantflow.WorkflowRuntime.Corrections do
   @moduledoc "Atomic explicit section invalidation within the coordinator's existing transaction."
   alias Instantflow.Repo
 
-  def apply!(version, sections, edge) do
+  def apply!(_version, sections, edge) do
     case edge["reset"] do
       nil ->
-        Instantflow.WorkflowRuntime.LegacyResets.apply!(version, sections, edge)
+        %{}
 
       spec ->
         for section <- sections,

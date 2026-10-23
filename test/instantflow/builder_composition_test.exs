@@ -28,8 +28,8 @@ defmodule Instantflow.BuilderCompositionTest do
 
     visit_attrs = %{
       "resource_id" => resource["id"],
-      "waiter" => "Atendente",
-      "business_date" => Date.to_iso8601(Operations.today())
+      "responsible_actor" => "Atendente",
+      "business_date" => Date.to_iso8601(Operations.today(actor))
     }
 
     assert {:ok, first} = command.("open_session", visit_attrs)
@@ -72,6 +72,10 @@ defmodule Instantflow.BuilderCompositionTest do
       f.version.definition
       |> Map.put("template_key", "equipment_purchase")
       |> Map.put("capabilities", ["operations", "finance", "core"])
+      |> put_in(
+        ["interface", "operations"],
+        Instantflow.WorkflowCatalog.OperationalContract.defaults()
+      )
       |> put_in(["interface", "lifecycle"], %{"close_transition" => "finish"})
 
     assert {:ok, version} = WorkflowCatalog.publish(f.admin, definition, f.version.bindings)
@@ -82,8 +86,8 @@ defmodule Instantflow.BuilderCompositionTest do
     assert {:ok, visit} =
              op(f.requester, version.workflow_id, "open_session", %{
                "resource_id" => resource["id"],
-               "waiter" => "Solicitante",
-               "business_date" => Date.to_iso8601(Operations.today())
+               "responsible_actor" => "Solicitante",
+               "business_date" => Date.to_iso8601(Operations.today(f.requester))
              })
 
     session = Operations.visit(f.requester, visit["id"], version.workflow_id).session

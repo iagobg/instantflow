@@ -1,4 +1,14 @@
 defmodule InstantflowWeb.RuntimeErrors do
+  def message(:retired_invitation),
+    do: "Este convite antigo foi descontinuado. Solicite um novo convite de participante."
+
+  def message(:retired_version),
+    do:
+      "Esta versão histórica está arquivada. Crie um processo com os contratos atuais para continuar."
+
+  def message(:unsupported_contract),
+    do: "Configure e publique o contrato operacional antes de iniciar atendimentos."
+
   def message(:execution_disabled), do: "Os cálculos Python estão desativados pelo operador."
 
   def message(:calculation_required),

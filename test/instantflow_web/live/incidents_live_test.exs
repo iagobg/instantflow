@@ -11,26 +11,35 @@ defmodule InstantflowWeb.IncidentsLiveTest do
     id = report(f)
 
     {:ok, dean, _} =
-      live(Instantflow.IdentityFixtures.login(conn, f.dean), ~p"/o/horizonte/ocorrencias")
+      live(
+        Instantflow.IdentityFixtures.login(conn, f.dean),
+        ~p"/o/horizonte/processos/#{f.version.workflow_id}"
+      )
 
     assert has_element?(
              dean,
-             "#incident-urgency-status[role='status'][aria-live='polite']",
-             "1 ocorrência(s)"
+             "#process-urgency-status[role='status'][aria-live='polite']",
+             "1 registro(s)"
            )
 
-    assert has_element?(dean, "#incidents-#{id} strong", "Urgente")
-    dean |> form("#incident-filters", filter: %{urgency: "Rotina", stage: ""}) |> render_submit()
-    refute has_element?(dean, "#incidents-#{id}")
+    assert has_element?(dean, "#process_records-#{id}", "Urgente")
+
+    dean
+    |> element("#process-record-filters")
+    |> render_submit(%{
+      "record_filter" => %{"fields" => %{"report.urgency" => "Rotina"}, "stage" => ""}
+    })
+
+    refute has_element?(dean, "#process_records-#{id}")
 
     {:ok, other, _} =
       live(
         Instantflow.IdentityFixtures.login(conn, f.other_counselor),
-        ~p"/o/horizonte/ocorrencias"
+        ~p"/o/horizonte/processos/#{f.version.workflow_id}"
       )
 
-    assert has_element?(other, "#incident-count", "0 ocorrência(s)")
-    refute has_element?(other, "#incidents-#{id}")
+    assert has_element?(other, "#process-record-count", "0 registro(s)")
+    refute has_element?(other, "#process_records-#{id}")
   end
 
   test "dean and assigned counselor save independent sections; reassign removes protected drafts and presence",
@@ -108,7 +117,24 @@ defmodule InstantflowWeb.IncidentsLiveTest do
 
     assert has_element?(view, "#private-documents", "Em quarentena")
     [doc] = Instantflow.PrivateDocuments.list(f.counselor, id)
-    view |> element("#release-private-#{doc.id}") |> render_click()
+
+    view
+    |> form("#section-form-support",
+      section: %{notes: "Nota privada"}
+    )
+    |> render_submit()
+
+    refute has_element?(view, "#release-private-#{doc.id}")
+    assert {:ok, _} = assign(f.dean, id, f.other_counselor.id, "Revisão independente")
+    assert {:ok, _} = Instantflow.PrivateDocuments.review(f.other_counselor, doc.object_key, true)
+    assert {:ok, _} = assign(f.dean, id, f.counselor.id, "Retomar acompanhamento")
+
+    {:ok, view, _} =
+      live(
+        Instantflow.IdentityFixtures.login(build_conn(), f.counselor),
+        ~p"/o/horizonte/processos/#{f.version.workflow_id}/registros/#{id}"
+      )
+
     assert has_element?(view, "#download-private-#{doc.id}")
     view |> form("#section-form-support", section: %{notes: "Nota privada"}) |> render_submit()
     {:ok, data} = WorkflowRuntime.get(f.counselor, id)

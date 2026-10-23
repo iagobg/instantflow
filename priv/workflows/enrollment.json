@@ -6,7 +6,10 @@
   "name": "Matrícula de estudantes",
   "description": "Demonstração com documentos fictícios e integrações simuladas.",
   "capabilities": [
-    "core"
+    "core",
+    "participants",
+    "documents",
+    "communications"
   ],
   "role_requirements": [
     {
@@ -38,12 +41,13 @@
       "access": [
         {
           "role": "guardian",
-          "scope": "guardian",
+          "scope": "participant",
           "read": true,
           "edit_stages": [
             "draft",
             "correction"
-          ]
+          ],
+          "relationship": "family"
         },
         {
           "role": "admissions",
@@ -76,7 +80,22 @@
         {
           "key": "document",
           "label": "Documento fictício",
-          "type": "attachment"
+          "type": "attachment",
+          "document_policy": {
+            "reviewers": [
+              {
+                "role": "admissions",
+                "scope": "workflow_department",
+                "department_binding": "admissions_department"
+              }
+            ],
+            "max_bytes": 5242880,
+            "media_types": [
+              "application/pdf",
+              "image/png",
+              "image/jpeg"
+            ]
+          }
         }
       ]
     },
@@ -220,7 +239,8 @@
       "actors": [
         {
           "role": "guardian",
-          "scope": "guardian"
+          "scope": "participant",
+          "relationship": "family"
         }
       ],
       "required_fields": [
@@ -261,7 +281,8 @@
       "actors": [
         {
           "role": "guardian",
-          "scope": "guardian"
+          "scope": "participant",
+          "relationship": "family"
         }
       ],
       "required_fields": [
@@ -427,14 +448,93 @@
     }
   ],
   "interface": {
+    "access": {
+      "view": [
+        "admissions",
+        "academic",
+        "finance",
+        "it"
+      ]
+    },
     "pages": [
       {
-        "key": "overview",
-        "label": "Acompanhamento",
+        "key": "staff",
+        "label": "Equipe",
         "blocks": [
           "records"
         ]
+      },
+      {
+        "key": "family_portal",
+        "label": "Família",
+        "blocks": [
+          "records"
+        ],
+        "participant": {
+          "visibility_roles": [
+            "guardian"
+          ],
+          "audience": [
+            {
+              "role": "guardian",
+              "scope": "participant",
+              "relationship": "family"
+            }
+          ],
+          "fields": [
+            "application.student_name",
+            "application.guardian_name",
+            "application.school_year"
+          ],
+          "documents": [
+            "application.document"
+          ],
+          "actions": [
+            "submit",
+            "resubmit"
+          ],
+          "messages": [
+            "admission_notice"
+          ],
+          "status": true,
+          "history": false
+        }
       }
     ]
-  }
+  },
+  "participants": [
+    {
+      "key": "family",
+      "label": "Família verificada",
+      "kind": "external",
+      "candidate_roles": [
+        "guardian"
+      ],
+      "managers": [
+        {
+          "role": "admissions",
+          "scope": "workflow_department",
+          "department_binding": "admissions_department"
+        }
+      ]
+    }
+  ],
+  "communications": [
+    {
+      "key": "admission_notice",
+      "label": "Mensagem à família",
+      "recipient_relationship": "family",
+      "fields": [
+        "identity.display_name"
+      ],
+      "release_actors": [
+        {
+          "role": "admissions",
+          "scope": "workflow_department",
+          "department_binding": "admissions_department"
+        }
+      ],
+      "behavior": "fail_once"
+    }
+  ]
 }

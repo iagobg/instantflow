@@ -87,7 +87,7 @@ defmodule Instantflow.AccessTest do
     |> Ecto.Changeset.change(department_id: other.id)
     |> Repo.update!()
 
-    assert WorkflowRuntime.list(member) == []
+    assert WorkflowRuntime.search(member).tickets == []
     {:ok, _} = Access.grant(f.admin, member.id, f.reviewer.department_id, "finance")
     assert WorkflowRuntime.search(member).total == 1
     {:ok, data} = WorkflowRuntime.get(member, id)

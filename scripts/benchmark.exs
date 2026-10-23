@@ -5,7 +5,6 @@ defmodule Instantflow.Benchmark do
     Delivery,
     Finance,
     Identity,
-    Incidents,
     OperatorRepo,
     Repo,
     WorkflowRuntime
@@ -16,6 +15,8 @@ defmodule Instantflow.Benchmark do
 
   def run do
     Application.put_env(:instantflow, :delivery_worker, false)
+    Application.put_env(:instantflow, :calculation_worker, false)
+    Application.put_env(:instantflow, :calculation_execution, false)
     {:ok, _} = Application.ensure_all_started(:instantflow)
     config = OperatorRepo.config() |> Keyword.take([:username, :password, :hostname, :port])
     {:ok, control} = Postgrex.start_link(config ++ [database: "postgres"])
@@ -286,13 +287,23 @@ defmodule Instantflow.Benchmark do
     {:ok, trip} = Finance.install(admin, "field_trip", deps, account.id)
 
     {:ok, enrollment} =
-      Instantflow.Enrollment.install(
-        admin,
-        Map.new(~w(admissions academic finance it), &{&1 <> "_department", dep.id})
-      )
+      Instantflow.Examples.install(admin, "enrollment", %{
+        "roles" => %{
+          "guardian" => ["external"],
+          "admissions" => ["admin", "admissions"],
+          "academic" => ["head"],
+          "finance" => ["finance"],
+          "it" => ["it"]
+        },
+        "departments" =>
+          Map.new(~w(admissions academic finance it), &{&1 <> "_department", dep.id})
+      })
 
     {:ok, incident} =
-      Incidents.install(admin, %{"dean_department" => dep.id, "support_department" => dep.id})
+      Instantflow.Examples.install(admin, "incident", %{
+        "roles" => %{"teacher" => ["teacher"], "dean" => ["dean"], "counselor" => ["counselor"]},
+        "departments" => %{"dean_department" => dep.id, "support_department" => dep.id}
+      })
 
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 

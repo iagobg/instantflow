@@ -56,8 +56,8 @@ defmodule Instantflow.BuilderRecreationTest do
     assert {:ok, opened} =
              command.("open_session", %{
                "resource_id" => resource["id"],
-               "waiter" => "Técnico",
-               "business_date" => Date.to_iso8601(Operations.today())
+               "responsible_actor" => "Técnico",
+               "business_date" => Date.to_iso8601(Operations.today(admin))
              })
 
     {:ok, draft} = Templates.clone(admin, version.id)
@@ -110,8 +110,8 @@ defmodule Instantflow.BuilderRecreationTest do
     {:ok, opened} =
       command.("open_session", %{
         "resource_id" => resource["id"],
-        "waiter" => "Técnico",
-        "business_date" => Date.to_iso8601(Operations.today())
+        "responsible_actor" => "Técnico",
+        "business_date" => Date.to_iso8601(Operations.today(admin))
       })
 
     id = Operations.visit(admin, opened["id"], version.workflow_id).session.ticket_id
@@ -173,7 +173,7 @@ defmodule Instantflow.BuilderRecreationTest do
              })
 
     assert {:ok, %{ticket: %{stage: "collected"}}} = WorkflowRuntime.get(customer, id)
-    assert WorkflowRuntime.list(unrelated) == []
+    assert WorkflowRuntime.search(unrelated).tickets == []
     assert Instantflow.WorkflowCatalog.available(customer) == []
   end
 

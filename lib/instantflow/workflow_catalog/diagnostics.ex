@@ -130,10 +130,9 @@ defmodule Instantflow.WorkflowCatalog.Diagnostics do
 
       case field["document_policy"] do
         nil ->
-          if field["type"] == "attachment" and
-               (Map.has_key?(d, "participants") or Capabilities.enabled?(d, "documents")),
-             do: [path <> ": declare a política privada do campo."],
-             else: []
+          if field["type"] == "attachment",
+            do: [path <> ": declare a política privada do campo."],
+            else: []
 
         policy ->
           actor_errors(policy["reviewers"], roles, d, path <> ".reviewers") ++
@@ -158,7 +157,7 @@ defmodule Instantflow.WorkflowCatalog.Diagnostics do
     |> Enum.with_index()
     |> Enum.flat_map(fn {actor, i} ->
       references([actor["role"]], roles, path <> "[#{i}].role") ++
-        if(actor["scope"] == "guardian" and Map.has_key?(d, "participants"),
+        if(actor["scope"] == "guardian",
           do: [path <> "[#{i}].scope: substitua guardian por um relacionamento declarado."],
           else: []
         ) ++

@@ -79,7 +79,7 @@ defmodule InstantflowWeb.RequestLiveTest do
     )
 
     assert {:error, :not_found} = WorkflowRuntime.get(outsider, id)
-    assert WorkflowRuntime.list(outsider) == []
+    assert WorkflowRuntime.search(outsider).tickets == []
 
     assert {:error, {:live_redirect, %{to: "/o/horizonte/solicitacoes"}}} =
              live(login(conn, outsider), ~p"/o/horizonte/solicitacoes/#{id}")

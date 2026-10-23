@@ -322,6 +322,7 @@ defmodule Instantflow.BuilderFixtures do
         }
       ],
       "interface" => %{
+        "operations" => Instantflow.WorkflowCatalog.OperationalContract.defaults(),
         "pages" => [
           %{
             "key" => "counter",

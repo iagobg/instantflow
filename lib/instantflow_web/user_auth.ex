@@ -57,36 +57,16 @@ defmodule InstantflowWeb.UserAuth do
               {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
 
             fresh ->
-              feature =
-                case socket.view do
-                  InstantflowWeb.EnrollmentLive -> :enrollment
-                  InstantflowWeb.IncidentsLive -> :incident
-                  InstantflowWeb.BudgetsLive -> :finance
-                  _ -> nil
-                end
-
-              configured? =
-                feature == nil ||
-                  Instantflow.WorkflowCatalog.LegacyWorkspaces.available?(fresh, feature)
-
-              if !configured?,
+              if(
+                socket.view in [
+                  InstantflowWeb.TemplateLive,
+                  InstantflowWeb.TemplatesLive
+                ] and
+                  fresh.role != "admin",
                 do:
-                  {:halt,
-                   Phoenix.LiveView.redirect(socket,
-                     to: "/o/#{fresh.organization.slug}/processos"
-                   )},
-                else:
-                  if(
-                    socket.view in [
-                      InstantflowWeb.TemplateLive,
-                      InstantflowWeb.TemplatesLive
-                    ] and
-                      fresh.role != "admin",
-                    do:
-                      {:halt,
-                       Phoenix.LiveView.redirect(socket, to: "/o/#{fresh.organization.slug}")},
-                    else: {:cont, Phoenix.Component.assign(socket, :current_scope, fresh)}
-                  )
+                  {:halt, Phoenix.LiveView.redirect(socket, to: "/o/#{fresh.organization.slug}")},
+                else: {:cont, Phoenix.Component.assign(socket, :current_scope, fresh)}
+              )
           end
         end
 
@@ -116,9 +96,6 @@ defmodule InstantflowWeb.UserAuth do
                    InstantflowWeb.ParticipantLive,
                    InstantflowWeb.MessagesLive,
                    InstantflowWeb.RequestsLive,
-                   InstantflowWeb.EnrollmentLive,
-                   InstantflowWeb.BudgetsLive,
-                   InstantflowWeb.IncidentsLive,
                    InstantflowWeb.CalculationsLive,
                    InstantflowWeb.ProcessLive,
                    InstantflowWeb.ProcessesLive
@@ -141,9 +118,6 @@ defmodule InstantflowWeb.UserAuth do
                        InstantflowWeb.ParticipantLive,
                        InstantflowWeb.MessagesLive,
                        InstantflowWeb.RequestsLive,
-                       InstantflowWeb.EnrollmentLive,
-                       InstantflowWeb.BudgetsLive,
-                       InstantflowWeb.IncidentsLive,
                        InstantflowWeb.CalculationsLive,
                        InstantflowWeb.ProcessLive,
                        InstantflowWeb.ProcessesLive

@@ -73,4 +73,15 @@ For each scenario record definition/fixture paths, supported setup steps, assert
 
 ## Completion boundary
 
+Sprint 11's D-32 mid-sprint policy qualifies legacy-preservation requirements in
+this contract. Permanent version pinning for supported builder definitions is
+distinct from executing the retiring application's behavior. Inventory actual
+consumers before retaining adapters: remove synthetic-only paths, retain history
+through export/snapshots/read-only access where sufficient, and narrowly support
+active workflows until migration or drain. Unknown consumers require evidence,
+not assumptions. No new definition may depend on retired behavior. Preserve
+data integrity and supported mixed-version/revocation tests; populated recovery
+does not require reactivating every old write API. See the
+[Sprint 11 disposition gate](../sprint_plan/sprint_11.md#mid-sprint-compatibility-policy--d-32).
+
 Sprint 09 establishes contracts and a participant/document vertical slice. Sprint 10 adds generated experiences using that protocol and bounded query interface. Sprint 11 completes performance measurement, operational generalization, legacy replacement and full recreation/preservation. Every new capability ships its own cohesive boundary and tests; S11 extraction is residual cleanup, not permission to accumulate domain coupling. Pilot activation remains governed by Sprints 12–14.

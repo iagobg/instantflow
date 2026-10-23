@@ -25,7 +25,6 @@
     "scopes": [
       "requester",
       "assigned_department",
-      "guardian",
       "workflow_department",
       "assigned_user",
       "participant"
@@ -90,14 +89,25 @@
       "fail_once",
       "failure",
       "ambiguous"
-    ]
+    ],
+    "operational_contract_v1": {
+      "version": 1,
+      "actor": "captured_name",
+      "settlement": "full_manual",
+      "reporting_timezone": "organization",
+      "currency": "BRL",
+      "payment_methods": [
+        "cash",
+        "card",
+        "pix"
+      ],
+      "consumption": "estimated_product_units"
+    }
   },
   "reserved_fail_closed": {
-    "field_types": [
-      "directory_reference"
-    ],
+    "field_types": [],
     "guard_operators": [],
-    "reason": "Directory references remain blocked. Attachments require a private owning context; guardian scope requires a verified local link."
+    "reason": "All supported fields require their declared contracts. Attachments require explicit private document policies; directory references require declared verified relationships. Guardian scopes are retired."
   },
   "unsupported": [
     "python",

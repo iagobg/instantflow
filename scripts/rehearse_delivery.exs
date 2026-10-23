@@ -1,11 +1,14 @@
 defmodule Instantflow.DeliveryRehearsal do
   @moduledoc false
+  import Ecto.Query
   alias Instantflow.{Finance, Identity, OperatorRepo, PrivateDocuments, Repo, WorkflowRuntime}
   alias Instantflow.Identity.{Organization, User}
   alias Instantflow.WorkflowCatalog.Workflow
 
   def run do
     Application.put_env(:instantflow, :delivery_worker, false)
+    Application.put_env(:instantflow, :calculation_worker, false)
+    Application.put_env(:instantflow, :calculation_execution, false)
     {:ok, _} = Application.ensure_all_started(:instantflow)
     config = OperatorRepo.config() |> Keyword.take([:username, :password, :hostname, :port])
     {:ok, control} = Postgrex.start_link(config ++ [database: "postgres"])
@@ -27,6 +30,14 @@ defmodule Instantflow.DeliveryRehearsal do
 
     OperatorRepo.put_dynamic_repo(owner)
 
+    Ecto.Migrator.run(
+      OperatorRepo,
+      Application.app_dir(:instantflow, "priv/repo/migrations"),
+      :up,
+      all: true,
+      log: false
+    )
+
     {:ok, runtime} =
       Repo.start_link(
         name: :delivery_rehearsal_runtime,
@@ -42,7 +53,7 @@ defmodule Instantflow.DeliveryRehearsal do
     before = snapshot()
 
     for table <-
-          ~w(private_documents budget_accounts budget_holds budget_entries section_assignments enrollments guardian_links command_receipts transition_events outbox_messages) do
+          ~w(private_documents budget_accounts budget_holds budget_entries section_assignments ticket_participants command_receipts transition_events outbox_messages) do
       unless before[table].count > 0, do: raise("missing populated recovery table: #{table}")
     end
 
@@ -128,6 +139,33 @@ defmodule Instantflow.DeliveryRehearsal do
     finance = actor!("financeiro@escola.example", org.id)
     head = actor!("coordenacao@escola.example", org.id)
     operations = actor!("operacoes@escola.example", org.id)
+    admin = actor!("admin@escola.example", org.id)
+
+    for key <- ~w(enrollment incident requisition field_trip) do
+      workflow = OperatorRepo.get_by!(Workflow, organization_id: org.id, key: key)
+
+      version =
+        OperatorRepo.one!(
+          from v in Instantflow.WorkflowCatalog.Version,
+            where: v.workflow_id == ^workflow.id,
+            order_by: [desc: v.number],
+            limit: 1
+        )
+
+      bindings =
+        if key == "enrollment",
+          do: put_in(version.bindings, ["roles", "guardian"], ["parent", "external"]),
+          else: version.bindings
+
+      {:ok, _} =
+        Instantflow.WorkflowCatalog.publish(
+          admin,
+          Instantflow.Examples.definition(key),
+          bindings,
+          version.number
+        )
+    end
+
     incident = create!(teacher, org.id, "incident")
 
     save!(teacher, incident, "report", %{
@@ -164,7 +202,27 @@ defmodule Instantflow.DeliveryRehearsal do
         bytes
       )
 
-    {:ok, _} = PrivateDocuments.review(counselor, file.object_key, true)
+    {:error, :forbidden} = PrivateDocuments.review(counselor, file.object_key, true)
+
+    {:ok, invitation} =
+      Identity.invite(admin, %{
+        "email" => "review-#{Ecto.UUID.generate()}@example.test",
+        "role" => "staff",
+        "department_id" => counselor.department_id
+      })
+
+    {:ok, reviewer_user} =
+      Identity.accept_invitation(invitation.token, %{
+        "name" => "Revisor sintético",
+        "password" => "fictional-password-123"
+      })
+
+    reviewer = Identity.scope(reviewer_user.id, org.id)
+    {:ok, _} = Instantflow.Access.grant(admin, reviewer.id, reviewer.department_id, "counselor")
+    reviewer = Identity.scope(reviewer_user.id, org.id)
+    assign!(dean, incident, reviewer.id, "Revisão independente de recuperação")
+    {:ok, _} = PrivateDocuments.review(reviewer, file.object_key, true)
+    assign!(dean, incident, counselor.id, "Retomar acompanhamento")
 
     save!(counselor, incident, "support", %{
       "notes" => "Nota sintética de recuperação",
@@ -320,53 +378,51 @@ defmodule Instantflow.DeliveryRehearsal do
   end
 
   defp enrollment_walkthrough!(org, academic, finance) do
-    alias Instantflow.Enrollment
     admissions = actor!("admin@escola.example", org.id)
     parent = actor!("responsavel.a@escola.example", org.id)
     unrelated = actor!("responsavel.b@escola.example", org.id)
     it = actor!("ti@escola.example", org.id)
     workflow = OperatorRepo.get_by!(Workflow, organization_id: org.id, key: "enrollment")
-    {:ok, enrollment} = Enrollment.create(admissions, workflow.id, Ecto.UUID.generate())
-    {:ok, invitation} = Enrollment.invite(admissions, enrollment.id, parent.user.email)
-    {:ok, _} = Identity.accept_invitation(invitation.token, %{}, parent.user)
 
-    link =
-      Enum.find(Enrollment.guardians(admissions, enrollment.id), &(&1.membership_id == parent.id))
+    {:ok, result} =
+      WorkflowRuntime.command(admissions, %{
+        "operation" => "create",
+        "workflow_id" => workflow.id,
+        "key" => Ecto.UUID.generate()
+      })
 
-    {:ok, _} = Enrollment.verify(admissions, link.id, true)
+    id = result["ticket_id"]
+
+    for {operation, revision} <- [{"create", 0}, {"verify", 1}] do
+      {:ok, _} =
+        Instantflow.Participants.command(admissions, %{
+          "operation" => operation,
+          "ticket_id" => id,
+          "membership_id" => parent.id,
+          "relationship" => "family",
+          "expected_revision" => revision,
+          "key" => Ecto.UUID.generate()
+        })
+    end
 
     {:ok, file} =
-      Enrollment.upload(parent, enrollment.id, "matricula.pdf", "%PDF-1.4 FICTICIO %%EOF")
-
-    {:ok, data} = Enrollment.get(parent, enrollment.id)
-
-    {:ok, _} =
-      Enrollment.save(
+      PrivateDocuments.upload(
         parent,
-        enrollment.id,
-        %{
-          "student_name" => "Estudante integrado fictício",
-          "guardian_name" => "Responsável fictício",
-          "school_year" => "2027",
-          "document" => file.object_key
-        },
-        data.stage_revision,
-        data.section_revision,
-        Ecto.UUID.generate()
+        id,
+        "application",
+        "document",
+        "matricula.pdf",
+        "%PDF-1.4 FICTICIO %%EOF"
       )
 
-    {:ok, data} = Enrollment.get(parent, enrollment.id)
+    save!(parent, id, "application", %{
+      "student_name" => "Estudante integrado fictício",
+      "guardian_name" => "Responsável fictício",
+      "school_year" => "2027",
+      "document" => file.object_key
+    })
 
-    {:ok, _} =
-      Enrollment.submit(
-        parent,
-        enrollment.id,
-        data.revision,
-        data.section_revision,
-        Ecto.UUID.generate()
-      )
-
-    id = enrollment.ticket_id
+    transition!(parent, id, "submit")
     save!(admissions, id, "identity", %{"display_name" => "Estudante fictício"})
 
     {:error, :attachment_not_ready} =
@@ -390,13 +446,25 @@ defmodule Instantflow.DeliveryRehearsal do
     retry!(it, id, "simulate_provisioning")
     drain!(org.id)
     transition!(it, id, "finish")
-    {:ok, public} = Enrollment.get(parent, enrollment.id)
 
-    unless public.status == "Matrícula concluída" and not Map.has_key?(public, :events),
-      do: raise("parent projection wrong")
+    {:ok, public} =
+      Instantflow.WorkflowRuntime.ParticipantPages.get(parent, workflow.id, "family_portal", id)
 
-    {:error, :not_found} = Enrollment.get(unrelated, enrollment.id)
-    {:error, :not_found} = WorkflowRuntime.get(parent, id)
+    unless public.status == "Concluída" and not Map.has_key?(public, :events),
+      do: raise("participant projection wrong")
+
+    {:error, :not_found} =
+      Instantflow.WorkflowRuntime.ParticipantPages.get(
+        unrelated,
+        workflow.id,
+        "family_portal",
+        id
+      )
+
+    {:ok, allowed} = WorkflowRuntime.get(parent, id)
+
+    unless Enum.map(allowed.sections, & &1.key) == ["application"],
+      do: raise("unexpected private section")
   end
 
   defp fifth_walkthrough!(org, teacher, head) do
@@ -462,6 +530,19 @@ defmodule Instantflow.DeliveryRehearsal do
       do: raise("other school altered source")
   end
 
+  defp assign!(actor, id, member_id, reason) do
+    {:ok, data} = WorkflowRuntime.get(actor, id)
+
+    command!(actor, %{
+      "operation" => "assign",
+      "ticket_id" => id,
+      "section" => "support",
+      "membership_id" => member_id,
+      "expected_revision" => data.ticket.revision,
+      "reason" => reason
+    })
+  end
+
   defp command!(actor, command) do
     {:ok, result} =
       WorkflowRuntime.command(actor, Map.put_new(command, "key", Ecto.UUID.generate()))
@@ -477,7 +558,12 @@ defmodule Instantflow.DeliveryRehearsal do
       |> List.flatten()
 
     Map.new(tables, fn table ->
-      column = if table == "schema_migrations", do: "version", else: "id"
+      column =
+        case table do
+          "schema_migrations" -> "version"
+          "retired_workflow_versions" -> "version_id"
+          _ -> "id"
+        end
 
       rows =
         OperatorRepo.query!(

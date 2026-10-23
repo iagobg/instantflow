@@ -3,7 +3,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
   alias Instantflow.WorkflowCatalog.{CalculationContract, Capabilities, Diagnostics, Interface}
 
   @types ~w(short_text long_text integer money date datetime boolean single_choice multiple_choice directory_reference attachment)
-  @scopes ~w(requester assigned_department guardian workflow_department assigned_user participant)
+  @scopes ~w(requester assigned_department workflow_department assigned_user participant)
   @kinds ~w(forward correction resubmission rejection cancellation reopening)
   @actions ~w(simulate_notification simulate_provisioning simulate_payment)
 
@@ -15,6 +15,7 @@ defmodule Instantflow.WorkflowCatalog.Definition do
          :ok <- references(definition),
          :ok <- graph(definition),
          :ok <- Interface.validate(definition),
+         :ok <- Instantflow.WorkflowCatalog.OperationalContract.validate(definition),
          :ok <- Instantflow.WorkflowCatalog.ViewContract.validate(definition),
          :ok <- Instantflow.WorkflowCatalog.Corrections.validate(definition),
          :ok <- Instantflow.WorkflowCatalog.FinanceSurfaces.validate(definition),

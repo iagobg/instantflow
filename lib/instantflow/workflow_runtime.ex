@@ -7,7 +7,6 @@ defmodule Instantflow.WorkflowRuntime do
   alias Instantflow.WorkflowRuntime.{
     Event,
     Guards,
-    LegacyAccess,
     Policy,
     Receipt,
     Section,
@@ -45,6 +44,8 @@ defmodule Instantflow.WorkflowRuntime do
 
             if command["operation"] == "create" and not Policy.create?(actor, version),
               do: Repo.rollback(:forbidden)
+
+            Instantflow.WorkflowCatalog.Retirement.require_active!(version.id)
 
             unless receipt.digest == digest, do: Repo.rollback(:idempotency_mismatch)
             receipt.result
@@ -120,8 +121,11 @@ defmodule Instantflow.WorkflowRuntime do
           |> Enum.map(&Map.take(&1, ~w(key label from to kind)))
         end)
 
+      archived? = Instantflow.WorkflowCatalog.Retirement.retired?(version.id)
+
       {:ok,
        %{
+         archived?: archived?,
          ticket: ticket,
          version: %{version | definition: projected_definition, bindings: %{}},
          sections: Enum.filter(sections, &(&1.key in keys)),
@@ -129,15 +133,22 @@ defmodule Instantflow.WorkflowRuntime do
          reference_labels: directory.labels,
          section_definitions:
            Enum.map(readable, &Map.take(&1, ~w(key label classification fields))),
-         assignments: Instantflow.Collaboration.Assignments.controls(scope, ticket, version),
-         can_retry: Policy.retry?(scope, ticket, version),
+         assignments:
+           if(archived?,
+             do: [],
+             else: Instantflow.Collaboration.Assignments.controls(scope, ticket, version)
+           ),
+         can_retry: not archived? and Policy.retry?(scope, ticket, version),
          editable:
-           Enum.filter(readable, &Policy.section?(scope, ticket, version, &1, :edit))
+           Enum.filter(
+             readable,
+             &(not archived? and Policy.section?(scope, ticket, version, &1, :edit))
+           )
            |> Enum.map(& &1["key"]),
          transitions:
            Enum.filter(
              version.definition["transitions"],
-             &Policy.transition?(scope, ticket, version, &1)
+             &(not archived? and Policy.transition?(scope, ticket, version, &1))
            )
            |> Enum.map(&Map.take(&1, ~w(key label require_reason kind))),
          calculations: Instantflow.Calculations.statuses(scope, ticket, version),
@@ -155,8 +166,6 @@ defmodule Instantflow.WorkflowRuntime do
       _ -> {:error, :not_found}
     end
   end
-
-  def list(actor), do: Tenant.read(actor, &list_scoped/1, [])
 
   defdelegate search(actor, filters \\ %{}), to: Instantflow.WorkflowRuntime.Projections
 
@@ -179,53 +188,9 @@ defmodule Instantflow.WorkflowRuntime do
       |> Enum.each(fn member ->
         scope = Instantflow.Access.load(member)
 
-        if LegacyAccess.parent_portal?(scope, version) and
-             LegacyAccess.guardian?(scope, ticket, version),
-           do:
-             Phoenix.PubSub.broadcast(
-               Instantflow.PubSub,
-               "organization:#{scope.organization_id}:user:#{scope.user_id}",
-               :enrollments_changed
-             )
-
         if Policy.discover?(scope, ticket, version),
           do: Phoenix.PubSub.broadcast(Instantflow.PubSub, list_topic(scope), :requests_changed)
       end)
-    end
-  end
-
-  defp list_scoped(actor) do
-    case Identity.scope(actor.user_id, actor.organization_id) do
-      nil ->
-        []
-
-      scope ->
-        Repo.all(
-          from t in Ticket,
-            where: t.organization_id == ^actor.organization_id,
-            order_by: [desc: t.id],
-            preload: [:workflow_version]
-        )
-        |> Enum.filter(fn ticket ->
-          contract = Instantflow.WorkflowCatalog.ParticipantPages
-          version = ticket.workflow_version
-
-          Policy.discover?(scope, ticket, version) and
-            (contract.pages(version.definition) == [] or
-               Instantflow.WorkflowRuntime.ParticipantPolicy.staff_workspace?(scope, version))
-        end)
-        |> Enum.map(fn ticket ->
-          version = ticket.workflow_version
-
-          %{
-            ticket
-            | workflow_version: %{
-                version
-                | bindings: %{},
-                  definition: Map.take(version.definition, ~w(name stages))
-              }
-          }
-        end)
     end
   end
 
@@ -249,6 +214,8 @@ defmodule Instantflow.WorkflowRuntime do
 
     unless version && Policy.create?(actor, version),
       do: Repo.rollback(:forbidden)
+
+    Instantflow.WorkflowCatalog.Retirement.require_active!(version.id)
 
     if Instantflow.WorkflowCatalog.Workspaces.operational?(version.definition) and
          origin != :operations,
@@ -290,6 +257,7 @@ defmodule Instantflow.WorkflowRuntime do
     unless ticket, do: Repo.rollback(:not_found)
     version = Repo.get!(Version, ticket.workflow_version_id)
     unless command_access?(actor, ticket, version), do: Repo.rollback(:forbidden)
+    Instantflow.WorkflowCatalog.Retirement.require_active!(version.id)
 
     sections =
       Repo.all(
@@ -525,9 +493,7 @@ defmodule Instantflow.WorkflowRuntime do
   end
 
   defp command_access?(actor, ticket, version) do
-    Policy.discover?(actor, ticket, version) or
-      (LegacyAccess.parent_portal?(actor, version) and
-         LegacyAccess.guardian?(actor, ticket, version))
+    Policy.discover?(actor, ticket, version)
   end
 
   defp command_shape(c) do

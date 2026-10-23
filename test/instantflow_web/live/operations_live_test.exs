@@ -9,7 +9,10 @@ defmodule InstantflowWeb.OperationsLiveTest do
        %{conn: conn} do
     actor = staff_fixture()
     install_operations(actor)
-    {:ok, view, _} = live(login(conn, actor), ~p"/o/horizonte/operacao")
+
+    {:ok, view, _} =
+      live(login(conn, actor), ~p"/o/horizonte/processos/#{Operations.default_workflow(actor)}")
+
     assert has_element?(view, "#product-form")
 
     view
@@ -37,15 +40,15 @@ defmodule InstantflowWeb.OperationsLiveTest do
     |> render_submit()
 
     view |> form("#resource-form", resource: %{name: "Mesa 08"}) |> render_submit()
-    data = Operations.workspace(actor, Operations.today())
+    data = Operations.workspace(actor, Operations.today(actor))
     [resource] = data.resources
 
     view
     |> form("#open-visit-form",
       visit: %{
         resource_id: resource.id,
-        waiter: "Carlos",
-        business_date: Date.to_iso8601(Operations.today())
+        responsible_actor: "Carlos",
+        business_date: Date.to_iso8601(Operations.today(actor))
       }
     )
     |> render_submit()
@@ -67,8 +70,8 @@ defmodule InstantflowWeb.OperationsLiveTest do
     end
 
     assert has_element?(view, "#cart-total", "R$ 211,00")
-    view |> form("#submit-batch-form", batch: %{waiter: "Ana"}) |> render_submit()
-    session = hd(Operations.workspace(actor, Operations.today()).sessions)
+    view |> form("#submit-batch-form", batch: %{responsible_actor: "Ana"}) |> render_submit()
+    session = hd(Operations.workspace(actor, Operations.today(actor)).sessions)
     batches = Operations.visit(actor, session.id).batches
     assert length(batches) == 2
 
@@ -93,19 +96,27 @@ defmodule InstantflowWeb.OperationsLiveTest do
 
   test "non-admin cannot see the workspace or mutate it with a forged event", %{conn: conn} do
     actor = staff_fixture("staff")
+    admin = staff_fixture()
+    version = install_operations(admin)
 
     assert {:error, {:live_redirect, %{to: "/o/horizonte/processos"}}} =
-             live(login(conn, actor), ~p"/o/horizonte/operacao")
+             live(login(conn, actor), ~p"/o/horizonte/processos/#{version.workflow_id}")
 
-    assert {:error, :workspace_required} =
+    assert {:error, :forbidden} =
              operation(actor, "add_resource", %{"name" => "Inválida"})
 
-    assert Operations.workspace(actor, Operations.today()) == nil
+    assert Operations.workspace(actor, Operations.today(actor)) == nil
   end
 
   test "menu edits and deactivation survive reload and preserve numeric prices", %{conn: conn} do
     f = operations_fixture()
-    {:ok, view, _} = live(login(conn, f.actor), ~p"/o/horizonte/operacao")
+
+    {:ok, view, _} =
+      live(
+        login(conn, f.actor),
+        ~p"/o/horizonte/processos/#{Operations.default_workflow(f.actor)}"
+      )
+
     view |> element("#edit-product-#{f.soup}") |> render_click()
 
     view
@@ -120,7 +131,12 @@ defmodule InstantflowWeb.OperationsLiveTest do
     )
     |> render_submit()
 
-    {:ok, again, _} = live(login(conn, f.actor), ~p"/o/horizonte/operacao")
+    {:ok, again, _} =
+      live(
+        login(conn, f.actor),
+        ~p"/o/horizonte/processos/#{Operations.default_workflow(f.actor)}"
+      )
+
     assert has_element?(again, "#products-#{f.soup}", "Indisponível")
     assert has_element?(again, "#products-#{f.soup}", "R$ 30,00")
   end

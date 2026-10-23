@@ -4,6 +4,67 @@ defmodule Instantflow.IdentityTest do
   alias Instantflow.Identity
   alias Instantflow.Identity.{Invitation, Membership, Session, User}
 
+  test "retired guardian invitations cannot create new identities or relationships" do
+    admin = staff_fixture()
+
+    for attrs <- [
+          %{"role" => "parent"},
+          %{"role" => "external", "enrollment_id" => 123},
+          %{"role" => "staff", "enrollment_id" => nil}
+        ] do
+      assert {:error, :retired_invitation} =
+               Identity.invite(
+                 admin,
+                 Map.merge(
+                   %{"email" => "retired@example.test", "department_id" => admin.department_id},
+                   attrs
+                 )
+               )
+    end
+
+    token = Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+
+    invitation =
+      Repo.insert!(%Invitation{
+        organization_id: admin.organization_id,
+        department_id: admin.department_id,
+        invited_by_id: admin.user_id,
+        email: "retained@example.test",
+        role: "parent",
+        token_hash: :crypto.hash(:sha256, token),
+        expires_at: DateTime.add(DateTime.utc_now(:second), 3600)
+      })
+
+    counts =
+      Enum.map(
+        [
+          User,
+          Membership,
+          Instantflow.Enrollment.GuardianLink,
+          Instantflow.Participants.Relationship
+        ],
+        &Repo.aggregate(&1, :count)
+      )
+
+    assert {:error, :retired_invitation} =
+             Identity.accept_invitation(
+               token,
+               %{"name" => "Historical invitation", "password" => "fictional-password-123"}
+             )
+
+    assert Enum.map(
+             [
+               User,
+               Membership,
+               Instantflow.Enrollment.GuardianLink,
+               Instantflow.Participants.Relationship
+             ],
+             &Repo.aggregate(&1, :count)
+           ) == counts
+
+    assert Repo.get!(Invitation, invitation.id).accepted_at == nil
+  end
+
   test "an invitation binds email, department and role and can only be accepted once" do
     admin = staff_fixture()
 

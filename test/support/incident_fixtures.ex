@@ -1,6 +1,6 @@
 defmodule Instantflow.IncidentFixtures do
   import Instantflow.IdentityFixtures
-  alias Instantflow.{Access, Identity, Incidents, WorkflowRuntime}
+  alias Instantflow.{Access, Identity, WorkflowRuntime}
   alias Instantflow.WorkflowFixtures, as: W
 
   def incident_fixture do
@@ -24,8 +24,15 @@ defmodule Instantflow.IncidentFixtures do
       "support_department" => admin.department_id
     }
 
-    {:ok, version} = Incidents.install(admin, deps)
+    {:ok, version} = install(admin, deps)
     Map.merge(actors, %{admin: admin, version: version, departments: deps})
+  end
+
+  def install(admin, deps) do
+    Instantflow.Examples.install(admin, "incident", %{
+      "roles" => %{"teacher" => ["teacher"], "dean" => ["dean"], "counselor" => ["counselor"]},
+      "departments" => deps
+    })
   end
 
   def report(f) do

@@ -44,7 +44,6 @@ defmodule Instantflow.Collaboration.Assignments do
 
         roles = version.bindings["roles"][spec["role"]]
         department = version.bindings["departments"][spec["department_binding"]]
-        legacy? = Instantflow.WorkflowRuntime.LegacyAccess.legacy_definition?(version.definition)
 
         candidates =
           Repo.all(
@@ -55,7 +54,6 @@ defmodule Instantflow.Collaboration.Assignments do
               on: g.membership_id == m.id,
               where:
                 m.active and u.active and
-                  (not (^legacy?) or m.role != "parent") and
                   ((m.role in ^roles and m.department_id == ^department) or
                      (g.role in ^roles and g.department_id == ^department)) and
                   fragment("strpos(lower(?), lower(?)) > 0", u.name, ^search),
@@ -133,7 +131,7 @@ defmodule Instantflow.Collaboration.Assignments do
   end
 
   defp eligible?(actor, version, spec) do
-    actor.active && not Instantflow.WorkflowRuntime.LegacyAccess.parent_portal?(actor, version) &&
+    actor.active &&
       Enum.any?(
         Access.profiles(actor),
         &(&1.role in version.bindings["roles"][spec["role"]] &&

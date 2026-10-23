@@ -1,3 +1,5 @@
+import Ecto.Query
+
 if Application.get_env(:instantflow, :environment) == :prod,
   do: raise("Seeds de demonstração são proibidos em produção.")
 
@@ -11,6 +13,32 @@ alias Instantflow.OperatorRepo, as: OperatorRepo
 alias Instantflow.Identity.{Department, Membership, Organization, User}
 alias Instantflow.{Identity, WorkflowCatalog, WorkflowRuntime}
 alias Instantflow.WorkflowCatalog.Workflow
+
+ensure_example = fn actor, key, bindings ->
+  workflow = OperatorRepo.get_by(Workflow, organization_id: actor.organization_id, key: key)
+
+  latest =
+    workflow &&
+      OperatorRepo.one(
+        from v in Instantflow.WorkflowCatalog.Version,
+          where: v.workflow_id == ^workflow.id,
+          order_by: [desc: v.number],
+          limit: 1
+      )
+
+  if is_nil(latest) or
+       Instantflow.Tenant.read(actor, fn _ ->
+         Instantflow.WorkflowCatalog.Retirement.retired?(latest.id)
+       end) do
+    {:ok, _} =
+      WorkflowCatalog.publish(
+        actor,
+        Instantflow.Examples.definition(key),
+        bindings,
+        if(latest, do: latest.number, else: 0)
+      )
+  end
+end
 
 for {slug, school} <- [
       {"horizonte", "Escola Horizonte (fictícia)"},
@@ -156,9 +184,18 @@ for {slug, school} <- [
     end
   end
 
-  unless OperatorRepo.get_by(Workflow, organization_id: organization.id, key: "enrollment") do
-    {:ok, _} = Instantflow.Enrollment.install(admin, enrollment_departments)
-  end
+  enrollment_bindings = %{
+    "roles" => %{
+      "guardian" => ["external", "parent"],
+      "admissions" => ["admin", "admissions"],
+      "academic" => ["head"],
+      "finance" => ["finance"],
+      "it" => ["it"]
+    },
+    "departments" => enrollment_departments
+  }
+
+  ensure_example.(admin, "enrollment", enrollment_bindings)
 
   workflow = OperatorRepo.get_by!(Workflow, organization_id: organization.id, key: "enrollment")
 
@@ -166,8 +203,12 @@ for {slug, school} <- [
         {"a", "responsavel.a@escola.example"},
         {"b", "responsavel.b@escola.example"}
       ] do
-    {:ok, enrollment} =
-      Instantflow.Enrollment.create(admin, workflow.id, "seed:enrollment:" <> key)
+    {:ok, result} =
+      WorkflowRuntime.command(admin, %{
+        "operation" => "create",
+        "workflow_id" => workflow.id,
+        "key" => "seed:participant-enrollment:" <> key
+      })
 
     existing = OperatorRepo.get_by(User, email: email)
 
@@ -175,32 +216,61 @@ for {slug, school} <- [
       existing &&
         OperatorRepo.get_by(Membership, user_id: existing.id, organization_id: organization.id)
 
-    link =
-      member &&
-        OperatorRepo.get_by(Instantflow.Enrollment.GuardianLink,
-          enrollment_id: enrollment.id,
-          membership_id: member.id
-        )
+    parent =
+      if member do
+        Identity.scope(existing.id, organization.id)
+      else
+        {:ok, invitation} =
+          Identity.invite(admin, %{
+            "email" => email,
+            "role" => "external",
+            "department_id" => admin.department_id
+          })
 
-    unless link do
-      {:ok, invitation} = Instantflow.Enrollment.invite(admin, enrollment.id, email)
+        {:ok, user} =
+          Identity.accept_invitation(
+            invitation.token,
+            %{"name" => "Responsável fictício " <> String.upcase(key), "password" => password},
+            existing
+          )
 
-      {:ok, user} =
-        Identity.accept_invitation(
-          invitation.token,
-          %{"name" => "Responsável fictício " <> String.upcase(key), "password" => password},
-          existing
-        )
+        Identity.scope(user.id, organization.id)
+      end
 
-      parent = Identity.scope(user.id, organization.id)
+    relationship =
+      OperatorRepo.get_by(Instantflow.Participants.Relationship,
+        ticket_id: result["ticket_id"],
+        membership_id: parent.id,
+        relationship: "family"
+      )
 
-      link =
-        OperatorRepo.get_by!(Instantflow.Enrollment.GuardianLink,
-          enrollment_id: enrollment.id,
-          membership_id: parent.id
-        )
+    relationship =
+      if relationship do
+        relationship
+      else
+        {:ok, created} =
+          Instantflow.Participants.command(admin, %{
+            "operation" => "create",
+            "ticket_id" => result["ticket_id"],
+            "membership_id" => parent.id,
+            "relationship" => "family",
+            "expected_revision" => 0,
+            "key" => "seed:family:" <> key
+          })
 
-      {:ok, _} = Instantflow.Enrollment.verify(admin, link.id, true)
+        OperatorRepo.get!(Instantflow.Participants.Relationship, created["relationship_id"])
+      end
+
+    unless relationship.status == "verified" do
+      {:ok, _} =
+        Instantflow.Participants.command(admin, %{
+          "operation" => "verify",
+          "ticket_id" => result["ticket_id"],
+          "membership_id" => parent.id,
+          "relationship" => "family",
+          "expected_revision" => relationship.revision,
+          "key" => "seed:verify-family:" <> key
+        })
     end
   end
 
@@ -274,22 +344,31 @@ for {slug, school} <- [
   end
 
   for template <- ~w(requisition field_trip) do
-    unless OperatorRepo.get_by(Workflow, organization_id: organization.id, key: template) do
-      {:ok, _} = Instantflow.Finance.install(admin, template, finance_departments, account.id)
-    end
+    ensure_example.(admin, template, %{
+      "roles" => %{
+        "requester" => ["teacher"],
+        "head" => ["head"],
+        "finance" => ["finance"],
+        "operations" => ["operations"],
+        "safety" => ["dean"],
+        "reverser" => ["finance_reverser"]
+      },
+      "departments" => finance_departments,
+      "budgets" => %{"shared_budget" => account.id}
+    })
   end
 
   support_department =
     OperatorRepo.get_by(Department, organization_id: organization.id, name: "Orientação") ||
       OperatorRepo.insert!(%Department{organization_id: organization.id, name: "Orientação"})
 
-  unless OperatorRepo.get_by(Workflow, organization_id: organization.id, key: "incident") do
-    {:ok, _} =
-      Instantflow.Incidents.install(admin, %{
-        "dean_department" => finance_departments["safety_department"],
-        "support_department" => support_department.id
-      })
-  end
+  ensure_example.(admin, "incident", %{
+    "roles" => %{"teacher" => ["teacher"], "dean" => ["dean"], "counselor" => ["counselor"]},
+    "departments" => %{
+      "dean_department" => finance_departments["safety_department"],
+      "support_department" => support_department.id
+    }
+  })
 
   if slug == "horizonte" do
     counselor =

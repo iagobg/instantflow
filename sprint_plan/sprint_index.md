@@ -2,7 +2,7 @@
 
 [Design index](../design/index.md)
 
-Status: Sprints 00–10 complete; Sprint 11 architecture priority; Sprints 12–15 customer delivery planned · Updated: 2026-10-22
+Status: Sprints 00–10 complete; Sprint 11 in progress; Sprints 12–15 customer delivery planned · Updated: 2026-10-22
 
 Dependency-ordered increments without duration estimates. Sprints 00 and 01 retain their original single-organization evidence. Sprint 01A has migrated and verified the multi-organization foundation before Sprint 02, preserving existing records.
 
@@ -20,13 +20,31 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 | [08](sprint_08.md) | Optional isolated Python calculations | 07; D-16, D-17; host activation gate | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [09](sprint_09.md) | Shared builder contracts, participants, references and document policies | Existing 01A–08; D-25–28 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [10](sprint_10.md) | Generated participant experiences and reusable projections | 09; D-06–07, D-25–27 | Done | 4/4 | 2026-10-22 / 2026-10-22 |
-| [11](sprint_11.md) | Cross-domain contracts, scalable reads and builder acceptance | 09–10; D-09, D-14, D-25–27 | Planned | 0/5 | — / — |
+| [11](sprint_11.md) | Cross-domain contracts, scalable reads and builder acceptance | corrected 09–10; D-09, D-14, D-25–30 | In progress | 1/5 | 2026-10-22 / — |
 | [12](sprint_12.md) | Pilot scope, isolation and account access | 11 architecture gate; D-21–23, D-27 | Planned | 0/3 | — / — |
 | [13](sprint_13.md) | Organization onboarding and first workflow | 12; D-22, D-27 | Planned | 0/3 | — / — |
 | [14](sprint_14.md) | Operations, data lifecycle and pilot launch readiness | 13; D-21, D-23 | Planned | 0/3 | — / — |
 | [15](sprint_15.md) | Customer pilot evaluation | 14; actual observation period | Planned | 0/1 | — / — |
 
 ## Tracking
+
+The [S09–10 legacy inventory](../docs/sprint11-legacy-disposition-inventory.md)
+assigns six concrete D-32 dispositions to Sprint 11's existing tasks, including
+implicit legacy detection, undeclared document policies and the guardian database
+bridge. No additional sprint or task is introduced.
+
+Sprint 11's mid-execution D-32 revision replaces blanket legacy support with an
+[evidenced disposition and retirement gate](sprint_11.md#mid-sprint-compatibility-policy--d-32).
+The first operational checkpoint is preserved. Synthetic-only paths should be
+retired; retained history and active consumers receive only the support their
+evidence requires. Supported builder versioning and data integrity remain required.
+The sprint stays In progress, with the same five tasks.
+
+Sprint 11's [execution checkpoints](sprint_11.md#execution-checkpoints-after-sprints-0910)
+incorporate the corrected Sprint 10 review under D-30: early restaurant composition,
+public-entry authorization parity, real form-payload coverage and version/process
+scale measurements. Existing bounded projections are the baseline. Its five tasks
+and feature scope are unchanged. Execution started on 2026-10-22. The [first operational checkpoint](../docs/sprint11-operational-checkpoint.md) records the initial slice; the [retirement checkpoint](../docs/sprint11-retirement-checkpoint.md) completes T01 and the D-32 inventory dispositions, with populated recovery and transferred security/business assertions. Current status is In progress, 1/5; T02–T05 remain open.
 
 Sprint 10's [pre-execution sequence and checkpoints](sprint_10.md#execution-order-and-checkpoints)
 incorporate the corrected Sprint 09 contracts under D-29. Deliver the first
@@ -39,7 +57,7 @@ IDs are unchanged. All four tasks are complete (4/4). Sprint 10 started and fini
 and [generated-experience recreation matrix](../docs/sprint10-generated-experiences.md)
 record the implementation sequence. Final validation passes 268 tests, asset build
 and whitespace checks; [completion evidence](../docs/evidence/sprint10-complete.json)
-records the exact sources and logs. The [review correction evidence](../docs/evidence/sprint10-review-resolution.json) supplements that checkpoint: direct-download release and browser multiple-choice corrections pass 273 tests, asset build and whitespace checks. Sprint 11 is next and remains Planned.
+records the exact sources and logs. The [review correction evidence](../docs/evidence/sprint10-review-resolution.json) supplements that checkpoint: direct-download release and browser multiple-choice corrections pass 273 tests, asset build and whitespace checks. Sprint 11 has since completed T01; its remaining architecture gates are open.
 
 The [builder architecture contract](../docs/builder-architecture-contract.md) and D-28 establish the remediation sequence. Sprint 09 now completes the shared execution/binding boundary, participants, references, document policies and populated migration/recovery with [implementation evidence](../docs/participants-and-documents.md). Sprint 10 introduces bounded projections and explicit correction resets; Sprint 11 completes scale, compatibility and full school replacement. Sprint 11 cleanup does not defer modular design until the end.
 
@@ -58,3 +76,8 @@ All sprints use [shared completion rules](../design/07-verification.md). Scope c
 ## Priority reorganization — 2026-10-21
 
 At the user's request, the remaining modularity findings are now explicit higher-priority Sprints 09–11 rather than an informal checkpoint. Previously planned Sprints 09–12 become 12–15 with scope and local evidence preserved; the [roadmap mapping](first_customer_roadmap.md#scope-tracking) resolves older identifiers. Completed Sprints 00–08 are unchanged. No sprint is marked started or complete by this planning update. D-27 records the ordering; the next implementation increment is Sprint 09.
+
+The 2026-10-23 [Sprint 11 checkpoint-review corrections](../docs/sprint11-first-checkpoint-review-resolution.md)
+resolve the two reproduced retirement lifecycle gaps with populated operational
+migration/restore and generated-page regressions. Sprint 11 remains In progress,
+1/5; the wider architecture gate is not closed by this correction.

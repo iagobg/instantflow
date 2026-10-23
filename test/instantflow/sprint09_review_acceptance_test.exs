@@ -222,7 +222,7 @@ defmodule Instantflow.Sprint09ReviewAcceptanceTest do
       assert length(Participants.controls(manager, id).controls) == 1
       assert {:ok, data} = WorkflowRuntime.get(manager, id)
       assert Enum.any?(data.section_definitions, &(&1["key"] == "customer_details"))
-      assert Enum.any?(WorkflowRuntime.list(manager), &(&1.id == id))
+      assert Enum.any?(WorkflowRuntime.search(manager).tickets, &(&1.id == id))
       assert Enum.any?(WorkflowCatalog.available(manager), &(&1.id == version.id))
       {own_id, creation} = create(manager, version)
       assert {:ok, _} = WorkflowRuntime.get(manager, own_id)
@@ -279,48 +279,34 @@ defmodule Instantflow.Sprint09ReviewAcceptanceTest do
     end
   end
 
-  test "legacy school versions retain parent restrictions when a declared version is published" do
-    f = Instantflow.EnrollmentFixtures.enrollment_fixture()
+  test "core-only publications honor explicit parent staff grants without optional-field inference" do
+    admin = staff_fixture()
+    parent = staff_fixture("parent")
     unrelated = staff_fixture("parent")
-    {:ok, _} = Grants.grant(f.admin, unrelated.id, f.admin.department_id, "admissions")
-    {:ok, _} = Grants.grant(f.admin, f.parent.id, f.admin.department_id, "admissions")
-    assert {:error, :not_found} = WorkflowRuntime.get(unrelated, f.enrollment.ticket_id)
-    assert {:error, :not_found} = WorkflowRuntime.get(f.parent, f.enrollment.ticket_id)
-    assert {:ok, _} = Instantflow.Enrollment.get(f.parent, f.enrollment.id)
-    refute Enum.any?(WorkflowCatalog.available(unrelated), &(&1.id == f.version.id))
+    {:ok, {_, grant}} = Grants.grant(admin, parent.id, admin.department_id, "teacher")
+    d = BuilderFixtures.core_definition()
 
-    assert {:error, :forbidden} =
-             WorkflowRuntime.command(unrelated, %{
-               "operation" => "create",
-               "workflow_id" => f.version.workflow_id,
-               "key" => Ecto.UUID.generate()
-             })
+    b = %{
+      "roles" => %{"requester" => ["teacher"], "reviewer" => ["teacher"]},
+      "departments" => %{"responsible" => admin.department_id}
+    }
 
-    definition = BuilderFixtures.participant_definition("enrollment")
-
-    {:ok, draft} = Templates.clone(f.admin, f.version.id)
+    v = BuilderFixtures.install(admin, d, b)
+    {id, _} = create(parent, v)
+    assert {:ok, _} = WorkflowRuntime.get(parent, id)
+    assert WorkflowRuntime.search(parent).total == 1
+    assert {:error, :not_found} = WorkflowRuntime.get(unrelated, id)
+    assert WorkflowRuntime.search(unrelated).total == 0
+    {:ok, draft} = Templates.clone(admin, v.id)
 
     {:ok, saved} =
-      Templates.save(f.admin, draft.id, draft.revision, definition, %{
-        "roles" => %{
-          "requester" => ["admissions"],
-          "reviewer" => ["admissions"],
-          "visitor" => ["parent"]
-        },
-        "departments" => %{"responsible" => f.admin.department_id}
-      })
+      Templates.save(admin, draft.id, draft.revision, Map.put(d, "name", "Nome novo"), b)
 
-    {:ok, version} = Templates.publish(f.admin, saved.id, saved.revision)
-
-    assert version.workflow_id == f.version.workflow_id
-    {id, _} = create(unrelated, version)
-    assert {:ok, _} = WorkflowRuntime.get(unrelated, id)
-    assert {:error, :not_found} = WorkflowRuntime.get(unrelated, f.enrollment.ticket_id)
-    assert {:ok, _} = Instantflow.Enrollment.get(f.parent, f.enrollment.id)
-    pinned = Repo.get!(Instantflow.WorkflowRuntime.Ticket, f.enrollment.ticket_id)
-    assert pinned.workflow_version_id == f.version.id
-
-    assert Repo.get!(Instantflow.WorkflowCatalog.Version, f.version.id).definition ==
-             f.version.definition
+    {:ok, next} = Templates.publish(admin, saved.id, saved.revision)
+    assert next.number == 2
+    assert Repo.get!(Instantflow.WorkflowRuntime.Ticket, id).workflow_version_id == v.id
+    assert {:ok, _} = Grants.revoke(admin, grant.id)
+    assert {:error, :not_found} = WorkflowRuntime.get(parent, id)
+    assert WorkflowRuntime.search(parent).total == 0
   end
 end

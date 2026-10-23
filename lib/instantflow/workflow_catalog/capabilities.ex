@@ -59,7 +59,7 @@ defmodule Instantflow.WorkflowCatalog.Capabilities do
         dependencies: ["core"],
         conflicts: [],
         bindings: [],
-        declarations: ~w(interface.lifecycle interface.pages),
+        declarations: ~w(interface.operations interface.lifecycle interface.pages),
         guards: ~w(open_session settlement),
         effects: ~w(catalog resource session item settlement),
         projections: ~w(catalog resources sessions daily_summary),

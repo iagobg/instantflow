@@ -44,9 +44,10 @@ defmodule InstantflowWeb.ProcessLive do
        record_form: to_form(%{}, as: :record_filter),
        workflow_id: nil,
        labels: Instantflow.WorkflowCatalog.Workspaces.labels(%{}),
-       date: Operations.today(),
+       date: Operations.today(socket.assigns.current_scope),
        visit_id: nil,
        visit: nil,
+       operational_archived?: false,
        cart: %{},
        print_ticket: nil,
        command_key: Ecto.UUID.generate(),
@@ -57,11 +58,18 @@ defmodule InstantflowWeb.ProcessLive do
            as: :product
          ),
        resource_form: to_form(%{}, as: :resource),
-       open_form: to_form(%{"business_date" => Date.to_iso8601(Operations.today())}, as: :visit),
+       open_form:
+         to_form(
+           %{"business_date" => Date.to_iso8601(Operations.today(socket.assigns.current_scope))},
+           as: :visit
+         ),
        item_form: to_form(%{"quantity" => "1"}, as: :item),
        batch_form: to_form(%{}, as: :batch),
        checkout_form: to_form(%{}, as: :checkout),
-       day_form: to_form(%{"date" => Date.to_iso8601(Operations.today())}, as: :day)
+       day_form:
+         to_form(%{"date" => Date.to_iso8601(Operations.today(socket.assigns.current_scope))},
+           as: :day
+         )
      )
      |> stream(:cart_items, [])}
   end
@@ -284,7 +292,7 @@ defmodule InstantflowWeb.ProcessLive do
     case run(socket, %{
            "operation" => "open_session",
            "resource_id" => number(p["resource_id"]),
-           "waiter" => p["waiter"],
+           "responsible_actor" => p["responsible_actor"],
            "business_date" => p["business_date"]
          }) do
       {:ok, socket, result} ->
@@ -377,7 +385,7 @@ defmodule InstantflowWeb.ProcessLive do
     case run(socket, %{
            "operation" => "submit_batch",
            "session_id" => socket.assigns.visit_id,
-           "waiter" => p["waiter"],
+           "responsible_actor" => p["responsible_actor"],
            "lines" => lines
          }) do
       {:ok, socket, _} ->
@@ -515,6 +523,7 @@ defmodule InstantflowWeb.ProcessLive do
               )
 
         products = data.products
+        archived? = if visit, do: visit.archived?, else: data.archived?
 
         resources =
           Enum.map(data.resources, fn r ->
@@ -524,10 +533,28 @@ defmodule InstantflowWeb.ProcessLive do
         socket
         |> assign(
           authorized: true,
+          operational_archived?: archived?,
+          can_configure:
+            not data.archived? and
+              Workspaces.allowed?(socket.assigns.current_scope, version, "configure"),
           workflow_id: data.version.workflow_id,
           product_catalog: Map.new(data.products, &{&1.id, &1}),
           visit: visit,
           report: data.report,
+          timezone: socket.assigns.current_scope.organization.timezone,
+          payment_options:
+            Instantflow.WorkflowCatalog.OperationalContract.payment_options(
+              if(visit, do: visit.version.definition, else: version.definition)
+            ),
+          labels:
+            Workspaces.labels(if(visit, do: visit.version.definition, else: version.definition)),
+          can_operate:
+            not archived? and
+              Workspaces.allowed?(
+                socket.assigns.current_scope,
+                if(visit, do: visit.version, else: version),
+                "operate"
+              ),
           resource_options:
             Enum.flat_map(resources, fn r -> if r.session, do: [], else: [{r.name, r.id}] end),
           cart_total:
@@ -547,7 +574,14 @@ defmodule InstantflowWeb.ProcessLive do
         )
         |> then(fn s ->
           if visit && s.assigns.batch_form.params == %{},
-            do: assign(s, :batch_form, to_form(%{"waiter" => visit.session.waiter}, as: :batch)),
+            do:
+              assign(
+                s,
+                :batch_form,
+                to_form(%{"responsible_actor" => Operations.actor_name(visit.session)},
+                  as: :batch
+                )
+              ),
             else: s
         end)
       else
@@ -571,7 +605,11 @@ defmodule InstantflowWeb.ProcessLive do
   end
 
   defp load_records(socket, version) do
-    views = Views.options(socket.assigns.current_scope, %{"workflow_id" => version.workflow_id})
+    views =
+      if "records" in socket.assigns.blocks,
+        do: Views.options(socket.assigns.current_scope, %{"workflow_id" => version.workflow_id}),
+        else: []
+
     selected = Enum.find(views, &(&1.key == socket.assigns.record_view)) || List.first(views)
 
     result =
@@ -716,17 +754,23 @@ defmodule InstantflowWeb.ProcessLive do
         Seu perfil não tem acesso aos blocos operacionais deste processo.
       </p>
       <div id="operations-workspace">
+        <p :if={@operational_archived?} id="archived-operations" role="status">
+          Atendimento histórico arquivado. Os dados foram preservados e não aceitam novas alterações.
+        </p>
         <div id="operations-print-hook" phx-hook="OperationsPrint" phx-update="ignore"></div>
         <div id="operations-connection" phx-hook="Collaboration" phx-update="ignore"></div>
         <p :if={@visit_id && !@visit} id="visit-not-found">Atendimento indisponível.</p>
         <section :if={@visit} id="active-visit" class="card template-section">
           <h2>{@visit.session.resource_name} · Atendimento #{@visit.session.id}</h2>
           <p>
-            {@labels["actor"]}: {@visit.session.waiter} · Dia operacional: {@visit.session.business_date}
+            {@labels["actor"]}: {Operations.actor_name(@visit.session)} · Dia operacional: {@visit.session.business_date}
           </p>
           <.link navigate={
             ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/registros/#{@visit.session.ticket_id}"
           }>Histórico do fluxo</.link>
+          <p :if={@visit.session.status == "archived"} id="visit-archived">
+            Atendimento arquivado sem quitação. O valor histórico foi preservado; o recurso está disponível para um novo atendimento.
+          </p>
           <p :if={@visit.session.status == "settled"} id="visit-settled">
             Conta encerrada. O recurso está disponível para um novo atendimento.
           </p>

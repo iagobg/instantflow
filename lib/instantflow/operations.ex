@@ -2,7 +2,7 @@ defmodule Instantflow.Operations do
   @moduledoc "Tenant-local catalog, resource visits, immutable line snapshots and destination batches. All writes are audited idempotent commands."
   import Ecto.Query
   alias Instantflow.{Repo, Tenant, WorkflowRuntime}
-  alias Instantflow.WorkflowCatalog.Workspaces
+  alias Instantflow.WorkflowCatalog.{Workspaces, OperationalContract, Version}
   alias Instantflow.Operations.{Product, Resource, Session, Batch, Line, Receipt, DayClose}
 
   @operations ~w(save_product add_resource open_session submit_batch handoff cancel_batch print_ticket settle close_day)
@@ -11,9 +11,8 @@ defmodule Instantflow.Operations do
       when operation in @operations and is_binary(key) and byte_size(key) in 1..120 do
     result =
       Tenant.transaction(actor, fn scope ->
-        version = workspace_version!(command["workflow_id"])
+        version = command_version!(command)
         action = if operation in ~w(save_product add_resource), do: "configure", else: "operate"
-        permit!(scope, version, action)
         workflow_id = version.workflow_id
         # Serialize resource occupancy, daily close and all related writes within this tenant.
         # Existing tenant authorization locks are acquired first; no background worker takes this gate.
@@ -27,8 +26,23 @@ defmodule Instantflow.Operations do
         receipt =
           Repo.get_by(Receipt, actor_id: scope.user_id, workflow_id: workflow_id, key: key)
 
+        # Opening receipts belong to the pinned result session, not a later publication.
+        version =
+          if (operation == "open_session" and receipt) && receipt.operation == "open_session" do
+            command_row!(Session, receipt.result["id"])
+            |> scoped_session_version!(workflow_id)
+          else
+            version
+          end
+
+        permit!(scope, version, action)
+        if receipt && receipt.digest != digest, do: Repo.rollback(:idempotency_mismatch)
+        Instantflow.WorkflowCatalog.Retirement.require_active!(version.id)
+
+        unless OperationalContract.resolve(version.definition),
+          do: Repo.rollback(:unsupported_contract)
+
         if receipt do
-          unless receipt.digest == digest, do: Repo.rollback(:idempotency_mismatch)
           receipt.result
         else
           value = execute(scope, workflow_id, operation, command)
@@ -59,10 +73,13 @@ defmodule Instantflow.Operations do
 
   def topic(scope), do: "organization:#{scope.organization_id}:operations"
 
-  def today do
-    %{rows: [[date]]} = Repo.query!("SELECT (now() AT TIME ZONE 'America/Sao_Paulo')::date")
-    date
-  end
+  def today(actor),
+    do: Tenant.read(actor, &Instantflow.LocalTime.date(organization_timezone!(&1)))
+
+  defp organization_timezone!(actor),
+    do: Repo.get!(Instantflow.Identity.Organization, actor.organization_id).timezone
+
+  def actor_name(row), do: row.waiter
 
   def workspace(actor, date, workflow_id \\ nil) do
     Tenant.read(actor, fn scope ->
@@ -72,6 +89,7 @@ defmodule Instantflow.Operations do
 
       %{
         version: version,
+        archived?: Instantflow.WorkflowCatalog.Retirement.retired?(version.id),
         labels: Workspaces.labels(version.definition),
         products:
           Repo.all(
@@ -98,13 +116,16 @@ defmodule Instantflow.Operations do
         if is_nil(workflow_id), do: Repo.get(Session, id), else: find!(Session, id, workflow_id)
 
       unless session, do: Repo.rollback(:not_found)
-      permit!(scope, workspace_version!(session.workflow_id), "view")
+      version = session_version!(session)
+      permit!(scope, version, "view")
       batches = Repo.all(from b in Batch, where: b.session_id == ^session.id, order_by: b.id)
       ids = Enum.map(batches, & &1.id)
       lines = Repo.all(from l in Line, where: l.batch_id in ^ids, order_by: l.id)
 
       %{
         session: session,
+        version: version,
+        archived?: Instantflow.WorkflowCatalog.Retirement.retired?(version.id),
         batches:
           Enum.map(
             batches,
@@ -202,9 +223,9 @@ defmodule Instantflow.Operations do
 
   defp execute(a, workflow_id, "open_session", c) do
     resource = find!(Resource, c["resource_id"], workflow_id)
-    waiter = text!(c["waiter"], 120)
+    waiter = responsible_actor!(c)
     date = date!(c["business_date"])
-    open_day!(date, workflow_id)
+    open_day!(date, workflow_id, organization_timezone!(a))
 
     if Repo.exists?(
          from s in Session, where: s.resource_id == ^resource.id and s.status == "open"
@@ -245,7 +266,7 @@ defmodule Instantflow.Operations do
     session = open_session!(c["session_id"], workflow_id)
     lines = c["lines"]
     unless is_list(lines) and length(lines) in 1..100, do: Repo.rollback(:invalid_values)
-    waiter = text!(c["waiter"] || session.waiter, 120)
+    waiter = responsible_actor!(c, session.waiter)
 
     items =
       Enum.map(lines, fn line ->
@@ -352,7 +373,8 @@ defmodule Instantflow.Operations do
 
   defp execute(a, workflow_id, "settle", c) do
     session = open_session!(c["session_id"], workflow_id)
-    unless c["payment_method"] in ~w(cash card pix), do: Repo.rollback(:invalid_values)
+    contract = OperationalContract.resolve(session_version!(session).definition)
+    unless c["payment_method"] in contract["payment_methods"], do: Repo.rollback(:invalid_values)
 
     if Repo.exists?(
          from b in Batch, where: b.session_id == ^session.id and b.status == "pending"
@@ -390,7 +412,7 @@ defmodule Instantflow.Operations do
 
   defp execute(a, workflow_id, "close_day", c) do
     date = date!(c["business_date"])
-    open_day!(date, workflow_id)
+    open_day!(date, workflow_id, organization_timezone!(a))
     summary = report!(date, workflow_id)
 
     if Repo.exists?(
@@ -423,6 +445,7 @@ defmodule Instantflow.Operations do
 
     settled = Enum.filter(sessions, &(&1.status == "settled"))
     open = Enum.filter(sessions, &(&1.status == "open"))
+    archived = Enum.filter(sessions, &(&1.status == "archived"))
     session_ids = Enum.map(sessions, & &1.id)
 
     lines =
@@ -452,6 +475,8 @@ defmodule Instantflow.Operations do
       settled_count: length(settled),
       open_count: length(open),
       open_total: Enum.sum(Enum.map(open, &total!(&1.id))),
+      archived_count: length(archived),
+      archived_total: Enum.sum(Enum.map(archived, &total!(&1.id))),
       payments:
         Map.new(~w(cash card pix), fn method ->
           {method,
@@ -498,12 +523,51 @@ defmodule Instantflow.Operations do
   def workflow_for_visit(actor, id) when is_integer(id) do
     Tenant.read(actor, fn scope ->
       session = Repo.get(Session, id)
-      if session, do: permit!(scope, workspace_version!(session.workflow_id), "view")
+      if session, do: permit!(scope, session_version!(session), "view")
       session && session.workflow_id
     end)
   end
 
   def workflow_for_visit(_, _), do: nil
+
+  # Session commands use immutable business rules and current grants, including replay.
+  # The shared catalog remains governed by the latest published workspace.
+  defp command_version!(command) do
+    case command["operation"] do
+      operation when operation in ~w(submit_batch settle) ->
+        session = command_row!(Session, command["session_id"])
+        scoped_session_version!(session, command["workflow_id"])
+
+      operation when operation in ~w(handoff cancel_batch print_ticket) ->
+        batch = command_row!(Batch, command["batch_id"])
+        session = batch && Repo.get(Session, batch.session_id)
+        scoped_session_version!(session, command["workflow_id"])
+
+      _ ->
+        workspace_version!(command["workflow_id"])
+    end
+  end
+
+  defp command_row!(module, id) when is_integer(id), do: Repo.get(module, id)
+  defp command_row!(_, _), do: Repo.rollback(:not_found)
+
+  defp scoped_session_version!(nil, _), do: Repo.rollback(:not_found)
+
+  defp scoped_session_version!(session, workflow_id) do
+    if workflow_id && workflow_id != session.workflow_id, do: Repo.rollback(:not_found)
+    session_version!(session)
+  end
+
+  defp session_version!(session) do
+    ticket = Repo.get!(Instantflow.WorkflowRuntime.Ticket, session.ticket_id)
+    Repo.get!(Version, ticket.workflow_version_id)
+  end
+
+  # Historical storage names remain unchanged; retired payloads cannot enter commands.
+  defp responsible_actor!(command, fallback \\ nil) do
+    if Map.has_key?(command, "waiter"), do: Repo.rollback(:invalid_values)
+    text!(command["responsible_actor"] || fallback, 120)
+  end
 
   defp workspace_version!(nil) do
     case Enum.filter(Workspaces.latest(), &operational_version?(&1)) do
@@ -539,17 +603,19 @@ defmodule Instantflow.Operations do
   defp open_session!(id, workflow_id) do
     session = find!(Session, id, workflow_id)
     unless session.status == "open", do: Repo.rollback(:invalid_state)
-    open_day!(session.business_date, workflow_id)
+    timezone = Repo.get!(Instantflow.Identity.Organization, session.organization_id).timezone
+    open_day!(session.business_date, workflow_id, timezone)
     session
   end
 
-  defp open_day!(date, workflow_id) do
+  defp open_day!(date, workflow_id, timezone) do
     if Repo.exists?(
          from d in DayClose, where: d.workflow_id == ^workflow_id and d.business_date >= ^date
        ),
        do: Repo.rollback(:day_closed)
 
-    if Date.compare(date, today()) == :gt, do: Repo.rollback(:invalid_date)
+    if Date.compare(date, Instantflow.LocalTime.date(timezone)) == :gt,
+      do: Repo.rollback(:invalid_date)
   end
 
   defp permit!(scope, version, action) do

@@ -1,5 +1,11 @@
 # Orçamentos, compras e passeios — demonstração
 
+Sprint 11 D-32 retired the dedicated **Orçamentos** route. Shared-budget
+commands and the rules below remain supported through configured
+`finance_setup`/`finance_summary` blocks in **Processos** and generic records in
+**Solicitações**. Old screen instructions are historical; see the
+[retirement checkpoint](sprint11-retirement-checkpoint.md).
+
 Sprint 05 uses synthetic data and integer BRL cents. No provider receives an order, no funds move, and no external credit is issued.
 
 ## Setup and permissions

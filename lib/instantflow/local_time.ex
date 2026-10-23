@@ -1,5 +1,15 @@
 defmodule Instantflow.LocalTime do
   @moduledoc "PT-BR instant formatting using PostgreSQL's IANA timezone database. Date-only values stay separate."
+  def date(timezone, instant \\ DateTime.utc_now()) do
+    %{rows: [[date]]} =
+      Instantflow.Repo.query!("SELECT timezone($2::text, $1::timestamptz)::date", [
+        instant,
+        timezone
+      ])
+
+    date
+  end
+
   def format_many([], _timezone), do: %{}
 
   def format_many(values, timezone) do

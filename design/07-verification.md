@@ -32,7 +32,45 @@ Add organization as the outer dimension of that matrix. Use two tenants with ove
 
 Confirm D-09 before sign-off: ten organizations with 10,000 tickets and 50 concurrent staff total; p95 accepted command response ≤ 500 ms and committed update visibility ≤ 1 second on a documented environment. Record per-organization results and test uneven load/queue flooding so a busy tenant does not starve another. Missed events reconcile within configured 30 seconds while connected. Record hardware, distribution, payloads, network, quotas, results, and exceptions. These are targets, not guarantees.
 
+## Sprint 11 read budgets fixed before T02 tuning — 2026-10-22
+
+Use the documented WSL workstation baseline in `docs/performance.md`, with no
+concurrent build/test run during timing. Retain D-09's 10 organizations, 10,000
+total tickets and 50 concurrent staff and the 500 ms command / 1 second update
+targets. Read acceptance adds p95 authorized backend selection/projection ≤500 ms,
+p95 browser-visible page completion ≤1 second, ≤32 MiB incremental BEAM memory per
+in-flight read and ≤4 MiB fetched result payload per request, including catalog,
+policy and supporting queries. The normal page remains 25 records. These are
+acceptance budgets, not measurements or production guarantees.
+
+Run the same workload cold (fresh application process, record PostgreSQL cache
+state) and warm (at least 100 requests after warmup), reporting every tenant and
+the maximum, not just aggregate p95. Compare equal ticket distribution with one
+tenant owning 70%; maintain 50 concurrent readers and report quiet-tenant latency.
+Independently vary published versions per process at 1/10/100, installed processes
+per tenant at 1/10/100, hidden:visible ratios at 0:1/9:1/99:1 and selected readable
+fields at 1/10/50 using 1 KiB synthetic field values within schema limits. Include
+mixed pinned versions and unrelated processes; keep total ticket count explicit.
+Do not silently substitute a smaller cross-product after a failure: retain every
+run's exact dimensions and justify any revised workload or target in the register.
+
+Record query count, SQL predicate bytes, planning/execution time, catalog rows/bytes,
+fetched record/section rows/bytes, policy compilation time, incremental/peak BEAM
+memory and browser paint/network timing separately. Authorization counts/metadata
+and revocation must still pass. Constant query count or backend-only timing cannot
+substitute for supporting-volume or browser evidence. These new dimensions remain
+unmeasured at the first operational checkpoint; collect baseline before tuning.
+
 ## Delivery
+
+For Sprint 11, D-32 qualifies historical compatibility checks: use the sprint's
+consumer/disposition register to select retained legacy URLs and commands.
+Synthetic-only legacy tests must transfer their business/security assertions to
+supported builder paths before retirement. Keep populated recovery for supported
+and retained data, version pinning and revocation coverage; restored history must
+not automatically reactivate retired mutations or pending effects. Unknown
+consumer classifications block the retirement acceptance gate, not justify
+indefinite compatibility or destructive resets.
 
 Document setup, migrations, seeds/reset, adapters, deployment, environment variables, backup and tested restore, limitations, and troubleshooting. No committed secrets. Demonstrate private file handling. Use synthetic data; real student-data deployment needs a separate readiness decision.
 
