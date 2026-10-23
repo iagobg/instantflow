@@ -52,3 +52,22 @@ BENCHMARK_MIXED=true BENCHMARK_UNEVEN=true BENCHMARK_ENFORCE=true mix run --no-s
 The harness creates a new database, migrates it, installs synthetic organizations/templates and runs through the runtime role. It retains the generated database and writes .local/benchmark.json unless BENCHMARK_REPORT selects another local report path. It does not reset the serving database. PostgreSQL client tools must be available on PATH or PG_BIN; an extracted local distribution may additionally need LD_LIBRARY_PATH. Operator permissions must allow isolated database creation. BENCHMARK_POOL_SIZE and BENCHMARK_POLL_MS allow explicit pool/poll comparisons.
 
 CI runs the mixed harness without enforcing workstation-specific timing thresholds. Rerun enforced measurements on the intended infrastructure, including real network and browser observations, before accepting production objectives. Connected clients also reconcile missed events every 30 seconds; fault tests verify this recovery path independently of these latency samples.
+
+## Sprint 11 read and browser acceptance — 2026-10-23
+
+The [consolidated read report](sprint11-final-acceptance.md) adds supporting-volume
+measurements to the command/update evidence above: cold/warm per-tenant selection,
+100 active pins, 100 processes, hidden:visible ratios, 50 selected fields, operation
+aggregates, participant/messages and wide catalog/creation/navigation. The fixed
+workload remains ten organizations, 10,000 records, 50 readers and runtime pool ten.
+Use python3 scripts/benchmark_acceptance_matrix.py UNIQUE_PHASE to reproduce all
+25 cases serially with the pinned Mix runtime, PostgreSQL tools and ss available.
+The runner refuses to overwrite retained evidence and checks the original budgets.
+Each case creates a fresh disposable database; it never resets the serving DB.
+
+The browser uses production-digested assets and counts actual connected records
+plus two animation frames. Under 49 background readers its 100 warm reloads have
+p95 927.2 ms. Browser HTTP/WebSocket observations, PostgreSQL TCP phase totals and
+decoded SQL payload maxima are distinct. Fresh application reads use fixture-warmed
+PostgreSQL/OS caches. Bulk fixture/restore readiness includes ANALYZE. Full reports
+retain failed phases, source fingerprints and measurement limitations.

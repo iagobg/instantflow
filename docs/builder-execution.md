@@ -176,3 +176,12 @@ Full school portal replacement and richer generated experiences remain Sprints
 changed-source hashes and checks. All data is synthetic and databases are isolated.
 
 Sprint 11 follow-up, 2026-10-23: the [D-32 disposition register](sprint11-legacy-disposition-inventory.md) supersedes earlier executable legacy allowlists. The [contract and ownership acceptance](sprint11-contract-ownership-checkpoint.md) records enforced capability dependencies, synchronized portable metadata, pure authoring panels and fail-closed local binding repair. Historical data retention does not restore retired commands.
+
+## Sprint 11 acceptance follow-up — 2026-10-23
+
+See [consolidated acceptance](sprint11-final-acceptance.md) for the recreation,
+load/browser and supported/historical restore matrices. Projections and curated
+inboxes retain separate authority rules even when equivalent definitions share
+query-local predicates. Restored jobs require their supported owner and current
+authority; retired jobs remain cancelled with audit. No historical mutation API
+is re-enabled by retaining its rows.

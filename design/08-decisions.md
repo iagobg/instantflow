@@ -228,3 +228,22 @@ populated recovery remain required. Preservation of data is distinct from keepin
 obsolete write APIs available; pending jobs need an explicit disposition. Keep
 business/security coverage when replacing legacy tests. This is a compatibility
 scope revision, not authorization to delete user data or reset environments.
+
+### D-33 — Fresh bounded composite reads and measured readiness (2026-10-23)
+
+Keep the existing projection owner and current tenant/grant/relationship checks.
+Group immutable policy bodies only within a query when their policy inputs and
+local bindings match; retain actual pin IDs, labels and field schemas where used.
+Version-first authorized EXISTS discovery bounds repeated page/message work.
+A connection lease may cover a composite authenticated web read, but supplies no
+authority and does not replace context transactions. No cross-request policy cache
+is introduced.
+
+Generated lists load their record data on the connected pass and preview 80
+characters; full detail remains available. Visible completion waits for connected
+records and paint. Preserve the predeclared Sprint 11 workload and budgets, retain
+failed phases, and distinguish decoded payload, TCP protocol totals, browser
+frames, caller heap and full-VM samples. ANALYZE after bulk import/restore is an
+explicit readiness prerequisite, not a reduced workload. Workstation acceptance
+does not replace S14 real-host capacity verification. See the
+[consolidated evidence](../docs/sprint11-final-acceptance.md).

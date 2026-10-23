@@ -78,3 +78,11 @@ Earlier evidence and dated decisions may retain previous sprint/task identifiers
 Architecture finding ownership is explicit: participant relationships and directory references → S09-T01/T02; external file policies → S09-T03; external projections → S10-T01; dashboards/calendar → S10-T02; finance → S10-T03; curated messages → S10-T04; operational assumptions → S11-T01; bounded reads → S11-T02; contract compatibility → S11-T03; cohesive editor/command extraction → S11-T04; populated preservation and full recreation → S11-T05. Durable drafts → S13-T02; physical POS-80 acceptance → S13-T03; recovery/throttling → S12-T03; backup/export/offboarding/launch → Sprint 14.
 
 Provider/device choices, support/commercial terms, retention and recovery objectives remain implementation inputs with named owners. Resolve them before the dependent work or activation; do not invent customer requirements. Public self-service, automated billing and broad integrations remain deferred.
+
+## Sprint 11 architecture handoff — 2026-10-23
+
+Sprint 11 is Done, 5/5. Its [consolidated acceptance](../docs/sprint11-final-acceptance.md)
+records supported independent recreation, live authority, bounded reads and
+populated preservation/recovery. Sprint 12 may now start its pilot-scope and
+account-access work. This closes the architecture prerequisite, not the remaining
+Sprints 12–14 activation gates or Sprint 15 post-launch observation.

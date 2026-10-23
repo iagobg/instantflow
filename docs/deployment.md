@@ -54,3 +54,17 @@ The user reports Oracle Ampere A1 ARM running Ubuntu with 4 OCPUs and 24 GB RAM,
 ## Sprint 11 restoration readiness
 
 The [supported-data rehearsal](sprint11-scale-recovery-checkpoint.md) verifies empty-org public setup and an exact all-table restore separately from D-32 historical preservation. Use a new isolated database for rehearsal; never reset the serving environment. After restoring or bulk importing, apply the operator migrations, refresh PostgreSQL planner statistics with ANALYZE, then verify runtime-role RLS, current grants, pinned records, private bytes, receipt replay and day totals before traffic. Retired jobs remain cancelled with audit; supported queued jobs retain their current-eligibility and authorized retry checks. Do not blindly replay retired effects. Final load acceptance remains separate, and must use the production asset/profile; development reload/check overhead is retained as a failed diagnostic phase.
+
+## Sprint 11 acceptance handoff — 2026-10-23
+
+The [acceptance report](sprint11-final-acceptance.md) separates the full supported
+builder backup/restore rehearsal from the D-32 historical-data rehearsal. Restore
+with the operator role, apply forward migrations, establish planner statistics
+with ANALYZE after restore/bulk import, and verify scoped runtime reads before
+traffic. Additive read indexes were tested only in disposable databases; this
+checkpoint does not apply migrations or deploy a serving environment. Supported
+curated retries use current authority; never replay retired pending effects.
+
+Production-digested browser assets are the measured profile. Workstation p95 is
+not a hosting guarantee: S14 rechecks capacity and recovery on the actual host.
+S13 still owns unsent-draft recovery and physical Windows/POS-80 validation.

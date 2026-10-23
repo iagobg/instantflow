@@ -1,6 +1,6 @@
 # Sprint 11 — Cross-domain contracts, scalable reads and builder acceptance
 
-[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: In progress · Dependencies: corrected Sprints 09–10; existing restaurant increment; D-09, D-14, D-25–30
+[Sprint index](sprint_index.md) · [Shared roadmap](first_customer_roadmap.md) · Status: Done · Dependencies: corrected Sprints 09–10; existing restaurant increment; D-09, D-14, D-25–30
 
 Goal: verify that the same maintained builder recreates the original school projects, restaurant service and an independently configured non-school process, with explicit operational contracts and bounded authorized reads. Completion is the architecture gate for pilot work in Sprint 12; it is not customer launch readiness.
 
@@ -71,7 +71,7 @@ These are execution/evidence checkpoints, not additional permission gates. The [
   - Replace restaurant-specific command/API terminology with a generic actor contract. Audit the existing Session.waiter/payload mapping under D-32; retain old payload acceptance only for evidenced consumers. Generate forward migrations through Mix only if stored-model changes are necessary; preserve captured names, prices, receipts and supported version pins. Do not rename historical columns solely for vocabulary consistency.
   - Make the current BRL/cash/card/Pix boundary an explicit validated supported contract, or add another option only with its full accounting/reporting rules and tests. Reject unsupported currencies, payment semantics and combinations. Rental deposits, refunds, ingredients, losses and stock balances remain deferred until their own reusable contracts are justified; product-unit consumption remains visibly estimated.
 
-- [ ] S11-T02 Move filtering and pagination into bounded authorized read models.
+- [x] S11-T02 Move filtering and pagination into bounded authorized read models.
   - Reuse and measure the bounded query/projection service already used by WorkflowRuntime.search and WorkflowCatalog.Views. Inventory actual remaining callers, including WorkflowRuntime.list and operational/compatibility surfaces; migrate residual load-all paths or document a bounded compatibility exception with an owner and retirement condition. Preserve the existing service rather than creating a competing query engine.
   - Preserve tenant RLS, process scope, each record's pinned field permissions and exact authorized count/filter semantics. Do not page raw unauthorized data and filter afterwards, or leak hidden rows through totals, sort order or calendar metadata.
   - Use deterministic ordering and explicit query/page limits for table, board, calendar, participant and operational surfaces. Avoid loading record projections for pages that do not declare them.
@@ -97,7 +97,7 @@ These are execution/evidence checkpoints, not additional permission gates. The [
   - Preserve form IDs, keyboard/focus behavior, revision conflicts and unsaved-draft handling. Use meaningful outcome tests around the extracted boundaries rather than tests that mirror private implementation.
   - Retain the modular monolith and bounded registered capabilities. A dynamic plugin framework, arbitrary template code and a rewrite based only on module line counts are outside this sprint.
 
-- [ ] S11-T05 Pass the full builder recreation and preservation gate.
+- [x] S11-T05 Pass the full builder recreation and preservation gate.
   - Complete the incremental evidence matrix, including the equipment service desk composed from a blank definition, not just renamed examples. Record fixture paths, supported setup actions, generated routes, assertions and remaining adapter dependencies for each scenario. Verify the authoring/local-mapping UI as well as context commands; schema acceptance and a total test count are not sufficient recreation evidence.
   - Start from an empty synthetic organization and use only supported editor/import/local-binding interfaces to recreate all four school examples and the restaurant workflow under independent keys. Configure an additional non-school participant/resource process to show reuse beyond renamed sample labels.
   - Exercise full supported happy/exception paths, external and restricted access, partial receipt/finance guards, kitchen/parrilla destination batches, checkout/table reuse, daily summaries, communication failure/retry and republishing while existing records remain pinned.
@@ -122,8 +122,8 @@ These are execution/evidence checkpoints, not additional permission gates. The [
 
 ## Progress
 
-Actual start / finish: 2026-10-22 / not finished  
-Tasks: 3/5. Status: In progress. The 190-test structural-review result is historical baseline evidence, not completion of this gate.  
+Actual start / finish: 2026-10-22 / 2026-10-23  
+Tasks: 5/5. Status: Done. The 190-test structural-review result is historical baseline evidence, not completion of this gate.  
 Planning date: 2026-10-21. Record dated evidence and remaining defects before changing status.  
 Priority: architecture gate before pilot engineering. Handoff: verified reusable builder foundation for Sprint 12, with operational reliability and real-customer acceptance still open.
 
@@ -231,3 +231,14 @@ unavailable-binding repair, pure authoring panels and the prior security/form
 matrices. Full precommit passes 342 tests. Progress: 3/5; T02 and T05 remain open.
 
 Scale/recovery implementation checkpoint — 2026-10-23: the [checkpoint](../docs/sprint11-scale-recovery-checkpoint.md) records compact pinned bodies, fresh composite web reads, exact twelve-process coexistence and all-table supported backup restoration. Full precommit passes 345 tests; runner/deployment/assets pass. Failed load/browser phases remain retained. T02 final browser/participant/message evidence and T05 consolidated acceptance remain open; progress stays 3/5.
+
+Final acceptance — 2026-10-23: implementation checkpoint 7d7b5d8 bounds independent
+participant/message admission and passes the browser gate. The
+[consolidated acceptance](../docs/sprint11-final-acceptance.md) closes T02/T05 with
+25 cold/warm backend cases, 101 connected browser reloads, six independent processes
+in each of two organizations and exact supported/historical restoration evidence.
+Final same-seed numeric-only diagnostic precommit passes 346 tests with zero age
+events; assets, 17 runner and 8 deployment checks pass. The prior intermittent
+test-client invalid session remains unexplained and recorded; no validation or
+automatic retry was changed. All five tasks are complete. Handoff is Sprint 12;
+Sprints 12–14 remain required before customer activation.

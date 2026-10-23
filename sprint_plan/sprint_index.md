@@ -2,7 +2,7 @@
 
 [Design index](../design/index.md)
 
-Status: Sprints 00–10 complete; Sprint 11 in progress; Sprints 12–15 customer delivery planned · Updated: 2026-10-23
+Status: Sprints 00–11 complete; Sprints 12–15 customer delivery planned · Updated: 2026-10-23
 
 Dependency-ordered increments without duration estimates. Sprints 00 and 01 retain their original single-organization evidence. Sprint 01A has migrated and verified the multi-organization foundation before Sprint 02, preserving existing records.
 
@@ -20,7 +20,7 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 | [08](sprint_08.md) | Optional isolated Python calculations | 07; D-16, D-17; host activation gate | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [09](sprint_09.md) | Shared builder contracts, participants, references and document policies | Existing 01A–08; D-25–28 | Done | 5/5 | 2026-10-21 / 2026-10-21 |
 | [10](sprint_10.md) | Generated participant experiences and reusable projections | 09; D-06–07, D-25–27 | Done | 4/4 | 2026-10-22 / 2026-10-22 |
-| [11](sprint_11.md) | Cross-domain contracts, scalable reads and builder acceptance | corrected 09–10; D-09, D-14, D-25–30 | In progress | 3/5 | 2026-10-22 / — |
+| [11](sprint_11.md) | Cross-domain contracts, scalable reads and builder acceptance | corrected 09–10; D-09, D-14, D-25–30 | Done | 5/5 | 2026-10-22 / 2026-10-23 |
 | [12](sprint_12.md) | Pilot scope, isolation and account access | 11 architecture gate; D-21–23, D-27 | Planned | 0/3 | — / — |
 | [13](sprint_13.md) | Organization onboarding and first workflow | 12; D-22, D-27 | Planned | 0/3 | — / — |
 | [14](sprint_14.md) | Operations, data lifecycle and pilot launch readiness | 13; D-21, D-23 | Planned | 0/3 | — / — |
@@ -38,7 +38,7 @@ Sprint 11's mid-execution D-32 revision replaces blanket legacy support with an
 The first operational checkpoint is preserved. Synthetic-only paths should be
 retired; retained history and active consumers receive only the support their
 evidence requires. Supported builder versioning and data integrity remain required.
-The sprint stays In progress, with the same five tasks.
+That revision retained the same five tasks; final acceptance is recorded below.
 
 Sprint 11's [execution checkpoints](sprint_11.md#execution-checkpoints-after-sprints-0910)
 incorporate the corrected Sprint 10 review under D-30: early restaurant composition,
@@ -130,3 +130,12 @@ curated discovery prunes unused message versions. The
 [discovery report](../docs/sprint11-discovery-checkpoint.md) records later-page
 interaction, current-grant/pinned-history parity, pure layout ownership and atomic
 publication invalidation. Final T02 measurements and remaining T03–T05 work stay open.
+
+Sprint 11 complete — 2026-10-23: all 5/5 tasks pass the
+[consolidated architecture acceptance](../docs/sprint11-final-acceptance.md).
+Checkpoint 7d7b5d8 completes bounded participant/message discovery. All 25 backend
+cases, connected-browser completion, supported/historical restoration and 346-test
+precommit pass; assets and runner/deployment checks pass. The intermittent
+test-client invalid-session observation remains documented and unexplained.
+Next is Sprint 12; customer activation still requires Sprints 12–14, with Sprint 15
+reserved for actual post-launch observation.

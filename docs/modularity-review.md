@@ -65,3 +65,23 @@ Final verification: mix precommit passed with 190 tests and zero failures; asset
 Follow-up review of the sprint plans found that ownership/execution contracts and integration evidence were too concentrated in Sprint 11. The [builder architecture contract](builder-architecture-contract.md) now defines the early S09-T05 foundation, explicit correction/reset semantics, pinned/live binding lifetime, bounded query sequencing and incremental recreation matrix. It includes code-level findings from the current working tree. This is a planning correction; neither the historical checks above nor the revised sprint text constitutes implementation of the remaining architecture work.
 
 The user requested these findings become higher-priority implementation sprints. [Sprint 09](../sprint_plan/sprint_09.md) owns reusable participant/reference/document policies; [Sprint 10](../sprint_plan/sprint_10.md) owns generated external experiences, configured views and finance/communication surfaces; [Sprint 11](../sprint_plan/sprint_11.md) owns operational contracts, scalable reads, cohesive extraction and the complete recreation/preservation gate. Pilot work moves to Sprints 12–15; the [roadmap](../sprint_plan/first_customer_roadmap.md#scope-tracking) maps earlier task IDs and keeps launch gates open. This planning follow-up does not change the historical verification result above.
+
+## Sprint 11 buildability matrix — 2026-10-23
+
+This dated matrix supersedes the current-state gaps recorded on 2026-10-21; those
+historical findings remain above. See the [consolidated acceptance](sprint11-final-acceptance.md)
+for fixture paths, supported setup, generated routes, assertions and measurement limits.
+
+| Experience | Current supported buildability | Remaining example adapter dependency |
+|---|---|---|
+| Enrollment and private family documents | Independent imported definition, local editor mapping, generic invitations/participants, generated family pages, exact document release | None in common recreation; historical data retained under D-32 |
+| Confidential incidents | Independent definition, named section assignments, restricted generated views and curated snapshots | None |
+| Requisition and field trip | Independent definitions, explicit budget bindings, finance guards, partial receiving and renewed review | None; real calculation host acceptance remains deferred |
+| Restaurant service | Independent supper-room definition, explicit actor/timezone/settlement, two destinations, captured operational commands and pinned checkout | None; physical printer acceptance remains S13 |
+| Blank equipment desk | Composed definition with participants, parts references, private documents, views and messages | None |
+| Combined isolation/recovery | Six processes in each of two organizations; distinct local grants for one identity; full supported snapshot restore and separate historical preservation | No retired mutation dependency |
+
+The common path no longer selects school/restaurant behavior by example keys.
+Closed capability registries, one authoritative transaction and server-side
+current authorization remain architectural constraints. Dynamic plugins, arbitrary
+template code and customer launch readiness are outside this acceptance.
