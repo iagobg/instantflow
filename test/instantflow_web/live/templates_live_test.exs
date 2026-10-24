@@ -48,6 +48,8 @@ defmodule InstantflowWeb.TemplatesLiveTest do
     |> render_submit()
 
     refute has_element?(editor, "#publish-template[disabled]")
+    render_click(editor, "move-stage", %{"key" => "missing", "direction" => "up"})
+    assert has_element?(editor, "#flash-error")
     editor |> element("#publish-template") |> render_click()
     assert has_element?(editor, "#publication-confirmation")
     assert Repo.aggregate(Version, :count) == 0
@@ -56,6 +58,7 @@ defmodule InstantflowWeb.TemplatesLiveTest do
     editor |> element("#publish-template") |> render_click()
     editor |> element("#confirm-publish-template") |> render_click()
     assert Repo.aggregate(Version, :count) == 1
+    refute has_element?(editor, "#flash-error")
     assert has_element?(editor, "#save-template-item[disabled]")
     editor |> element("#export-draft") |> render_click()
     assert has_element?(editor, "#draft-export-preview")
@@ -110,6 +113,47 @@ defmodule InstantflowWeb.TemplatesLiveTest do
     assert {:ok, ^draft} = Templates.get(f.admin, draft.id)
     assert has_element?(editor, "#publish-template[disabled]")
     assert has_element?(editor, "#flash-error")
+    editor |> form("#template-metadata", metadata: %{name: "Edição corrigida"}) |> render_submit()
+    refute has_element?(editor, "#flash-error")
+    assert {:ok, saved} = Templates.get(f.admin, draft.id)
+    assert saved.definition["name"] == "Edição corrigida"
+  end
+
+  test "a new board rejected for empty columns remains editable and can be corrected and published",
+       %{conn: conn} do
+    f = workflow_fixture()
+    {:ok, draft} = Templates.clone(f.admin, f.version.id)
+    {:ok, editor, _} = live(login(conn, f.admin), ~p"/o/horizonte/modelos/#{draft.id}")
+    editor |> form("#authoring-picker", picker: %{collection: "views"}) |> render_submit()
+
+    editor
+    |> form("#template-item-form",
+      item: %{key: "rehearsal_board", label: "Quadro do ensaio", type: "board", columns: []}
+    )
+    |> render_submit()
+
+    assert has_element?(editor, "#flash-error")
+    refute has_element?(editor, "#items-views-root-rehearsal_board")
+    refute has_element?(editor, "#item_key[readonly]")
+
+    editor
+    |> form("#template-item-form",
+      item: %{
+        key: "rehearsal_board",
+        label: "Quadro do ensaio",
+        type: "board",
+        columns: ["stage", "request.summary"]
+      }
+    )
+    |> render_submit()
+
+    assert has_element?(editor, "#items-views-root-rehearsal_board")
+    assert has_element?(editor, "#item_key[readonly]")
+    refute has_element?(editor, "#flash-error")
+    editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
+    refute has_element?(editor, "#flash-error")
+    assert Repo.get!(Draft, draft.id).published_version_id
   end
 
   test "cloning, comparison and conflicting saves preserve the losing editor's input", %{

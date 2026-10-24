@@ -131,7 +131,7 @@ defmodule InstantflowWeb.TemplateLive do
             _ -> p["key"]
           end
 
-        persist(assign(socket, original: key), definition, a.draft.bindings)
+        persist(socket, definition, a.draft.bindings, key)
 
       {:error, reason} ->
         {:noreply, put_flash(socket, :error, TemplatesLive.message(reason))}
@@ -438,6 +438,7 @@ defmodule InstantflowWeb.TemplateLive do
       {:ok, version} ->
         {:noreply,
          reload(socket)
+         |> clear_flash(:error)
          |> put_flash(
            :info,
            "Versão #{version.number} publicada. Solicitações existentes preservam sua versão."
@@ -455,7 +456,7 @@ defmodule InstantflowWeb.TemplateLive do
     end
   end
 
-  defp persist(socket, definition, bindings) do
+  defp persist(socket, definition, bindings, saved_selection \\ nil) do
     case Templates.save(
            socket.assigns.current_scope,
            socket.assigns.draft.id,
@@ -464,8 +465,12 @@ defmodule InstantflowWeb.TemplateLive do
            bindings
          ) do
       {:ok, _} ->
+        socket = if saved_selection, do: assign(socket, original: saved_selection), else: socket
+
         {:noreply,
-         reload(socket) |> put_flash(:info, "Rascunho salvo. Revise antes de publicar.")}
+         reload(socket)
+         |> clear_flash(:error)
+         |> put_flash(:info, "Rascunho salvo. Revise antes de publicar.")}
 
       {:error, :conflict} ->
         case Templates.get(socket.assigns.current_scope, socket.assigns.draft.id) do
