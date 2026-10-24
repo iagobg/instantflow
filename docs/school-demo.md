@@ -2,7 +2,8 @@
 
 Este é o primeiro checkpoint de D01 do [plano de demo](../sprint_plan/demo_readiness.md).
 Instala uma escola fictícia com oito requisições de compra. Matrículas, passeios,
-ocorrências confidenciais, fluxo publicado e quadro por etapas continuam pendentes.
+ocorrências confidenciais e quadro por etapas continuam pendentes. O fluxo publicado
+foi implementado no checkpoint D02, com aceitação visual ainda pendente.
 A grade atual de cartões ainda não é o quadro D03.
 
 ## Preparar e iniciar
@@ -94,6 +95,47 @@ ou integrações externas neste processo. Pedidos e recebimentos são simulados.
    essa conta não recebe ações de aprovação/reserva e não descobre as outras compras.
 5. Volte à sessão admin e confira a atualização. Isso é um roteiro preliminar;
    a aceitação visual completa e a atualização do futuro quadro pertencem a D03/D04.
+
+## Fluxo publicado (D02)
+
+1. No processo, escolha **Ver fluxo publicado**. O cabeçalho identifica o número,
+   a publicação e o contexto da versão mais recente. A visão geral acompanha novas
+   publicações, preservando o filtro de destaque escolhido.
+2. Escolha uma etapa em **Destacar conexões da etapa** para acompanhar suas entradas
+   e saídas. O diagrama tem rolagem própria; **Lista de etapas e conexões** mantém
+   os nomes completos, os destinos e as indicações inicial/final em texto.
+3. Abra um caso e escolha **Ver fluxo desta versão**. A versão é a fixada no caso,
+   inclusive quando existe publicação mais nova ou rascunho alterado. A etapa atual
+   aparece no diagrama e na lista. Transições e correções por outro usuário atualizam
+   essa indicação através das invalidações já usadas pelo runtime.
+4. Use **Voltar ao registro** ou **Voltar aos casos**. Administradores também têm
+   um link para **Modelos de fluxo**; colaboradores podem consultar o fluxo sem
+   receber acesso à edição.
+
+As rotas são /o/horizonte/processos/ID/fluxo e
+/o/horizonte/processos/ID/registros/CASO/fluxo. A consulta não aceita um ID de versão
+arbitrário: a visão geral resolve a publicação atual e o caso resolve seu próprio pin.
+A tela informa quando uma versão é histórica/arquivada.
+
+O diagrama só recebe nomes, chaves, tipos de conexão e marcas inicial/final. Não
+recebe vínculos locais, valores dos formulários, configuração de efeitos ou guardas.
+Conexões cujo histórico é restrito aos atores ficam fora da visão geral; no caso,
+a política existente de histórico determina quais aparecem. As ações permitidas
+continuam sendo verificadas na experiência normal do registro. Públicos de páginas
+de participantes não ganham uma rota alternativa para um diagrama interno. Acesso
+revogado limpa o diagrama aberto após a invalidação/revalidação.
+
+O ensaio visual deste checkpoint está pendente: a abertura automatizada de
+localhost:4001 foi bloqueada porque o serviço de revisão automática de aprovação
+atingiu seu limite de uso. Isso não foi uma rejeição manual do usuário. Não houve
+captura de navegador nem confirmação visual de tamanho, rolagem ou foco por teclado.
+Os testes de LiveView comprovam os elementos e as atualizações de estado, mas não
+substituem essa inspeção.
+
+Validação D02: suite focada de fluxo/editor com 20 testes e zero falhas (seed
+830214); mix assets.build passou; mix precommit passou com 360 testes e zero falhas
+(seed 636776); git diff --check passou. A implementação parte do commit D01
+29156a4. D01 ainda tem cenários pendentes; D03 e D04 ainda não foram implementados.
 
 ## Repetir, preservar ou reiniciar
 

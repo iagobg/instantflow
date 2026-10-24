@@ -51,6 +51,8 @@ defmodule InstantflowWeb.Router do
       live "/processos/:workflow_id/comunicacoes", MessagesLive, :index
       live "/processos/:workflow_id/participacao/:page_key", ParticipantLive, :index
       live "/processos/:workflow_id/participacao/:page_key/registros/:id", ParticipantLive, :show
+      live "/processos/:workflow_id/fluxo", FlowLive, :index
+      live "/processos/:workflow_id/registros/:id/fluxo", FlowLive, :show
       live "/processos/:workflow_id", ProcessLive, :index
       live "/processos/:workflow_id/p/:page_key", ProcessLive, :index
       live "/processos/:workflow_id/p/:page_key/atendimentos/:id", ProcessLive, :show

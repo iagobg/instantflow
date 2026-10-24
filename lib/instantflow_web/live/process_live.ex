@@ -859,6 +859,17 @@ defmodule InstantflowWeb.ProcessLive do
           </p>
         </div>
       </div>
+      <.link
+        id="process-flow-link"
+        class="btn"
+        navigate={
+          if @visit do
+            ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/registros/#{@visit.session.ticket_id}/fluxo"
+          else
+            ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/fluxo"
+          end
+        }
+      >Ver fluxo publicado</.link>
       <nav id="process-pages" aria-label="Páginas do processo" class="process-page-tabs">
         <.link
           :for={page <- @pages}

@@ -635,3 +635,11 @@ footer {
 .process-page-tabs [aria-current="page"] { border-color: var(--if-accent-text); color: var(--if-accent-text); }
 #process-records dl > div { display: flex; gap: 12px; margin: 6px 0; }
 #process-records dt { font-weight: 600; }
+
+/* Published flow keeps a distinct current-stage marker and a full-text alternative. */
+.graph-stage.current .graph-node { stroke: var(--if-accent-text); stroke-width: 3; stroke-dasharray: 7 3; }
+.flow-stage-list { padding-left: 24px; }
+.flow-stage-list > li { padding: 16px 12px; border-bottom: 1px solid var(--if-border); overflow-wrap: anywhere; }
+.flow-stage-list > li[aria-current="step"] { border-left: 4px solid var(--if-accent-text); }
+.flow-stage-list ul { padding-left: 20px; }
+.workflow-graph:focus-visible { outline: 2px solid var(--if-accent-text); outline-offset: 3px; }

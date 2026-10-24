@@ -788,6 +788,13 @@ defmodule InstantflowWeb.RequestLive do
           </h1><p>Revisão {@data.ticket.revision} · {stage_label(@data)}</p>
         </div><span class="badge">{stage_label(@data)}</span>
       </div>
+      <.link
+        id="record-flow-link"
+        class="btn"
+        navigate={
+          ~p"/o/#{@current_scope.organization.slug}/processos/#{@data.ticket.workflow_id}/registros/#{@data.ticket.id}/fluxo"
+        }
+      >Ver fluxo desta versão</.link>
       <div :if={@stale} id="stale-warning" class="flash error" role="alert">
         Esta solicitação foi atualizada. Seu rascunho foi preservado.
       </div>

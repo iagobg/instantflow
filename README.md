@@ -36,8 +36,8 @@ The enrollment parent portal and private files are implemented. All four school 
 
 For the current school demo milestone, use the [isolated school demo setup](docs/school-demo.md).
 Its first D01 checkpoint prepares eight populated purchasing cases in instantflow_demo,
-with explicit presenter grants and a restricted comparison account. Other demo scenarios
-and the shared flow/stage-board presentation remain in progress.
+with explicit presenter grants and a restricted comparison account. Published process flows now reuse the editor diagram and preserve case version pins;
+visual rehearsal, other demo scenarios and stage boards remain in progress.
 
 ## Prerequisites and setup
 

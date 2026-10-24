@@ -1,5 +1,6 @@
 defmodule InstantflowWeb.TemplateLive do
   use InstantflowWeb, :live_view
+  import InstantflowWeb.WorkflowGraphComponents
   import InstantflowWeb.AuthoringPanels, only: [workspace_panel: 1, participant_preview_panel: 1]
   alias Instantflow.{Identity, WorkflowCatalog.Templates}
   alias Instantflow.WorkflowCatalog.{Authoring, Definition, Diff, Graph, Interchange}
@@ -826,78 +827,7 @@ defmodule InstantflowWeb.TemplateLive do
               <span><i class="graph-swatch"></i>Avanço</span><span><i class="graph-swatch secondary"></i>Correção e outros caminhos</span>
             </div>
           </div>
-          <div id="graph-focus-controller" phx-hook="WorkflowGraph" phx-update="ignore" hidden></div>
-          <div id="workflow-graph-viewport" class="workflow-graph">
-            <svg
-              id="workflow-graph"
-              viewBox={"0 0 #{@graph_width} #{@graph_height}"}
-              style={"min-width: #{max(840, @graph_width)}px"}
-              role="img"
-              aria-labelledby="workflow-graph-title"
-            >
-              <title id="workflow-graph-title">
-                Etapas e transições do modelo; descrições e controles na lista abaixo
-              </title><defs>
-                <marker
-                  id="workflow-arrow"
-                  viewBox="0 0 10 10"
-                  refX="9"
-                  refY="5"
-                  markerWidth="6"
-                  markerHeight="6"
-                  orient="auto-start-reverse"
-                >
-                  <path d="M 0 0 L 10 5 L 0 10 z" />
-                </marker>
-              </defs>
-              <g id="graph-edges" phx-update="stream">
-                <g
-                  :for={{id, edge} <- @streams.graph_edges}
-                  id={id}
-                  class={[
-                    "graph-connection",
-                    edge.secondary? && "secondary",
-                    edge.dimmed? && "dimmed"
-                  ]}
-                >
-                  <title>{edge.title}</title><path
-                    d={edge.path}
-                    fill="none"
-                    class="graph-edge"
-                    marker-end="url(#workflow-arrow)"
-                  />
-                  <text
-                    x={edge.label_x}
-                    y={edge.label_y}
-                    text-anchor={edge.anchor}
-                    class="graph-edge-label"
-                  >
-                    {edge.label}
-                  </text>
-                </g>
-              </g>
-              <g id="graph-nodes" phx-update="stream">
-                <g
-                  :for={{id, node} <- @streams.graph_nodes}
-                  id={id}
-                  class={["graph-stage", node.focused? && "focused", node.dimmed? && "dimmed"]}
-                  data-stage={node.id}
-                >
-                  <title>{node.label}</title>
-                  <rect x={node.x} y={node.y} width="220" height="68" rx="10" class="graph-node" /><text
-                    x={node.x + 16}
-                    y={node.y + 29}
-                  >
-                    {if String.length(node.label) > 25,
-                      do: String.slice(node.label, 0, 24) <> "…",
-                      else: node.label}
-                  </text><text x={node.x + 16} y={node.y + 49} class="graph-note">
-                    {node.id} {if node.initial, do: "· Inicial"} {if node.terminal, do: "· Final"}
-                  </text>
-                </g>
-              </g>
-            </svg>
-          </div>
+          <.workflow_graph graph_width={@graph_width} graph_height={@graph_height} streams={@streams} />
         </section>
         <div class="template-grid">
           <section class="card">

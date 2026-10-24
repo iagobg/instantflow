@@ -1,6 +1,6 @@
 # School demo readiness and execution plan
 
-Status: In progress — first D01 purchasing checkpoint implemented · Assessed: 2026-10-23
+Status: In progress — D01 purchasing checkpoint and D02 flow implementation · Assessed: 2026-10-23
 
 [Sprint index](sprint_index.md) · [Design](../design/index.md)
 
@@ -47,18 +47,40 @@ presenter and restricted-requester grants use existing policies; case mutations
 use runtime commands. Clean and repeat setup passed locally; regressions cover
 rerun preservation, authorization and retired pinned versions. Enrollment, trips,
 confidential incidents and their documents/roles remain pending. D01 is not yet
-complete; D02–D04 have not started. Validation: mix precommit passed with 350 tests,
+complete. D02 progress is recorded below; D03–D04 have not started. Validation: mix precommit passed with 350 tests,
 zero failures (seed 487092); isolated demo HTTP login smoke passed on port 4001.
 No authenticated visual rehearsal was claimed.
 
 ## D02 — Published process flow
 
-- [ ] Add an obvious flow entry from the process workspace, retaining a clear path back to cases and the builder for authorized authors.
-- [ ] Extract/reuse graph layout and display where appropriate. Render stage names, initial/terminal stages, allowed graph connections and correction paths from the published definition. Keep editing authorization separate from viewing authorization; do not expose private bindings, guard internals or secret configuration through a diagram.
-- [ ] Show publication/version identity. A case's flow uses its pinned version and can highlight its current stage. Do not depict historical cases against the latest edited draft. If the process overview selects a version, label it explicitly.
+- [x] Add an obvious flow entry from the process workspace, retaining a clear path back to cases and the builder for authorized authors.
+- [x] Extract/reuse graph layout and display where appropriate. Render stage names, initial/terminal stages, allowed graph connections and correction paths from the published definition. Keep editing authorization separate from viewing authorization; do not expose private bindings, guard internals or secret configuration through a diagram.
+- [x] Show publication/version identity. A case's flow uses its pinned version and can highlight its current stage. Do not depict historical cases against the latest edited draft. If the process overview selects a version, label it explicitly.
 - [ ] Make large flows usable through scrolling/focus and a readable accessible alternative. Keep PT-BR labels and clear loading/empty/denied states.
 
 Acceptance: a user can explain a published process without opening the editor; its stages match the corresponding board/version. Opening a case from an older version shows its own correct flow.
+
+### D02 implementation checkpoint — 2026-10-23
+
+Process workspaces now link to a read-only published flow. Record links resolve
+through the shared authorized projection and retain their immutable version pin,
+including archived versions; the current stage is marked in the diagram and its
+readable alternative. The workspace overview explicitly shows the latest published
+version and updates on publication while an open case remains pinned. The editor
+and viewer share the streamed graph component and layout. Authoring navigation
+remains admin-only. No bindings, guards, field values or action configuration are
+returned by the diagram projection. Actor-private history connections are omitted
+from overviews and shown in cases only through the runtime's existing history policy.
+
+The fourth D02 checkbox remains open for actual-size scrolling, keyboard and visual
+acceptance. Browser automation could not open localhost:4001 because automatic
+approval review hit its usage limit; this was a review-service failure, not a user
+rejection. No browser screenshot or visual acceptance is claimed. Focused tests
+cover current/pinned publications, corrections and other-user refresh, revocation,
+confidential-case denial, participant/tenant isolation, long labels and editor reuse.
+Validation: the focused flow/editor suite passed (20 tests, zero failures, seed
+830214), mix assets.build passed, mix precommit passed (360 tests, zero failures,
+seed 636776), and git diff --check passed. See [the current flow walkthrough](../docs/school-demo.md#fluxo-publicado-d02).
 
 ## D03 — Genuine authorized stage boards
 

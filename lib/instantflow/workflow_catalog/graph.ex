@@ -8,6 +8,15 @@ defmodule Instantflow.WorkflowCatalog.Graph do
   def layout(definition, focus \\ "") do
     stages = definition["stages"]
     transitions = definition["transitions"]
+
+    if stages == [] do
+      %{nodes: [], edges: [], width: 600, height: 160}
+    else
+      layout_stages(stages, transitions, focus)
+    end
+  end
+
+  defp layout_stages(stages, transitions, focus) do
     initial = Enum.find(stages, & &1["initial"]) || hd(stages)
     forward = Enum.reject(transitions, &(&1["kind"] in ~w(cancellation resubmission reopening)))
     ranks = rank([{initial["key"], 0}], forward, %{})

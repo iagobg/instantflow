@@ -3,6 +3,13 @@ defmodule Instantflow.WorkflowCatalog.GraphTest do
   import Instantflow.WorkflowFixtures
   alias Instantflow.WorkflowCatalog.Graph
 
+  test "an empty stage collection produces an empty diagram" do
+    graph = Graph.layout(%{"stages" => [], "transitions" => []})
+    assert graph.nodes == []
+    assert graph.edges == []
+    assert graph.width > 0 and graph.height > 0
+  end
+
   test "main stages align vertically and alternate routes have distinct orthogonal paths" do
     graph = Graph.layout(definition_fixture())
     nodes = Map.new(graph.nodes, &{&1.id, &1})
