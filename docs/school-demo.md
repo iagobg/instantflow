@@ -3,7 +3,8 @@
 Este é o primeiro checkpoint de D01 do [plano de demo](../sprint_plan/demo_readiness.md).
 Instala uma escola fictícia com oito requisições de compra. Matrículas, passeios,
 ocorrências confidenciais e quadro por etapas continuam pendentes. O fluxo publicado
-foi implementado no checkpoint D02, com aceitação visual ainda pendente.
+foi implementado no checkpoint D02 e ensaiado em 1280 × 720; veja o
+[relatório visual e seus limites](demo-flow-visual-rehearsal.md).
 A grade atual de cartões ainda não é o quadro D03.
 
 ## Preparar e iniciar
@@ -125,12 +126,17 @@ continuam sendo verificadas na experiência normal do registro. Públicos de pá
 de participantes não ganham uma rota alternativa para um diagrama interno. Acesso
 revogado limpa o diagrama aberto após a invalidação/revalidação.
 
-O ensaio visual deste checkpoint está pendente: a abertura automatizada de
-localhost:4001 foi bloqueada porque o serviço de revisão automática de aprovação
-atingiu seu limite de uso. Isso não foi uma rejeição manual do usuário. Não houve
-captura de navegador nem confirmação visual de tamanho, rolagem ou foco por teclado.
-Os testes de LiveView comprovam os elementos e as atualizações de estado, mas não
-substituem essa inspeção.
+O [ensaio visual de D02](demo-flow-visual-rehearsal.md) foi executado em 1280 × 720.
+Foram verificados navegação, seleção/rolagem por teclado, atualização em outra aba,
+edição permitida, conta restrita e estado de acesso negado. Um ajuste no hook passou
+a centralizar a etapa atual quando o diagrama do caso é aberto. O limite anterior
+do serviço de aprovação do navegador não se repetiu.
+
+O ensaio deixou o caso #3 em Compra e atualizou a justificativa do caso #7. Também
+criou o rascunho #1, ainda não publicado, para testar rótulos longos. A versão
+publicada continua sendo v1. O setup preservará essas mudanças; o inventário acima
+continua descrevendo o cenário inicial de uma instalação limpa. O relatório registra
+as contagens finais, capturas e os testes visuais ainda pendentes para D03/D04.
 
 Validação D02: suite focada de fluxo/editor com 20 testes e zero falhas (seed
 830214); mix assets.build passou; mix precommit passou com 360 testes e zero falhas

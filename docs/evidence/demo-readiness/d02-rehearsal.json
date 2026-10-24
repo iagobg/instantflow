@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-23",
+  "baseCommit": "ade7fba",
+  "database": "instantflow_demo",
+  "currentStage": "purchase",
+  "currentStageWithinDiagram": true,
+  "diagramMaximumScroll": 1206,
+  "diagramScrollTop": 603,
+  "keyboardFocusOnDiagram": true,
+  "pageHasHorizontalOverflow": false,
+  "readableStageCount": 7,
+  "version": "Versão 1 · Publicada em\n          23/10/2026",
+  "viewport": {
+    "height": 720,
+    "width": 1280
+  },
+  "separateTabStageUpdate": "finance -> purchase, same presenter identity",
+  "restrictedStaffVisibleCases": 1,
+  "presenterVisibleCases": 8,
+  "restrictedForeignCaseFlow": "unavailable",
+  "draftLongLabelPublished": false,
+  "dataChanges": [
+    "case 3 advanced to purchase",
+    "case 7 justification edited",
+    "unpublished draft 1 created with a long initial-stage label"
+  ]
+}

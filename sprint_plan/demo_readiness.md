@@ -56,7 +56,7 @@ No authenticated visual rehearsal was claimed.
 - [x] Add an obvious flow entry from the process workspace, retaining a clear path back to cases and the builder for authorized authors.
 - [x] Extract/reuse graph layout and display where appropriate. Render stage names, initial/terminal stages, allowed graph connections and correction paths from the published definition. Keep editing authorization separate from viewing authorization; do not expose private bindings, guard internals or secret configuration through a diagram.
 - [x] Show publication/version identity. A case's flow uses its pinned version and can highlight its current stage. Do not depict historical cases against the latest edited draft. If the process overview selects a version, label it explicitly.
-- [ ] Make large flows usable through scrolling/focus and a readable accessible alternative. Keep PT-BR labels and clear loading/empty/denied states.
+- [x] Make large flows usable through scrolling/focus and a readable accessible alternative. Keep PT-BR labels and clear loading/empty/denied states.
 
 Acceptance: a user can explain a published process without opening the editor; its stages match the corresponding board/version. Opening a case from an older version shows its own correct flow.
 
@@ -72,10 +72,15 @@ remains admin-only. No bindings, guards, field values or action configuration ar
 returned by the diagram projection. Actor-private history connections are omitted
 from overviews and shown in cases only through the runtime's existing history policy.
 
-The fourth D02 checkbox remains open for actual-size scrolling, keyboard and visual
-acceptance. Browser automation could not open localhost:4001 because automatic
-approval review hit its usage limit; this was a review-service failure, not a user
-rejection. No browser screenshot or visual acceptance is claimed. Focused tests
+A follow-up [visual rehearsal](../docs/demo-flow-visual-rehearsal.md) passed for the
+purchasing scenario at 1280 × 720. It verified diagram selection/keyboard scrolling,
+readable labels, presenter/staff navigation, a guarded transition, another open tab's
+stage refresh, allowed edits, empty search and denied foreign-case access. It found
+and fixed initial positioning of later-stage cases: the graph now centers the current
+stage on mount. Real screenshots and the exact resulting local state are retained.
+The earlier browser approval-service limit did not recur. Post-rehearsal validation:
+mix assets.build and mix precommit passed (360 tests, zero failures, seed 949960).
+Focused tests
 cover current/pinned publications, corrections and other-user refresh, revocation,
 confidential-case denial, participant/tenant isolation, long labels and editor reuse.
 Validation: the focused flow/editor suite passed (20 tests, zero failures, seed
