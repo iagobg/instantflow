@@ -1,9 +1,10 @@
 defmodule Instantflow.Demo.School do
   @moduledoc "D01 synthetic installation data; all case mutations use shared runtime commands."
   import Ecto.Query
-  alias Instantflow.{Access, Finance, Identity, Repo, Tenant, WorkflowCatalog, WorkflowRuntime}
-  alias Instantflow.Identity.{Department, Membership, Organization, User}
-  alias Instantflow.WorkflowCatalog.{Retirement, Version, Workflow}
+  alias Instantflow.{Finance, Identity, Repo, Tenant, WorkflowRuntime}
+  import Instantflow.Demo.Scenario
+  alias Instantflow.Identity.{Department, Organization}
+  alias Instantflow.WorkflowCatalog.Version
   alias Instantflow.WorkflowRuntime.{Receipt, Ticket}
 
   @scenario "demo:d01:purchasing:1"
@@ -132,7 +133,7 @@ defmodule Instantflow.Demo.School do
       "budgets" => %{"shared_budget" => account.id}
     }
 
-    version = version!(presenter, bindings)
+    version = version!(presenter, "requisition", bindings)
 
     @cases
     |> Enum.with_index(1)
@@ -182,82 +183,22 @@ defmodule Instantflow.Demo.School do
       )
     end)
 
-    inventory(operator, org, version, [presenter, staff, author])
-  end
+    {extra_versions, extra_actors} =
+      Instantflow.Demo.SchoolScenarios.install!(
+        operator,
+        org,
+        departments,
+        presenter,
+        author,
+        bindings,
+        password
+      )
 
-  defp ensure(operator, schema, keys, attrs) do
-    operator.get_by(schema, keys) ||
-      operator.insert!(struct(schema, Map.merge(Map.new(keys), attrs)))
-  end
-
-  defp member!(operator, org, department_id, email, name, role, password) do
-    user =
-      operator.get_by(User, email: email) ||
-        operator.insert!(User.changeset(%User{email: email}, %{name: name, password: password}))
-
-    member =
-      ensure(operator, Membership, [organization_id: org.id, user_id: user.id], %{
-        department_id: department_id,
-        role: role
-      })
-
-    unless member.active and member.role == role and user.active,
-      do: raise("Demo identity changed or revoked: #{email}; not reactivating it")
-
-    Identity.scope(user.id, org.id) || raise("Demo identity unavailable: #{email}")
-  end
-
-  defp grant!(admin, member, department, role) do
-    exists? =
-      Tenant.read(admin, fn _ ->
-        Repo.exists?(
-          from g in Access.Grant,
-            where:
-              g.membership_id == ^member.id and
-                g.department_id == ^department and g.role == ^role
-        )
-      end)
-
-    unless exists?, do: ok!(Access.grant(admin, member.id, department, role))
-  end
-
-  defp version!(actor, bindings) do
-    definition = Instantflow.Examples.definition("requisition")
-
-    ok!(
-      Tenant.transaction(actor, fn _ ->
-        Repo.query!("SELECT pg_advisory_xact_lock($1)", [actor.organization_id])
-
-        latest =
-          Repo.one(
-            from v in Version,
-              join: w in Workflow,
-              on: w.id == v.workflow_id,
-              where: w.key == "requisition",
-              order_by: [desc: v.number],
-              limit: 1
-          )
-
-        cond do
-          is_nil(latest) or Retirement.retired?(latest.id) ->
-            ok!(
-              WorkflowCatalog.publish(
-                actor,
-                definition,
-                bindings,
-                if(latest, do: latest.number, else: 0)
-              )
-            )
-
-          latest.definition == definition and latest.bindings == bindings ->
-            latest
-
-          true ->
-            raise(
-              "Demo publication differs from the fixture; preserve its pins and review explicitly"
-            )
-        end
-      end)
+    inventory(
+      operator,
+      org,
+      [version | extra_versions],
+      [staff, author] ++ extra_actors
     )
   end
 
@@ -321,45 +262,15 @@ defmodule Instantflow.Demo.School do
     end
   end
 
-  defp save!(actor, id, section_key, values, key) do
-    data = ok!(WorkflowRuntime.get(actor, id))
-    section = Enum.find(data.sections, &(&1.key == section_key))
+  defp inventory(operator, org, current_versions, actors) do
+    workflow_ids = Enum.map(current_versions, & &1.workflow_id)
+    primary_ids = Enum.map(current_versions, & &1.id)
 
-    ok!(
-      WorkflowRuntime.command(actor, %{
-        "operation" => "save_section",
-        "ticket_id" => id,
-        "section" => section_key,
-        "values" => values,
-        "key" => key,
-        "expected_stage_revision" => data.ticket.stage_revision,
-        "expected_section_revision" => section.revision
-      })
-    )
-  end
-
-  defp transition!(actor, id, edge, key, reason \\ nil) do
-    data = ok!(WorkflowRuntime.get(actor, id))
-
-    ok!(
-      WorkflowRuntime.command(actor, %{
-        "operation" => "transition",
-        "ticket_id" => id,
-        "transition" => edge,
-        "key" => key,
-        "reason" => reason,
-        "expected_revision" => data.ticket.revision,
-        "section_revisions" => Map.new(data.sections, &{&1.key, &1.revision})
-      })
-    )
-  end
-
-  defp inventory(operator, org, current, actors) do
     versions =
       operator.all(
         from v in Version,
-          where: v.workflow_id == ^current.workflow_id,
-          order_by: v.number
+          where: v.workflow_id in ^workflow_ids,
+          order_by: [v.workflow_id, v.number]
       )
 
     %{
@@ -378,10 +289,10 @@ defmodule Instantflow.Demo.School do
             |> Map.new()
 
           %{
-            workflow: "requisition",
+            workflow: version.definition["template_key"],
             version: version.number,
             version_id: version.id,
-            primary: version.id == current.id,
+            primary: version.id in primary_ids,
             total: Enum.sum(Map.values(counts)),
             stages: counts
           }
@@ -396,7 +307,4 @@ defmodule Instantflow.Demo.School do
         end)
     }
   end
-
-  defp ok!({:ok, value}), do: value
-  defp ok!({:error, reason}), do: raise("Demo fixture failed: #{inspect(reason)}")
 end

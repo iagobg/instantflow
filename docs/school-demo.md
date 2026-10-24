@@ -1,11 +1,11 @@
 # Escola Horizonte: preparação isolada da demonstração
 
-Este é o primeiro checkpoint de D01 do [plano de demo](../sprint_plan/demo_readiness.md).
-Instala uma escola fictícia com oito requisições de compra. Matrículas, passeios,
-ocorrências confidenciais continuam pendentes. O quadro por etapas D03 agora está implementado. O fluxo publicado
-foi implementado no checkpoint D02 e ensaiado em 1280 × 720; veja o
-[relatório visual e seus limites](demo-flow-visual-rehearsal.md).
-Veja [o roteiro do quadro D03](stage-boards.md) para seleção de versão, colunas, contagens e paginação.
+O setup D01 instala 12 matrículas, oito compras, seis passeios e três ocorrências
+inteiramente fictícias. Fluxo publicado D02 e quadro por etapas D03 estão
+implementados. O ensaio completo D04 ainda está pendente, incluindo o processo
+independente construído pela interface e a estabilidade do relógio local.
+Veja o [relatório visual D02](demo-flow-visual-rehearsal.md) e o
+[roteiro do quadro D03](stage-boards.md).
 
 ## Preparar e iniciar
 
@@ -54,19 +54,24 @@ os seeds antigos e não toca nos bancos de trabalho existentes.
 
 ## Contas e limites de acesso
 
-As três contas novas usam a senha digitada. Senhas existentes são preservadas.
+As oito contas usam a senha digitada na primeira instalação. Senhas existentes são preservadas.
 
 | Conta | Papel local e concessões explícitas | Demonstração |
 |---|---|---|
-| admin@escola.example | Administração; teacher/head em Coordenação, finance/finance_allocator em Financeiro, operations em Operações | Vê as oito compras, cria processos, aprova e executa compras de outro solicitante; edita sua proposta devolvida |
+| admin@escola.example | Administração; teacher/head em Coordenação, finance/finance_allocator em Financeiro, operations em Operações, admissions em Secretaria e it em TI | Vê compras, passeios e matrículas; cria processos e executa as etapas autorizadas de outros solicitantes |
 | docente@escola.example | Colaboradora; teacher em Coordenação | Vê apenas sua requisição de cadernos; edita e envia a proposta, sem aprovar ou reservar |
-| compras@escola.example | Colaborador; teacher em Coordenação | Solicitante das outras seis compras; sem permissão de aprovar ou reservar |
+| compras@escola.example | Colaborador; teacher em Coordenação | Solicitante de seis compras, dos passeios e dos relatos de ocorrência; sem aprovar ou reservar |
+| secretaria@escola.example | Colaboradora; admissions em Secretaria | Cria matrículas, verifica a família, revisa documentos e solicita correções |
+| ti@escola.example | Colaborador; it em TI | Vê apenas identidade mínima, acompanha a falha simulada e tenta novamente o provisionamento |
+| familia@escola.example | Participante externo; vínculo familiar verificado nas 12 matrículas | Vê e edita dados familiares nas etapas permitidas; não vê avaliação interna, pagamento ou notas privadas |
+| direcao@escola.example | Colaboradora; dean em Direção | Aprova segurança dos passeios; vê triagem/resolução das ocorrências; atribui orientação e simula comunicação |
+| orientacao@escola.example | Colaboradora; counselor em Orientação | Vê relato e notas privadas apenas nos dois casos atribuídos; não vê disciplina nem comunicação |
 
 A administração não ignora a separação de funções: uma pessoa não pode reservar
-orçamento para sua própria solicitação. Não concedemos dean, counselor ou
-finance_reverser ao apresentador. Este checkpoint não cria ocorrências nem
-contas de familiares; a demo confidencial será acrescentada separadamente com
-pessoas explicitamente autorizadas.
+orçamento ou confirmar pagamento para sua própria solicitação. O apresentador
+não recebe dean, counselor ou finance_reverser e não descobre os três incidentes.
+A direção também não lê as notas privadas da orientação. Todas as pessoas e
+referências são fictícias; nenhum pagamento, envio ou provisionamento é real.
 
 ## Inventário inicial e roteiro curto
 
@@ -95,7 +100,44 @@ ou integrações externas neste processo. Pedidos e recebimentos são simulados.
 4. Em outra sessão, entre como docente: só a compra de cadernos aparece. Envie-a;
    essa conta não recebe ações de aprovação/reserva e não descobre as outras compras.
 5. Volte à sessão admin e confira a atualização. Isso é um roteiro preliminar;
-   a aceitação visual completa e a atualização do futuro quadro pertencem a D03/D04.
+   a aceitação visual completa permanece em D04; o quadro D03 já está implementado.
+
+## Matrículas, passeios e ocorrências (D01)
+
+| Processo | Distribuição inicial da publicação primária |
+|---|---|
+| Matrículas (12) | Rascunho 2; documentos 2; correção 1; acadêmica 2; pagamento 2; provisionamento 2; concluída 1 |
+| Passeios (6) | Proposta, acadêmica, financeira, transporte, segurança e aprovado: um em cada |
+| Ocorrências (3) | Triagem 1; acompanhamento 1; encerrada 1 |
+
+As matrículas têm nome fictício, série, família verificada e um PDF privado
+inofensivo por caso. Sete documentos já foram revisados pela Secretaria;
+os demais aguardam revisão. Dois provisionamentos estão com falha simulada
+para demonstrar **Tentar novamente** com TI. O concluído registra falha, nova
+tentativa e sucesso antes de concluir. A avaliação acadêmica é interna.
+Os documentos expiram após 30 dias; não são renovados no rerun. Para um ensaio
+posterior à validade, prepare outro banco descartável pelo reset explícito.
+
+1. Como admin, abra Matrícula de estudantes, selecione Etapas da matrícula e
+   Filtrar. Compare o quadro e o fluxo publicado; abra a matrícula concluída e
+   confira o histórico simulado. A Secretaria criou os casos, permitindo a
+   confirmação financeira pelo apresentador sem violar separação de funções.
+2. Como família, abra a página Família do processo. Confira as 12 matrículas,
+   escolha a que aguarda correção, ajuste a série e reenvie. Compare com a visão
+   interna: avaliação, pagamento e identidade mínima de TI não são expostos.
+3. Como admin, abra Aprovação de passeios: há destinos, datas, roteiro, riscos e
+   transporte fictícios. O calendário usa as datas de novembro de 2026. A aprovação
+   de segurança exige a conta Direção; o orçamento é o mesmo fundo sintético de compras.
+4. O exemplo confidencial é opcional. Admin e docente veem zero ocorrências.
+   Entre como Direção para triagem/resolução; depois Orientação para as notas dos
+   dois casos atribuídos. Não copie notas privadas na comunicação curada.
+
+O setup preserva casos editados, senhas, documentos, tentativas e versões antigas.
+Uma publicação aposentada é substituída por uma nova primária sem reescrever pins.
+A melhoria de cartões da matrícula admite somente a publicação anterior conhecida,
+com bindings iguais: publica uma nova versão com nome/série no quadro. Outros
+desvios falham explicitamente. No banco já usado em ensaios, os casos antigos ficam
+na versão anterior; o inventário separa as contagens por publicação.
 
 ## Quadro por etapas (D03)
 

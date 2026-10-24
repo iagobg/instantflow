@@ -1,0 +1,15 @@
+D01 expanded school checkpoint — 2026-10-23
+Focused: mix test test/instantflow/demo
+6 tests, 0 failures; seed 243918; 12.8 seconds
+
+Final: MIX_ENV=test mix run --no-start scripts/diagnose_token_clock.exs precommit --seed 865528
+375 tests, 0 failures; 184.4 seconds (147.3s async, 37.1s sync)
+TOKEN_CLOCK_SUMMARY age_checks=1186 invalid_age_results=0 largest_future_delta_ms=0
+Existing migration module-redefinition warnings were emitted by migration tests.
+The passing run does not resolve the previously reproduced clock/session issue.
+
+Two final named instantflow_demo setup runs: exit 0; inventories identical.
+No reset; 29 primary cases plus 12 preserved historical enrollment cases.
+Browser: named enrollment v2 cards, six named trips, admin incident board zero cases.
+Full D04 builder and multi-account rehearsal not performed in this checkpoint.
+Git diff --check: pass.

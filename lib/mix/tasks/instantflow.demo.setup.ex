@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Instantflow.Demo.Setup do
 
   @shortdoc "Prepare the explicitly selected disposable local school demo"
   @moduledoc """
-  Prepares the first D01 purchasing scenario. Requires MIX_ENV=dev,
+  Prepares the four fictional D01 school scenarios. Requires MIX_ENV=dev,
   INSTANTFLOW_DEMO_DATABASE=instantflow_demo and DEMO_PASSWORD (12–128 characters).
 
       mix instantflow.demo.setup --database instantflow_demo

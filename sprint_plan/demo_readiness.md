@@ -1,6 +1,6 @@
 # School demo readiness and execution plan
 
-Status: In progress — D01 purchasing checkpoint, D02 flow and D03 stage boards implemented · Assessed: 2026-10-23
+Status: In progress — D01 school fixtures, D02 flow and D03 stage boards implemented · Assessed: 2026-10-23
 
 [Sprint index](sprint_index.md) · [Design](../design/index.md)
 
@@ -30,10 +30,10 @@ Evidence inspected: authenticated local model/enrollment UI; priv/repo/seeds.exs
 ## D01 — Reproducible school scenario
 
 - [x] Provide a checked-in setup/start guide and demo fixture entry point targeting an explicitly named isolated demo database. Refuse production or unspecified reset targets. Preserve existing working databases; reset must be explicit and confined to the disposable demo. Do not rely on untracked .local scripts or commit credentials.
-- [ ] Seed Horizonte with enrollment, purchasing, trips and a small confidential incident scenario through supported definitions, bindings and runtime commands. Suggested presentation dataset: 12 enrollments, 8 purchase requests, 6 trips and 3 fictional incidents. Include open work across at least three applicable stages, completed cases and a valid correction/return path. Use fixed fixture identities and idempotency keys; repeat setup must not duplicate cases or replay effects.
-- [ ] Fill meaningful titles, dates, descriptions, departments and supported assignment/urgency fields. Create history through valid commands, never direct stage updates. Populate budget/document prerequisites for paths that require them. Use only fictional people and harmless documents; simulate all external effects.
-- [ ] Give the presenter administrator explicit grants required for the selected non-confidential demonstration paths. Provide at least one restricted staff account and, if presenting the family portal, a participant account. Document the allowed/denied actions and fields. Confidential incidents must remain limited to explicitly authorized people, including when the presenter is an administrator.
-- [ ] Output an inventory of process versions, case counts/stages and available demo roles. Validate a clean setup and repeat setup. Preserve old pinned cases rather than silently rewriting them; do not let retired fixtures become the primary demo story.
+- [x] Seed Horizonte with enrollment, purchasing, trips and a small confidential incident scenario through supported definitions, bindings and runtime commands. Suggested presentation dataset: 12 enrollments, 8 purchase requests, 6 trips and 3 fictional incidents. Include open work across at least three applicable stages, completed cases and a valid correction/return path. Use fixed fixture identities and idempotency keys; repeat setup must not duplicate cases or replay effects.
+- [x] Fill meaningful titles, dates, descriptions, departments and supported assignment/urgency fields. Create history through valid commands, never direct stage updates. Populate budget/document prerequisites for paths that require them. Use only fictional people and harmless documents; simulate all external effects.
+- [x] Give the presenter administrator explicit grants required for the selected non-confidential demonstration paths. Provide at least one restricted staff account and, if presenting the family portal, a participant account. Document the allowed/denied actions and fields. Confidential incidents must remain limited to explicitly authorized people, including when the presenter is an administrator.
+- [x] Output an inventory of process versions, case counts/stages and available demo roles. Validate a clean setup and repeat setup. Preserve old pinned cases rather than silently rewriting them; do not let retired fixtures become the primary demo story.
 
 Acceptance: fresh local setup gives a populated school without manual DB edits, existing setup rerun is safe, and the presenter can see the intended processes with meaningful case cards. Fixture failure is explicit, not silently skipped.
 
@@ -50,6 +50,34 @@ confidential incidents and their documents/roles remain pending. D01 is not yet
 complete. D02/D03 progress is recorded below; D04 remains incomplete. Validation: mix precommit passed with 350 tests,
 zero failures (seed 487092); isolated demo HTTP login smoke passed on port 4001.
 No authenticated visual rehearsal was claimed.
+
+### D01 expanded school checkpoint — 2026-10-23
+
+All four primary scenarios now install through supported publications, participant,
+document, assignment, finance and runtime commands: 12 enrollments, eight purchases,
+six trips and three confidential incidents. Enrollment includes a correction,
+seven reviewed synthetic PDFs, two failed simulated provisionings and one completed
+retry path. Incidents retain actor-private history and assigned counselor notes;
+the presenter has no dean/counselor grants and cannot discover the three cases.
+Separate family, admissions, IT, director and counselor accounts are documented in
+[the PT-BR guide](../docs/school-demo.md).
+
+A real browser check found the original enrollment board configured with only its
+stage. The demo now publishes a supported definition with student name and school
+year in the board. Only the exact known previous definition with matching bindings
+is upgraded automatically; other drift fails. Old versions and case pins are
+preserved. The current demo therefore has 12 historical enrollments in v1 and 12
+primary enrollments in v2. Fresh setup has 29 cases total; the existing demo has
+41 including historical pins. Purchasing rehearsal changes and its unpublished
+builder draft were preserved, with no reset. Two final isolated setup runs returned
+identical inventories.
+
+See [the fixture acceptance and browser evidence](../docs/demo-school-fixtures.md).
+Validation: six focused fixture/safety tests passed (seed 243918); final instrumented
+mix precommit passed 375 tests with zero failures (seed 865528), with 1186 token-age
+checks and zero invalid results. Two named demo setup runs returned identical
+inventories. D04 remains incomplete: the independent builder proof, full multi-account
+scenario rehearsal and local clock-stability gate are still open.
 
 ## D02 — Published process flow
 
@@ -118,8 +146,8 @@ The known intermittent LiveView invalid-session failure recurred in an initial
 full run. Numeric-only token diagnostics captured a later rejection with the signed timestamp
 2907 ms ahead of the verifier's OS clock, establishing the immediate clock-related
 cause for that occurrence. Local clock stability remains an explicit D04 readiness
-gate; passing reruns do not repair it or explain earlier uninstrumented failures. D01's
-remaining school scenarios and the full independent-builder rehearsal remain pending. Final validation: 18 focused
+gate; passing reruns do not repair it or explain earlier uninstrumented failures. The full independent-builder rehearsal remains pending; D01's
+remaining school scenarios were subsequently implemented in the checkpoint above. Final validation: 18 focused
 UI tests passed (seed 576683), assets built, and instrumented mix precommit passed
 373 tests with zero failures (seed 865528; 1186 token-age checks, zero invalid-age
 results). The preceding instrumented failure and its 2907 ms clock delta are retained;
