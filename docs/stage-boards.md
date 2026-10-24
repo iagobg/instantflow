@@ -193,3 +193,16 @@ identities were verified in automated tests rather than this browser dataset.
 The earlier complete 373-test run with one captured future-token failure remains
 part of this report. This later successful run verifies the code checkpoint; it
 neither repairs the local clock nor closes the D04 clock/session stability gate.
+
+## Independent review follow-up
+
+Version discovery now scans compact read-policy declarations in keyset batches of
+25, discards each batch after admission, and retains only authorized ID/number
+options. It fetches the selected full definition once. Field schemas, stages,
+transitions, descriptions and unrelated configured views do not cross the database
+boundary during candidate discovery. Authorization is still recomputed under
+Tenant's fresh scope before counts, cards and selection.
+
+The total discovery scan and option metadata remain linear in populated pins;
+25 visible choices is not a constant-time or constant-memory capacity guarantee.
+See [measurements and remaining research work](demo-readiness-review-response.md).

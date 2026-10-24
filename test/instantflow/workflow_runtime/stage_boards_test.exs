@@ -207,6 +207,67 @@ defmodule Instantflow.WorkflowRuntime.StageBoardsTest do
     assert length(result.version_options) <= 25
   end
 
+  test "discovery strips wide schemas and batches hidden pins before historical selection" do
+    f = fixture()
+    own = record(f, "Histórico autorizado")
+    stranger = staff_fixture("staff")
+    {:ok, _} = Access.grant(f.admin, stranger.id, stranger.department_id, "teacher")
+    stranger = Identity.scope(stranger.user_id, stranger.organization_id)
+
+    for number <- 3..30 do
+      definition =
+        f.definition
+        |> Map.put("description", "Publication #{number}")
+        |> Map.update!("sections", fn sections ->
+          Enum.map(sections, fn section ->
+            Map.update!(section, "fields", fn fields ->
+              fields ++
+                [
+                  %{
+                    "key" => "extra",
+                    "label" => "Wide private schema #{number}",
+                    "type" => "long_text"
+                  }
+                ]
+            end)
+          end)
+        end)
+
+      {:ok, version} = WorkflowCatalog.publish(f.admin, definition, f.bindings, number - 1)
+      create_ticket(%{f | version: version, requester: stranger})
+    end
+
+    candidates =
+      Instantflow.Tenant.read(f.requester, fn _ ->
+        Instantflow.WorkflowRuntime.BoardVersions.candidates(
+          f.version.workflow_id,
+          "board",
+          nil,
+          nil
+        )
+      end)
+
+    assert length(candidates) == 25
+
+    for version <- candidates do
+      refute Map.has_key?(version.definition, "stages")
+      refute Map.has_key?(version.definition, "transitions")
+      refute Map.has_key?(version.definition, "description")
+      assert Enum.all?(version.definition["sections"], &(not Map.has_key?(&1, "fields")))
+    end
+
+    result =
+      Views.board(f.requester, f.version.workflow_id, "board", %{
+        "version_id" => to_string(f.version.id)
+      })
+
+    # Only the populated authorized historical pin and the empty-capable latest pin.
+    assert result.version_total == 2
+    assert result.version.id == f.version.id
+    assert Enum.map(result.rows, & &1.id) == [own]
+    assert result.total == 1
+  end
+
   test "switching organizations never reveals cases or version options of a foreign board" do
     f = fixture()
     record(f, "Somente Horizonte")

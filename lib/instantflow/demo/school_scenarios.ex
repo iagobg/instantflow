@@ -1,8 +1,19 @@
 defmodule Instantflow.Demo.SchoolScenarios do
   @moduledoc false
+  import Ecto.Query
   import Instantflow.Demo.Scenario
-  alias Instantflow.{Identity, Participants, PrivateDocuments, WorkflowRuntime}
+  alias Instantflow.{Identity, Participants, PrivateDocuments, Repo, Tenant, WorkflowRuntime}
+  alias Instantflow.WorkflowRuntime.Receipt
   alias Instantflow.Identity.Department
+
+  @families [
+    {"familia", "Família fictícia Oliveira", [1, 5]},
+    {"familia.santos", "Família fictícia Santos", [2, 6]},
+    {"familia.costa", "Família fictícia Costa", [3, 7]},
+    {"familia.lima", "Família fictícia Lima", [4, 8]},
+    {"familia.rocha", "Família fictícia Rocha", [9, 10]},
+    {"familia.alves", "Família fictícia Alves", [11, 12]}
+  ]
 
   def install!(operator, org, departments, presenter, author, purchasing_bindings, password) do
     extra_departments =
@@ -66,25 +77,62 @@ defmodule Instantflow.Demo.SchoolScenarios do
         "counselor"
       )
 
-    family =
-      member!(
-        operator,
-        org,
-        departments["admissions_department"],
-        "familia@escola.example",
-        "Família fictícia Oliveira",
-        "external",
-        password
-      )
+    family_groups =
+      Enum.map(@families, fn {prefix, name, students} ->
+        actor =
+          member!(
+            operator,
+            org,
+            departments["admissions_department"],
+            prefix <> "@escola.example",
+            name,
+            "external",
+            password
+          )
+
+        {actor, students}
+      end)
+
+    families =
+      for {actor, students} <- family_groups, index <- students, into: %{}, do: {index, actor}
+
+    require_compatible_families!(registrar, families)
 
     grant!(presenter, presenter, departments["admissions_department"], "admissions")
     grant!(presenter, presenter, departments["it_department"], "it")
     presenter = Identity.scope(presenter.user_id, org.id)
 
-    enrollment = enrollment!(presenter, registrar, it, family, departments)
+    enrollment = enrollment!(presenter, registrar, it, families, departments)
     trip = trips!(presenter, author, dean, purchasing_bindings)
     incident = incidents!(presenter, author, dean, counselor, departments)
-    {[enrollment, trip, incident], [presenter, registrar, it, dean, counselor, family]}
+
+    {[enrollment, trip, incident],
+     [presenter, registrar, it, dean, counselor] ++ Enum.map(family_groups, &elem(&1, 0))}
+  end
+
+  # Do not silently keep the old shared-family fixture or reassign human-edited links.
+  # Old datasets remain recoverable; this fixture revision requires a fresh demo.
+  defp require_compatible_families!(registrar, families) do
+    receipts =
+      Tenant.read(registrar, fn _ ->
+        Repo.all(
+          from r in Receipt,
+            where:
+              r.actor_id == ^registrar.user_id and r.operation == "create" and
+                like(r.key, "demo:d01:enrollment:1:%"),
+            select: {r.ticket_id, r.key}
+        )
+      end)
+
+    for {id, key} <- receipts do
+      [_, index] = Regex.run(~r/:case(\d+)$/, key)
+      family = Map.fetch!(families, String.to_integer(index))
+      links = Participants.controls(registrar, id).relationships
+
+      unless Enum.any?(links, &(&1.key == "family" and &1.membership_id == family.id)) do
+        raise "Existing enrollment fixtures use a different family distribution; prepare a fresh isolated demo instead of silently changing participant access"
+      end
+    end
   end
 
   defp actor!(operator, org, departments, admin, password, prefix, name, department, role) do
@@ -103,7 +151,7 @@ defmodule Instantflow.Demo.SchoolScenarios do
     Identity.scope(member.user_id, org.id)
   end
 
-  defp enrollment!(presenter, registrar, it, family, departments) do
+  defp enrollment!(presenter, registrar, it, families, departments) do
     original = Instantflow.Examples.definition("enrollment")
 
     definition =
@@ -148,6 +196,7 @@ defmodule Instantflow.Demo.SchoolScenarios do
 
     Enum.with_index(targets, 1)
     |> Enum.each(fn {target, index} ->
+      family = Map.fetch!(families, index)
       key = "demo:d01:enrollment:1:v#{version.id}:case#{index}"
 
       case!(registrar, version, key, fn id ->
@@ -173,7 +222,7 @@ defmodule Instantflow.Demo.SchoolScenarios do
           %{
             "student_name" =>
               "Estudante fictício #{String.pad_leading(to_string(index), 2, "0")}",
-            "guardian_name" => "Família fictícia Oliveira",
+            "guardian_name" => family.user.name,
             "school_year" => "6º ano",
             "document" => document.object_key
           },

@@ -35,11 +35,13 @@ The demonstration includes Escola Horizonte and Escola Aurora. The same `admin@e
 The enrollment parent portal and private files are implemented. All four school reference workflows are implemented; integrated verification and delivery are complete in Sprint 07. This application is a demonstration, not a production student-data deployment. Password recovery, login throttling, MFA, and session cleanup are not implemented yet.
 
 For the current school demo milestone, use the [isolated school demo setup](docs/school-demo.md).
-Its first D01 checkpoint prepares eight populated purchasing cases in instantflow_demo,
-with explicit presenter grants and a restricted comparison account. Published process flows now reuse the editor diagram and preserve case version pins;
-the [stage-board checkpoint](docs/stage-boards.md) now adds authorized version selection,
-ordered stage columns, per-column paging and live refresh. Other demo scenarios,
-the complete rehearsal and the intermittent session investigation remain in progress.
+D01–D04 are complete for a local, synthetic demonstration: 29 populated cases
+cover purchases, enrollments, trips and incidents, with pinned published flows,
+authorized stage boards, historical version navigation and a UI rehearsal.
+See the [final acceptance and its evidence](docs/demo-readiness-final-acceptance.md)
+and the [current family-isolated demo](docs/demo-family-isolation.md).
+Integrations are simulated; this milestone is neither production certification
+nor a measurement of current board capacity.
 
 ## Prerequisites and setup
 

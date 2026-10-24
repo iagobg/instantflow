@@ -1,5 +1,11 @@
 # D04 final clean acceptance — 2026-10-24
 
+Current serving dataset: see [family isolation](demo-family-isolation.md). This report
+records the earlier accepted dataset on cluster 55433, including its shared fictional
+family and independently authored fifth process. It is preserved with its server
+stopped; port 4002 now serves a fresh four-process dataset on cluster 55434.
+
+
 **Passed for the isolated local synthetic demonstration.** A fresh 29-case school,
 the full presenter walkthrough and an independently authored process were exercised
 through the browser on the final fixed application code. No application edits,
@@ -7,7 +13,7 @@ direct case/database mutations, permission bypasses or unexplained reloads were
 needed during the accepted pass. Deliberate validation failures were corrected
 through the UI. Application commit: **a7a5e93**.
 
-The demo remains running at [127.0.0.1:4002](http://127.0.0.1:4002) with its board
+At acceptance, the demo was running at [127.0.0.1:4002](http://127.0.0.1:4002) with its board
 and case flow open. The original [localhost:4001](http://localhost:4001) demo and its
 database were preserved. Login credentials are supplied in the private conversation;
 no passwords are committed here. This acceptance does not enable real integrations,

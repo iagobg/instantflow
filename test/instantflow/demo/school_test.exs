@@ -116,12 +116,12 @@ defmodule Instantflow.Demo.SchoolTest do
     assert Map.new(report.versions, &{&1.workflow, &1.total}) ==
              %{"requisition" => 8, "enrollment" => 12, "field_trip" => 6, "incident" => 3}
 
-    assert length(report.roles) == 8
-    assert length(Enum.uniq_by(report.roles, & &1.email)) == 8
+    assert length(report.roles) == 13
+    assert length(Enum.uniq_by(report.roles, & &1.email)) == 13
     org = Repo.get_by!(Organization, slug: "horizonte")
     presenter = scope("admin", org.id)
     staff = scope("docente", org.id)
-    family = scope("familia", org.id)
+    family = scope("familia.alves", org.id)
     dean = scope("direcao", org.id)
     counselor = scope("orientacao", org.id)
     author = scope("compras", org.id)
@@ -263,6 +263,129 @@ defmodule Instantflow.Demo.SchoolTest do
 
     before = snapshot()
     School.install!(@password, Repo)
+    assert snapshot() == before
+  end
+
+  test "family accounts have disjoint sibling groups and cannot read or edit other enrollments" do
+    report = School.install!(@password, Repo)
+    org = Repo.get_by!(Organization, slug: "horizonte")
+
+    version =
+      Repo.get!(Version, Enum.find(report.versions, &(&1.workflow == "enrollment")).version_id)
+
+    groups = [
+      {"familia", [1, 5]},
+      {"familia.santos", [2, 6]},
+      {"familia.costa", [3, 7]},
+      {"familia.lima", [4, 8]},
+      {"familia.rocha", [9, 10]},
+      {"familia.alves", [11, 12]}
+    ]
+
+    for {prefix, indices} <- groups do
+      family = scope(prefix, org.id)
+
+      own =
+        Enum.map(indices, fn index ->
+          Repo.get_by!(Instantflow.WorkflowRuntime.Receipt,
+            operation: "create",
+            key: "demo:d01:enrollment:1:v#{version.id}:case#{index}"
+          ).ticket_id
+        end)
+
+      visible =
+        WorkflowRuntime.Projections.participant_search(
+          family,
+          version.workflow_id,
+          "family_portal"
+        )
+
+      assert visible.total == 2
+      assert Enum.sort(Enum.map(visible.rows, & &1.id)) == Enum.sort(own)
+
+      for ticket <- Repo.all(from t in Ticket, where: t.workflow_version_id == ^version.id) do
+        result =
+          WorkflowRuntime.ParticipantPages.get(
+            family,
+            version.workflow_id,
+            "family_portal",
+            ticket.id
+          )
+
+        if ticket.id in own do
+          assert {:ok, _} = result
+        else
+          assert {:error, :not_found} = result
+          assert {:error, :not_found} = WorkflowRuntime.get(family, ticket.id)
+
+          assert {:error, _} =
+                   WorkflowRuntime.ParticipantPages.save(
+                     family,
+                     version.workflow_id,
+                     "family_portal",
+                     ticket.id,
+                     "application",
+                     %{"student_name" => "Forbidden"},
+                     %{stage_revision: 1, section_revision: 1},
+                     "foreign-#{family.id}-#{ticket.id}"
+                   )
+        end
+      end
+    end
+
+    before = snapshot()
+    School.install!(@password, Repo)
+    assert snapshot() == before
+  end
+
+  test "legacy shared-family enrollment fixtures are rejected without rewriting their access" do
+    report = School.install!(@password, Repo)
+    org = Repo.get_by!(Organization, slug: "horizonte")
+    registrar = scope("secretaria", org.id)
+    family = scope("familia", org.id)
+    other_family = scope("familia.santos", org.id)
+    version = Enum.find(report.versions, &(&1.workflow == "enrollment"))
+
+    id =
+      Repo.get_by!(Instantflow.WorkflowRuntime.Receipt,
+        operation: "create",
+        key: "demo:d01:enrollment:1:v#{version.version_id}:case2"
+      ).ticket_id
+
+    # Reconstruct the topology of the previous fixture revision in this sandbox.
+    Repo.delete_all(
+      from r in Instantflow.Participants.Relationship,
+        where: r.ticket_id == ^id and r.membership_id == ^other_family.id
+    )
+
+    command = %{
+      "operation" => "create",
+      "ticket_id" => id,
+      "membership_id" => family.id,
+      "relationship" => "family",
+      "expected_revision" => 0,
+      "key" => "legacy-family-create"
+    }
+
+    assert {:ok, linked} = Instantflow.Participants.command(registrar, command)
+
+    assert {:ok, _} =
+             Instantflow.Participants.command(
+               registrar,
+               %{
+                 command
+                 | "operation" => "verify",
+                   "expected_revision" => linked["revision"],
+                   "key" => "legacy-family-verify"
+               }
+             )
+
+    before = snapshot()
+
+    assert_raise RuntimeError, ~r/different family distribution/, fn ->
+      School.install!(@password, Repo)
+    end
+
     assert snapshot() == before
   end
 

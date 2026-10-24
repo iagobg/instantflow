@@ -6,11 +6,16 @@ inteiramente fictícias. Os requisitos D01–D04 passaram na
 O ensaio inclui o processo independente construído pela interface, permissões,
 fluxo publicado, quadro por etapas, teclado, rótulos longos e estabilidade de sessão.
 
-A sessão limpa permanece em [127.0.0.1:4002](http://127.0.0.1:4002), em outro cluster
-local; a sessão anterior de localhost:4001 foi preservada. As credenciais da sessão
-limpa foram fornecidas na conversa. O [roteiro PT-BR](demo-readiness-rehearsal.md)
-e o [relatório de correção do relógio](demo-clock-remediation.md) detalham operação
-e limites. A aceitação é local, com dados fictícios e integrações simuladas.
+A sessão atual está em [127.0.0.1:4002](http://127.0.0.1:4002), com
+[seis famílias separadas](demo-family-isolation.md), duas matrículas por conta.
+Essa instalação nova usa o cluster local 55434; a instalação aceita anteriormente
+no cluster 55433 permanece preservada, com o servidor parado. A demo antiga em
+4001 também foi parada. O processo independente do ensaio anterior permanece
+naquele banco preservado; a instalação atual começa com os quatro exemplos escolares.
+As credenciais locais foram fornecidas na conversa; não estão no Git.
+O [roteiro PT-BR](demo-readiness-rehearsal.md) e o
+[relatório do relógio](demo-clock-remediation.md) detalham operação e limites.
+A aceitação é local, com dados fictícios e integrações simuladas.
 
 ## Preparar e iniciar
 
@@ -24,7 +29,7 @@ Em um terminal Bash, na raiz do projeto:
 ~~~sh
 export MIX_ENV=dev
 export PGHOST=localhost
-export PGPORT=55432
+export PGPORT=55434
 export INSTANTFLOW_DEMO_DATABASE=instantflow_demo
 # Remova destinos de operador usados em outros trabalhos neste terminal.
 unset OPERATOR_DATABASE_URL MIGRATION_DATABASE
@@ -32,10 +37,10 @@ unset OPERATOR_DATABASE_URL MIGRATION_DATABASE
 read -r -s -p 'Senha local dos novos usuários fictícios: ' DEMO_PASSWORD
 export DEMO_PASSWORD
 mix instantflow.demo.setup --database instantflow_demo
-PORT=4001 mix phx.server
+PORT=4002 mix phx.server
 ~~~
 
-Abra [a demo local](http://localhost:4001). A porta separada permite manter um
+Abra [a demo local](http://127.0.0.1:4002). A porta separada permite manter um
 servidor de desenvolvimento existente. O seletor de banco deve permanecer exportado
 no terminal do servidor: as duas conexões usam instantflow_demo. Sem a variável,
 a configuração de desenvolvimento continua usando instantflow_dev.
@@ -59,7 +64,7 @@ os seeds antigos e não toca nos bancos de trabalho existentes.
 
 ## Contas e limites de acesso
 
-As oito contas usam a senha digitada na primeira instalação. Senhas existentes são preservadas.
+As 13 contas usam a senha digitada na primeira instalação. Senhas existentes são preservadas.
 
 | Conta | Papel local e concessões explícitas | Demonstração |
 |---|---|---|
@@ -68,7 +73,12 @@ As oito contas usam a senha digitada na primeira instalação. Senhas existentes
 | compras@escola.example | Colaborador; teacher em Coordenação | Solicitante de seis compras, dos passeios e dos relatos de ocorrência; sem aprovar ou reservar |
 | secretaria@escola.example | Colaboradora; admissions em Secretaria | Cria matrículas, verifica a família, revisa documentos e solicita correções |
 | ti@escola.example | Colaborador; it em TI | Vê apenas identidade mínima, acompanha a falha simulada e tenta novamente o provisionamento |
-| familia@escola.example | Participante externo; vínculo familiar verificado nas 12 matrículas | Vê e edita dados familiares nas etapas permitidas; não vê avaliação interna, pagamento ou notas privadas |
+| familia@escola.example | Participante externo; vínculo familiar verificado nos estudantes 01 e 05 | Vê e edita dados familiares nas etapas permitidas; não vê avaliação interna, pagamento ou notas privadas |
+| familia.santos@escola.example | Participante externo; estudantes 02 e 06 | Apenas suas duas matrículas |
+| familia.costa@escola.example | Participante externo; estudantes 03 e 07 | Apenas suas duas matrículas |
+| familia.lima@escola.example | Participante externo; estudantes 04 e 08 | Apenas suas duas matrículas |
+| familia.rocha@escola.example | Participante externo; estudantes 09 e 10 | Apenas suas duas matrículas |
+| familia.alves@escola.example | Participante externo; estudantes 11 e 12 | Apenas suas duas matrículas |
 | direcao@escola.example | Colaboradora; dean em Direção | Aprova segurança dos passeios; vê triagem/resolução das ocorrências; atribui orientação e simula comunicação |
 | orientacao@escola.example | Colaboradora; counselor em Orientação | Vê relato e notas privadas apenas nos dois casos atribuídos; não vê disciplina nem comunicação |
 
@@ -121,13 +131,15 @@ os demais aguardam revisão. Dois provisionamentos estão com falha simulada
 para demonstrar **Tentar novamente** com TI. O concluído registra falha, nova
 tentativa e sucesso antes de concluir. A avaliação acadêmica é interna.
 Os documentos expiram após 30 dias; não são renovados no rerun. Para um ensaio
-posterior à validade, prepare outro banco descartável pelo reset explícito.
+posterior à validade, prepare outra instalação isolada. Bases com o vínculo antigo
+compartilhado são recusadas pelo setup; ele não redistribui vínculos já editados.
+Preserve a base antiga e use um cluster novo para a distribuição de seis famílias.
 
 1. Como admin, abra Matrícula de estudantes, selecione Etapas da matrícula e
    Filtrar. Compare o quadro e o fluxo publicado; abra a matrícula concluída e
    confira o histórico simulado. A Secretaria criou os casos, permitindo a
    confirmação financeira pelo apresentador sem violar separação de funções.
-2. Como família, abra a página Família do processo. Confira as 12 matrículas,
+2. Como família, abra a página Família do processo. Confira somente as duas matrículas da família Oliveira,
    escolha a que aguarda correção, ajuste a série e reenvie. Compare com a visão
    interna: avaliação, pagamento e identidade mínima de TI não são expostos.
 3. Como admin, abra Aprovação de passeios: há destinos, datas, roteiro, riscos e

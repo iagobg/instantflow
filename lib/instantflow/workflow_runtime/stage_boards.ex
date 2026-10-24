@@ -2,8 +2,8 @@ defmodule Instantflow.WorkflowRuntime.StageBoards do
   @moduledoc "Version-separated stage boards over the shared authorized record projection."
   import Ecto.Query
   alias Instantflow.{Repo, Tenant}
-  alias Instantflow.WorkflowCatalog.{Retirement, Workspaces}
-  alias Instantflow.WorkflowRuntime.{ConfiguredQueries, Projections}
+  alias Instantflow.WorkflowCatalog.{Retirement, Version}
+  alias Instantflow.WorkflowRuntime.{BoardVersions, ConfiguredQueries, Projections}
 
   @card_limit 10
   @column_limit 10
@@ -17,25 +17,7 @@ defmodule Instantflow.WorkflowRuntime.StageBoards do
   def read(_, _, _, _), do: empty()
 
   defp read_scoped(scope, workflow_id, key, filters) do
-    versions = Projections.versions(%{"workflow_id" => workflow_id}, :full)
-    latest = Workspaces.get(scope, workflow_id)
-    versions = if latest, do: Enum.uniq_by([latest | versions], & &1.id), else: versions
-
-    versions =
-      Enum.filter(versions, fn version ->
-        view = ConfiguredQueries.view(version, key)
-        view && view["type"] == "board" && Projections.visible_view?(scope, version, view)
-      end)
-
-    base = Projections.view_query(scope, versions, key)
-
-    admitted =
-      Repo.all(from t in base, distinct: t.workflow_version_id, select: t.workflow_version_id)
-
-    eligible =
-      versions
-      |> Enum.filter(&(&1.id in admitted or (latest && &1.id == latest.id)))
-      |> Enum.sort_by(&{&1.number, &1.id}, :desc)
+    %{eligible: eligible, latest_id: latest_id} = BoardVersions.discover(scope, workflow_id, key)
 
     version_pages = max(1, ceil(length(eligible) / @version_limit))
     version_page = min(positive(filters["version_page"], 1), version_pages)
@@ -59,13 +41,15 @@ defmodule Instantflow.WorkflowRuntime.StageBoards do
     }
 
     if selected do
-      board(scope, key, filters, selected, latest, base) |> Map.merge(navigation)
+      version = Repo.get!(Version, selected.id)
+      base = Projections.view_query(scope, [version], key)
+      board(scope, key, filters, version, latest_id, base) |> Map.merge(navigation)
     else
       empty() |> Map.merge(navigation)
     end
   end
 
-  defp board(scope, key, filters, version, latest, base) do
+  defp board(scope, key, filters, version, latest_id, base) do
     base = where(base, [ticket: t], t.workflow_version_id == ^version.id)
     filtered = Projections.filter_query(base, scope, [version], key, filters)
 
@@ -137,7 +121,7 @@ defmodule Instantflow.WorkflowRuntime.StageBoards do
       version: %{
         id: version.id,
         number: version.number,
-        current?: not is_nil(latest) and latest.id == version.id,
+        current?: latest_id == version.id,
         archived?: Retirement.retired?(version.id)
       },
       columns: columns,

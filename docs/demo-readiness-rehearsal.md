@@ -1,5 +1,8 @@
 # D04 rehearsal — 2026-10-24
 
+Current dataset: [six isolated families](demo-family-isolation.md), two enrollments each.
+The historical observations and screenshots below retain their original database.
+
 Follow-up: the [final clean acceptance](demo-readiness-final-acceptance.md) now
 passes on application commit a7a5e93, with the original demo preserved. The report
 below retains the earlier rehearsal history and its then-open gates.

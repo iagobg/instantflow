@@ -1,0 +1,847 @@
+{
+  "environment": {
+    "otp": "28",
+    "schedulers": 24,
+    "elixir": "1.19.5",
+    "database": "isolated SQL sandbox on local PostgreSQL 16"
+  },
+  "baseline_revision": "8d347354a7d506fada121ab2e0ad713725951753",
+  "source_sha256": {
+    "lib/instantflow/workflow_runtime/board_versions.ex": "ec12966f2188b711edae855f8bdfcfa3b1812d64a745edfd8d2c05698335b6c5",
+    "lib/instantflow/workflow_runtime/projections.ex": "b709283e57ed6e1362d146de9b47c90b31f6ec56d00f39d0b06a7df3415aa3da",
+    "lib/instantflow/workflow_runtime/stage_boards.ex": "53a3bdc0e38a138578227e1814b978cabffc5173b2390b77a81e880f157004cd",
+    "scripts/benchmark_stage_boards.exs": "1a0f105dfdd58cf8b4161bc78d78d69c71fa660fb28eb46895f2958432c6c8df"
+  },
+  "working_tree": "Review follow-up: BoardVersions compact batched admission",
+  "measurement": "Serial in-process reads with payload instrumentation included in latency; two warmups and nine raw samples. Bytes are uncompressed Erlang external-term encoding of decoded database result rows, a payload proxy, not PostgreSQL wire bytes or memory residency. p95/p99 are nearest-rank and equal the maximum at nine samples. No HTTP, browser, k6 or concurrent capacity claim.",
+  "scenarios": [
+    {
+      "measurements": {
+        "board_refresh": {
+          "samples": [
+            {
+              "latency_ms": 2.603,
+              "decoded_result_bytes": 7434
+            },
+            {
+              "latency_ms": 3.013,
+              "decoded_result_bytes": 7434
+            },
+            {
+              "latency_ms": 2.584,
+              "decoded_result_bytes": 7434
+            },
+            {
+              "latency_ms": 2.69,
+              "decoded_result_bytes": 7434
+            },
+            {
+              "latency_ms": 2.33,
+              "decoded_result_bytes": 7434
+            },
+            {
+              "latency_ms": 2.087,
+              "decoded_result_bytes": 7434
+            },
+            {
+              "latency_ms": 2.409,
+              "decoded_result_bytes": 7434
+            },
+            {
+              "latency_ms": 2.304,
+              "decoded_result_bytes": 7434
+            },
+            {
+              "latency_ms": 1.995,
+              "decoded_result_bytes": 7434
+            }
+          ],
+          "p50_ms": 2.409,
+          "p95_ms": 3.013,
+          "p99_ms": 3.013
+        },
+        "compact_discovery": {
+          "samples": [
+            {
+              "latency_ms": 2.21,
+              "decoded_result_bytes": 2332
+            },
+            {
+              "latency_ms": 1.918,
+              "decoded_result_bytes": 2332
+            },
+            {
+              "latency_ms": 1.758,
+              "decoded_result_bytes": 2332
+            },
+            {
+              "latency_ms": 2.273,
+              "decoded_result_bytes": 2332
+            },
+            {
+              "latency_ms": 1.496,
+              "decoded_result_bytes": 2332
+            },
+            {
+              "latency_ms": 1.55,
+              "decoded_result_bytes": 2332
+            },
+            {
+              "latency_ms": 1.439,
+              "decoded_result_bytes": 2332
+            },
+            {
+              "latency_ms": 1.632,
+              "decoded_result_bytes": 2332
+            },
+            {
+              "latency_ms": 1.375,
+              "decoded_result_bytes": 2332
+            }
+          ],
+          "p50_ms": 1.632,
+          "p95_ms": 2.273,
+          "p99_ms": 2.273
+        },
+        "legacy_discovery": {
+          "samples": [
+            {
+              "latency_ms": 3.013,
+              "decoded_result_bytes": 12272
+            },
+            {
+              "latency_ms": 3.245,
+              "decoded_result_bytes": 12272
+            },
+            {
+              "latency_ms": 2.534,
+              "decoded_result_bytes": 12272
+            },
+            {
+              "latency_ms": 3.35,
+              "decoded_result_bytes": 12272
+            },
+            {
+              "latency_ms": 2.37,
+              "decoded_result_bytes": 12272
+            },
+            {
+              "latency_ms": 2.33,
+              "decoded_result_bytes": 12272
+            },
+            {
+              "latency_ms": 2.707,
+              "decoded_result_bytes": 12272
+            },
+            {
+              "latency_ms": 2.266,
+              "decoded_result_bytes": 12272
+            },
+            {
+              "latency_ms": 2.724,
+              "decoded_result_bytes": 12272
+            }
+          ],
+          "p50_ms": 2.707,
+          "p95_ms": 3.35,
+          "p99_ms": 3.35
+        }
+      },
+      "shape": "narrow",
+      "populated_pins": 1,
+      "fields_per_definition": 2,
+      "authorized_pins": 1,
+      "hidden_records": 1
+    },
+    {
+      "measurements": {
+        "board_refresh": {
+          "samples": [
+            {
+              "latency_ms": 2.834,
+              "decoded_result_bytes": 13656
+            },
+            {
+              "latency_ms": 3.18,
+              "decoded_result_bytes": 13656
+            },
+            {
+              "latency_ms": 3.373,
+              "decoded_result_bytes": 13656
+            },
+            {
+              "latency_ms": 2.82,
+              "decoded_result_bytes": 13656
+            },
+            {
+              "latency_ms": 2.551,
+              "decoded_result_bytes": 13656
+            },
+            {
+              "latency_ms": 2.168,
+              "decoded_result_bytes": 13656
+            },
+            {
+              "latency_ms": 2.433,
+              "decoded_result_bytes": 13656
+            },
+            {
+              "latency_ms": 2.319,
+              "decoded_result_bytes": 13656
+            },
+            {
+              "latency_ms": 2.189,
+              "decoded_result_bytes": 13656
+            }
+          ],
+          "p50_ms": 2.551,
+          "p95_ms": 3.373,
+          "p99_ms": 3.373
+        },
+        "compact_discovery": {
+          "samples": [
+            {
+              "latency_ms": 2.001,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.195,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.191,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.236,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 1.801,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 1.946,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 1.926,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 1.717,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.528,
+              "decoded_result_bytes": 8553
+            }
+          ],
+          "p50_ms": 2.001,
+          "p95_ms": 2.528,
+          "p99_ms": 2.528
+        },
+        "legacy_discovery": {
+          "samples": [
+            {
+              "latency_ms": 4.174,
+              "decoded_result_bytes": 51679
+            },
+            {
+              "latency_ms": 3.789,
+              "decoded_result_bytes": 51679
+            },
+            {
+              "latency_ms": 3.899,
+              "decoded_result_bytes": 51679
+            },
+            {
+              "latency_ms": 3.721,
+              "decoded_result_bytes": 51679
+            },
+            {
+              "latency_ms": 3.427,
+              "decoded_result_bytes": 51679
+            },
+            {
+              "latency_ms": 4.048,
+              "decoded_result_bytes": 51679
+            },
+            {
+              "latency_ms": 3.589,
+              "decoded_result_bytes": 51679
+            },
+            {
+              "latency_ms": 3.215,
+              "decoded_result_bytes": 51679
+            },
+            {
+              "latency_ms": 4.224,
+              "decoded_result_bytes": 51679
+            }
+          ],
+          "p50_ms": 3.789,
+          "p95_ms": 4.224,
+          "p99_ms": 4.224
+        }
+      },
+      "shape": "narrow",
+      "populated_pins": 10,
+      "fields_per_definition": 2,
+      "authorized_pins": 6,
+      "hidden_records": 5
+    },
+    {
+      "measurements": {
+        "board_refresh": {
+          "samples": [
+            {
+              "latency_ms": 6.857,
+              "decoded_result_bytes": 75847
+            },
+            {
+              "latency_ms": 6.711,
+              "decoded_result_bytes": 75847
+            },
+            {
+              "latency_ms": 6.145,
+              "decoded_result_bytes": 75847
+            },
+            {
+              "latency_ms": 6.705,
+              "decoded_result_bytes": 75847
+            },
+            {
+              "latency_ms": 6.508,
+              "decoded_result_bytes": 75847
+            },
+            {
+              "latency_ms": 6.432,
+              "decoded_result_bytes": 75847
+            },
+            {
+              "latency_ms": 6.261,
+              "decoded_result_bytes": 75847
+            },
+            {
+              "latency_ms": 5.847,
+              "decoded_result_bytes": 75847
+            },
+            {
+              "latency_ms": 6.017,
+              "decoded_result_bytes": 75847
+            }
+          ],
+          "p50_ms": 6.432,
+          "p95_ms": 6.857,
+          "p99_ms": 6.857
+        },
+        "compact_discovery": {
+          "samples": [
+            {
+              "latency_ms": 6.342,
+              "decoded_result_bytes": 70743
+            },
+            {
+              "latency_ms": 6.088,
+              "decoded_result_bytes": 70743
+            },
+            {
+              "latency_ms": 6.089,
+              "decoded_result_bytes": 70743
+            },
+            {
+              "latency_ms": 6.035,
+              "decoded_result_bytes": 70743
+            },
+            {
+              "latency_ms": 5.544,
+              "decoded_result_bytes": 70743
+            },
+            {
+              "latency_ms": 5.851,
+              "decoded_result_bytes": 70743
+            },
+            {
+              "latency_ms": 5.41,
+              "decoded_result_bytes": 70743
+            },
+            {
+              "latency_ms": 5.843,
+              "decoded_result_bytes": 70743
+            },
+            {
+              "latency_ms": 5.807,
+              "decoded_result_bytes": 70743
+            }
+          ],
+          "p50_ms": 5.851,
+          "p95_ms": 6.342,
+          "p99_ms": 6.342
+        },
+        "legacy_discovery": {
+          "samples": [
+            {
+              "latency_ms": 10.875,
+              "decoded_result_bytes": 445744
+            },
+            {
+              "latency_ms": 10.915,
+              "decoded_result_bytes": 445744
+            },
+            {
+              "latency_ms": 11.807,
+              "decoded_result_bytes": 445744
+            },
+            {
+              "latency_ms": 10.413,
+              "decoded_result_bytes": 445744
+            },
+            {
+              "latency_ms": 10.098,
+              "decoded_result_bytes": 445744
+            },
+            {
+              "latency_ms": 11.205,
+              "decoded_result_bytes": 445744
+            },
+            {
+              "latency_ms": 10.235,
+              "decoded_result_bytes": 445744
+            },
+            {
+              "latency_ms": 10.032,
+              "decoded_result_bytes": 445744
+            },
+            {
+              "latency_ms": 9.418,
+              "decoded_result_bytes": 445744
+            }
+          ],
+          "p50_ms": 10.413,
+          "p95_ms": 11.807,
+          "p99_ms": 11.807
+        }
+      },
+      "shape": "narrow",
+      "populated_pins": 100,
+      "fields_per_definition": 2,
+      "authorized_pins": 51,
+      "hidden_records": 50
+    },
+    {
+      "measurements": {
+        "board_refresh": {
+          "samples": [
+            {
+              "latency_ms": 2.559,
+              "decoded_result_bytes": 29619
+            },
+            {
+              "latency_ms": 2.448,
+              "decoded_result_bytes": 29619
+            },
+            {
+              "latency_ms": 2.165,
+              "decoded_result_bytes": 29619
+            },
+            {
+              "latency_ms": 2.231,
+              "decoded_result_bytes": 29619
+            },
+            {
+              "latency_ms": 2.064,
+              "decoded_result_bytes": 29619
+            },
+            {
+              "latency_ms": 2.171,
+              "decoded_result_bytes": 29619
+            },
+            {
+              "latency_ms": 2.433,
+              "decoded_result_bytes": 29619
+            },
+            {
+              "latency_ms": 2.243,
+              "decoded_result_bytes": 29619
+            },
+            {
+              "latency_ms": 2.268,
+              "decoded_result_bytes": 29619
+            }
+          ],
+          "p50_ms": 2.243,
+          "p95_ms": 2.559,
+          "p99_ms": 2.559
+        },
+        "compact_discovery": {
+          "samples": [
+            {
+              "latency_ms": 1.467,
+              "decoded_result_bytes": 2333
+            },
+            {
+              "latency_ms": 1.458,
+              "decoded_result_bytes": 2333
+            },
+            {
+              "latency_ms": 1.37,
+              "decoded_result_bytes": 2333
+            },
+            {
+              "latency_ms": 1.343,
+              "decoded_result_bytes": 2333
+            },
+            {
+              "latency_ms": 1.279,
+              "decoded_result_bytes": 2333
+            },
+            {
+              "latency_ms": 1.34,
+              "decoded_result_bytes": 2333
+            },
+            {
+              "latency_ms": 1.322,
+              "decoded_result_bytes": 2333
+            },
+            {
+              "latency_ms": 1.6,
+              "decoded_result_bytes": 2333
+            },
+            {
+              "latency_ms": 1.335,
+              "decoded_result_bytes": 2333
+            }
+          ],
+          "p50_ms": 1.343,
+          "p95_ms": 1.6,
+          "p99_ms": 1.6
+        },
+        "legacy_discovery": {
+          "samples": [
+            {
+              "latency_ms": 3.122,
+              "decoded_result_bytes": 56642
+            },
+            {
+              "latency_ms": 3.273,
+              "decoded_result_bytes": 56642
+            },
+            {
+              "latency_ms": 2.814,
+              "decoded_result_bytes": 56642
+            },
+            {
+              "latency_ms": 2.772,
+              "decoded_result_bytes": 56642
+            },
+            {
+              "latency_ms": 2.512,
+              "decoded_result_bytes": 56642
+            },
+            {
+              "latency_ms": 2.633,
+              "decoded_result_bytes": 56642
+            },
+            {
+              "latency_ms": 3.104,
+              "decoded_result_bytes": 56642
+            },
+            {
+              "latency_ms": 3.079,
+              "decoded_result_bytes": 56642
+            },
+            {
+              "latency_ms": 2.876,
+              "decoded_result_bytes": 56642
+            }
+          ],
+          "p50_ms": 2.876,
+          "p95_ms": 3.273,
+          "p99_ms": 3.273
+        }
+      },
+      "shape": "wide",
+      "populated_pins": 1,
+      "fields_per_definition": 102,
+      "authorized_pins": 1,
+      "hidden_records": 1
+    },
+    {
+      "measurements": {
+        "board_refresh": {
+          "samples": [
+            {
+              "latency_ms": 3.927,
+              "decoded_result_bytes": 35940
+            },
+            {
+              "latency_ms": 4.179,
+              "decoded_result_bytes": 35940
+            },
+            {
+              "latency_ms": 3.721,
+              "decoded_result_bytes": 35940
+            },
+            {
+              "latency_ms": 4.567,
+              "decoded_result_bytes": 35940
+            },
+            {
+              "latency_ms": 3.298,
+              "decoded_result_bytes": 35940
+            },
+            {
+              "latency_ms": 3.273,
+              "decoded_result_bytes": 35940
+            },
+            {
+              "latency_ms": 3.472,
+              "decoded_result_bytes": 35940
+            },
+            {
+              "latency_ms": 3.254,
+              "decoded_result_bytes": 35940
+            },
+            {
+              "latency_ms": 3.435,
+              "decoded_result_bytes": 35940
+            }
+          ],
+          "p50_ms": 3.472,
+          "p95_ms": 4.567,
+          "p99_ms": 4.567
+        },
+        "compact_discovery": {
+          "samples": [
+            {
+              "latency_ms": 2.516,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.78,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.451,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.429,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 1.927,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.097,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.089,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.181,
+              "decoded_result_bytes": 8553
+            },
+            {
+              "latency_ms": 2.359,
+              "decoded_result_bytes": 8553
+            }
+          ],
+          "p50_ms": 2.359,
+          "p95_ms": 2.78,
+          "p99_ms": 2.78
+        },
+        "legacy_discovery": {
+          "samples": [
+            {
+              "latency_ms": 5.178,
+              "decoded_result_bytes": 295903
+            },
+            {
+              "latency_ms": 5.091,
+              "decoded_result_bytes": 295903
+            },
+            {
+              "latency_ms": 5.001,
+              "decoded_result_bytes": 295903
+            },
+            {
+              "latency_ms": 5.236,
+              "decoded_result_bytes": 295903
+            },
+            {
+              "latency_ms": 5.236,
+              "decoded_result_bytes": 295903
+            },
+            {
+              "latency_ms": 4.326,
+              "decoded_result_bytes": 295903
+            },
+            {
+              "latency_ms": 4.789,
+              "decoded_result_bytes": 295903
+            },
+            {
+              "latency_ms": 4.397,
+              "decoded_result_bytes": 295903
+            },
+            {
+              "latency_ms": 4.718,
+              "decoded_result_bytes": 295903
+            }
+          ],
+          "p50_ms": 5.001,
+          "p95_ms": 5.236,
+          "p99_ms": 5.236
+        }
+      },
+      "shape": "wide",
+      "populated_pins": 10,
+      "fields_per_definition": 102,
+      "authorized_pins": 6,
+      "hidden_records": 5
+    },
+    {
+      "measurements": {
+        "board_refresh": {
+          "samples": [
+            {
+              "latency_ms": 8.442,
+              "decoded_result_bytes": 98229
+            },
+            {
+              "latency_ms": 8.424,
+              "decoded_result_bytes": 98229
+            },
+            {
+              "latency_ms": 8.776,
+              "decoded_result_bytes": 98229
+            },
+            {
+              "latency_ms": 9.167,
+              "decoded_result_bytes": 98229
+            },
+            {
+              "latency_ms": 8.481,
+              "decoded_result_bytes": 98229
+            },
+            {
+              "latency_ms": 7.76,
+              "decoded_result_bytes": 98229
+            },
+            {
+              "latency_ms": 8.192,
+              "decoded_result_bytes": 98229
+            },
+            {
+              "latency_ms": 7.767,
+              "decoded_result_bytes": 98229
+            },
+            {
+              "latency_ms": 8.028,
+              "decoded_result_bytes": 98229
+            }
+          ],
+          "p50_ms": 8.424,
+          "p95_ms": 9.167,
+          "p99_ms": 9.167
+        },
+        "compact_discovery": {
+          "samples": [
+            {
+              "latency_ms": 8.087,
+              "decoded_result_bytes": 70741
+            },
+            {
+              "latency_ms": 7.895,
+              "decoded_result_bytes": 70741
+            },
+            {
+              "latency_ms": 7.225,
+              "decoded_result_bytes": 70741
+            },
+            {
+              "latency_ms": 7.432,
+              "decoded_result_bytes": 70741
+            },
+            {
+              "latency_ms": 6.984,
+              "decoded_result_bytes": 70741
+            },
+            {
+              "latency_ms": 6.968,
+              "decoded_result_bytes": 70741
+            },
+            {
+              "latency_ms": 7.181,
+              "decoded_result_bytes": 70741
+            },
+            {
+              "latency_ms": 7.231,
+              "decoded_result_bytes": 70741
+            },
+            {
+              "latency_ms": 6.881,
+              "decoded_result_bytes": 70741
+            }
+          ],
+          "p50_ms": 7.225,
+          "p95_ms": 8.087,
+          "p99_ms": 8.087
+        },
+        "legacy_discovery": {
+          "samples": [
+            {
+              "latency_ms": 27.856,
+              "decoded_result_bytes": 2695724
+            },
+            {
+              "latency_ms": 31.751,
+              "decoded_result_bytes": 2695724
+            },
+            {
+              "latency_ms": 27.166,
+              "decoded_result_bytes": 2695724
+            },
+            {
+              "latency_ms": 29.006,
+              "decoded_result_bytes": 2695724
+            },
+            {
+              "latency_ms": 24.827,
+              "decoded_result_bytes": 2695724
+            },
+            {
+              "latency_ms": 22.836,
+              "decoded_result_bytes": 2695724
+            },
+            {
+              "latency_ms": 24.734,
+              "decoded_result_bytes": 2695724
+            },
+            {
+              "latency_ms": 29.633,
+              "decoded_result_bytes": 2695724
+            },
+            {
+              "latency_ms": 24.725,
+              "decoded_result_bytes": 2695724
+            }
+          ],
+          "p50_ms": 27.166,
+          "p95_ms": 31.751,
+          "p99_ms": 31.751
+        }
+      },
+      "shape": "wide",
+      "populated_pins": 100,
+      "fields_per_definition": 102,
+      "authorized_pins": 51,
+      "hidden_records": 50
+    }
+  ]
+}
