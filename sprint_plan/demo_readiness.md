@@ -183,6 +183,16 @@ Final instrumented precommit passed 377 tests with zero failures (seed 865528;
 clock regression remain blockers. Precise limitations and outcomes are recorded
 in the rehearsal report.
 
+### Clock verification follow-up — 2026-10-24
+
+A [simultaneous Windows/WSL comparison](../docs/demo-clock-verification.md) confirmed
+two backward WSL OS-time reads while the Windows host showed none over 60 seconds.
+The largest guest discrepancy was 546.898 ms. Active Hyper-V implicit sync plus
+Ubuntu systemd-timesyncd matches Canonical's documented configuration conflict.
+Affected-test reruns passed 28 tests and full instrumented precommit passed 377 tests
+(seed 865528; zero invalid token-age checks in both runs). No system settings
+changed; exact causality and the D04 clock gate remain open.
+
 ## Execution order and boundaries
 
 Start D01 with a small valid scenario, then implement D02/D03 against it; expand fixtures and complete D04. Each checkpoint should be independently reviewed before claiming the milestone complete. No time estimate is asserted before implementation.

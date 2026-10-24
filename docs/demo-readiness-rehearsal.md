@@ -164,3 +164,13 @@ observed. It does not modify clocks, kernel settings, token validation or creden
 A passing sample only describes that interval. OS/host clock stability must be
 resolved and independently rechecked before declaring the demo ready. No token
 backdating, validation weakening, dependency patches or OS clock changes were used.
+
+
+### Windows / WSL verification follow-up
+
+The [read-only host/guest comparison](demo-clock-verification.md) independently
+confirmed two WSL backward reads during a 60-second sample while Windows had none.
+The largest guest wall/monotonic discrepancy was 546.898 ms. Hyper-V implicit sync
+and Ubuntu NTP sync are both active, matching Canonical's documented conflict.
+The exact causal mechanism has not been isolated through a service-change test;
+the clock gate remains open and no OS settings were changed.

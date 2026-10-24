@@ -1,0 +1,33 @@
+Read-only clock verification — 2026-10-24
+Windows and WSL samples ran concurrently for 60 seconds.
+Windows: samples=3807 duration_seconds=60.0091551 backward_reads=0
+steps_over_50ms=0 largest_wall_monotonic_delta_ms=3.05
+WSL: samples=29944 duration_seconds=60 backward_reads=2
+steps_over_50ms=2 largest_wall_monotonic_delta_us=546898 exit_status=1
+
+Host-bracketed guest UTC readings (round_trip_ms, guest_lower_ms, guest_upper_ms):
+124,61,185
+116,66,182
+107,67,174
+109,70,179
+114,72,186
+
+Hyper-V live timesync_implicit=Y; kernel hv_utils.timesync_implicit=1.
+Ubuntu 24.04.4 LTS; WSL 3.0.3.0; kernel 6.18.54.1-microsoft-standard-WSL2.
+Windows 11 Pro 10.0.26200; WSL reports host build 26200.9711.
+Linux clocksource=tsc; no user .wslconfig.
+systemd-timesyncd enabled/running; ntp.ubuntu.com; poll_interval=32s
+NTP_offset_ms=-504.084 delay_ms=207.389 jitter_ms=8.689 frequency_ppm=+26.061
+Windows W32Time=Stopped/Manual, with service triggers; vmictimesync=Stopped/Manual.
+Windows NTP client enabled; peer=time.windows.com,0x9.
+w32tm status: service has not been started.
+No clock, service, registry, WSL configuration or application settings changed.
+Configuration matches Canonical's documented dual-sync warning; causal A/B not performed.
+
+Focused: 28 tests, 0 failures; seed 865528; 16.4 seconds.
+TOKEN_CLOCK_SUMMARY age_checks=417 invalid_age_results=0 largest_future_delta_ms=0
+Full precommit: 377 tests, 0 failures; seed 865528.
+Finished in 162.2 seconds (129.8s async, 32.4s sync).
+TOKEN_CLOCK_SUMMARY age_checks=1194 invalid_age_results=0 largest_future_delta_ms=0
+The passing test rerun does not resolve observed WSL clock regressions.
+Git diff --check passed.
