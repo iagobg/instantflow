@@ -1,9 +1,11 @@
 # D04 rehearsal — 2026-10-24
 
 The independent builder proof and the four school examples were exercised in the
-isolated local demo. D04 is **not complete**: the local OS clock still moves
-backward and can invalidate a freshly signed LiveView session. Do not present a
-passing rerun as a repair. Setup and role details remain in [school-demo.md](school-demo.md).
+isolated local demo. The clock conflict observed during this rehearsal was
+subsequently [remediated and verified](demo-clock-remediation.md) with configuration
+changes, clean clock samples and 377 passing tests. This report preserves the
+original observations below. Final clean-setup/presenter-script acceptance remains
+separate from that clock fix. Setup and role details remain in [school-demo.md](school-demo.md).
 
 ## Changes prompted by the rehearsal
 
@@ -174,3 +176,14 @@ The largest guest wall/monotonic discrepancy was 546.898 ms. Hyper-V implicit sy
 and Ubuntu NTP sync are both active, matching Canonical's documented conflict.
 The exact causal mechanism has not been isolated through a service-change test;
 the clock gate remains open and no OS settings were changed.
+
+
+### Applied clock remediation
+
+With the user's explicit authorization, Windows Time was enabled, started and
+synchronized, and Ubuntu's competing systemd-timesyncd service was disabled/stopped.
+Hyper-V implicit synchronization remains enabled. Two consecutive 60-second guest
+samples had zero backward reads (maximum discrepancies 86 μs and 8 μs), and the
+full instrumented suite passed 377 tests. See [settings, rollback and limits](demo-clock-remediation.md).
+The demonstrated conflict is fixed in the current environment; no restart/resume
+was forced, and final D04 clean-replay acceptance is not inferred from test counts.

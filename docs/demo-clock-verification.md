@@ -1,5 +1,9 @@
 # Windows / WSL clock verification — 2026-10-24
 
+Follow-up: the user subsequently authorized and applied the
+[host-authoritative configuration fix](demo-clock-remediation.md). This document
+preserves the pre-fix baseline; its open-gate statements describe that earlier state.
+
 Read-only verification confirms an unstable WSL guest clock while the Windows host
 clock remained stable during the same observation window. The configuration also
 matches a documented conflict between Hyper-V implicit time synchronization and

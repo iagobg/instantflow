@@ -193,6 +193,19 @@ Affected-test reruns passed 28 tests and full instrumented precommit passed 377 
 (seed 865528; zero invalid token-age checks in both runs). No system settings
 changed; exact causality and the D04 clock gate remain open.
 
+### Applied clock remediation — 2026-10-24
+
+The user authorized the [host-authoritative configuration fix](../docs/demo-clock-remediation.md):
+Windows Time is Running/Automatic and successfully synchronized; Ubuntu
+systemd-timesyncd is disabled/inactive; Hyper-V implicit sync remains enabled.
+Two consecutive 60-second WSL samples had zero backward reads and maximum interval
+discrepancies of 86 μs and 8 μs. The affected suite passed 28 tests; full instrumented
+precommit passed 377 tests (seed 865528), with zero invalid token-age checks.
+The demonstrated clock-conflict blocker is fixed in the current environment.
+Restart/resume was not forced. Final clean-setup and complete presenter-script
+acceptance remain separate D04 work; the entire milestone is not declared complete
+from these test results.
+
 ## Execution order and boundaries
 
 Start D01 with a small valid scenario, then implement D02/D03 against it; expand fixtures and complete D04. Each checkpoint should be independently reviewed before claiming the milestone complete. No time estimate is asserted before implementation.

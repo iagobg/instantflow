@@ -9,7 +9,9 @@ Veja o [relatório visual D02](demo-flow-visual-rehearsal.md) e o
 
 O [ensaio D04 e roteiro PT-BR](demo-readiness-rehearsal.md) agora registram o processo
 independente construído pela interface e os testes com família, TI, direção e
-orientação. A demo ainda não está liberada: o relógio local voltou a regredir.
+orientação. O [conflito de sincronização do relógio](demo-clock-remediation.md) foi
+corrigido e verificado no ambiente atual; a aceitação final do roteiro completo
+partindo da instalação limpa continua separada desses testes.
 
 ## Preparar e iniciar
 

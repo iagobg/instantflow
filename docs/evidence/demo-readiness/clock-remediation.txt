@@ -1,0 +1,43 @@
+Clock configuration remediation — 2026-10-24
+Selected authority: Windows NTP -> Hyper-V implicit sync -> WSL.
+
+Before: W32Time Stopped/Manual; Ubuntu systemd-timesyncd enabled/active.
+Before clock sample: WSL 2 backwards reads/60s; max discrepancy 546898 us.
+
+Windows action: user-approved UAC elevation; Set-Service W32Time Automatic,
+Start-Service W32Time, w32tm /resync /rediscover.
+Resync exit 0. Source time.windows.com,0x9; successful sync recorded 04:25:07 local.
+After: W32Time Running/Automatic.
+
+WSL sudo required a password. Root-interface operation was initially rejected by
+automatic review for lack of specific elevation-route authorization.
+The user explicitly approved the exact root command before it was retried:
+wsl.exe -d Ubuntu -u root --exec systemctl disable --now systemd-timesyncd.service
+Command succeeded; enablement symlinks removed.
+After: ActiveState=inactive SubState=dead UnitFileState=disabled.
+Hyper-V live timesync_implicit=Y. Clocksource remains tsc. No WSL restart performed.
+
+Post-fix simultaneous host/guest sample:
+Windows samples=3806 duration_seconds=60.0058065 backward_reads=0
+steps_over_50ms=0 largest_wall_monotonic_delta_ms=1.8793
+WSL window 1 samples=30001 duration_seconds=60 backward_reads=0
+steps_over_50ms=0 largest_wall_monotonic_delta_us=86 exit_status=0
+WSL consecutive window 2 samples=29963 duration_seconds=60 backward_reads=0
+steps_over_50ms=0 largest_wall_monotonic_delta_us=8 exit_status=0
+Second window overlapped regression-test load.
+
+Post-fix host-bracketed guest UTC bounds (round_trip_ms, lower_ms, upper_ms):
+113,-37,76
+104,-37,67
+116,-37,79
+127,-40,87
+99,-36,63
+All intervals include zero; bridge uncertainty prevents a more precise offset claim.
+
+Focused: 28 tests, 0 failures; seed 865528; 15.6 seconds.
+TOKEN_CLOCK_SUMMARY age_checks=417 invalid_age_results=0 largest_future_delta_ms=0
+Full precommit: 377 tests, 0 failures; seed 865528.
+Finished in 161.0 seconds (128.9s async, 32.1s sync).
+TOKEN_CLOCK_SUMMARY age_checks=1194 invalid_age_results=0 largest_future_delta_ms=0
+No application/dependency/token-validation changes. Git diff --check passed.
+Current-state fix verified; future restart/resume behavior not forced or tested.
