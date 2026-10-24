@@ -30,6 +30,7 @@ defmodule InstantflowWeb.ConfiguredViewsLiveTest do
 
     refute has_element?(editor, "#publish-template[disabled]")
     editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
     {:ok, published} = Templates.get(f.admin, draft.id)
     version = Repo.get!(Instantflow.WorkflowCatalog.Version, published.published_version_id)
     f = %{f | version: version}

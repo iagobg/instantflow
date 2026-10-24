@@ -200,6 +200,7 @@ defmodule InstantflowWeb.Sprint11FieldSurfaceMatrixTest do
 
     refute has_element?(editor, "#publish-template[disabled]")
     editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
     {:ok, published} = Templates.get(admin, draft.id)
     version = Repo.get!(Version, published.published_version_id)
     assert Definition.fields(version.definition)[ref] == Map.put(field, "label", "Valor revisado")

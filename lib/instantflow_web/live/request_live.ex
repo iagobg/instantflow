@@ -161,7 +161,7 @@ defmodule InstantflowWeb.RequestLive do
                 )
             )
 
-          refresh(put_flash(socket, :info, "Formulário salvo."))
+          refresh(socket |> clear_flash(:error) |> put_flash(:info, "Formulário salvo."))
 
         {:error, error} ->
           failure(socket, error)
@@ -232,7 +232,7 @@ defmodule InstantflowWeb.RequestLive do
       case WorkflowRuntime.command(socket.assigns.current_scope, command) do
         {:ok, result} ->
           refresh(
-            assign(socket,
+            assign(clear_flash(socket, :error),
               reason: to_form(%{}, as: :action),
               review_revision: result["revision"],
               action_key: Ecto.UUID.generate()
@@ -260,7 +260,7 @@ defmodule InstantflowWeb.RequestLive do
     message = Enum.find(socket.assigns.data.deliveries, &(to_string(&1.id) == id))
 
     case message && Delivery.retry(socket.assigns.current_scope, message.id) do
-      {:ok, _} -> refresh(socket)
+      {:ok, _} -> refresh(clear_flash(socket, :error))
       {:error, error} -> failure(socket, error)
       _ -> failure(socket, :forbidden)
     end

@@ -54,6 +54,7 @@ defmodule InstantflowWeb.FinanceSurfacesLiveTest do
 
     refute has_element?(editor, "#publish-template[disabled]")
     editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
     {:ok, saved} = Templates.get(f.admin, draft.id)
     version = Repo.get!(Instantflow.WorkflowCatalog.Version, saved.published_version_id)
 

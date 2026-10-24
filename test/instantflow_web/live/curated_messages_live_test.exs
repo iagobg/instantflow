@@ -138,6 +138,7 @@ defmodule InstantflowWeb.CuratedMessagesLiveTest do
 
     refute has_element?(editor, "[id='preview-field-customer_details.private_marker']")
     editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
     {:ok, saved} = Templates.get(admin, draft.id)
     assert saved.published_version_id
   end

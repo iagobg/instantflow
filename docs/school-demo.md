@@ -7,6 +7,10 @@ independente construído pela interface e a estabilidade do relógio local.
 Veja o [relatório visual D02](demo-flow-visual-rehearsal.md) e o
 [roteiro do quadro D03](stage-boards.md).
 
+O [ensaio D04 e roteiro PT-BR](demo-readiness-rehearsal.md) agora registram o processo
+independente construído pela interface e os testes com família, TI, direção e
+orientação. A demo ainda não está liberada: o relógio local voltou a regredir.
+
 ## Preparar e iniciar
 
 Use o runtime fixado em .tool-versions, dependências já instaladas e PostgreSQL 16

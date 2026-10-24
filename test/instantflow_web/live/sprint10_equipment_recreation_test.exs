@@ -39,6 +39,7 @@ defmodule InstantflowWeb.Sprint10EquipmentRecreationTest do
 
     refute has_element?(editor, "#publish-template[disabled]")
     editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
     {:ok, draft} = Templates.get(admin, draft.id)
     v = Repo.get!(Version, draft.published_version_id)
 

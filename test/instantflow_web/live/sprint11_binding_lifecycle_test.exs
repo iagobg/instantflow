@@ -112,6 +112,7 @@ defmodule InstantflowWeb.Sprint11BindingLifecycleTest do
 
     refute has_element?(editor, "#publish-template[disabled]")
     editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
     {:ok, repaired} = Templates.get(f.admin, draft.id)
     assert repaired.published_version_id
     assert Repo.get!(Version, broken.id).bindings["budgets"]["shared_budget"] == unavailable.id

@@ -49,11 +49,67 @@ defmodule InstantflowWeb.TemplatesLiveTest do
 
     refute has_element?(editor, "#publish-template[disabled]")
     editor |> element("#publish-template") |> render_click()
+    assert has_element?(editor, "#publication-confirmation")
+    assert Repo.aggregate(Version, :count) == 0
+    editor |> element("#cancel-publish-template") |> render_click()
+    refute has_element?(editor, "#publication-confirmation")
+    editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
     assert Repo.aggregate(Version, :count) == 1
     assert has_element?(editor, "#save-template-item[disabled]")
     editor |> element("#export-draft") |> render_click()
     assert has_element?(editor, "#draft-export-preview")
     assert has_element?(editor, "#download-draft[download='modelo-rascunho.json']")
+  end
+
+  test "stage ordering persists into publication and rejects stale or published edits", %{
+    conn: conn
+  } do
+    f = workflow_fixture()
+    {:ok, draft} = Templates.clone(f.admin, f.version.id)
+    {:ok, editor, _} = live(login(conn, f.admin), ~p"/o/horizonte/modelos/#{draft.id}")
+    {:ok, stale, _} = live(login(conn, f.admin), ~p"/o/horizonte/modelos/#{draft.id}")
+    original = draft.definition["stages"]
+    first = hd(original)["key"]
+    second = Enum.at(original, 1)["key"]
+    assert has_element?(editor, "#move-up-stages-root-#{first}[disabled]")
+    editor |> element("#move-up-stages-root-#{second}") |> render_click()
+    {:ok, saved} = Templates.get(f.admin, draft.id)
+
+    assert Enum.map(saved.definition["stages"], & &1["key"]) ==
+             [second, first] ++ Enum.map(Enum.drop(original, 2), & &1["key"])
+
+    assert saved.definition["transitions"] == draft.definition["transitions"]
+    assert saved.bindings == draft.bindings
+    stale |> element("#move-up-stages-root-#{second}") |> render_click()
+    assert has_element?(stale, "#draft-conflict")
+    assert {:ok, ^saved} = Templates.get(f.admin, draft.id)
+    editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
+    published = Repo.get!(Version, Repo.get!(Draft, draft.id).published_version_id)
+    assert published.definition["stages"] == saved.definition["stages"]
+    assert has_element?(editor, "#move-down-stages-root-#{second}[disabled]")
+    render_click(editor, "move-stage", %{"key" => second, "direction" => "down"})
+    assert Repo.get!(Version, published.id) == published
+    assert {:ok, %{definition: definition}} = Templates.get(f.admin, draft.id)
+    assert definition == published.definition
+  end
+
+  test "stage ordering refuses pending form edits and invalid moves without changing the draft",
+       %{conn: conn} do
+    f = workflow_fixture()
+    {:ok, draft} = Templates.clone(f.admin, f.version.id)
+    {:ok, editor, _} = live(login(conn, f.admin), ~p"/o/horizonte/modelos/#{draft.id}")
+    first = hd(draft.definition["stages"])["key"]
+    render_click(editor, "move-stage", %{"key" => first, "direction" => "up"})
+    assert {:ok, ^draft} = Templates.get(f.admin, draft.id)
+    render_click(editor, "move-stage", %{"key" => first, "direction" => "invalid"})
+    assert {:ok, ^draft} = Templates.get(f.admin, draft.id)
+    editor |> form("#template-metadata", metadata: %{name: "Edição pendente"}) |> render_change()
+    render_click(editor, "move-stage", %{"key" => first, "direction" => "down"})
+    assert {:ok, ^draft} = Templates.get(f.admin, draft.id)
+    assert has_element?(editor, "#publish-template[disabled]")
+    assert has_element?(editor, "#flash-error")
   end
 
   test "cloning, comparison and conflicting saves preserve the losing editor's input", %{

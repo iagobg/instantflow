@@ -148,6 +148,22 @@ defmodule InstantflowWeb.TemplateLive do
     end
   end
 
+  def handle_event("move-stage", %{"key" => key, "direction" => direction}, socket) do
+    if socket.assigns.unsaved or socket.assigns.conflict != nil do
+      {:noreply,
+       put_flash(
+         socket,
+         :error,
+         "Salve ou revise as alterações pendentes antes de reorganizar as etapas."
+       )}
+    else
+      case Authoring.move_stage(socket.assigns.draft.definition, key, direction) do
+        {:ok, definition} -> persist(socket, definition, socket.assigns.draft.bindings)
+        {:error, reason} -> {:noreply, put_flash(socket, :error, TemplatesLive.message(reason))}
+      end
+    end
+  end
+
   def handle_event("metadata", %{"metadata" => p}, socket) do
     d = socket.assigns.draft
 
@@ -402,6 +418,17 @@ defmodule InstantflowWeb.TemplateLive do
     {:noreply, reload(socket) |> assign(conflict: nil, unsaved: false)}
   end
 
+  def handle_event("review-publication", _, socket) do
+    {:noreply, assign(socket, publication_confirmation: true)}
+  end
+
+  def handle_event("cancel-publication", _, socket) do
+    {:noreply, assign(socket, publication_confirmation: false)}
+  end
+
+  def handle_event("publish", _, %{assigns: %{publication_confirmation: false}} = socket),
+    do: {:noreply, socket}
+
   def handle_event("publish", _, socket) do
     case Templates.publish(
            socket.assigns.current_scope,
@@ -486,6 +513,7 @@ defmodule InstantflowWeb.TemplateLive do
       draft: review.draft,
       preview: nil,
       review_errors: review.errors,
+      publication_confirmation: false,
       review_warnings: review.warnings,
       unsaved: false,
       conflict: nil,
@@ -580,6 +608,8 @@ defmodule InstantflowWeb.TemplateLive do
         parent: p || "",
         key: key,
         kind: @labels[c],
+        first?: item == List.first(items),
+        last?: item == List.last(items),
         label: item_label(d, c, item, key),
         detail: if(c == "transitions", do: "#{item["from"]} → #{item["to"]}", else: p || key)
       }
@@ -1375,6 +1405,30 @@ defmodule InstantflowWeb.TemplateLive do
             <article :for={{id, item} <- @streams.items} id={id} class="request-row">
               <div>
                 <small>{item.kind}</small><strong>{item.label}</strong><small>{item.detail}</small>
+              </div>
+              <div :if={item.collection == "stages"} class="flex gap-2">
+                <button
+                  id={"move-up-#{item.id}"}
+                  class="btn"
+                  phx-click="move-stage"
+                  phx-value-key={item.key}
+                  phx-value-direction="up"
+                  aria-label={"Mover #{item.label} para cima"}
+                  disabled={item.first? or @draft.published_version_id != nil}
+                >
+                  Subir
+                </button>
+                <button
+                  id={"move-down-#{item.id}"}
+                  class="btn"
+                  phx-click="move-stage"
+                  phx-value-key={item.key}
+                  phx-value-direction="down"
+                  aria-label={"Mover #{item.label} para baixo"}
+                  disabled={item.last? or @draft.published_version_id != nil}
+                >
+                  Descer
+                </button>
               </div><button
                 id={"edit-#{item.id}"}
                 class="btn"
@@ -1438,13 +1492,35 @@ defmodule InstantflowWeb.TemplateLive do
           <button
             id="publish-template"
             class="btn primary"
-            phx-click="publish"
+            phx-click="review-publication"
             disabled={
               @draft.published_version_id != nil or @review_errors != [] or @unsaved or
                 @conflict != nil
             }
-            data-confirm="Publicar a definição e os mapeamentos revisados? Solicitações existentes manterão suas versões."
           >Publicar versão revisada</button>
+          <section
+            :if={@publication_confirmation}
+            id="publication-confirmation"
+            role="group"
+            aria-labelledby="publication-confirmation-title"
+            class="card"
+          >
+            <h3 id="publication-confirmation-title">Confirmar publicação</h3>
+            <p>
+              Publicar a definição e os mapeamentos revisados? Solicitações existentes manterão suas versões.
+            </p>
+            <button
+              id="confirm-publish-template"
+              class="btn primary"
+              phx-click="publish"
+              disabled={
+                @draft.published_version_id != nil or @review_errors != [] or @unsaved or
+                  @conflict != nil
+              }
+              phx-disable-with="Publicando…"
+            >Confirmar publicação</button>
+            <button id="cancel-publish-template" class="btn" phx-click="cancel-publication">Continuar revisão</button>
+          </section>
           <button id="export-draft" class="btn" phx-click="export">Revisar exportação do rascunho</button>
         </section>
         <section :if={@export} id="draft-export-preview" class="card template-section">

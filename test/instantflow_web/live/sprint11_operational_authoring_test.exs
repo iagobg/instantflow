@@ -39,6 +39,7 @@ defmodule InstantflowWeb.Sprint11OperationalAuthoringTest do
     assert get_in(saved.definition, ["interface", "operations", "payment_methods"]) == ["cash"]
     refute has_element?(editor, "#publish-template[disabled]")
     editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
 
     {:ok, view, _} =
       live(conn, ~p"/o/horizonte/processos/#{draft.workflow_id}/p/service_desk")

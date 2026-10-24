@@ -1,0 +1,38 @@
+D04 checkpoint — client date 2026-10-24
+
+Affected builder/view suite: 11 tests, 0 failures; seed 590195.
+Recovery and field-surface suite: 22 tests, 0 failures; seed 865528.
+TOKEN_CLOCK_SUMMARY age_checks=585 invalid_age_results=0 largest_future_delta_ms=0
+Final builder suite: 10 tests, 0 failures; seed 541978.
+
+Earlier full precommit: 376 tests, 1 failure; seed 865528; 160.0 seconds.
+Failure: Sprint11FieldSurfaceMatrixTest participant long_text roundtrip.
+Phoenix.LiveViewTest.ClientProxy.put_view/3: {:error, :invalid}.
+TOKEN_CLOCK_INVALID signed_minus_now_ms=403
+TOKEN_CLOCK_SUMMARY age_checks=1193 invalid_age_results=1 largest_future_delta_ms=403
+
+Read-only clock preflight: elixir scripts/check_demo_clock.exs 30
+Exit status 1.
+DEMO_CLOCK_SAMPLE samples=15001 backward_reads=1 steps_over_50ms=1
+largest_wall_monotonic_delta_us=409039 duration_seconds=30
+WSL kernel: 6.18.54.1-microsoft-standard-WSL2
+Current clocksource: tsc. Available: tsc hyperv_clocksource_tsc_page hyperv_clocksource_msr acpi_pm.
+NTPSynchronized=yes. systemd-timesyncd is running.
+Kernel boot log: Switched to clocksource tsc at 0.179654 seconds.
+These readings do not establish the underlying cause or implicate a particular clocksource.
+No clock or token-validation settings changed.
+
+Final instrumented precommit: 377 tests, 0 failures; seed 865528.
+Finished in 162.9 seconds (128.1s async, 34.8s sync).
+TOKEN_CLOCK_SUMMARY age_checks=1194 invalid_age_results=0 largest_future_delta_ms=0
+The passing run does not close the clock gate.
+Existing migration module-redefinition warnings were emitted by migration tests.
+
+Browser proof: independent workflow 5 v1; teacher case 42 submitted, reviewer approved;
+connected board moved to closed; pinned flow current stage closed.
+Family case 34 corrected/resubmitted; IT cases 39/40 retried and completed;
+director trip 25 safety approved; incident 28 director/counselor masking verified;
+purchase 7 corrected text saved, remains draft.
+No production data, real external effects, JSON configuration edits or direct DB stage edits.
+
+UI assets: mix assets.build passed. Git diff --check passed.

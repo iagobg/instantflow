@@ -100,9 +100,22 @@ defmodule InstantflowWeb.Sprint10SchoolRecreationTest do
     refute has_element?(it_page, "#sections", "DEPOSIT-PRIVATE")
     {:ok, it_data} = WorkflowRuntime.get(it, id)
     [failed] = Enum.filter(it_data.deliveries, &(&1.kind == "simulate_provisioning"))
+
+    it_page
+    |> form("#transition-form", action: %{reason: ""})
+    |> render_submit(%{"transition" => Copy.key("finish")})
+
+    assert has_element?(it_page, "#flash-error")
     it_page |> element("#retry-#{failed.id}") |> render_click()
+    refute has_element?(it_page, "#flash-error")
     assert {:ok, _} = Delivery.process(1, failed.id)
-    transition(it, v, id, "finish")
+    send(it_page.pid, :reconcile)
+
+    it_page
+    |> form("#transition-form", action: %{reason: ""})
+    |> render_submit(%{"transition" => Copy.key("finish")})
+
+    refute has_element?(it_page, "#flash-error")
     assert_stage(it, id, "complete")
     assert WorkflowRuntime.search(other).total == 0
 
@@ -328,6 +341,7 @@ defmodule InstantflowWeb.Sprint10SchoolRecreationTest do
     editor |> form("#template-mappings", mapping: mapping) |> render_submit()
     refute has_element?(editor, "#publish-template[disabled]")
     editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
     {:ok, saved} = Templates.get(admin, draft.id)
     Repo.get!(Version, saved.published_version_id)
   end

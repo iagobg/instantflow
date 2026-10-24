@@ -155,13 +155,33 @@ the successful run does not close the clock gate.
 
 ## D04 — Rehearsal and release of the demo
 
-- [ ] Write a short PT-BR presenter walkthrough: login → school/process overview → populated board → published flow → open/edit/advance a case → observe board update → restricted-user comparison.
-- [ ] Include a builder proof: create an independent process from a supported starter, change fields/stages/transitions and configure a board through the UI, review local bindings, publish, create and advance a case, then find it on the generated board/flow. No JSON or application-code changes should be needed for that supported scenario. Do not present seeded definitions alone as proof of builder usability.
-- [ ] Exercise each of the four school examples briefly, with a deeper enrollment or purchase narrative. Keep any confidential demo optional and explicitly authorized. Prove the new shared flow/board also works for the independent builder-created process.
+- [x] Write a short PT-BR presenter walkthrough: login → school/process overview → populated board → published flow → open/edit/advance a case → observe board update → restricted-user comparison.
+- [x] Include a builder proof: create an independent process from a supported starter, change fields/stages/transitions and configure a board through the UI, review local bindings, publish, create and advance a case, then find it on the generated board/flow. No JSON or application-code changes should be needed for that supported scenario. Do not present seeded definitions alone as proof of builder usability.
+- [x] Exercise each of the four school examples briefly, with a deeper enrollment or purchase narrative. Keep any confidential demo optional and explicitly authorized. Prove the new shared flow/board also works for the independent builder-created process.
 - [ ] Verify desktop layout at the actual presentation size, keyboard navigation, long labels, useful empty/error states and page reload/login stability. Investigate the documented intermittent invalid-session observation if reproduced; repeated passing reruns alone do not resolve a reproduced defect.
-- [ ] Run focused fixture/projection/LiveView regressions and mix precommit. Record commit, isolated DB/setup procedure, browser evidence, test outcomes, remaining limitations and exact rehearsal script. Do not declare completion from test counts alone.
+- [x] Run focused fixture/projection/LiveView regressions and mix precommit. Record commit, isolated DB/setup procedure, browser evidence, test outcomes, remaining limitations and exact rehearsal script. Do not declare completion from test counts alone.
 
 Acceptance: a clean setup plus the entire presenter script succeeds without developer intervention, direct database changes, unexplained reloads or permission bypasses. Capture real UI evidence of the populated board, flow and transition outcome. Leave the local session available for the user's inspection.
+
+### D04 implementation and rehearsal checkpoint — 2026-10-24
+
+The [PT-BR script and evidence](../docs/demo-readiness-rehearsal.md) record an
+independent approvals process built with typed UI controls: added date field,
+review stage, requester submission, separate reviewer approval, board, reviewed
+local bindings and publication. Teacher case #42 completed and moved in another
+connected tab's generated board; its flow remains pinned to v1. Family corrections,
+minimal IT visibility and failed-delivery recovery, trip safety approval,
+purchasing draft edits, and director/counselor confidentiality were exercised.
+
+The rehearsal added guarded stage ordering, explicit in-app publication confirmation,
+and clearing of obsolete command errors after successful saves/transitions/retries.
+It does not close the release gate: full precommit reproduced future-token rejection
+at 403 ms, and a separate read-only clock sample caught a backward OS-time read
+with a 409,039 μs interval discrepancy. No OS setting or token validation was changed.
+Final instrumented precommit passed 377 tests with zero failures (seed 865528;
+1194 token-age checks, zero invalid results). The earlier rejection and independent
+clock regression remain blockers. Precise limitations and outcomes are recorded
+in the rehearsal report.
 
 ## Execution order and boundaries
 

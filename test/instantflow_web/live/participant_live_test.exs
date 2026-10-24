@@ -57,6 +57,7 @@ defmodule InstantflowWeb.ParticipantLiveTest do
 
     refute has_element?(editor, "#publish-template[disabled]")
     editor |> element("#publish-template") |> render_click()
+    editor |> element("#confirm-publish-template") |> render_click()
     {:ok, saved} = Templates.get(admin, draft.id)
     version = Repo.get!(Instantflow.WorkflowCatalog.Version, saved.published_version_id)
     assert Enum.at(version.definition["interface"]["pages"], 1)["participant"] == spec

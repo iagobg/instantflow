@@ -53,6 +53,7 @@ defmodule InstantflowWeb.Sprint11CombinedRecreationTest do
         editor |> form("#template-mappings", mapping: mapping) |> render_submit()
         refute has_element?(editor, "#publish-template[disabled]")
         editor |> element("#publish-template") |> render_click()
+        editor |> element("#confirm-publish-template") |> render_click()
         {:ok, published} = Templates.get(owner, draft.id)
         assert published.published_version_id
       end

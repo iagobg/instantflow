@@ -205,6 +205,25 @@ defmodule Instantflow.WorkflowCatalog.Authoring do
 
   def change(_, _, _, _, _), do: {:error, :invalid_control}
 
+  def move_stage(definition, key, direction) when direction in ["up", "down"] do
+    stages = definition["stages"]
+    index = Enum.find_index(stages, &(&1["key"] == key))
+    target = if index, do: index + if(direction == "up", do: -1, else: 1)
+
+    if index && target >= 0 && target < length(stages) do
+      reordered =
+        stages
+        |> List.replace_at(index, Enum.at(stages, target))
+        |> List.replace_at(target, Enum.at(stages, index))
+
+      {:ok, Map.put(definition, "stages", reordered)}
+    else
+      {:error, :invalid_control}
+    end
+  end
+
+  def move_stage(_, _, _), do: {:error, :invalid_control}
+
   def remove(definition, collection, parent, key) when collection in @collections do
     list = items(definition, collection, parent)
 
