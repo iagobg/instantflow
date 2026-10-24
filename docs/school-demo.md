@@ -2,10 +2,10 @@
 
 Este é o primeiro checkpoint de D01 do [plano de demo](../sprint_plan/demo_readiness.md).
 Instala uma escola fictícia com oito requisições de compra. Matrículas, passeios,
-ocorrências confidenciais e quadro por etapas continuam pendentes. O fluxo publicado
+ocorrências confidenciais continuam pendentes. O quadro por etapas D03 agora está implementado. O fluxo publicado
 foi implementado no checkpoint D02 e ensaiado em 1280 × 720; veja o
 [relatório visual e seus limites](demo-flow-visual-rehearsal.md).
-A grade atual de cartões ainda não é o quadro D03.
+Veja [o roteiro do quadro D03](stage-boards.md) para seleção de versão, colunas, contagens e paginação.
 
 ## Preparar e iniciar
 
@@ -97,6 +97,23 @@ ou integrações externas neste processo. Pedidos e recebimentos são simulados.
 5. Volte à sessão admin e confira a atualização. Isso é um roteiro preliminar;
    a aceitação visual completa e a atualização do futuro quadro pertencem a D03/D04.
 
+## Quadro por etapas (D03)
+
+No processo, selecione **Gargalos por etapa** em Visualização e clique em **Filtrar**.
+O quadro mostra a versão publicada selecionada, inclusive etapas vazias e os totais
+autorizados por coluna. Cada coluna tem até dez cartões por página; processos com
+mais de dez etapas também têm paginação de etapas. Use a rolagem horizontal ou o
+teclado para chegar às etapas finais. Abra um cartão com Ctrl+clique para manter
+o quadro conectado enquanto executa a ação normal no caso em outra aba.
+
+O [relatório D03](stage-boards.md) registra o ensaio, capturas e limites. Nesse ensaio,
+o caso #2 (Livros) avançou de Aprovação da área para Aprovação financeira. As outras
+alterações de D02 foram preservadas. A falha intermitente de sessão foi reproduzida
+em um teste completo e continua como pendência explícita de D04; o diagnóstico
+capturou uma rejeição de token com timestamp 2907 ms à frente do relógio do
+verificador. A estabilidade do relógio local não foi corrigida; esse resultado
+não explica automaticamente ocorrências antigas sem rastreamento.
+
 ## Fluxo publicado (D02)
 
 1. No processo, escolha **Ver fluxo publicado**. O cabeçalho identifica o número,
@@ -141,7 +158,7 @@ as contagens finais, capturas e os testes visuais ainda pendentes para D03/D04.
 Validação D02: suite focada de fluxo/editor com 20 testes e zero falhas (seed
 830214); mix assets.build passou; mix precommit passou com 360 testes e zero falhas
 (seed 636776); git diff --check passou. A implementação parte do commit D01
-29156a4. D01 ainda tem cenários pendentes; D03 e D04 ainda não foram implementados.
+29156a4. D01 ainda tem cenários pendentes. D03 foi implementado e ensaiado separadamente; D04 permanece incompleto.
 
 ## Repetir, preservar ou reiniciar
 

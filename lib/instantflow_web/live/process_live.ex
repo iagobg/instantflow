@@ -3,6 +3,19 @@ defmodule InstantflowWeb.ProcessLive do
   import InstantflowWeb.ProcessComponents
   import InstantflowWeb.ProcessRoutes
 
+  @board_streams [
+    :board_cards_0,
+    :board_cards_1,
+    :board_cards_2,
+    :board_cards_3,
+    :board_cards_4,
+    :board_cards_5,
+    :board_cards_6,
+    :board_cards_7,
+    :board_cards_8,
+    :board_cards_9
+  ]
+
   alias Instantflow.{Operations, WorkflowCatalog, WorkflowRuntime}
   alias Instantflow.WorkflowCatalog.{Workspaces, Views}
 
@@ -42,6 +55,8 @@ defmodule InstantflowWeb.ProcessLive do
        resource_search_form: to_form(%{}, as: :browse),
        record_filters: %{},
        record_view: nil,
+       stage_board: Instantflow.WorkflowRuntime.StageBoards.empty(),
+       board_columns: [],
        record_view_page: 1,
        finance_account_form: to_form(%{}, as: :finance_account),
        finance_allocation_form: to_form(%{}, as: :finance_allocation),
@@ -53,6 +68,7 @@ defmodule InstantflowWeb.ProcessLive do
        visit: nil,
        operational_archived?: false,
        current_workspace?: true,
+       overview_flow_available?: false,
        cart: %{},
        print_ticket: nil,
        command_key: Ecto.UUID.generate(),
@@ -69,7 +85,8 @@ defmodule InstantflowWeb.ProcessLive do
        checkout_form: to_form(%{}, as: :checkout),
        day_form: to_form(%{}, as: :day)
      )
-     |> stream(:cart_items, [])}
+     |> stream(:cart_items, [])
+     |> then(fn socket -> Enum.reduce(@board_streams, socket, &stream(&2, &1, [])) end)}
   end
 
   def handle_params(params, _, socket) do
@@ -118,6 +135,7 @@ defmodule InstantflowWeb.ProcessLive do
                visit_id: id,
                workflow_id: workflow_id,
                page_key: page["key"],
+               record_view: params["view"] || socket.assigns.record_view,
                cart:
                  if(socket.assigns.workflow_id == workflow_id and socket.assigns.visit_id == id,
                    do: socket.assigns.cart,
@@ -174,14 +192,68 @@ defmodule InstantflowWeb.ProcessLive do
   end
 
   def handle_event("record-filters", %{"record_filter" => params}, socket) do
+    previous = socket.assigns.stage_board.version
+    changed_view? = params["view"] != socket.assigns.record_view
+    changed_version? = previous && params["version_id"] != to_string(previous.id)
+    filters = Map.take(params, ~w(query stage fields assigned_to version_id))
+    filters = if changed_view?, do: Map.delete(filters, "version_id"), else: filters
+
+    filters =
+      if changed_view? or changed_version? do
+        Map.merge(filters, %{"stage" => "", "fields" => %{}, "assigned_to" => ""})
+      else
+        filters
+      end
+
     {:noreply,
      socket
      |> assign(
-       record_filters: Map.take(params, ~w(query stage fields assigned_to)),
+       record_filters: filters,
        record_view: params["view"],
-       record_form: to_form(params, as: :record_filter)
+       record_form: to_form(filters, as: :record_filter)
      )
      |> load()}
+  end
+
+  def handle_event("board-card-page", params, socket) do
+    column = Enum.find(socket.assigns.board_columns, &(&1.id == params["stage"]))
+
+    if column && current_board?(socket, params["version_id"]) do
+      pages = Map.get(socket.assigns.record_filters, "column_pages", %{})
+
+      filters =
+        Map.put(
+          socket.assigns.record_filters,
+          "column_pages",
+          Map.put(pages, column.id, params["page"])
+        )
+
+      {:noreply, socket |> assign(:record_filters, filters) |> load()}
+    else
+      {:noreply, load(socket)}
+    end
+  end
+
+  def handle_event("board-columns-page", params, socket) do
+    if current_board?(socket, params["version_id"]) do
+      filters = socket.assigns.record_filters |> Map.put("columns_page", params["page"])
+      {:noreply, socket |> assign(:record_filters, filters) |> load()}
+    else
+      {:noreply, load(socket)}
+    end
+  end
+
+  def handle_event("board-versions-page", params, socket) do
+    filters =
+      socket.assigns.record_filters
+      |> Map.delete("version_id")
+      |> Map.put("version_page", params["page"])
+      |> Map.put("column_pages", %{})
+      |> Map.put("columns_page", 1)
+      |> Map.put("stage", "")
+      |> Map.put("fields", %{})
+
+    {:noreply, socket |> assign(:record_filters, filters) |> load()}
   end
 
   def handle_event("record-page", %{"page" => page}, socket) do
@@ -515,7 +587,13 @@ defmodule InstantflowWeb.ProcessLive do
   def handle_info(:budgets_changed, socket), do: {:noreply, load(socket)}
   def handle_info(:permissions_changed, socket), do: {:noreply, load(socket)}
 
-  defp page_version(scope, workflow_id, nil), do: Workspaces.get(scope, workflow_id)
+  defp current_board?(socket, value) do
+    version = socket.assigns.stage_board.version
+    version && to_string(version.id) == value
+  end
+
+  defp page_version(scope, workflow_id, nil),
+    do: Workspaces.get(scope, workflow_id) || Views.board_workspace(scope, workflow_id)
 
   defp page_version(scope, workflow_id, session_id) do
     Operations.version_for_visit(scope, session_id, workflow_id)
@@ -590,6 +668,8 @@ defmodule InstantflowWeb.ProcessLive do
           page_title: version.definition["name"],
           labels: Workspaces.labels(version.definition),
           pages: Workspaces.pages(version.definition),
+          overview_flow_available?:
+            not is_nil(Workspaces.get(socket.assigns.current_scope, version.workflow_id)),
           blocks: blocks,
           page_key: page["key"],
           can_configure: Workspaces.allowed?(socket.assigns.current_scope, version, "configure"),
@@ -725,18 +805,36 @@ defmodule InstantflowWeb.ProcessLive do
           }),
         else: %{rows: [], total: 0, page: 1, pages: 1}
 
+    discovery =
+      if ready? and "records" in socket.assigns.blocks and discovery.total == 0 do
+        Views.empty_board_discovery(socket.assigns.current_scope, version.workflow_id, %{
+          "page" => socket.assigns.record_view_page
+        })
+      else
+        discovery
+      end
+
     views = discovery.rows
 
     selected = Enum.find(views, &(&1.key == socket.assigns.record_view)) || List.first(views)
 
     result =
       if (ready? and selected) && "records" in socket.assigns.blocks do
-        Views.search(
-          socket.assigns.current_scope,
-          version.workflow_id,
-          selected.key,
-          socket.assigns.record_filters
-        )
+        if selected.type == "board" do
+          Views.board(
+            socket.assigns.current_scope,
+            version.workflow_id,
+            selected.key,
+            socket.assigns.record_filters
+          )
+        else
+          Views.search(
+            socket.assigns.current_scope,
+            version.workflow_id,
+            selected.key,
+            socket.assigns.record_filters
+          )
+        end
       else
         %{
           columns: [],
@@ -751,16 +849,56 @@ defmodule InstantflowWeb.ProcessLive do
         }
       end
 
+    board =
+      if selected && selected.type == "board",
+        do: result,
+        else: Instantflow.WorkflowRuntime.StageBoards.empty()
+
+    # Ten fixed stream slots bound the rendered stage window. No user-supplied atoms.
+    columns =
+      board.columns
+      |> Enum.with_index()
+      |> Enum.map(fn {column, index} ->
+        column
+        |> Map.delete(:rows)
+        |> Map.put(:stream, Enum.at(@board_streams, index))
+        |> Map.put(:loaded, length(column.rows))
+      end)
+
+    socket =
+      Enum.reduce(Enum.with_index(@board_streams), socket, fn {name, index}, state ->
+        rows =
+          case Enum.at(board.columns, index) do
+            nil -> []
+            column -> column.rows
+          end
+
+        stream(state, name, rows, reset: true, limit: 10)
+      end)
+
+    filters =
+      if board.version do
+        Map.put(socket.assigns.record_filters, "version_id", to_string(board.version.id))
+      else
+        socket.assigns.record_filters
+      end
+
     socket
     |> assign(
+      stage_board: Map.drop(board, [:rows, :columns]),
+      board_columns: columns,
+      record_filters: filters,
+      record_view: selected && selected.key,
+      record_form:
+        to_form(Map.put(filters, "view", selected && selected.key), as: :record_filter),
       records_loading?: not ready? and "records" in socket.assigns.blocks,
-      record_columns: result.columns,
+      record_columns: if(board.version, do: [], else: result.columns),
       record_total: result.total,
       record_filter_options: result.filters,
       record_urgent: result.urgent,
       record_assignments?: result.assignment?,
-      record_page: result.page,
-      record_pages: result.pages,
+      record_page: Map.get(result, :page, 1),
+      record_pages: Map.get(result, :pages, 1),
       record_views: Map.delete(discovery, :rows),
       record_view_options: Enum.map(views, &{&1.view_label, &1.key}),
       record_stage_options: Enum.map(result.stages, &{&1.label, &1.id}),
@@ -769,7 +907,11 @@ defmodule InstantflowWeb.ProcessLive do
         ready? && !Workspaces.operational?(version.definition) &&
           WorkflowCatalog.creatable?(socket.assigns.current_scope, version.workflow_id)
     )
-    |> stream(:process_records, result.rows, reset: true)
+    |> stream(
+      :process_records,
+      if(selected && selected.type == "board", do: [], else: result.rows),
+      reset: true
+    )
   end
 
   defp finance_result(socket, {:ok, _}),
@@ -860,6 +1002,7 @@ defmodule InstantflowWeb.ProcessLive do
         </div>
       </div>
       <.link
+        :if={@overview_flow_available? || @visit}
         id="process-flow-link"
         class="btn"
         navigate={

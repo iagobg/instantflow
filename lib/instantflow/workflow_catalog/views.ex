@@ -9,4 +9,14 @@ defmodule Instantflow.WorkflowCatalog.Views do
   defdelegate search(actor, workflow_id, key, filters \\ %{}),
     to: Instantflow.WorkflowRuntime.Projections,
     as: :view
+
+  defdelegate board_workspace(actor, workflow_id),
+    to: Instantflow.WorkflowRuntime.Projections
+
+  defdelegate empty_board_discovery(actor, workflow_id, filters),
+    to: Instantflow.WorkflowRuntime.Projections
+
+  defdelegate board(actor, workflow_id, key, filters),
+    to: Instantflow.WorkflowRuntime.StageBoards,
+    as: :read
 end

@@ -226,6 +226,7 @@ defmodule Instantflow.WorkflowRuntime.Projections do
             ],
             select: %{
               workflow_id: version.workflow_id,
+              version_id: version.id,
               key: fragment("?->>'key'", view.value),
               type: fragment("?->>'type'", view.value),
               urgency?: fragment("?->'urgency' IS NOT NULL", view.value),
@@ -234,6 +235,13 @@ defmodule Instantflow.WorkflowRuntime.Projections do
               position: fragment("?::int", view.ordinality),
               version_number: version.number
             }
+
+        query =
+          if filters["type"] == "board" do
+            where(query, [declared_view: view], fragment("?->>'type'", view.value) == "board")
+          else
+            query
+          end
 
         query = option_filter(query, filters, :view)
         result = option_page(query, filters)
@@ -246,6 +254,48 @@ defmodule Instantflow.WorkflowRuntime.Projections do
                 |> Map.put(:id, "#{row.workflow_id}:#{row.key}")
                 |> Map.put(:label, "#{row.process_label} · #{row.view_label}")
               end)
+        }
+      end,
+      empty_options()
+    )
+  end
+
+  @doc "Resolve a historical board workspace only through authorized record/view discovery."
+  def board_workspace(actor, workflow_id) when is_integer(workflow_id) and workflow_id > 0 do
+    Tenant.read(actor, fn scope ->
+      case view_discovery(scope, %{"workflow_id" => workflow_id, "type" => "board"}).rows do
+        [option | _] -> Repo.get(Version, option.version_id)
+        [] -> nil
+      end
+    end)
+  end
+
+  def board_workspace(_, _), do: nil
+
+  @doc "Configured empty boards of an authorized current workspace, before its first case."
+  def empty_board_discovery(actor, workflow_id, filters) do
+    Tenant.read(
+      actor,
+      fn scope ->
+        version = Instantflow.WorkflowCatalog.Workspaces.get(scope, workflow_id)
+
+        views =
+          if version do
+            version.definition["views"]
+            |> Enum.filter(&(&1["type"] == "board" and visible_view?(scope, version, &1)))
+            |> Enum.map(&%{key: &1["key"], type: "board", view_label: &1["label"]})
+          else
+            []
+          end
+
+        pages = max(1, ceil(length(views) / @page_size))
+        page = min(positive_integer(filters["page"], 1), pages)
+
+        %{
+          rows: Enum.slice(views, (page - 1) * @page_size, @page_size),
+          total: length(views),
+          page: page,
+          pages: pages
         }
       end,
       empty_options()
@@ -289,10 +339,8 @@ defmodule Instantflow.WorkflowRuntime.Projections do
 
   defp option_filter(query, _, _), do: query
 
-  defp fetch_page(scope, filters, view_key) do
-    versions = versions(filters, if(is_binary(view_key), do: :full, else: :policy))
-    by_id = Map.new(versions, &{&1.id, &1})
-
+  @doc false
+  def view_query(scope, versions, view_key) do
     # Group only identical declarations/bindings within this fresh scoped read.
     # Stage descriptors affect pinned display/count labels, not view admission.
     # Keep every actual version for rendering; no permission result is cached.
@@ -305,11 +353,37 @@ defmodule Instantflow.WorkflowRuntime.Projections do
         dynamic([ticket: t], ^acc or (t.workflow_version_id in ^ids and ^rule))
       end)
 
-    base =
-      from t in Ticket,
-        as: :ticket,
-        where: t.organization_id == ^scope.organization_id,
-        where: ^predicate
+    from t in Ticket,
+      as: :ticket,
+      where: t.organization_id == ^scope.organization_id,
+      where: ^predicate
+  end
+
+  @doc false
+  def filter_query(base, scope, versions, view_key, filters) do
+    stage = text(filters["stage"])
+    query = text(filters["query"]) |> String.downcase()
+
+    names =
+      versions
+      |> Enum.filter(&String.contains?(String.downcase(&1.definition["name"]), query))
+      |> Enum.map(& &1.id)
+
+    filtered =
+      from t in base,
+        where: ^(stage == "") or t.stage == ^stage,
+        where:
+          ^(query == "") or t.workflow_version_id in ^names or
+            fragment("strpos(?::text, ?) > 0", t.id, ^query)
+
+    ConfiguredQueries.filter(filtered, scope, versions, view_key, filters)
+  end
+
+  defp fetch_page(scope, filters, view_key) do
+    versions = versions(filters, if(is_binary(view_key), do: :full, else: :policy))
+    by_id = Map.new(versions, &{&1.id, &1})
+
+    base = view_query(scope, versions, view_key)
 
     groups =
       Repo.all(
@@ -334,22 +408,7 @@ defmodule Instantflow.WorkflowRuntime.Projections do
         {stage, labels |> Enum.uniq() |> Enum.sort() |> Enum.join(" / ")}
       end)
 
-    stage = text(filters["stage"])
-    query = text(filters["query"]) |> String.downcase()
-
-    names =
-      versions
-      |> Enum.filter(&String.contains?(String.downcase(&1.definition["name"]), query))
-      |> Enum.map(& &1.id)
-
-    filtered =
-      from t in base,
-        where: ^(stage == "") or t.stage == ^stage,
-        where:
-          ^(query == "") or t.workflow_version_id in ^names or
-            fragment("strpos(?::text, ?) > 0", t.id, ^query)
-
-    filtered = ConfiguredQueries.filter(filtered, scope, versions, view_key, filters)
+    filtered = filter_query(base, scope, versions, view_key, filters)
     metadata = ConfiguredQueries.metadata(base, scope, versions, view_key)
     count = Repo.aggregate(filtered, :count)
     pages = max(1, ceil(count / @page_size))
@@ -409,15 +468,7 @@ defmodule Instantflow.WorkflowRuntime.Projections do
   defp view_policy(scope, version, key) do
     view = Enum.find(version.definition["views"], &(&1["key"] == key))
 
-    visible? =
-      view &&
-        (is_nil(view["visibility_roles"]) or
-           Enum.any?(
-             view["visibility_roles"],
-             &Instantflow.Access.role?(scope, version.bindings["roles"][&1] || [])
-           ))
-
-    if visible? && generic_surface?(scope, version) do
+    if visible_view?(scope, version, view) do
       # A section permission applies to every selected field in that section.
       # Compile it once, keeping builtin-column visibility semantics unchanged.
       columns =
@@ -441,12 +492,23 @@ defmodule Instantflow.WorkflowRuntime.Projections do
     end
   end
 
+  @doc false
+  def visible_view?(scope, version, view) do
+    not is_nil(view) and generic_surface?(scope, version) and
+      (is_nil(view["visibility_roles"]) or
+         Enum.any?(
+           view["visibility_roles"],
+           &Instantflow.Access.role?(scope, version.bindings["roles"][&1] || [])
+         ))
+  end
+
   defp generic_surface?(scope, version) do
     Instantflow.WorkflowCatalog.ParticipantPages.pages(version.definition) == [] or
       Instantflow.WorkflowRuntime.ParticipantPolicy.staff_workspace?(scope, version)
   end
 
-  defp versions(filters, mode) do
+  @doc false
+  def versions(filters, mode) do
     # Only record-bearing pins participate in record discovery/count/projection.
     # Latest publications for creation remain owned by the workspace catalog.
     referenced =
@@ -526,7 +588,8 @@ defmodule Instantflow.WorkflowRuntime.Projections do
     |> Enum.sort_by(&{&1.number, &1.id}, :desc)
   end
 
-  defp project(scope, result, key) do
+  @doc false
+  def project(scope, result, key) do
     page_versions =
       Map.take(result.versions, Enum.map(result.tickets, & &1.workflow_version_id))
 
@@ -638,6 +701,14 @@ defmodule Instantflow.WorkflowRuntime.Projections do
 
         %{
           id: ticket.id,
+          title:
+            Enum.find_value(cells, fn cell ->
+              field = fields[cell.key]
+
+              if field && field["type"] in ~w(short_text long_text) &&
+                   is_binary(cell.value) && String.trim(cell.value) != "", do: cell.value
+            end) || "Registro ##{ticket.id}",
+          version_id: version.id,
           type: view["type"],
           label: view["label"],
           stage: ticket.stage,

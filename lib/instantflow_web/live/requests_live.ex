@@ -47,10 +47,25 @@ defmodule InstantflowWeb.RequestsLive do
        |> load()}
 
   def handle_event("configured-view", %{"view" => %{"key" => key}}, socket) do
-    {:noreply,
-     socket
-     |> assign(selected_view: key, view_form: to_form(%{"key" => key}, as: :view))
-     |> load()}
+    selected =
+      Views.discovery(
+        socket.assigns.current_scope,
+        %{"page" => socket.assigns.view_options_page}
+      ).rows
+      |> Enum.find(&(&1.id == key))
+
+    if selected && selected.type == "board" do
+      {:noreply,
+       push_navigate(socket,
+         to:
+           ~p"/o/#{socket.assigns.current_scope.organization.slug}/processos/#{selected.workflow_id}?#{%{view: selected.key}}"
+       )}
+    else
+      {:noreply,
+       socket
+       |> assign(selected_view: key, view_form: to_form(%{"key" => key}, as: :view))
+       |> load()}
+    end
   end
 
   def handle_event(event, _, socket) when event in ["reconcile", "heartbeat"],
@@ -115,7 +130,7 @@ defmodule InstantflowWeb.RequestsLive do
     selected = Enum.find(options, &(&1.id == socket.assigns.selected_view))
 
     result =
-      if selected do
+      if selected && selected.type != "board" do
         [id, key] = String.split(selected.id, ":", parts: 2)
 
         Views.search(
@@ -128,21 +143,15 @@ defmodule InstantflowWeb.RequestsLive do
         %{rows: [], total: 0, columns: [], stages: []}
       end
 
-    stage_positions = result.stages |> Enum.with_index(1) |> Map.new(fn {s, i} -> {s.id, i} end)
-
     socket
     |> assign(
       view_discovery: Map.delete(discovery, :rows),
       view_options: Enum.map(options, &{&1.label, &1.id}),
       view_columns: result.columns,
       view_total: result.total,
-      calendar?: Enum.any?(result.rows, &(&1.type == "calendar")),
-      board?: Enum.any?(result.rows, &(&1.type == "board")),
-      stage_positions: stage_positions,
-      view_stage_count: max(length(result.stages), 1)
+      calendar?: Enum.any?(result.rows, &(&1.type == "calendar"))
     )
     |> stream(:configured_rows, result.rows, reset: true)
-    |> stream(:view_stages, result.stages, reset: true)
   end
 
   defp cell(row, key),
@@ -257,7 +266,7 @@ defmodule InstantflowWeb.RequestsLive do
       </section>
       <section id="configured-views" class="card template-section">
         <h2>Visualizações do processo</h2><p>
-          Colunas e quadros seguem a versão de cada solicitação e suas permissões atuais.
+          As visualizações respeitam suas permissões atuais. Quadros abrem no espaço do processo, com seleção de versão e paginação por etapa.
         </p>
         <.form for={@view_form} id="configured-view-form" phx-submit="configured-view">
           <.input
@@ -275,16 +284,6 @@ defmodule InstantflowWeb.RequestsLive do
         <p id="configured-preview-note" class="small-text">
           Textos longos mostram até 80 caracteres. Abra o registro para ver o conteúdo completo.
         </p>
-        <div :if={@board?} class="table-scroll">
-          <div
-            id="view-stages"
-            phx-update="stream"
-            class="configured-board"
-            style={"grid-template-columns: repeat(#{@view_stage_count}, minmax(240px, 1fr))"}
-          >
-            <h3 :for={{id, stage} <- @streams.view_stages} id={id}>{stage.label} · {stage.count}</h3>
-          </div>
-        </div>
         <div :if={@calendar?} id="configured-calendar" phx-update="stream" class="foundation-grid">
           <article :for={{id, row} <- @streams.configured_rows} id={id} class="card">
             <h3><time>{row.date || "Sem data"}</time></h3><span class="badge">{row.stage_label}</span>
@@ -299,7 +298,7 @@ defmodule InstantflowWeb.RequestsLive do
           </article>
         </div>
         <div class="table-scroll">
-          <table :if={!@board? && !@calendar?} id="configured-table">
+          <table :if={!@calendar?} id="configured-table">
             <thead>
               <tr>
                 <th>Solicitação</th><th :for={column <- @view_columns} scope="col">{column.label}</th>
@@ -312,28 +311,6 @@ defmodule InstantflowWeb.RequestsLive do
               </tr>
             </tbody>
           </table>
-          <div
-            :if={@board?}
-            id="configured-board-rows"
-            phx-update="stream"
-            class="configured-board"
-            style={"grid-template-columns: repeat(#{@view_stage_count}, minmax(240px, 1fr))"}
-          >
-            <article
-              :for={{id, row} <- @streams.configured_rows}
-              id={id}
-              class="card configured-card"
-              style={"grid-column: #{@stage_positions[row.stage]}"}
-            >
-              <h3>
-                <.link navigate={~p"/o/#{@current_scope.organization.slug}/solicitacoes/#{row.id}"}>Solicitação #{row.id}</.link>
-              </h3><p>{row.stage_label}</p><dl>
-                <div :for={c <- row.cells}>
-                  <dt>{c.label}</dt><dd>{display(c.value)}</dd>
-                </div>
-              </dl>
-            </article>
-          </div>
         </div>
       </section>
     </Layouts.app>

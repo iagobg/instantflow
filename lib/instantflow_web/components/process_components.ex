@@ -111,6 +111,13 @@ defmodule InstantflowWeb.ProcessComponents do
           options={@record_view_options}
         />
         <.input
+          :if={@record_view_type == "board" && @stage_board.version_options != []}
+          field={@record_form[:version_id]}
+          type="select"
+          label="Versão publicada do quadro"
+          options={Enum.map(@stage_board.version_options, &{"Versão #{&1.number}", &1.id})}
+        />
+        <.input
           field={@record_form[:stage]}
           type="select"
           label="Etapa"
@@ -155,7 +162,9 @@ defmodule InstantflowWeb.ProcessComponents do
       <p id="process-urgency-status" role="status" aria-live="polite">
         {@record_urgent} registro(s) com maior urgência em aberto.
       </p>
+      <.stage_board :if={@record_view_type == "board" && !@records_loading?} {assigns} />
       <div
+        :if={@record_view_type != "board"}
         id="process-records"
         phx-update="stream"
         class={if @record_view_type == "board", do: "operations-tables"}
@@ -182,7 +191,11 @@ defmodule InstantflowWeb.ProcessComponents do
           >Abrir registro</.link>
         </article>
       </div>
-      <nav :if={@record_pages > 1} id="process-record-pagination" aria-label="Páginas de registros">
+      <nav
+        :if={@record_view_type != "board" && @record_pages > 1}
+        id="process-record-pagination"
+        aria-label="Páginas de registros"
+      >
         <button
           id="process-record-previous"
           class="btn"
@@ -200,6 +213,149 @@ defmodule InstantflowWeb.ProcessComponents do
         >Próxima</button>
       </nav>
     </section>
+    """
+  end
+
+  def stage_board(assigns) do
+    ~H"""
+    <div id="process-stage-board">
+      <p :if={!@stage_board.available?} id="board-unavailable" role="status">
+        Esta versão do quadro está indisponível para seu perfil. Selecione uma versão autorizada.
+      </p>
+      <nav
+        :if={@stage_board.version_pages > 1}
+        id="board-version-pages"
+        aria-label="Páginas de versões"
+      >
+        <button
+          id="board-versions-previous"
+          class="btn"
+          phx-click="board-versions-page"
+          phx-value-page={@stage_board.version_page - 1}
+          disabled={@stage_board.version_page <= 1}
+        >Versões anteriores nesta lista</button>
+        <span>Página {@stage_board.version_page} de {@stage_board.version_pages} · {@stage_board.version_total} versões autorizadas</span>
+        <button
+          id="board-versions-next"
+          class="btn"
+          phx-click="board-versions-page"
+          phx-value-page={@stage_board.version_page + 1}
+          disabled={@stage_board.version_page >= @stage_board.version_pages}
+        >Mais versões históricas</button>
+      </nav>
+      <div :if={@stage_board.version}>
+        <h3 id="board-version" data-version-id={@stage_board.version.id}>
+          Quadro · Versão {@stage_board.version.number}
+          {if @stage_board.version.current?, do: "· Publicação atual", else: "· Publicação anterior"}
+        </h3>
+        <p :if={@stage_board.version.archived?} id="board-archived" role="status">
+          Versão arquivada. Os casos estão preservados para consulta.
+        </p>
+        <p id="board-version-note">
+          Este quadro contém apenas casos desta versão. Abra um caso para consultar seu fluxo e suas ações permitidas.
+        </p>
+        <p id="board-loaded-count" aria-live="polite">
+          {@stage_board.loaded} exibidos de {@stage_board.total} casos correspondentes · até {@stage_board.card_limit} por etapa
+        </p>
+        <nav
+          :if={@stage_board.columns_pages > 1}
+          id="board-column-pages"
+          aria-label="Páginas de etapas"
+        >
+          <button
+            id="board-columns-previous"
+            class="btn"
+            phx-click="board-columns-page"
+            phx-value-version_id={@stage_board.version.id}
+            phx-value-page={@stage_board.columns_page - 1}
+            disabled={@stage_board.columns_page <= 1}
+          >Etapas anteriores</button>
+          <span>Etapas · Página {@stage_board.columns_page} de {@stage_board.columns_pages} · {@stage_board.stage_total} etapas</span>
+          <button
+            id="board-columns-next"
+            class="btn"
+            phx-click="board-columns-page"
+            phx-value-version_id={@stage_board.version.id}
+            phx-value-page={@stage_board.columns_page + 1}
+            disabled={@stage_board.columns_page >= @stage_board.columns_pages}
+          >Próximas etapas</button>
+        </nav>
+        <div
+          id="stage-board-scroll"
+          class="stage-board-scroll"
+          tabindex="0"
+          role="region"
+          aria-label="Quadro de casos com rolagem horizontal"
+        >
+          <div id="stage-board-columns" class="stage-board-columns">
+            <section
+              :for={column <- @board_columns}
+              id={"board-column-#{column.id}"}
+              class="stage-board-column"
+              aria-labelledby={"board-heading-#{column.id}"}
+            >
+              <h4 id={"board-heading-#{column.id}"}>{column.label}</h4>
+              <p :if={column.initial? || column.terminal?} class="small-text">
+                {if column.initial?, do: "Inicial "}{if column.terminal?, do: "Final"}
+              </p>
+              <p id={"board-count-#{column.id}"} class="small-text" aria-live="polite">
+                {column.loaded} exibidos de {column.total} correspondentes
+              </p>
+              <p :if={column.total == 0} id={"board-empty-#{column.id}"}>
+                Nenhum caso correspondente nesta etapa.
+              </p>
+              <div id={"board-cards-#{column.id}"} phx-update="stream">
+                <article :for={{id, row} <- @streams[column.stream]} id={id} class="stage-board-card">
+                  <h5>#{row.id} · {InstantflowWeb.ProjectionDisplay.preview(row.title)}</h5>
+                  <p class="badge">{row.stage_label}</p>
+                  <p :if={row.assignment}>Responsável: {row.assignment}</p>
+                  <p :if={row.urgency}>Urgência: {row.urgency}</p>
+                  <dl>
+                    <div :for={cell <- row.cells}>
+                      <dt>{cell.label}</dt><dd>
+                        {InstantflowWeb.ProjectionDisplay.preview(cell.value)}
+                      </dd>
+                    </div>
+                  </dl>
+                  <.link
+                    id={"open-process-record-#{row.id}"}
+                    class="btn"
+                    navigate={
+                      ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/registros/#{row.id}"
+                    }
+                  >Abrir registro</.link>
+                </article>
+              </div>
+              <nav
+                :if={column.pages > 1}
+                id={"board-pagination-#{column.id}"}
+                aria-label={"Casos em #{column.label}"}
+              >
+                <button
+                  id={"board-previous-#{column.id}"}
+                  class="btn"
+                  phx-click="board-card-page"
+                  phx-value-stage={column.id}
+                  phx-value-version_id={@stage_board.version.id}
+                  phx-value-page={column.page - 1}
+                  disabled={column.page <= 1}
+                >Anterior</button>
+                <span>{column.page} / {column.pages}</span>
+                <button
+                  id={"board-next-#{column.id}"}
+                  class="btn"
+                  phx-click="board-card-page"
+                  phx-value-stage={column.id}
+                  phx-value-version_id={@stage_board.version.id}
+                  phx-value-page={column.page + 1}
+                  disabled={column.page >= column.pages}
+                >Próxima</button>
+              </nav>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
     """
   end
 

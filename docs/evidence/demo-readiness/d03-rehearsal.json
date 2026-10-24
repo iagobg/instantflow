@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-23",
+  "database": "instantflow_demo",
+  "columns": [
+    {
+      "cards": 2,
+      "count": "2 exibidos de 2 correspondentes",
+      "id": "board-column-draft",
+      "label": "Solicitada"
+    },
+    {
+      "cards": 0,
+      "count": "0 exibidos de 0 correspondentes",
+      "id": "board-column-academic",
+      "label": "Aprovação da área"
+    },
+    {
+      "cards": 1,
+      "count": "1 exibidos de 1 correspondentes",
+      "id": "board-column-finance",
+      "label": "Aprovação financeira"
+    },
+    {
+      "cards": 2,
+      "count": "2 exibidos de 2 correspondentes",
+      "id": "board-column-purchase",
+      "label": "Compra"
+    },
+    {
+      "cards": 1,
+      "count": "1 exibidos de 1 correspondentes",
+      "id": "board-column-receiving",
+      "label": "Recebimento"
+    },
+    {
+      "cards": 1,
+      "count": "1 exibidos de 1 correspondentes",
+      "id": "board-column-complete",
+      "label": "Concluída"
+    },
+    {
+      "cards": 1,
+      "count": "1 exibidos de 1 correspondentes",
+      "id": "board-column-cancelled",
+      "label": "Cancelada"
+    }
+  ],
+  "pageHasHorizontalOverflow": false,
+  "total": "8 exibidos de 8 casos correspondentes · até 10 por etapa",
+  "version": "Quadro · Versão 1\n      · Publicação atual",
+  "viewport": {
+    "height": 720,
+    "width": 1280
+  },
+  "transition": "case 2 academic -> finance, revision 3 -> 4",
+  "liveRefresh": "second tab with same presenter identity; no board reload at transition",
+  "restrictedStaffCases": 1,
+  "keyboardHorizontalScrollLeft": 120,
+  "sameVersion": true
+}

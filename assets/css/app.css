@@ -9,8 +9,6 @@
 .template-section pre { max-height: 350px; overflow: auto; padding: 12px; background: var(--if-bg); border: 1px solid var(--if-border); white-space: pre-wrap; overflow-wrap: anywhere; }
 .diff-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .role-preview { border-top: 1px solid var(--if-border); padding: 16px 0; }
-.configured-board { display: grid; gap: 16px; min-width: max-content; }
-.configured-card { min-width: 240px; max-width: 380px; margin: 0; }
 .graph-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin: 20px 0 8px; }
 .graph-toolbar form { flex: 1; max-width: 340px; min-width: 220px; }
 .graph-toolbar .form-field { margin-bottom: 0; }
@@ -643,3 +641,15 @@ footer {
 .flow-stage-list > li[aria-current="step"] { border-left: 4px solid var(--if-accent-text); }
 .flow-stage-list ul { padding-left: 20px; }
 .workflow-graph:focus-visible { outline: 2px solid var(--if-accent-text); outline-offset: 3px; }
+
+.stage-board-scroll { overflow-x: auto; max-width: 100%; padding-bottom: 16px; }
+.stage-board-scroll:focus-visible { outline: 2px solid var(--if-accent-text); outline-offset: 3px; }
+.stage-board-columns { display: flex; align-items: flex-start; gap: 16px; width: max-content; }
+.stage-board-column { flex: 0 0 290px; width: 290px; background: var(--if-bg); border: 1px solid var(--if-border); border-radius: 12px; padding: 16px; overflow-wrap: anywhere; }
+.stage-board-column h4 { font-size: 16px; margin: 0 0 8px; }
+.stage-board-card { border: 1px solid var(--if-border); background: var(--if-surface); border-radius: 8px; margin: 12px 0; padding: 12px; }
+.stage-board-card h5 { font-size: 15px; margin: 0 0 8px; }
+.stage-board-card dl { margin: 12px 0; font-size: 12px; }
+.stage-board-card dt { color: var(--if-text-subtle); }
+.stage-board-card dd { margin: 0 0 10px; white-space: normal; }
+.stage-board-column nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

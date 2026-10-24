@@ -1,6 +1,6 @@
 # School demo readiness and execution plan
 
-Status: In progress — D01 purchasing checkpoint and D02 flow implementation · Assessed: 2026-10-23
+Status: In progress — D01 purchasing checkpoint, D02 flow and D03 stage boards implemented · Assessed: 2026-10-23
 
 [Sprint index](sprint_index.md) · [Design](../design/index.md)
 
@@ -47,7 +47,7 @@ presenter and restricted-requester grants use existing policies; case mutations
 use runtime commands. Clean and repeat setup passed locally; regressions cover
 rerun preservation, authorization and retired pinned versions. Enrollment, trips,
 confidential incidents and their documents/roles remain pending. D01 is not yet
-complete. D02 progress is recorded below; D03–D04 have not started. Validation: mix precommit passed with 350 tests,
+complete. D02/D03 progress is recorded below; D04 remains incomplete. Validation: mix precommit passed with 350 tests,
 zero failures (seed 487092); isolated demo HTTP login smoke passed on port 4001.
 No authenticated visual rehearsal was claimed.
 
@@ -89,13 +89,41 @@ seed 636776), and git diff --check passed. See [the current flow walkthrough](..
 
 ## D03 — Genuine authorized stage boards
 
-- [ ] Render board views as ordered stage columns from the applicable published definition, including empty stages, with cards containing a useful authorized title, stage, and configured fields. Preserve table/calendar behavior. School names or workflow keys must not select special code paths.
-- [ ] Define version grouping explicitly: separate incompatible pinned schemas by version or offer a visible version selector. Do not merge same-named stage keys from incompatible versions. Preserve access to authorized older cases.
-- [ ] Reuse Projections/Views and PolicyQuery for membership, visibility, field masking, filtering and counts. Keep SQL authorization before pagination and bounded card loading. Use per-column paging/load-more or an equally explicit bounded strategy; do not label a column empty because its cases fall outside a single global page. Distinguish loaded count from total matching authorized cases.
-- [ ] Clicking a card opens its existing case experience. Keep edits/transitions in that authorized experience initially: drag-and-drop is optional and not required for demo acceptance. Any later board transition must call the same guarded runtime command, retain validation/concurrency/idempotency behavior and reject illegal moves.
-- [ ] Refresh affected columns/counts after successful transitions, corrections and other-user updates. Preserve filters and handle revocation and stale writes without leaking cards or silently losing edits. Use bounded LiveView streams and clear loading/error states.
+- [x] Render board views as ordered stage columns from the applicable published definition, including empty stages, with cards containing a useful authorized title, stage, and configured fields. Preserve table/calendar behavior. School names or workflow keys must not select special code paths.
+- [x] Define version grouping explicitly: separate incompatible pinned schemas by version or offer a visible version selector. Do not merge same-named stage keys from incompatible versions. Preserve access to authorized older cases.
+- [x] Reuse Projections/Views and PolicyQuery for membership, visibility, field masking, filtering and counts. Keep SQL authorization before pagination and bounded card loading. Use per-column paging/load-more or an equally explicit bounded strategy; do not label a column empty because its cases fall outside a single global page. Distinguish loaded count from total matching authorized cases.
+- [x] Clicking a card opens its existing case experience. Keep edits/transitions in that authorized experience initially: drag-and-drop is optional and not required for demo acceptance. Any later board transition must call the same guarded runtime command, retain validation/concurrency/idempotency behavior and reject illegal moves.
+- [x] Refresh affected columns/counts after successful transitions, corrections and other-user updates. Preserve filters and handle revocation and stale writes without leaking cards or silently losing edits. Use bounded LiveView streams and clear loading/error states.
 
 Acceptance: cases genuinely occupy the correct columns, a permitted transition moves a case once, a denied action cannot mutate it, a correction returns it correctly, and another connected session sees the update. Test a case beyond the first 25 results, empty columns, filters, restricted counts/fields, tenant isolation and incompatible published versions.
+
+### D03 implementation checkpoint — 2026-10-23
+
+Configured boards now show one published version at a time, with ordered empty
+stages, useful masked card titles, exact authorized matching counts and independent
+10-card column pages. Stage windows contain at most ten columns; version selectors
+page 25 choices. Fixed bounded LiveView streams reuse the shared projection/filter
+and PolicyQuery authority. Older authorized cases/boards remain available even
+when a newer role mapping removes access to the current workspace. Cards use the
+existing case route and guarded runtime mutations. The global board chooser also
+opens this canonical workspace instead of its former mixed-version grid. Filters and selected versions
+survive live transitions, corrections and permission refreshes.
+
+Focused backend/LiveView tests cover all D03 acceptance scenarios. A real 1280 × 720
+browser check verified populated/empty columns, an allowed case transition with
+live board refresh, restricted counts and horizontal keyboard scrolling. See the
+[implementation, PT-BR walkthrough and evidence](../docs/stage-boards.md).
+
+The known intermittent LiveView invalid-session failure recurred in an initial
+full run. Numeric-only token diagnostics captured a later rejection with the signed timestamp
+2907 ms ahead of the verifier's OS clock, establishing the immediate clock-related
+cause for that occurrence. Local clock stability remains an explicit D04 readiness
+gate; passing reruns do not repair it or explain earlier uninstrumented failures. D01's
+remaining school scenarios and the full independent-builder rehearsal remain pending. Final validation: 18 focused
+UI tests passed (seed 576683), assets built, and instrumented mix precommit passed
+373 tests with zero failures (seed 865528; 1186 token-age checks, zero invalid-age
+results). The preceding instrumented failure and its 2907 ms clock delta are retained;
+the successful run does not close the clock gate.
 
 ## D04 — Rehearsal and release of the demo
 

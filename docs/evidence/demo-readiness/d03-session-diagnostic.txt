@@ -1,0 +1,58 @@
+D03 session diagnostic evidence — 2026-10-23
+Base implementation commit: 68894ba plus D03 working changes.
+
+Initial full precommit run, seed 865528:
+Reproduced the existing intermittent invalid-session observation.
+Test: InstantflowWeb.BudgetsLiveTest, authorized generated finance pages converge and revoke totals.
+Boundary: Phoenix.LiveViewTest.ClientProxy.put_view/3, dependency line 847.
+Expected {:ok, Phoenix.LiveView.Session}; received {:error, :invalid}.
+This early run briefly overlapped a focused test process, and was stopped to
+serialize subsequent validation. It was not a passing precommit result, and no
+causal attribution is made to the overlap.
+No numeric token-age trace was active for this original occurrence.
+
+Source inspection:
+Plug.Crypto.validate_age/2 returns invalid for signed timestamp > System.os_time(:millisecond).
+Signature, LiveView topic, or static-token mismatch can also produce invalid.
+Future mtime warnings were observed during compilation, but they do not prove that
+clock movement caused the session failure. Cause remains unestablished.
+
+Focused diagnostic:
+Eight runs of budgets_live_test.exs, seed 865528: three tests each, zero failures.
+No invalid-age result captured. This is non-reproduction, not a demonstrated fix.
+
+Instrumented precommit before final historical-access addition:
+371 tests, 0 failures; seed 865528; 170.0 seconds.
+TOKEN_CLOCK_SUMMARY age_checks=1174 invalid_age_results=0 largest_future_delta_ms=0
+
+Trace scope:
+Only numeric age/timestamp arguments and results in Plug.Crypto.validate_age/2
+and Plug.Crypto.now_ms/0. No token, payload, signature, salt or key was recorded.
+Checked-in harness: scripts/diagnose_token_clock.exs.
+
+Instrumented precommit after historical-access addition:
+372 tests, 0 failures; seed 865528; 171.2 seconds.
+TOKEN_CLOCK_SUMMARY age_checks=1178 invalid_age_results=0 largest_future_delta_ms=0
+The global chooser redirect was added afterwards and has a separate final run.
+
+Instrumented final implementation, including global chooser redirect:
+Test: InstantflowWeb.Sprint11CombinedRecreationTest, six independent processes coexist
+from empty organizations with UI mappings and shared identity local grants.
+At the same ClientProxy.put_view token boundary, the numeric-only trace captured:
+TOKEN_CLOCK_INVALID signed_minus_now_ms=2907
+373 tests, 1 failure; seed 865528; 170.3 seconds.
+TOKEN_CLOCK_SUMMARY age_checks=1177 invalid_age_results=1 largest_future_delta_ms=2907
+
+This establishes a future-timestamp rejection for this occurrence. Default signing
+and verification use Plug.Crypto.now_ms/0, which calls System.os_time(:millisecond);
+no project signed_at overrides were found. The evidence supports a backward local
+clock read between signing and verification. The underlying OS-clock behavior has
+not been repaired. Earlier uninstrumented failures remain unattributed.
+
+A further serial full verification retains this same diagnostic. Its result must
+not be described as fixing the clock issue, even if all tests pass.
+
+Final serial full verification after the captured diagnostic:
+373 tests, 0 failures; seed 865528; 171.5 seconds.
+TOKEN_CLOCK_SUMMARY age_checks=1186 invalid_age_results=0 largest_future_delta_ms=0
+Exit code zero. This verifies the final implementation, not a clock repair.
