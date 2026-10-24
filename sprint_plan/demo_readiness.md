@@ -1,6 +1,6 @@
 # School demo readiness and execution plan
 
-Status: In progress — D01 school fixtures, D02 flow and D03 stage boards implemented · Assessed: 2026-10-23
+Status: Accepted for the local synthetic school demo — D01–D04 complete · Validated: 2026-10-24
 
 [Sprint index](sprint_index.md) · [Design](../design/index.md)
 
@@ -158,7 +158,7 @@ the successful run does not close the clock gate.
 - [x] Write a short PT-BR presenter walkthrough: login → school/process overview → populated board → published flow → open/edit/advance a case → observe board update → restricted-user comparison.
 - [x] Include a builder proof: create an independent process from a supported starter, change fields/stages/transitions and configure a board through the UI, review local bindings, publish, create and advance a case, then find it on the generated board/flow. No JSON or application-code changes should be needed for that supported scenario. Do not present seeded definitions alone as proof of builder usability.
 - [x] Exercise each of the four school examples briefly, with a deeper enrollment or purchase narrative. Keep any confidential demo optional and explicitly authorized. Prove the new shared flow/board also works for the independent builder-created process.
-- [ ] Verify desktop layout at the actual presentation size, keyboard navigation, long labels, useful empty/error states and page reload/login stability. Investigate the documented intermittent invalid-session observation if reproduced; repeated passing reruns alone do not resolve a reproduced defect.
+- [x] Verify desktop layout at the actual presentation size, keyboard navigation, long labels, useful empty/error states and page reload/login stability. Investigate the documented intermittent invalid-session observation if reproduced; repeated passing reruns alone do not resolve a reproduced defect.
 - [x] Run focused fixture/projection/LiveView regressions and mix precommit. Record commit, isolated DB/setup procedure, browser evidence, test outcomes, remaining limitations and exact rehearsal script. Do not declare completion from test counts alone.
 
 Acceptance: a clean setup plus the entire presenter script succeeds without developer intervention, direct database changes, unexplained reloads or permission bypasses. Capture real UI evidence of the populated board, flow and transition outcome. Leave the local session available for the user's inspection.
@@ -205,6 +205,27 @@ The demonstrated clock-conflict blocker is fixed in the current environment.
 Restart/resume was not forced. Final clean-setup and complete presenter-script
 acceptance remain separate D04 work; the entire milestone is not declared complete
 from these test results.
+
+### Final clean acceptance — 2026-10-24
+
+**Passed.** The [final acceptance report](../docs/demo-readiness-final-acceptance.md)
+records an empty, separate PostgreSQL cluster, fresh/repeat setup with 29 cases,
+and the complete UI presenter script on application commit a7a5e93. Two builder
+recovery defects found in earlier attempts were fixed and regression-tested, then
+only the disposable rehearsal database was reset before the accepted pass. That
+pass required no application changes, direct data repairs or permission bypasses.
+It verified long labels, keyboard scrolling, useful empty/denied/guard states,
+account switching, reloads, four examples and an independently built process.
+
+The independent teacher case #30 was approved by a separate reviewer, moved in
+another connected board and retained its pinned v1 flow. Final precommit passed
+378 tests with zero failures (seed 865528; 1198 token-age checks, zero invalid).
+Thirty focused tests also passed. A 60-second clock sample had zero backward reads,
+with maximum interval discrepancy 33 μs. The original demo's 42 tickets and two
+drafts have unchanged fingerprints. Both hosted demos remain available; the clean
+session is at http://127.0.0.1:4002. Credentials were handed to the user privately.
+This acceptance covers the current local synthetic demo, not production delivery;
+OS restart/resume was not forced or claimed tested.
 
 ## Execution order and boundaries
 

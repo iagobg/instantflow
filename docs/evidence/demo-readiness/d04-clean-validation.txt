@@ -1,0 +1,28 @@
+D04 clean acceptance — 2026-10-24
+Application commit: a7a5e93
+Isolated cluster: 127.0.0.1:55433, instantflow_demo.
+Accepted browser: http://127.0.0.1:4002; viewport 1280x720; document width 1265.
+Fresh/repeat supported setup inventories identical: 29 cases, four v1 processes.
+Final UI pass after both builder recovery fixes: passed without code/DB repair.
+Post-rehearsal setup rerun: passed; edits and 30 total cases preserved.
+Original cluster 55432: identical ticket/draft fingerprints, 42 tickets and 2 drafts.
+
+Focused: fixtures, TemplatesLive, StageBoardLive and StageBoards service suites.
+30 tests, 0 failures; seed 865528; 21.8 seconds.
+TOKEN_CLOCK_SUMMARY age_checks=97 invalid_age_results=0 largest_future_delta_ms=0
+Full instrumented precommit: 378 tests, 0 failures; seed 865528.
+Finished in 166.9 seconds (133.3s async, 33.6s sync).
+TOKEN_CLOCK_SUMMARY age_checks=1198 invalid_age_results=0 largest_future_delta_ms=0
+Clock: 60 seconds, samples=29975, backward_reads=0, steps_over_50ms=0,
+largest_wall_monotonic_delta_us=33; exit 0.
+
+Builder initial-stage long label: heading width/scrollWidth=256px;
+height/scrollHeight=77px. Full label in board and accessible flow list.
+Independent case 30: teacher created/submitted; presenter approved; closed revision 4.
+Live board update observed in another connected tab. Pinned flow v1 current closed.
+Roles: teacher one purchase, family 12 enrollments, director 3 incidents,
+counselor 2 assigned incidents, presenter 0 incidents; private masking verified.
+Guarded IT retry completed on attempt 2, with no obsolete error.
+No real external effects, JSON configuration edits, direct case writes or permission bypasses.
+Rehearsal and original demo remain running; no credentials in tracked artifacts.
+Git diff --check passed. Suspend/resume/restart not forced or claimed tested.

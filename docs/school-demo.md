@@ -1,17 +1,16 @@
 # Escola Horizonte: preparação isolada da demonstração
 
 O setup D01 instala 12 matrículas, oito compras, seis passeios e três ocorrências
-inteiramente fictícias. Fluxo publicado D02 e quadro por etapas D03 estão
-implementados. O ensaio completo D04 ainda está pendente, incluindo o processo
-independente construído pela interface e a estabilidade do relógio local.
-Veja o [relatório visual D02](demo-flow-visual-rehearsal.md) e o
-[roteiro do quadro D03](stage-boards.md).
+inteiramente fictícias. Os requisitos D01–D04 passaram na
+[aceitação final a partir de instalação limpa](demo-readiness-final-acceptance.md).
+O ensaio inclui o processo independente construído pela interface, permissões,
+fluxo publicado, quadro por etapas, teclado, rótulos longos e estabilidade de sessão.
 
-O [ensaio D04 e roteiro PT-BR](demo-readiness-rehearsal.md) agora registram o processo
-independente construído pela interface e os testes com família, TI, direção e
-orientação. O [conflito de sincronização do relógio](demo-clock-remediation.md) foi
-corrigido e verificado no ambiente atual; a aceitação final do roteiro completo
-partindo da instalação limpa continua separada desses testes.
+A sessão limpa permanece em [127.0.0.1:4002](http://127.0.0.1:4002), em outro cluster
+local; a sessão anterior de localhost:4001 foi preservada. As credenciais da sessão
+limpa foram fornecidas na conversa. O [roteiro PT-BR](demo-readiness-rehearsal.md)
+e o [relatório de correção do relógio](demo-clock-remediation.md) detalham operação
+e limites. A aceitação é local, com dados fictícios e integrações simuladas.
 
 ## Preparar e iniciar
 

@@ -1,0 +1,128 @@
+[
+  {
+    "workflow": "enrollment",
+    "version": 1,
+    "stage": "academic",
+    "cases": 2
+  },
+  {
+    "workflow": "enrollment",
+    "version": 1,
+    "stage": "complete",
+    "cases": 2
+  },
+  {
+    "workflow": "enrollment",
+    "version": 1,
+    "stage": "documents",
+    "cases": 3
+  },
+  {
+    "workflow": "enrollment",
+    "version": 1,
+    "stage": "draft",
+    "cases": 2
+  },
+  {
+    "workflow": "enrollment",
+    "version": 1,
+    "stage": "payment",
+    "cases": 2
+  },
+  {
+    "workflow": "enrollment",
+    "version": 1,
+    "stage": "provisioning",
+    "cases": 1
+  },
+  {
+    "workflow": "field_trip",
+    "version": 1,
+    "stage": "academic",
+    "cases": 1
+  },
+  {
+    "workflow": "field_trip",
+    "version": 1,
+    "stage": "complete",
+    "cases": 2
+  },
+  {
+    "workflow": "field_trip",
+    "version": 1,
+    "stage": "draft",
+    "cases": 1
+  },
+  {
+    "workflow": "field_trip",
+    "version": 1,
+    "stage": "finance",
+    "cases": 1
+  },
+  {
+    "workflow": "field_trip",
+    "version": 1,
+    "stage": "purchase",
+    "cases": 1
+  },
+  {
+    "workflow": "incident",
+    "version": 1,
+    "stage": "closed",
+    "cases": 1
+  },
+  {
+    "workflow": "incident",
+    "version": 1,
+    "stage": "followup",
+    "cases": 1
+  },
+  {
+    "workflow": "incident",
+    "version": 1,
+    "stage": "triage",
+    "cases": 1
+  },
+  {
+    "workflow": "mostra_cultural_demo",
+    "version": 1,
+    "stage": "closed",
+    "cases": 1
+  },
+  {
+    "workflow": "requisition",
+    "version": 1,
+    "stage": "academic",
+    "cases": 2
+  },
+  {
+    "workflow": "requisition",
+    "version": 1,
+    "stage": "cancelled",
+    "cases": 1
+  },
+  {
+    "workflow": "requisition",
+    "version": 1,
+    "stage": "complete",
+    "cases": 1
+  },
+  {
+    "workflow": "requisition",
+    "version": 1,
+    "stage": "draft",
+    "cases": 1
+  },
+  {
+    "workflow": "requisition",
+    "version": 1,
+    "stage": "purchase",
+    "cases": 2
+  },
+  {
+    "workflow": "requisition",
+    "version": 1,
+    "stage": "receiving",
+    "cases": 1
+  }
+]

@@ -1,5 +1,9 @@
 # D04 rehearsal — 2026-10-24
 
+Follow-up: the [final clean acceptance](demo-readiness-final-acceptance.md) now
+passes on application commit a7a5e93, with the original demo preserved. The report
+below retains the earlier rehearsal history and its then-open gates.
+
 The independent builder proof and the four school examples were exercised in the
 isolated local demo. The clock conflict observed during this rehearsal was
 subsequently [remediated and verified](demo-clock-remediation.md) with configuration

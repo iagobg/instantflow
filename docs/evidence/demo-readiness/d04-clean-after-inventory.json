@@ -1,0 +1,164 @@
+{
+  "database": "instantflow_demo",
+  "versions": [
+    {
+      "total": 8,
+      "version": 1,
+      "primary": true,
+      "stages": {
+        "academic": 2,
+        "cancelled": 1,
+        "complete": 1,
+        "draft": 1,
+        "purchase": 2,
+        "receiving": 1
+      },
+      "version_id": 1,
+      "workflow": "requisition"
+    },
+    {
+      "total": 12,
+      "version": 1,
+      "primary": true,
+      "stages": {
+        "academic": 2,
+        "complete": 2,
+        "documents": 3,
+        "draft": 2,
+        "payment": 2,
+        "provisioning": 1
+      },
+      "version_id": 2,
+      "workflow": "enrollment"
+    },
+    {
+      "total": 6,
+      "version": 1,
+      "primary": true,
+      "stages": {
+        "academic": 1,
+        "complete": 2,
+        "draft": 1,
+        "finance": 1,
+        "purchase": 1
+      },
+      "version_id": 3,
+      "workflow": "field_trip"
+    },
+    {
+      "total": 3,
+      "version": 1,
+      "primary": true,
+      "stages": {
+        "closed": 1,
+        "followup": 1,
+        "triage": 1
+      },
+      "version_id": 4,
+      "workflow": "incident"
+    }
+  ],
+  "organization": "horizonte",
+  "roles": [
+    {
+      "role": "staff",
+      "email": "docente@escola.example",
+      "grants": [
+        {
+          "role": "teacher",
+          "department_id": 1
+        }
+      ]
+    },
+    {
+      "role": "staff",
+      "email": "compras@escola.example",
+      "grants": [
+        {
+          "role": "teacher",
+          "department_id": 1
+        }
+      ]
+    },
+    {
+      "role": "admin",
+      "email": "admin@escola.example",
+      "grants": [
+        {
+          "role": "head",
+          "department_id": 1
+        },
+        {
+          "role": "teacher",
+          "department_id": 1
+        },
+        {
+          "role": "finance",
+          "department_id": 2
+        },
+        {
+          "role": "finance_allocator",
+          "department_id": 2
+        },
+        {
+          "role": "operations",
+          "department_id": 3
+        },
+        {
+          "role": "admissions",
+          "department_id": 5
+        },
+        {
+          "role": "it",
+          "department_id": 6
+        }
+      ]
+    },
+    {
+      "role": "staff",
+      "email": "secretaria@escola.example",
+      "grants": [
+        {
+          "role": "admissions",
+          "department_id": 5
+        }
+      ]
+    },
+    {
+      "role": "staff",
+      "email": "ti@escola.example",
+      "grants": [
+        {
+          "role": "it",
+          "department_id": 6
+        }
+      ]
+    },
+    {
+      "role": "staff",
+      "email": "direcao@escola.example",
+      "grants": [
+        {
+          "role": "dean",
+          "department_id": 4
+        }
+      ]
+    },
+    {
+      "role": "staff",
+      "email": "orientacao@escola.example",
+      "grants": [
+        {
+          "role": "counselor",
+          "department_id": 7
+        }
+      ]
+    },
+    {
+      "role": "external",
+      "email": "familia@escola.example",
+      "grants": []
+    }
+  ],
+  "scenario": "demo:d01:purchasing:1"
+}

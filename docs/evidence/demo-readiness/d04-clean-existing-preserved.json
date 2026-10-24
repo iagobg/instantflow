@@ -1,0 +1,15 @@
+{
+  "before": {
+    "tickets": 42,
+    "ticket_hash": "237a24ebd1380d5afbbed38f8d609909",
+    "drafts": 2,
+    "draft_hash": "4a66bc39f07df8fdd25be2106ba4594d"
+  },
+  "after": {
+    "tickets": 42,
+    "ticket_hash": "237a24ebd1380d5afbbed38f8d609909",
+    "drafts": 2,
+    "draft_hash": "4a66bc39f07df8fdd25be2106ba4594d"
+  },
+  "unchanged": true
+}
