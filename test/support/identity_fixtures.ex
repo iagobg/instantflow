@@ -3,6 +3,10 @@ defmodule Instantflow.IdentityFixtures do
   alias Instantflow.Identity.{Department, Membership, Organization, User}
 
   def staff_fixture(role \\ "admin") do
+    # Explicit fixture ID 1 does not advance PostgreSQL's sequence. Consume a value
+    # so subsequent generated IDs cannot collide on a freshly migrated database.
+    Repo.query!("SELECT nextval(pg_get_serial_sequence('organizations', 'id'))")
+
     Repo.insert!(%Organization{id: 1, slug: "horizonte", name: "Escola de Teste"},
       on_conflict: :nothing
     )
