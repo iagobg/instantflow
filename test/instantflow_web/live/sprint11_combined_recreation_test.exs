@@ -9,7 +9,10 @@ defmodule InstantflowWeb.Sprint11CombinedRecreationTest do
   test "six independent processes coexist from empty organizations with UI mappings and shared identity local grants" do
     admin = staff_fixture()
     assert Repo.aggregate(Version, :count) == 0
-    org = Repo.insert!(%Organization{slug: "second-builder", name: "Second synthetic builder"})
+
+    org =
+      Repo.insert!(%Organization{id: 2, slug: "second-builder", name: "Second synthetic builder"})
+
     dep = Repo.insert!(%Department{organization_id: org.id, name: "Local team"})
 
     user =

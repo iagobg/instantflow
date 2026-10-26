@@ -112,6 +112,8 @@ defmodule Instantflow.Sprint11SupportedRecoveryTest do
       assert Operations.visit(first.admin, first.session, first.equipment.workflow_id) == nil
       assert Operations.visit(other.admin, first.session, first.restaurant.workflow_id) == nil
 
+      File.mkdir_p!(Path.expand(".local"))
+
       File.write!(
         Path.expand(".local/sprint11-supported-recovery.json"),
         Jason.encode!(
