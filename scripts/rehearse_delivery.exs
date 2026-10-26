@@ -69,11 +69,18 @@ defmodule Instantflow.DeliveryRehearsal do
 
     rollback_refused =
       try do
-        Ecto.Migrator.run(
+        # Later index-only migrations are reversible; probe the protected tenant boundary.
+        Code.require_file(
+          Application.app_dir(
+            :instantflow,
+            "priv/repo/migrations/20261020200807_isolate_organizations.exs"
+          )
+        )
+
+        Ecto.Migrator.down(
           OperatorRepo,
-          Application.app_dir(:instantflow, "priv/repo/migrations"),
-          :down,
-          step: 1,
+          20_261_020_200_807,
+          Instantflow.Repo.Migrations.IsolateOrganizations,
           log: false
         )
 

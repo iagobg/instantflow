@@ -50,7 +50,7 @@ def snapshot(database, columns=None):
     data = {}
     for table, names in columns.items():
         selected = ",".join('"' + name + '"' for name in names)
-        data[table] = sql(database, f'SELECT row_to_json(row) FROM (SELECT {selected} FROM "{table}" ORDER BY id) row')
+        data[table] = sql(database, f'SELECT row_to_json(row) FROM (SELECT {selected} FROM "{table}") row ORDER BY row_to_json(row)::text COLLATE "C"')
     return columns, data
 
 
@@ -101,10 +101,17 @@ run([binary("pg_dump"), "-Fc", "-d", original, "-f", str(backup)])
 sql("postgres", f"CREATE DATABASE {restored} TEMPLATE template0 ENCODING 'UTF8'")
 run([binary("pg_restore"), "--exit-on-error", "-d", restored, str(backup)])
 assert snapshot(restored, full_columns)[1] == full_before, "Full restore did not preserve every tenant's rows"
-# The current forward-only rollback must refuse without deleting the second school.
-result = subprocess.run(["mix", "ecto.rollback", "-r", "Instantflow.OperatorRepo"], cwd=ROOT,
+# Exercise the tenant-isolation boundary explicitly; later index-only migrations are reversible.
+rollback_probe = (
+    'Code.require_file("priv/repo/migrations/20261020200807_isolate_organizations.exs"); '
+    'Ecto.Migrator.with_repo(Instantflow.OperatorRepo, fn repo -> '
+    'Ecto.Migrator.down(repo, 20261020200807, '
+    'Instantflow.Repo.Migrations.IsolateOrganizations, log: false) end)'
+)
+result = subprocess.run(["mix", "run", "--no-start", "-e", rollback_probe], cwd=ROOT,
                         env={**env, "MIGRATION_DATABASE": restored}, capture_output=True, text=True)
-assert result.returncode != 0 and "forward-only" in result.stdout + result.stderr
+assert result.returncode != 0 and "forward-only" in result.stdout + result.stderr, "Tenant-isolation rollback probe did not refuse at the protected boundary"
+assert snapshot(restored, full_columns)[1] == full_before, "Refused rollback changed restored data"
 assert sql(restored, "SELECT count(*) FROM organizations") == "2"
 print(json.dumps({"forward_preservation": "passed", "multitenant_restore": "passed", "rollback_refusal": "passed",
                   "migration_database": original, "restore_database": restored, "backup": str(backup)}, indent=2))
