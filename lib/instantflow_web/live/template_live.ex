@@ -40,6 +40,7 @@ defmodule InstantflowWeb.TemplateLive do
          page_title: "Editor de modelo",
          draft: nil,
          unsaved: false,
+         pending_forms: %{},
          conflict: nil,
          export: nil,
          graph_focus: "",
@@ -86,7 +87,7 @@ defmodule InstantflowWeb.TemplateLive do
 
     if collection in Authoring.collections() and
          valid_parent?(socket.assigns.draft.definition, collection, parent),
-       do: {:noreply, select(socket, collection, parent, nil)},
+       do: {:noreply, select_item(socket, collection, parent, nil)},
        else:
          {:noreply,
           put_flash(socket, :error, "Escolha uma seção ou transição válida para este item.")}
@@ -94,11 +95,38 @@ defmodule InstantflowWeb.TemplateLive do
 
   def handle_event("edit", %{"collection" => c, "parent" => p, "key" => key}, socket) do
     if c in Authoring.collections() and valid_parent?(socket.assigns.draft.definition, c, p),
-      do: {:noreply, select(socket, c, p, key)},
+      do: {:noreply, select_item(socket, c, p, key)},
       else: {:noreply, put_flash(socket, :error, TemplatesLive.message(:not_found))}
   end
 
-  def handle_event("dirty", _, socket), do: {:noreply, assign(socket, unsaved: true)}
+  def handle_event("dirty", params, socket) do
+    pending =
+      Map.merge(
+        socket.assigns.pending_forms,
+        Map.take(params, ~w(metadata mapping item interface_page workspace advanced))
+      )
+
+    {:noreply, socket |> assign(pending_forms: pending) |> restore_pending_forms()}
+  end
+
+  def handle_event("discard-form", _, %{assigns: %{conflict: conflict}} = socket)
+      when not is_nil(conflict) do
+    {:noreply,
+     put_flash(
+       socket,
+       :error,
+       "Compare o conflito e preserve suas alterações antes de recarregar a versão salva."
+     )}
+  end
+
+  def handle_event("discard-form", %{"form" => name}, socket) do
+    {:noreply,
+     socket |> assign(pending_forms: Map.delete(socket.assigns.pending_forms, name)) |> reload()}
+  end
+
+  def handle_event("preview-picker", %{"picker" => params}, socket) do
+    {:noreply, assign(socket, picker: to_form(params, as: :picker))}
+  end
 
   def handle_event("preview-participant", %{"preview" => params}, socket) do
     preview =
@@ -111,6 +139,14 @@ defmodule InstantflowWeb.TemplateLive do
   end
 
   def handle_event("save-item", %{"item" => p}, socket) do
+    socket =
+      assign(socket,
+        pending_forms: Map.put(socket.assigns.pending_forms, "item", p),
+        saving_form: "item",
+        unsaved: true
+      )
+      |> restore_pending_forms()
+
     a = socket.assigns
 
     socket =
@@ -134,7 +170,8 @@ defmodule InstantflowWeb.TemplateLive do
         persist(socket, definition, a.draft.bindings, key)
 
       {:error, reason} ->
-        {:noreply, put_flash(socket, :error, TemplatesLive.message(reason))}
+        {:noreply,
+         put_flash(assign(socket, saving_form: nil), :error, TemplatesLive.message(reason))}
     end
   end
 
@@ -165,6 +202,14 @@ defmodule InstantflowWeb.TemplateLive do
   end
 
   def handle_event("metadata", %{"metadata" => p}, socket) do
+    socket =
+      assign(socket,
+        pending_forms: Map.put(socket.assigns.pending_forms, "metadata", p),
+        saving_form: "metadata",
+        unsaved: true
+      )
+      |> restore_pending_forms()
+
     d = socket.assigns.draft
 
     persist(
@@ -175,6 +220,14 @@ defmodule InstantflowWeb.TemplateLive do
   end
 
   def handle_event("workspace-labels", %{"workspace" => params}, socket) do
+    socket =
+      assign(socket,
+        pending_forms: Map.put(socket.assigns.pending_forms, "workspace", params),
+        saving_form: "workspace",
+        unsaved: true
+      )
+      |> restore_pending_forms()
+
     draft = socket.assigns.draft
 
     interface =
@@ -190,6 +243,15 @@ defmodule InstantflowWeb.TemplateLive do
       ),
       draft.bindings
     )
+  end
+
+  def handle_event(
+        "pick-page",
+        _,
+        %{assigns: %{pending_forms: %{"interface_page" => _}}} = socket
+      ) do
+    {:noreply,
+     put_flash(socket, :error, "Salve a página atual antes de trocar ou reorganizar páginas.")}
   end
 
   def handle_event("pick-page", %{"key" => key}, socket) do
@@ -214,6 +276,11 @@ defmodule InstantflowWeb.TemplateLive do
     end
   end
 
+  def handle_event("new-page", _, %{assigns: %{pending_forms: %{"interface_page" => _}}} = socket) do
+    {:noreply,
+     put_flash(socket, :error, "Salve a página atual antes de trocar ou reorganizar páginas.")}
+  end
+
   def handle_event("new-page", _, socket) do
     params =
       interface_page(socket.assigns.draft.definition, nil)
@@ -227,6 +294,14 @@ defmodule InstantflowWeb.TemplateLive do
   end
 
   def handle_event("save-interface-page", %{"interface_page" => params}, socket) do
+    socket =
+      assign(socket,
+        pending_forms: Map.put(socket.assigns.pending_forms, "interface_page", params),
+        saving_form: "interface_page",
+        unsaved: true
+      )
+      |> restore_pending_forms()
+
     draft = socket.assigns.draft
     interface = Instantflow.WorkflowCatalog.Workspaces.configuration(draft.definition)
 
@@ -339,6 +414,15 @@ defmodule InstantflowWeb.TemplateLive do
     persist(assign(socket, :selected_page_key, page["key"]), definition, draft.bindings)
   end
 
+  def handle_event(
+        "move-interface-block",
+        _,
+        %{assigns: %{pending_forms: %{"interface_page" => _}}} = socket
+      ) do
+    {:noreply,
+     put_flash(socket, :error, "Salve a página atual antes de trocar ou reorganizar páginas.")}
+  end
+
   def handle_event("move-interface-block", %{"index" => raw, "direction" => direction}, socket) do
     draft = socket.assigns.draft
     config = Instantflow.WorkflowCatalog.Workspaces.configuration(draft.definition)
@@ -380,6 +464,14 @@ defmodule InstantflowWeb.TemplateLive do
   end
 
   def handle_event("bindings", %{"mapping" => p}, socket) do
+    socket =
+      assign(socket,
+        pending_forms: Map.put(socket.assigns.pending_forms, "mapping", p),
+        saving_form: "mapping",
+        unsaved: true
+      )
+      |> restore_pending_forms()
+
     roles =
       Map.new(p["roles"] || %{}, fn {key, values} ->
         {key, List.wrap(values) |> Enum.reject(&(&1 == ""))}
@@ -408,14 +500,27 @@ defmodule InstantflowWeb.TemplateLive do
   end
 
   def handle_event("advanced", %{"advanced" => p}, socket) do
+    socket =
+      assign(socket,
+        pending_forms: Map.put(socket.assigns.pending_forms, "advanced", p),
+        saving_form: "advanced",
+        unsaved: true
+      )
+      |> restore_pending_forms()
+
     case Interchange.decode(p["json"]) do
-      {:ok, definition} -> persist(socket, definition, socket.assigns.draft.bindings)
-      _ -> {:noreply, put_flash(socket, :error, TemplatesLive.message(:invalid_json))}
+      {:ok, definition} ->
+        persist(socket, definition, socket.assigns.draft.bindings)
+
+      _ ->
+        {:noreply,
+         put_flash(assign(socket, saving_form: nil), :error, TemplatesLive.message(:invalid_json))}
     end
   end
 
   def handle_event("reload", _, socket) do
-    {:noreply, reload(socket) |> assign(conflict: nil, unsaved: false)}
+    {:noreply,
+     socket |> assign(pending_forms: %{}) |> reload() |> assign(conflict: nil, unsaved: false)}
   end
 
   def handle_event("review-publication", _, socket) do
@@ -428,6 +533,13 @@ defmodule InstantflowWeb.TemplateLive do
 
   def handle_event("publish", _, %{assigns: %{publication_confirmation: false}} = socket),
     do: {:noreply, socket}
+
+  def handle_event("publish", _, %{assigns: %{unsaved: true}} = socket),
+    do: {:noreply, put_flash(socket, :error, "Salve os formulários pendentes antes de publicar.")}
+
+  def handle_event("publish", _, %{assigns: %{conflict: conflict}} = socket)
+      when not is_nil(conflict),
+      do: {:noreply, put_flash(socket, :error, "Resolva o conflito antes de publicar.")}
 
   def handle_event("publish", _, socket) do
     case Templates.publish(
@@ -457,6 +569,9 @@ defmodule InstantflowWeb.TemplateLive do
   end
 
   defp persist(socket, definition, bindings, saved_selection \\ nil) do
+    saved_form = socket.assigns[:saving_form]
+    socket = assign(socket, saving_form: nil)
+
     case Templates.save(
            socket.assigns.current_scope,
            socket.assigns.draft.id,
@@ -466,6 +581,12 @@ defmodule InstantflowWeb.TemplateLive do
          ) do
       {:ok, _} ->
         socket = if saved_selection, do: assign(socket, original: saved_selection), else: socket
+
+        socket =
+          assign(socket,
+            pending_forms: Map.delete(socket.assigns.pending_forms, saved_form),
+            saving_form: nil
+          )
 
         {:noreply,
          reload(socket)
@@ -565,6 +686,7 @@ defmodule InstantflowWeb.TemplateLive do
     )
     |> stream(:roles, review.roles, reset: true)
     |> restore_selection()
+    |> restore_pending_forms()
   end
 
   defp load_graph(socket, definition) do
@@ -635,6 +757,38 @@ defmodule InstantflowWeb.TemplateLive do
   defp groups(d, "actions"), do: Enum.map(d["transitions"], &{&1["key"], &1["actions"]})
   defp groups(d, c), do: [{nil, Authoring.items(d, c, nil)}]
 
+  defp select_item(socket, collection, parent, key) do
+    socket
+    |> assign(pending_forms: Map.delete(socket.assigns.pending_forms, "item"))
+    |> select(collection, parent, key)
+    |> restore_pending_forms()
+  end
+
+  defp restore_pending_forms(socket) do
+    forms = %{
+      "metadata" => :metadata_form,
+      "mapping" => :mapping_form,
+      "item" => :item_form,
+      "interface_page" => :interface_page_form,
+      "workspace" => :workspace_form,
+      "advanced" => :advanced_form
+    }
+
+    Enum.reduce(socket.assigns.pending_forms, socket, fn {name, params}, state ->
+      form =
+        if name == "item" do
+          to_form(Ecto.Changeset.cast(Authoring.form(), params, Map.keys(Authoring.form().types)),
+            as: :item
+          )
+        else
+          to_form(params, as: name)
+        end
+
+      assign(state, Map.fetch!(forms, name), form)
+    end)
+    |> assign(unsaved: map_size(socket.assigns.pending_forms) > 0)
+  end
+
   defp select(socket, c, p, key) do
     item =
       Enum.find(
@@ -647,6 +801,7 @@ defmodule InstantflowWeb.TemplateLive do
       collection_label: @labels[c],
       parent: p,
       original: key,
+      picker: to_form(%{"collection" => c}, as: :picker),
       item_form: to_form(Authoring.form(item, socket.assigns.draft.definition), as: :item),
       unsaved: false
     )
@@ -710,6 +865,36 @@ defmodule InstantflowWeb.TemplateLive do
       Instantflow.WorkflowCatalog.Workspaces.close_transition(definition)
     )
   end
+
+  defp review_error_anchor(error) do
+    cond do
+      String.starts_with?(error, "mapeamentos") ->
+        "#authoring-people"
+
+      String.contains?(error, "interface") ->
+        "#workspace-configuration"
+
+      String.starts_with?(error, ["name", "description", "template_version"]) ->
+        "#authoring-overview"
+
+      true ->
+        "#authoring-items"
+    end
+  end
+
+  defp form_anchor("metadata"), do: "#authoring-overview"
+  defp form_anchor("mapping"), do: "#authoring-people"
+  defp form_anchor("item"), do: "#authoring-items"
+  defp form_anchor("interface_page"), do: "#workspace-configuration"
+  defp form_anchor("workspace"), do: "#workspace-labels-form"
+  defp form_anchor(_), do: "#template-review"
+
+  defp form_label("metadata"), do: "Identificação do processo"
+  defp form_label("mapping"), do: "Pessoas e permissões"
+  defp form_label("item"), do: "Item em edição"
+  defp form_label("interface_page"), do: "Página em edição"
+  defp form_label("workspace"), do: "Nomes dos recursos"
+  defp form_label(_), do: "Definição avançada"
 
   defp selections(value), do: List.wrap(value) |> Enum.reject(&(&1 == ""))
 
@@ -787,19 +972,24 @@ defmodule InstantflowWeb.TemplateLive do
       unsaved={@unsaved}
     >
       <div :if={@draft} id="workflow-editor">
-        <.participant_preview_panel
-          draft={@draft}
-          preview={@preview}
-          preview_form={@preview_form}
-          role_options={@role_options}
-          stage_options={@stage_options}
-        />
-        <div class="page-heading">
+        <div class="page-heading" id="authoring-heading">
           <div>
             <p class="eyebrow">EDITOR DE MODELOS</p><h1>{@draft.definition["name"]}</h1><p>
               Revisão {@draft.revision} · {if @draft.published_version_id,
                 do: "Publicado",
                 else: "Rascunho não publicado"}
+            </p>
+            <p id="authoring-save-state" role="status">
+              <%= cond do %>
+                <% @conflict != nil -> %>
+                  Conflito: compare as alterações antes de continuar.
+                <% @unsaved -> %>
+                  Alterações não salvas. Salve cada formulário antes de publicar.
+                <% @draft.published_version_id != nil -> %>
+                  Versão publicada. Clone o modelo para editar uma nova versão.
+                <% true -> %>
+                  Sem alterações locais pendentes.
+              <% end %>
             </p>
           </div><.link
             navigate={~p"/o/#{@current_scope.organization.slug}/modelos"}
@@ -807,6 +997,34 @@ defmodule InstantflowWeb.TemplateLive do
             data-confirm={if @unsaved, do: "Descartar alterações não salvas?"}
           >Todos os modelos</.link>
         </div>
+        <section
+          :if={map_size(@pending_forms) > 0}
+          id="pending-authoring-forms"
+          class="card template-section"
+          aria-label="Formulários com alterações pendentes"
+        >
+          <h2>Alterações não salvas</h2>
+          <p>Salvar um formulário mantém as alterações dos demais.</p>
+          <div :for={{name, _params} <- @pending_forms} id={"pending-form-#{name}"}>
+            <.link href={form_anchor(name)}>{form_label(name)}</.link>
+            <button
+              id={"discard-form-#{name}"}
+              type="button"
+              class="btn"
+              phx-click="discard-form"
+              phx-value-form={name}
+              data-confirm="Descartar somente as alterações deste formulário?"
+            >Descartar alterações</button>
+          </div>
+        </section>
+        <nav id="authoring-navigation" class="authoring-navigation" aria-label="Seções do editor">
+          <.link href="#authoring-overview" class="btn">Visão geral</.link>
+          <.link href="#authoring-items" class="btn">Formulário e regras</.link>
+          <.link href="#authoring-stages" class="btn">Etapas e caminhos</.link>
+          <.link href="#authoring-people" class="btn">Pessoas e permissões</.link>
+          <.link href="#workspace-configuration" class="btn">Páginas e visualizações</.link>
+          <.link href="#template-review" class="btn">Revisar e publicar</.link>
+        </nav>
         <section :if={@conflict} id="draft-conflict" role="alert" class="card template-section">
           <h2>O rascunho foi alterado</h2><p>
             A versão salva está na revisão {@conflict.revision}. Suas alterações não foram aplicadas. Compare e copie o que deseja preservar antes de recarregar.
@@ -828,45 +1046,9 @@ defmodule InstantflowWeb.TemplateLive do
             data-confirm="Suas alterações locais serão descartadas. Recarregar?"
           >Recarregar versão salva</button>
         </section>
-        <.workspace_panel
-          budget_binding_options={@budget_binding_options}
-          close_options={@close_options}
-          communication_options={@communication_options}
-          department_options={@department_options}
-          draft={@draft}
-          field_options={@field_options}
-          finance_account_form={@finance_account_form}
-          interface_blocks={@interface_blocks}
-          interface_page_form={@interface_page_form}
-          interface_pages={@interface_pages}
-          participant_audience_options={@participant_audience_options}
-          role_options={@role_options}
-          transition_options={@transition_options}
-          workspace_form={@workspace_form}
-        />
-        <section class="card template-section">
-          <h2>Etapas e caminhos</h2><p>
-            Acompanhe o fluxo de cima para baixo. Escolha uma etapa para destacar suas entradas e saídas.
-          </p>
-          <div class="graph-toolbar">
-            <.form for={@graph_form} id="graph-focus-form" phx-change="focus-stage">
-              <.input
-                field={@graph_form[:stage]}
-                type="select"
-                label="Destacar conexões da etapa"
-                options={@stage_options}
-                prompt="Todas as etapas"
-              />
-            </.form>
-            <div class="graph-legend" aria-label="Legenda das conexões">
-              <span><i class="graph-swatch"></i>Avanço</span><span><i class="graph-swatch secondary"></i>Correção e outros caminhos</span>
-            </div>
-          </div>
-          <.workflow_graph graph_width={@graph_width} graph_height={@graph_height} streams={@streams} />
-        </section>
         <div class="template-grid">
           <section class="card">
-            <h2>Configuração do modelo</h2><.form
+            <h2 id="authoring-overview">Visão geral</h2><.form
               for={@metadata_form}
               id="template-metadata"
               phx-submit="metadata"
@@ -887,7 +1069,7 @@ defmodule InstantflowWeb.TemplateLive do
             </.form>
           </section>
           <section class="card">
-            <h2>Mapeamentos desta organização</h2><p>
+            <h2 id="authoring-people">Quem desempenha cada papel</h2><p>
               Mapear papéis não concede permissões às pessoas. Somente departamentos locais são aceitos.
             </p><.form
               for={@mapping_form}
@@ -903,7 +1085,10 @@ defmodule InstantflowWeb.TemplateLive do
                 multiple
                 label={role["label"]}
                 options={@local_roles}
-                value={@draft.bindings["roles"][role["key"]] || []}
+                value={
+                  get_in(@mapping_form.params, ["roles", role["key"]]) ||
+                    @draft.bindings["roles"][role["key"]] || []
+                }
               />
               <.input
                 :for={
@@ -915,7 +1100,10 @@ defmodule InstantflowWeb.TemplateLive do
                 label={binding["label"]}
                 options={@department_options}
                 prompt="Não resolvido"
-                value={@draft.bindings["departments"][binding["key"]]}
+                value={
+                  get_in(@mapping_form.params, ["departments", binding["key"]]) ||
+                    @draft.bindings["departments"][binding["key"]]
+                }
               />
               <.input
                 :for={
@@ -927,7 +1115,10 @@ defmodule InstantflowWeb.TemplateLive do
                 label={binding["label"]}
                 options={@budget_options}
                 prompt="Selecione um orçamento local"
-                value={get_in(@draft.bindings, ["budgets", binding["key"]])}
+                value={
+                  get_in(@mapping_form.params, ["budgets", binding["key"]]) ||
+                    get_in(@draft.bindings, ["budgets", binding["key"]])
+                }
               />
               <.input
                 name="mapping[assignment]"
@@ -940,47 +1131,76 @@ defmodule InstantflowWeb.TemplateLive do
                     &{&1["label"], &1["key"]}
                   )
                 }
-                value={@draft.definition["assignment"]["department_binding"]}
+                value={
+                  @mapping_form.params["assignment"] ||
+                    @draft.definition["assignment"]["department_binding"]
+                }
               />
               <button id="save-mappings" class="btn" disabled={@draft.published_version_id != nil}>Salvar mapeamentos</button>
             </.form>
           </section>
         </div>
+        <section id="authoring-stages" class="card template-section">
+          <h2>Etapas e caminhos</h2><p>
+            Acompanhe o fluxo de cima para baixo. Escolha uma etapa para destacar suas entradas e saídas.
+          </p>
+          <div class="graph-toolbar">
+            <.form for={@graph_form} id="graph-focus-form" phx-change="focus-stage">
+              <.input
+                field={@graph_form[:stage]}
+                type="select"
+                label="Destacar conexões da etapa"
+                options={@stage_options}
+                prompt="Todas as etapas"
+              />
+            </.form>
+            <div class="graph-legend" aria-label="Legenda das conexões">
+              <span><i class="graph-swatch"></i>Avanço</span><span><i class="graph-swatch secondary"></i>Correção e outros caminhos</span>
+            </div>
+          </div>
+          <.workflow_graph graph_width={@graph_width} graph_height={@graph_height} streams={@streams} />
+        </section>
         <section class="card template-section">
-          <h2>Editar itens</h2>
+          <h2 id="authoring-items">Formulário e regras do processo</h2>
           <.link
             :if={Instantflow.WorkflowCatalog.Capabilities.enabled?(@draft.definition, "finance")}
             id="configure-process-budgets"
             href="#template-finance-account"
             class="btn"
           >Configurar contas de orçamento para os vínculos deste processo</.link>
-          <.form for={@picker} id="authoring-picker" phx-submit="pick">
+          <.form for={@picker} id="authoring-picker" phx-submit="pick" phx-change="preview-picker">
             <div class="template-grid">
               <.input
                 field={@picker[:collection]}
                 type="select"
                 label="Tipo de item"
                 options={@collection_options}
-                value={@collection}
+                value={@picker.params["collection"] || @collection}
               />
-              <.input
-                field={@picker[:section]}
-                type="select"
-                label="Seção (para campos e permissões)"
-                options={@section_options}
-                value={@parent}
-              />
-              <.input
-                field={@picker[:transition]}
-                type="select"
-                label="Transição (para ações)"
-                options={@transition_options}
-                value={@parent}
-              />
+              <div hidden={(@picker.params["collection"] || @collection) not in ~w(fields access)}>
+                <.input
+                  field={@picker[:section]}
+                  type="select"
+                  label="Seção (para campos e permissões)"
+                  options={@section_options}
+                  value={@parent}
+                />
+              </div>
+              <div hidden={(@picker.params["collection"] || @collection) != "actions"}>
+                <.input
+                  field={@picker[:transition]}
+                  type="select"
+                  label="Transição (para ações)"
+                  options={@transition_options}
+                  value={@parent}
+                />
+              </div>
             </div><button
               id="add-template-item"
               class="btn"
-              data-confirm={if @unsaved, do: "Descartar alterações do formulário?"}
+              data-confirm={
+                if Map.has_key?(@pending_forms, "item"), do: "Descartar alterações deste item?"
+              }
             >Preparar novo item</button>
           </.form>
           <h3>{if @original, do: "Editar", else: "Adicionar"} {@collection_label}</h3>
@@ -1441,7 +1661,9 @@ defmodule InstantflowWeb.TemplateLive do
                 phx-value-collection={item.collection}
                 phx-value-parent={item.parent}
                 phx-value-key={item.key}
-                data-confirm={if @unsaved, do: "Descartar alterações do formulário?"}
+                data-confirm={
+                  if Map.has_key?(@pending_forms, "item"), do: "Descartar alterações deste item?"
+                }
               >Editar</button><button
                 id={"remove-#{item.id}"}
                 class="btn"
@@ -1455,13 +1677,40 @@ defmodule InstantflowWeb.TemplateLive do
             </article>
           </div>
         </section>
+        <.workspace_panel
+          pending_forms={@pending_forms}
+          budget_binding_options={@budget_binding_options}
+          close_options={@close_options}
+          communication_options={@communication_options}
+          department_options={@department_options}
+          draft={@draft}
+          field_options={@field_options}
+          finance_account_form={@finance_account_form}
+          interface_blocks={@interface_blocks}
+          interface_page_form={@interface_page_form}
+          interface_pages={@interface_pages}
+          participant_audience_options={@participant_audience_options}
+          role_options={@role_options}
+          transition_options={@transition_options}
+          workspace_form={@workspace_form}
+        />
         <section class="card template-section" id="template-review">
           <h2>Revisão antes de publicar</h2><p :for={warning <- @review_warnings}>{warning}</p><div
             id="publication-errors"
             role="status"
           >
-            <p :for={error <- @review_errors}>{error}</p>
+            <p :if={@review_errors != []}>Corrija os pontos abaixo antes de publicar:</p>
+            <p :for={error <- @review_errors}>
+              <.link href={review_error_anchor(error)}>{error}</.link>
+            </p>
           </div>
+          <.participant_preview_panel
+            draft={@draft}
+            preview={@preview}
+            preview_form={@preview_form}
+            role_options={@role_options}
+            stage_options={@stage_options}
+          />
           <h3>Comparação com a versão de origem</h3><div id="template-diff" phx-update="stream">
             <p id="template-diff-empty" class="empty-state">Nenhuma alteração.</p><article
               :for={{id, change} <- @streams.changes}
@@ -1494,6 +1743,20 @@ defmodule InstantflowWeb.TemplateLive do
               </p>
             </article>
           </div>
+          <p id="publication-availability" role="status">
+            <%= cond do %>
+              <% @draft.published_version_id != nil -> %>
+                Esta versão já está publicada. Clone-a na lista de modelos para continuar editando.
+              <% @conflict != nil -> %>
+                Resolva o conflito de revisão antes de publicar.
+              <% @unsaved -> %>
+                Salve ou descarte cada formulário pendente antes de publicar.
+              <% @review_errors != [] -> %>
+                A publicação ficará disponível após corrigir os pontos da revisão.
+              <% true -> %>
+                Pronto para revisar e confirmar a publicação.
+            <% end %>
+          </p>
           <button
             id="publish-template"
             class="btn primary"

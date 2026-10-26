@@ -86,8 +86,11 @@ defmodule InstantflowWeb.WorkflowGraphComponents do
                 do: String.slice(node.label, 0, 24) <> "…",
                 else: node.label}
             </text><text x={node.x + 16} y={node.y + 49} class="graph-note">
-              {if node.id == @current_stage, do: "Etapa atual · "}{node.id} {if node.initial,
-                do: "· Inicial"} {if node.terminal, do: "· Final"}
+              {cond do
+                node.id == @current_stage -> "Etapa atual"
+                node.focused? -> "Em inspeção"
+                true -> ""
+              end} {if node.initial, do: "· Inicial"} {if node.terminal, do: "· Final"}
             </text>
           </g>
         </g>

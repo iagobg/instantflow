@@ -24,7 +24,8 @@ defmodule InstantflowWeb.FlowLive do
      )
      |> stream(:graph_nodes, [])
      |> stream(:graph_edges, [])
-     |> stream(:flow_stages, [])}
+     |> stream(:flow_stages, [])
+     |> stream(:inspection_edges, [])}
   end
 
   def handle_params(params, _, socket) do
@@ -32,11 +33,23 @@ defmodule InstantflowWeb.FlowLive do
      socket
      |> assign(
        workflow_id: integer(params["workflow_id"]),
+       record_navigation: InstantflowWeb.RecordNavigation.context(params["context"]),
        ticket_id: integer(params["id"]),
        invalid_ticket?: Map.has_key?(params, "id") and is_nil(integer(params["id"])),
        graph_focus: nil
      )
      |> load()}
+  end
+
+  def handle_event("graph-overview", _, socket) do
+    handle_event("focus-stage", %{"graph" => %{"stage" => ""}}, socket)
+  end
+
+  def handle_event("graph-current", _, socket) do
+    socket = socket |> assign(:graph_focus, nil) |> load()
+
+    {:noreply,
+     push_event(socket, "workflow-graph-focus", %{stage: socket.assigns.graph_focus || ""})}
   end
 
   def handle_event("focus-stage", %{"graph" => %{"stage" => stage}}, socket) do
@@ -98,6 +111,8 @@ defmodule InstantflowWeb.FlowLive do
           graph_width: graph.width,
           graph_height: graph.height,
           graph_focus: focus,
+          inspected_stage: Enum.find(accessible, &(&1.id == focus)),
+          current_stage_label: labels[flow.current_stage],
           graph_form: to_form(%{"stage" => focus}, as: :graph),
           stage_options: Enum.map(stages, &{&1["label"], &1["key"]}),
           graph_empty?: stages == []
@@ -105,6 +120,15 @@ defmodule InstantflowWeb.FlowLive do
         |> stream(:graph_nodes, graph.nodes, reset: true)
         |> stream(:graph_edges, graph.edges, reset: true)
         |> stream(:flow_stages, accessible, reset: true)
+        |> stream(
+          :inspection_edges,
+          edges
+          |> Enum.filter(&(&1["from"] == focus or &1["to"] == focus))
+          |> Enum.map(
+            &%{id: &1["key"], label: &1["label"], from: labels[&1["from"]], to: labels[&1["to"]]}
+          ),
+          reset: true
+        )
 
       _ ->
         socket
@@ -159,14 +183,23 @@ defmodule InstantflowWeb.FlowLive do
           <.link
             id="flow-back-process"
             class="btn"
-            navigate={~p"/o/#{@current_scope.organization.slug}/processos/#{@flow.workflow_id}"}
+            navigate={
+              InstantflowWeb.RecordNavigation.process_path(
+                @current_scope,
+                @flow.workflow_id,
+                @record_navigation
+              )
+            }
           >Voltar aos casos</.link>
           <.link
             :if={@flow.ticket_id}
             id="flow-back-record"
             class="btn"
             navigate={
-              ~p"/o/#{@current_scope.organization.slug}/processos/#{@flow.workflow_id}/registros/#{@flow.ticket_id}"
+              InstantflowWeb.RecordNavigation.with_context(
+                ~p"/o/#{@current_scope.organization.slug}/processos/#{@flow.workflow_id}/registros/#{@flow.ticket_id}",
+                @record_navigation
+              )
             }
           >Voltar ao registro #{@flow.ticket_id}</.link>
           <.link
@@ -227,6 +260,37 @@ defmodule InstantflowWeb.FlowLive do
               <span><i class="graph-swatch"></i>Avanço</span>
               <span><i class="graph-swatch secondary"></i>Correção e outros caminhos</span>
             </div>
+          </div>
+          <div class="process-page-tabs" aria-label="Orientação do diagrama">
+            <button id="graph-overview" type="button" class="btn" phx-click="graph-overview">Visão geral</button>
+            <button
+              :if={@flow.current_stage}
+              id="graph-current"
+              type="button"
+              class="btn"
+              phx-click="graph-current"
+            >
+              Voltar à etapa atual
+            </button>
+          </div>
+          <p :if={@flow.current_stage} id="graph-current-status">
+            Etapa atual do registro: <strong>{@current_stage_label}</strong>
+          </p>
+          <div id="graph-inspection" role="region" aria-label="Etapa em inspeção">
+            <p id="graph-inspection-status" role="status">
+              <%= if @inspected_stage do %>
+                Inspecionando: <strong>{@inspected_stage.label}</strong>. {if @inspected_stage.initial?,
+                  do: "Etapa inicial. "}
+                {if @inspected_stage.terminal?, do: "Etapa final. "} A seleção não altera o registro.
+              <% else %>
+                Visão geral: todas as etapas e conexões visíveis.
+              <% end %>
+            </p>
+            <ul id="graph-inspection-connections" phx-update="stream">
+              <li :for={{id, edge} <- @streams.inspection_edges} id={id}>
+                {edge.from} → {edge.to}: {edge.label}
+              </li>
+            </ul>
           </div>
           <.workflow_graph
             graph_width={@graph_width}

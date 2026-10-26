@@ -6,6 +6,116 @@ defmodule InstantflowWeb.TemplatesLiveTest do
   alias Instantflow.{Repo, WorkflowCatalog.Templates}
   alias Instantflow.WorkflowCatalog.{Draft, Version}
 
+  test "saving one form preserves independent pending forms and blocks publication", %{conn: conn} do
+    f = workflow_fixture()
+    {:ok, draft} = Templates.clone(f.admin, f.version.id)
+    {:ok, editor, _} = live(login(conn, f.admin), ~p"/o/horizonte/modelos/#{draft.id}")
+
+    editor
+    |> form("#template-metadata", metadata: %{name: "Nome ainda não salvo"})
+    |> render_change()
+
+    editor
+    |> form("#interface-page-form", interface_page: %{label: "Página ainda não salva"})
+    |> render_change()
+
+    editor |> element("#new-interface-page") |> render_click()
+    assert has_element?(editor, "#interface_page_label[value='Página ainda não salva']")
+    assert has_element?(editor, "#flash-error")
+
+    editor |> form("#template-metadata", metadata: %{name: "Nome salvo"}) |> render_submit()
+    assert has_element?(editor, "#interface_page_label[value='Página ainda não salva']")
+    assert has_element?(editor, "#publish-template[disabled]")
+    editor |> render_click("review-publication")
+    editor |> render_click("publish")
+    assert {:ok, current} = Templates.get(f.admin, draft.id)
+    assert current.definition["name"] == "Nome salvo"
+    assert current.published_version_id == nil
+
+    editor
+    |> form("#template-metadata", metadata: %{name: "Outra edição pendente"})
+    |> render_change()
+
+    editor |> element("#discard-form-interface_page") |> render_click()
+    assert has_element?(editor, "#metadata_name[value='Outra edição pendente']")
+    refute has_element?(editor, "#interface_page_label[value='Página ainda não salva']")
+    assert has_element?(editor, "#pending-form-metadata")
+    refute has_element?(editor, "#pending-form-interface_page")
+  end
+
+  test "participant settings retain selections across visibility changes and other saves", %{
+    conn: conn
+  } do
+    f = workflow_fixture()
+    {:ok, draft} = Templates.clone(f.admin, f.version.id)
+    {:ok, editor, _} = live(login(conn, f.admin), ~p"/o/horizonte/modelos/#{draft.id}")
+
+    assert has_element?(editor, "#page-settlement-settings[hidden]")
+    assert has_element?(editor, "#page-access-configure[hidden]")
+    assert has_element?(editor, "#finance-page-authoring[hidden]")
+    assert has_element?(editor, "#participant-page-settings[hidden]")
+
+    editor
+    |> form("#interface-page-form",
+      interface_page: %{participant_enabled: "true", participant_visibility: ["requester"]}
+    )
+    |> render_change()
+
+    refute has_element?(editor, "#participant-page-settings[hidden]")
+
+    editor
+    |> form("#interface-page-form", interface_page: %{participant_enabled: "false"})
+    |> render_change()
+
+    assert has_element?(editor, "#participant-page-settings[hidden]")
+
+    assert has_element?(
+             editor,
+             "#interface_page_participant_visibility option[value='requester'][selected]"
+           )
+
+    editor
+    |> form("#template-metadata", metadata: %{name: "Identificação salva separadamente"})
+    |> render_submit()
+
+    assert has_element?(editor, "#pending-form-interface_page")
+
+    editor
+    |> form("#interface-page-form", interface_page: %{participant_enabled: "true"})
+    |> render_change()
+
+    refute has_element?(editor, "#participant-page-settings[hidden]")
+
+    assert has_element?(
+             editor,
+             "#interface_page_participant_visibility option[value='requester'][selected]"
+           )
+  end
+
+  test "preparing another item preserves unsaved identification", %{conn: conn} do
+    f = workflow_fixture()
+    {:ok, draft} = Templates.clone(f.admin, f.version.id)
+    {:ok, editor, _} = live(login(conn, f.admin), ~p"/o/horizonte/modelos/#{draft.id}")
+
+    editor
+    |> form("#template-metadata", metadata: %{name: "Identificação pendente"})
+    |> render_change()
+
+    editor
+    |> form("#authoring-picker", picker: %{collection: "fields", section: "request"})
+    |> render_change()
+
+    assert has_element?(editor, "#picker_collection option[value='fields'][selected]")
+    assert has_element?(editor, "#metadata_name[value='Identificação pendente']")
+
+    editor
+    |> form("#authoring-picker", picker: %{collection: "fields", section: "request"})
+    |> render_submit()
+
+    assert has_element?(editor, "#metadata_name[value='Identificação pendente']")
+    assert has_element?(editor, "#publish-template[disabled]")
+  end
+
   test "administrator creates a process, adds typed fields and publishes through keyboard forms",
        %{conn: conn} do
     admin = staff_fixture()
@@ -21,6 +131,9 @@ defmodule InstantflowWeb.TemplatesLiveTest do
     {:ok, editor, _} = live(conn, ~p"/o/horizonte/modelos/#{draft.id}")
     assert has_element?(editor, "#workflow-graph")
     assert has_element?(editor, "#role-preview")
+    assert has_element?(editor, "#template-review #participant-preview-empty")
+    refute has_element?(editor, "#participant-preview-form")
+    assert has_element?(editor, "#authoring-navigation a[href='#template-review']")
     assert has_element?(editor, "#publish-template[disabled]")
 
     editor

@@ -3,6 +3,7 @@ defmodule InstantflowWeb.AuthoringPanels do
   use InstantflowWeb, :html
   alias Instantflow.WorkflowCatalog.{Interface, ParticipantPages}
 
+  attr :pending_forms, :map, default: %{}
   attr :budget_binding_options, :any, required: true
   attr :close_options, :any, required: true
   attr :communication_options, :any, required: true
@@ -19,12 +20,28 @@ defmodule InstantflowWeb.AuthoringPanels do
   attr :workspace_form, :any, required: true
 
   def workspace_panel(assigns) do
+    blocks = List.wrap(assigns.interface_page_form.params["blocks"])
+
+    assigns =
+      assigns
+      |> assign(:page_blocks, blocks)
+      |> assign(:operational?, Enum.any?(blocks, &(&1 in Interface.operational_blocks())))
+      |> assign(
+        :financial?,
+        Enum.any?(blocks, &(&1 in ~w(finance_setup finance_summary))) or
+          assigns.interface_page_form.params["finance_binding"] not in [nil, ""]
+      )
+      |> assign(
+        :participant?,
+        assigns.interface_page_form.params["participant_enabled"] in [true, "true"]
+      )
+
     ~H"""
     <section
       class="card template-section"
       id="workspace-configuration"
     >
-      <h2>Interface gerada pelo processo</h2>
+      <h2>Páginas e visualizações</h2>
       <p>
         Defina páginas e componha seus blocos. Publicar gera os endereços dentro deste processo, sem criar telas no código.
       </p>
@@ -37,7 +54,12 @@ defmodule InstantflowWeb.AuthoringPanels do
           phx-value-key={page["key"]}
         >{page["label"]}</button><button id="new-interface-page" class="btn" phx-click="new-page">Nova página</button>
       </div>
-      <.form for={@interface_page_form} id="interface-page-form" phx-submit="save-interface-page">
+      <.form
+        for={@interface_page_form}
+        id="interface-page-form"
+        phx-submit="save-interface-page"
+        phx-change="dirty"
+      >
         <.input
           field={@interface_page_form[:key]}
           label="Chave da página"
@@ -63,18 +85,21 @@ defmodule InstantflowWeb.AuthoringPanels do
             )
           }
         />
-        <.input
-          field={@interface_page_form[:close_transition]}
-          type="select"
-          label="Transição usada no fechamento de atendimentos"
-          options={@close_options}
-          prompt="Não se aplica"
-        />
+        <div id="page-settlement-settings" hidden={"settlement" not in @page_blocks}>
+          <.input
+            field={@interface_page_form[:close_transition]}
+            type="select"
+            label="Transição usada no fechamento de atendimentos"
+            options={@close_options}
+            prompt="Não se aplica"
+          />
+        </div>
         <fieldset
           :if={"operations" in @draft.definition["capabilities"]}
+          hidden={"settlement" not in @page_blocks}
           id="operational-contract"
         >
-          <legend>Contrato operacional v1</legend>
+          <legend>Recebimento do atendimento</legend>
           <p>
             Responsável por nome registrado; recebimento manual integral em BRL; fuso da organização; consumo estimado de unidades.
           </p>
@@ -86,7 +111,7 @@ defmodule InstantflowWeb.AuthoringPanels do
             options={[{"Dinheiro", "cash"}, {"Cartão", "card"}, {"Pix", "pix"}]}
           />
         </fieldset>
-        <.input
+        <div
           :for={
             {key, label} <- [
               {"view", "Papéis que consultam os blocos"},
@@ -94,75 +119,85 @@ defmodule InstantflowWeb.AuthoringPanels do
               {"operate", "Papéis que operam atendimentos e fechamento"}
             ]
           }
-          name={"interface_page[access_#{key}][]"}
-          id={"interface-access-#{key}"}
-          type="select"
-          multiple
-          label={label}
-          options={@role_options}
-          value={@interface_page_form.params["access_" <> key] || []}
-        />
-        <fieldset id="participant-page-authoring">
+          id={"page-access-#{key}"}
+          hidden={key != "view" and not @operational?}
+        >
           <.input
-            field={@interface_page_form[:participant_messages]}
+            name={"interface_page[access_#{key}][]"}
+            id={"interface-access-#{key}"}
             type="select"
             multiple
-            label="Mensagens selecionadas"
-            options={@communication_options}
+            label={label}
+            options={@role_options}
+            value={@interface_page_form.params["access_" <> key] || []}
           />
-          <legend>Projeção para participantes</legend>
+        </div>
+        <fieldset id="participant-page-authoring">
+          <legend>Página do participante</legend>
           <.input
             field={@interface_page_form[:participant_enabled]}
             type="checkbox"
-            label="Página de participação declarada"
+            label="Disponibilizar esta página para participantes"
           />
-          <.input
-            field={@interface_page_form[:participant_visibility]}
-            type="select"
-            multiple
-            label="Papéis que veem a página"
-            options={@role_options}
-          />
-          <.input
-            field={@interface_page_form[:participant_audience]}
-            type="select"
-            multiple
-            label="Audiência da projeção (exige acesso ao registro)"
-            options={@participant_audience_options}
-          />
-          <.input
-            field={@interface_page_form[:participant_fields]}
-            type="select"
-            multiple
-            label="Campos liberados"
-            options={@field_options}
-          />
-          <.input
-            field={@interface_page_form[:participant_documents]}
-            type="select"
-            multiple
-            label="Documentos liberados"
-            options={@field_options}
-          />
-          <.input
-            field={@interface_page_form[:participant_actions]}
-            type="select"
-            multiple
-            label="Ações solicitadas"
-            options={@transition_options}
-          />
-          <.input
-            field={@interface_page_form[:participant_status]}
-            type="checkbox"
-            label="Mostrar situação atual"
-          />
-          <.input
-            field={@interface_page_form[:participant_history]}
-            type="checkbox"
-            label="Mostrar histórico das ações selecionadas"
-          />
+          <p :if={not @participant?} class="small-text">
+            Ative para escolher os campos, documentos e ações que os participantes poderão consultar.
+          </p>
+          <div id="participant-page-settings" hidden={not @participant?}>
+            <.input
+              field={@interface_page_form[:participant_messages]}
+              type="select"
+              multiple
+              label="Mensagens selecionadas"
+              options={@communication_options}
+            />
+            <.input
+              field={@interface_page_form[:participant_visibility]}
+              type="select"
+              multiple
+              label="Papéis que veem a página"
+              options={@role_options}
+            />
+            <.input
+              field={@interface_page_form[:participant_audience]}
+              type="select"
+              multiple
+              label="Audiência da projeção (exige acesso ao registro)"
+              options={@participant_audience_options}
+            />
+            <.input
+              field={@interface_page_form[:participant_fields]}
+              type="select"
+              multiple
+              label="Campos liberados"
+              options={@field_options}
+            />
+            <.input
+              field={@interface_page_form[:participant_documents]}
+              type="select"
+              multiple
+              label="Documentos liberados"
+              options={@field_options}
+            />
+            <.input
+              field={@interface_page_form[:participant_actions]}
+              type="select"
+              multiple
+              label="Ações solicitadas"
+              options={@transition_options}
+            />
+            <.input
+              field={@interface_page_form[:participant_status]}
+              type="checkbox"
+              label="Mostrar situação atual"
+            />
+            <.input
+              field={@interface_page_form[:participant_history]}
+              type="checkbox"
+              label="Mostrar histórico das ações selecionadas"
+            />
+          </div>
         </fieldset>
-        <fieldset id="finance-page-authoring">
+        <fieldset id="finance-page-authoring" hidden={not @financial?}>
           <legend>Capacidade financeira</legend>
           <.input
             field={@interface_page_form[:finance_binding]}
@@ -191,7 +226,15 @@ defmodule InstantflowWeb.AuthoringPanels do
         <button id="save-interface-page" class="btn" disabled={@draft.published_version_id != nil}>Salvar página</button>
       </.form>
       <ol id="interface-block-order">
-        <li :for={{block, index} <- Enum.with_index(@interface_page_form.params["blocks"] || [])}>
+        <li :for={
+          {block, index} <-
+            Enum.with_index(
+              Enum.filter(
+                List.wrap(@interface_page_form.params["blocks"]),
+                &(&1 in @interface_blocks)
+              )
+            )
+        }>
           {Interface.block_label(block)}<button
             id={"move-block-up-#{index}"}
             class="btn"
@@ -212,6 +255,7 @@ defmodule InstantflowWeb.AuthoringPanels do
       <.form
         for={@finance_account_form}
         id="template-finance-account"
+        hidden={not @financial?}
         phx-submit="create-finance-account"
       >
         <.input
@@ -228,48 +272,59 @@ defmodule InstantflowWeb.AuthoringPanels do
         />
         <button id="template-create-finance-account" class="btn">Criar conta local</button>
       </.form>
-      <.form
-        for={@workspace_form}
-        id="workspace-labels-form"
-        phx-submit="workspace-labels"
-        class="operations-form"
+      <details
+        id="workspace-terminology"
+        hidden={
+          "operations" not in @draft.definition["capabilities"] and
+            not Map.has_key?(@pending_forms, "workspace")
+        }
+        open={Map.has_key?(@pending_forms, "workspace")}
       >
-        <.input
-          field={@workspace_form[:resource]}
-          label="Recurso (singular)"
-          maxlength="80"
-          required
-        />
-        <.input
-          field={@workspace_form[:resources]}
-          label="Recursos (plural)"
-          maxlength="80"
-          required
-        />
-        <.input
-          field={@workspace_form[:catalog]}
-          label="Catálogo de itens"
-          maxlength="80"
-          required
-        />
-        <.input
-          field={@workspace_form[:actor]}
-          label="Responsável pelo atendimento"
-          maxlength="80"
-          required
-        />
-        <.input
-          field={@workspace_form[:destination]}
-          label="Destino do lote"
-          maxlength="80"
-          required
-        />
-        <button
-          id="save-workspace-labels"
-          class="btn"
-          disabled={@draft.published_version_id != nil}
-        >Salvar nomes</button>
-      </.form>
+        <summary>Nomes usados nos atendimentos</summary>
+        <.form
+          for={@workspace_form}
+          id="workspace-labels-form"
+          phx-submit="workspace-labels"
+          phx-change="dirty"
+          class="operations-form"
+        >
+          <.input
+            field={@workspace_form[:resource]}
+            label="Recurso (singular)"
+            maxlength="80"
+            required
+          />
+          <.input
+            field={@workspace_form[:resources]}
+            label="Recursos (plural)"
+            maxlength="80"
+            required
+          />
+          <.input
+            field={@workspace_form[:catalog]}
+            label="Catálogo de itens"
+            maxlength="80"
+            required
+          />
+          <.input
+            field={@workspace_form[:actor]}
+            label="Responsável pelo atendimento"
+            maxlength="80"
+            required
+          />
+          <.input
+            field={@workspace_form[:destination]}
+            label="Destino do lote"
+            maxlength="80"
+            required
+          />
+          <button
+            id="save-workspace-labels"
+            class="btn"
+            disabled={@draft.published_version_id != nil}
+          >Salvar nomes</button>
+        </.form>
+      </details>
     </section>
     """
   end
@@ -283,11 +338,21 @@ defmodule InstantflowWeb.AuthoringPanels do
   def participant_preview_panel(assigns) do
     ~H"""
     <section id="participant-preview" class="card">
-      <h2>Prévia sintética de participação</h2>
+      <h2>Prévia da página do participante</h2>
       <p>
-        Dados fictícios sob a política compartilhada. Vínculos e atribuições reais não são consultados; ações não são executadas.
+        Esta prévia usa dados fictícios e não executa ações. Ela não confirma o acesso de uma pessoa real.
       </p>
-      <.form for={@preview_form} id="participant-preview-form" phx-submit="preview-participant">
+      <p :if={ParticipantPages.pages(@draft.definition) == []} id="participant-preview-empty">
+        Nenhuma página de participante configurada.
+        <.link href="#workspace-configuration">Configure uma página em Páginas e visualizações</.link>
+        para testar o que cada papel poderá consultar.
+      </p>
+      <.form
+        :if={ParticipantPages.pages(@draft.definition) != []}
+        for={@preview_form}
+        id="participant-preview-form"
+        phx-submit="preview-participant"
+      >
         <.input
           field={@preview_form[:page]}
           type="select"
@@ -302,7 +367,7 @@ defmodule InstantflowWeb.AuthoringPanels do
         <.input
           field={@preview_form[:role]}
           type="select"
-          label="Papel simbólico"
+          label="Papel no processo"
           options={@role_options}
         />
         <.input

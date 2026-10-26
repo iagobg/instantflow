@@ -529,7 +529,7 @@ main {
 .request-filters .btn { margin-bottom:4px; }
 .list-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .pagination { display:flex; gap:12px; margin-top:20px; }
-.conflict-panel { background:#fff7e8; border:1px solid #efd49a; border-radius:12px; padding:16px; margin:16px 0; }
+.conflict-panel { background:var(--if-warning-subtle); color:var(--if-text); border:1px solid var(--if-warning-border); border-radius:12px; padding:16px; margin:16px 0; }
 .conflict-panel .btn { margin:12px 8px 0 0; }
 .presence-note { color:var(--if-purple); font-size:13px; }
 .grant-row { border-top:1px solid var(--if-border); margin-top:12px; padding:12px 0; }
@@ -653,3 +653,26 @@ footer {
 .stage-board-card dt { color: var(--if-text-subtle); }
 .stage-board-card dd { margin: 0 0 10px; white-space: normal; }
 .stage-board-column nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* Section links keep every editor form mounted and preserve local input. */
+.authoring-navigation { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+#workflow-editor :is(h2, section) { scroll-margin-top: 24px; }
+#template-import > summary { cursor: pointer; font-weight: 600; }
+#template-import[open] > summary { margin-bottom: 16px; }
+
+.process-view-options { display: contents; }
+
+/* Checkboxes keep their native shape rather than inheriting full-width text input sizing. */
+.form-field input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  accent-color: var(--if-accent-text);
+}
+
+.case-action-summary { margin-bottom: 16px; }
+.case-action-summary h2 { margin-top: 0; }
+.save-progress { display: none; }
+.phx-submit-loading .save-progress { display: block; }
+#case-action-summary, [id^="conflict-"], [id^="section-form-"], [id^="transition-"] { scroll-margin-top: 24px; }

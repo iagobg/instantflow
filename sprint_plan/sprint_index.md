@@ -2,7 +2,7 @@
 
 [Design index](../design/index.md)
 
-Status: Sprints 00–11 complete; Sprints 12–15 deferred; school demo milestone is the active planning priority · Updated: 2026-10-23
+Status: Sprints 00–11 complete; school demo milestone accepted; UI redesign presentation candidate frozen; Sprints 12–15 deferred · Updated: 2026-10-26
 
 Dependency-ordered increments without duration estimates. Sprints 00 and 01 retain their original single-organization evidence. Sprint 01A has migrated and verified the multi-organization foundation before Sprint 02, preserving existing records.
 
@@ -28,7 +28,9 @@ Dependency-ordered increments without duration estimates. Sprints 00 and 01 reta
 
 ## Active priority
 
-[School demo readiness and execution plan](demo_readiness.md): populated fictional school, builder-to-publication proof, published flow overview and authorized stage boards. Planned; not implemented by this assessment. Sprints 12–15 remain shelved until explicitly resumed.
+[UI redesign sprint](ui_redesign.md): complete, 6/6 task groups accepted. Named local presentation candidate: ui-redesign-candidate-2026-10-26. See [final acceptance and limitations](../docs/ui-redesign-acceptance.md). VPS measurements and recording follow this freeze; no deployment is included.
+
+[School demo readiness](demo_readiness.md) is accepted for the isolated synthetic local demonstration; see [final acceptance](../docs/demo-readiness-final-acceptance.md). Sprints 12–15 remain deferred with their customer-delivery requirements preserved. Earlier checkpoint entries below retain their historical status.
 
 ## Tracking
 

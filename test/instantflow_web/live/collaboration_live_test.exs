@@ -23,6 +23,9 @@ defmodule InstantflowWeb.CollaborationLiveTest do
     second |> form("#section-form-notes", section: %{summary: "Versão remota"}) |> render_submit()
     notify(id)
     assert has_element?(first, "#conflict-notes")
+    assert has_element?(first, "#case-pending-forms a[href='#conflict-notes']")
+    assert has_element?(first, "#section-status-notes", "Conflito")
+    assert has_element?(first, "#transition-blocked-explanation a[href='#case-action-summary']")
     assert has_element?(first, "#section-form-notes input[value='Meu outro rascunho']")
     first |> element("#conflict-notes button", "Revisar alterações") |> render_click()
     assert has_element?(first, "#comparison-notes dd", "Versão remota")
@@ -39,6 +42,8 @@ defmodule InstantflowWeb.CollaborationLiveTest do
              "Meu outro rascunho"
 
     assert Enum.find(data.sections, &(&1.key == "request")).values == values()
+    refute has_element?(first, "#case-pending-forms")
+    assert has_element?(first, "#section-status-notes", "Sem alterações locais")
   end
 
   test "revoking a section grant clears its protected draft without losing other authorized drafts",

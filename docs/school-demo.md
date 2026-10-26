@@ -108,7 +108,7 @@ valor e atribuição de departamento. Este modelo não possui campos de prazo ou
 urgência; nenhum campo foi inventado fora do contrato publicado. Não há documentos
 ou integrações externas neste processo. Pedidos e recebimentos são simulados.
 
-1. Entre como admin e abra Processos → Requisição de materiais e bens → Acompanhamento.
+1. Entre como admin e abra Processos → Requisição de materiais e bens → Quadro de Acompanhamento.
 2. Abra a compra de tintas e execute Reservar orçamento. Observe a etapa Compra.
 3. Abra tecidos e confira no histórico a devolução da aprovação da área para Solicitada.
    Edite a justificativa e reenvie para análise.
@@ -135,8 +135,8 @@ posterior à validade, prepare outra instalação isolada. Bases com o vínculo 
 compartilhado são recusadas pelo setup; ele não redistribui vínculos já editados.
 Preserve a base antiga e use um cluster novo para a distribuição de seis famílias.
 
-1. Como admin, abra Matrícula de estudantes, selecione Etapas da matrícula e
-   Filtrar. Compare o quadro e o fluxo publicado; abra a matrícula concluída e
+1. Como admin, abra Matrícula de estudantes e selecione Quadro de Acompanhamento.
+   Use Filtrar somente para aplicar filtros aos registros. Compare o quadro e o fluxo publicado; abra a matrícula concluída e
    confira o histórico simulado. A Secretaria criou os casos, permitindo a
    confirmação financeira pelo apresentador sem violar separação de funções.
 2. Como família, abra a página Família do processo. Confira somente as duas matrículas da família Oliveira,
@@ -263,3 +263,27 @@ para revisão, rerun após ação do apresentador, senha preservada, efeitos fin
 sem replay e versões aposentadas preservadas. A verificação de interface completa
 não foi executada neste checkpoint; contagens de testes não comprovam prontidão
 visual da demo.
+
+
+## Navegação e colaboração após o redesenho
+
+Lista, Quadro de Acompanhamento, Atribuições e Fluxo do Processo ficam acima dos
+registros; Calendário aparece quando configurado. Iniciar registro é uma ação
+separada. Os links de volta do registro e do fluxo preservam visualização, filtros,
+publicação e paginação de origem.
+
+No fluxo, Visão geral retorna ao início do diagrama; Voltar à etapa atual aparece
+no fluxo de um registro. Inspecionar outra etapa não altera o registro. As conexões
+completas aparecem em texto, inclusive caminhos de correção.
+
+Próxima ação leva aos controles de confirmação. Rascunhos e conflitos têm links
+para seus formulários. Compare antes de reaplicar ou descartar: reaplicar mantém
+o rascunho inteiro, sem mesclagem automática campo a campo. Reconectar não salva
+nem repete ações. Fechar uma aba não preserva rascunhos de forma durável.
+
+A publicação existente ainda chama a etapa inicial de Solicitada, embora sua
+chave seja draft. Enviar para análise é a ação de envio. Não migre a publicação
+antiga durante a apresentação.
+
+Consulte a [aceitação do redesenho](ui-redesign-acceptance.md) para evidências,
+limitações e identificação da versão candidata.

@@ -82,6 +82,37 @@ defmodule InstantflowWeb.ProcessComponents do
     """
   end
 
+  def record_presentation_navigation(assigns) do
+    ~H"""
+    <div
+      id="record-presentations"
+      phx-update="stream"
+      aria-label="Apresentação dos registros"
+      class="process-view-options"
+    >
+      <button
+        :for={{id, view} <- @streams.record_presentations}
+        id={id}
+        type="button"
+        class={["btn", view.selected? && "primary"]}
+        aria-pressed={to_string(view.selected?)}
+        phx-click="record-presentation"
+        phx-value-view={view.key}
+      >
+        {Map.fetch!(
+          %{
+            "table" => "Lista",
+            "board" => "Quadro de Acompanhamento",
+            "calendar" => "Calendário",
+            "assignments" => "Atribuições"
+          },
+          view.type
+        )}<span :if={view.disambiguate?}> · {view.view_label}</span>
+      </button>
+    </div>
+    """
+  end
+
   def records_block(assigns) do
     ~H"""
     <section id="process-records-block" class="card template-section">
@@ -104,12 +135,7 @@ defmodule InstantflowWeb.ProcessComponents do
         class="operations-form"
       >
         <.input field={@record_form[:query]} label="Buscar registro" />
-        <.input
-          field={@record_form[:view]}
-          type="select"
-          label="Visualização"
-          options={@record_view_options}
-        />
+        <input type="hidden" name="record_filter[view]" value={@record_view} />
         <.input
           :if={@record_view_type == "board" && @stage_board.version_options != []}
           field={@record_form[:version_id]}
@@ -150,6 +176,12 @@ defmodule InstantflowWeb.ProcessComponents do
         info={@record_views}
         label="visualização(ões)"
       />
+      <p :if={@show_board_setup?} id="board-setup-guidance" class="small-text">
+        <span :if={@record_views.pages > 1}>Consulte também as outras páginas de visualizações.</span>
+        Para adicionar um quadro de acompanhamento, abra
+        <.link navigate={~p"/o/#{@current_scope.organization.slug}/modelos"}>Modelos de fluxo</.link>
+        e configure uma visualização do tipo Quadro.
+      </p>
       <p id="process-record-preview-note" class="small-text">
         Textos longos mostram até 80 caracteres. Abra o registro para ver o conteúdo completo.
       </p>
@@ -185,7 +217,10 @@ defmodule InstantflowWeb.ProcessComponents do
           <.link
             id={"open-process-record-#{row.id}"}
             navigate={
-              ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/registros/#{row.id}"
+              InstantflowWeb.RecordNavigation.with_context(
+                ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/registros/#{row.id}",
+                @record_navigation
+              )
             }
             class="btn"
           >Abrir registro</.link>
@@ -321,7 +356,10 @@ defmodule InstantflowWeb.ProcessComponents do
                     id={"open-process-record-#{row.id}"}
                     class="btn"
                     navigate={
-                      ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/registros/#{row.id}"
+                      InstantflowWeb.RecordNavigation.with_context(
+                        ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/registros/#{row.id}",
+                        @record_navigation
+                      )
                     }
                   >Abrir registro</.link>
                 </article>

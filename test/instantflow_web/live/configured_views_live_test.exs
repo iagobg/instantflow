@@ -46,8 +46,8 @@ defmodule InstantflowWeb.ConfiguredViewsLiveTest do
       )
 
     process
-    |> form("#process-record-filters", record_filter: %{view: "scoped"})
-    |> render_submit()
+    |> element("#record_presentations-scoped")
+    |> render_click()
 
     assert has_element?(process, "[id='record-filter-request.summary'] option[value='Alfa']")
 

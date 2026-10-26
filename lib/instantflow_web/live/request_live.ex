@@ -59,6 +59,7 @@ defmodule InstantflowWeb.RequestLive do
              socket
              |> assign(
                page_title: "Solicitação ##{id}",
+               record_navigation: InstantflowWeb.RecordNavigation.context(params["context"]),
                editors: %{},
                dirty: false,
                stale: false,
@@ -778,9 +779,16 @@ defmodule InstantflowWeb.RequestLive do
       navigation={@workspace_navigation}
       unsaved={@dirty or (@reason.params["reason"] || "") != ""}
     >
-      <.link navigate={
-        ~p"/o/#{@current_scope.organization.slug}/processos/#{@data.ticket.workflow_id}"
-      }>← Voltar ao processo</.link>
+      <.link
+        id="record-back-process"
+        navigate={
+          InstantflowWeb.RecordNavigation.process_path(
+            @current_scope,
+            @data.ticket.workflow_id,
+            @record_navigation
+          )
+        }
+      >← Voltar ao processo</.link>
       <div class="page-heading request-heading">
         <div>
           <p class="eyebrow">{@data.version.definition["name"]} · VERSÃO {@data.version.number}</p><h1>
@@ -788,11 +796,53 @@ defmodule InstantflowWeb.RequestLive do
           </h1><p>Revisão {@data.ticket.revision} · {stage_label(@data)}</p>
         </div><span class="badge">{stage_label(@data)}</span>
       </div>
+      <section
+        id="case-action-summary"
+        class="card case-action-summary"
+        aria-labelledby="case-action-heading"
+      >
+        <h2 id="case-action-heading">Próxima ação</h2>
+        <p id="case-action-status" role="status">
+          <%= cond do %>
+            <% @data.archived? -> %>
+              Este registro está arquivado e disponível apenas para consulta.
+            <% @dirty -> %>
+              Salve ou descarte os rascunhos abaixo antes de avançar.
+            <% @stale -> %>
+              Revise os dados atualizados e confirme a revisão antes de avançar.
+            <% @data.transitions == [] -> %>
+              Nenhuma ação disponível para seu perfil nesta etapa.
+            <% true -> %>
+              Escolha uma ação abaixo. As condições serão verificadas ao confirmar.
+          <% end %>
+        </p>
+        <ul :if={@dirty} id="case-pending-forms">
+          <li :for={{key, editor} <- @editors} :if={editor.dirty}>
+            <.link href={if editor.conflict, do: "#conflict-#{key}", else: "#section-form-#{key}"}>
+              {Enum.find(@data.section_definitions, &(&1["key"] == key))["label"]}
+              {if editor.conflict, do: " · revisar conflito", else: " · rascunho não salvo"}
+            </.link>
+          </li>
+        </ul>
+        <.link :if={@stale} href="#review-request">Revisar dados atuais</.link>
+        <nav
+          :if={not @data.archived?}
+          class="process-page-tabs"
+          aria-label="Ações disponíveis nesta etapa"
+        >
+          <.link :for={edge <- @data.transitions} href={"#transition-#{edge["key"]}"} class="btn">
+            {edge["label"]}
+          </.link>
+        </nav>
+      </section>
       <.link
         id="record-flow-link"
         class="btn"
         navigate={
-          ~p"/o/#{@current_scope.organization.slug}/processos/#{@data.ticket.workflow_id}/registros/#{@data.ticket.id}/fluxo"
+          InstantflowWeb.RecordNavigation.with_context(
+            ~p"/o/#{@current_scope.organization.slug}/processos/#{@data.ticket.workflow_id}/registros/#{@data.ticket.id}/fluxo",
+            @record_navigation
+          )
         }
       >Ver fluxo desta versão</.link>
       <div :if={@stale} id="stale-warning" class="flash error" role="alert">
@@ -809,8 +859,17 @@ defmodule InstantflowWeb.RequestLive do
           <section :for={{id, section} <- @streams.sections} id={id} class="card section-card">
             <% definition = Enum.find(@data.section_definitions, &(&1["key"] == section.key)) %>
             <h2>{definition["label"]}</h2><p>Revisão do formulário: {section.revision}</p>
-            <p :if={@editors[section.key].dirty} class="presence-note">
-              Rascunho não salvo · mantido apenas nesta aba
+            <p id={"section-status-#{section.key}"} class="presence-note" role="status">
+              <%= cond do %>
+                <% @editors[section.key].conflict -> %>
+                  Conflito: seu rascunho está preservado nesta aba.
+                <% @editors[section.key].dirty -> %>
+                  Rascunho não salvo · mantido apenas nesta aba.
+                <% section.key in @data.editable -> %>
+                  Sem alterações locais · revisão {section.revision} carregada.
+                <% true -> %>
+                  Somente consulta nesta etapa.
+              <% end %>
             </p>
             <button
               :if={@editors[section.key].dirty and not @editors[section.key].conflict}
@@ -908,6 +967,9 @@ defmodule InstantflowWeb.RequestLive do
                 data-authoritative
                 phx-disable-with="Salvando…"
               >Salvar formulário</button>
+              <span id={"save-progress-#{section.key}"} class="save-progress" role="status">
+                Aguardando confirmação do salvamento…
+              </span>
             </.form><dl :if={section.key not in @data.editable}>
               <div :for={field <- definition["fields"]}>
                 <dt>{field["label"]}</dt><dd>
@@ -1197,7 +1259,11 @@ defmodule InstantflowWeb.RequestLive do
             </section>
           </div>
           <section :if={!@data.archived?} class="card">
-            <h2>Próximos passos</h2><p>
+            <h2>Confirmar ação</h2>
+            <p :if={@dirty or @stale} id="transition-blocked-explanation">
+              <.link href="#case-action-summary">Resolva os rascunhos ou a revisão pendente</.link>
+              antes de confirmar uma ação.
+            </p><p>
               Salve o formulário antes de avançar. Cada ação respeita as permissões e condições do fluxo.
             </p><.form for={@reason} id="transition-form" phx-change="reason" phx-submit="transition">
               <.input

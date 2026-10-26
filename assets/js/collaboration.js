@@ -2,6 +2,8 @@
 export const Collaboration = {
   mounted() {
     this.ready = true
+    this.el.setAttribute("role", "status")
+    this.el.textContent = "Conexão ativa. Alterações só são salvas após confirmação."
     this.sync = () => {
       if (this.ready) this.pushEvent("heartbeat", {})
     }
@@ -20,14 +22,17 @@ export const Collaboration = {
   },
   disconnected() {
     this.ready = false
+    this.el.textContent = "Conexão interrompida. Rascunhos nesta aba ainda não enviados permanecem locais."
     document.querySelectorAll("[data-authoritative]").forEach(button => {
       button.disabled = true
     })
   },
   reconnected() {
+    this.el.textContent = "Reconectando: conferindo os dados atuais antes de liberar ações…"
     // Reconcile before allowing commands; never replay a mutation on reconnect.
     this.pushEvent("reconcile", {}, () => {
       this.ready = true
+      this.el.textContent = "Conexão restabelecida. Confira os estados de cada formulário."
       document.querySelectorAll("[data-authoritative]").forEach(button => {
         button.disabled = button.dataset.blocked === "true"
       })

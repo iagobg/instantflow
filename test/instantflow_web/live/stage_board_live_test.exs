@@ -23,6 +23,14 @@ defmodule InstantflowWeb.StageBoardLiveTest do
     {:ok, board, _} =
       live(login(conn, f.requester), ~p"/o/horizonte/processos/#{f.version.workflow_id}")
 
+    assert has_element?(
+             board,
+             "#process-view-navigation #record_presentations-board",
+             "Quadro de Acompanhamento"
+           )
+
+    refute has_element?(board, "#process-records-block #record-presentations")
+    assert has_element?(board, "#process-records-block #create-process-record")
     assert has_element?(board, "#board-version[data-version-id='#{f.version.id}']")
     assert has_element?(board, "#board-count-draft", "10 exibidos de 32")
     assert has_element?(board, "#board-count-review", "1 exibidos de 1")
@@ -56,7 +64,13 @@ defmodule InstantflowWeb.StageBoardLiveTest do
     {:ok, board, _} =
       live(login(conn, f.requester), ~p"/o/horizonte/processos/#{f.version.workflow_id}")
 
-    board |> form("#process-record-filters", record_filter: %{view: "board"}) |> render_submit()
+    board |> element("#record_presentations-board") |> render_click()
+
+    assert has_element?(
+             board,
+             "#record_presentations-board[aria-pressed='true']",
+             "Quadro de Acompanhamento"
+           )
 
     {:ok, peer, _} =
       live(
@@ -64,7 +78,7 @@ defmodule InstantflowWeb.StageBoardLiveTest do
         ~p"/o/horizonte/processos/#{f.version.workflow_id}"
       )
 
-    peer |> form("#process-record-filters", record_filter: %{view: "board"}) |> render_submit()
+    peer |> element("#record_presentations-board") |> render_click()
 
     board
     |> form("#process-record-filters", record_filter: %{view: "board", query: to_string(id)})
@@ -97,7 +111,7 @@ defmodule InstantflowWeb.StageBoardLiveTest do
 
     assert has_element?(
              board,
-             "#board-column-draft #open-process-record-#{id}[href='/o/horizonte/processos/#{f.version.workflow_id}/registros/#{id}']"
+             "#board-column-draft #open-process-record-#{id}[href^='/o/horizonte/processos/#{f.version.workflow_id}/registros/#{id}']"
            )
   end
 
@@ -226,7 +240,7 @@ defmodule InstantflowWeb.StageBoardLiveTest do
     {:ok, board, _} =
       live(login(conn, f.requester), ~p"/o/horizonte/processos/#{f.version.workflow_id}")
 
-    board |> form("#process-record-filters", record_filter: %{view: "board"}) |> render_submit()
+    board |> element("#record_presentations-board") |> render_click()
 
     assert has_element?(
              board,
@@ -253,6 +267,123 @@ defmodule InstantflowWeb.StageBoardLiveTest do
     {:ok, board, _} = live(conn, ~p"/o/horizonte/processos/#{f.version.workflow_id}?view=board")
     assert has_element?(board, "#board-column-draft #open-process-record-#{id}")
     refute has_element?(board, "#configured-board-rows")
+  end
+
+  test "a historical board retains its filters and second card page through record and flow", %{
+    conn: conn
+  } do
+    f = board_fixture()
+
+    ids =
+      for index <- 1..11 do
+        id = create_ticket(f)
+        assert {:ok, _} = save(f.requester, id, Map.put(values(), "summary", "Proposta #{index}"))
+        id
+      end
+
+    {:ok, _} = WorkflowCatalog.publish(f.admin, f.definition, f.bindings, 2)
+    conn = login(conn, f.requester)
+    {:ok, board, _} = live(conn, ~p"/o/horizonte/processos/#{f.version.workflow_id}")
+
+    board
+    |> form("#process-record-filters",
+      record_filter: %{view: "board", version_id: to_string(f.version.id), query: "Aprovação"}
+    )
+    |> render_submit()
+
+    board |> element("#board-next-draft") |> render_click()
+    assert has_element?(board, "#board-count-draft", "1 exibidos de 11")
+
+    {:ok, record, _} =
+      board
+      |> element("#open-process-record-#{hd(ids)}")
+      |> render_click()
+      |> follow_redirect(conn)
+
+    {:ok, flow, _} =
+      record |> element("#record-flow-link") |> render_click() |> follow_redirect(conn)
+
+    assert has_element?(flow, "#flow-version[data-version-id='#{f.version.id}']")
+
+    {:ok, restored, _} =
+      flow |> element("#flow-back-process") |> render_click() |> follow_redirect(conn)
+
+    assert has_element?(restored, "#record_presentations-board[aria-pressed='true']")
+    assert has_element?(restored, "#board-version[data-version-id='#{f.version.id}']")
+    assert has_element?(restored, "#record_filter_query[value='Aprovação']")
+    assert has_element?(restored, "#board-count-draft", "1 exibidos de 11")
+    assert has_element?(restored, "#open-process-record-#{hd(ids)}")
+    refute has_element?(restored, "#open-process-record-#{List.last(ids)}")
+  end
+
+  test "historical boards beyond the discovery page remain distinct and reachable", %{conn: conn} do
+    f = workflow_fixture()
+
+    views =
+      for index <- 1..20 do
+        %{
+          "key" => "old_#{index}",
+          "label" => "Visão anterior #{index}",
+          "type" => if(index >= 19, do: "board", else: "table"),
+          "columns" => ["stage"],
+          "filters" => []
+        }
+      end
+
+    definition = Map.put(f.definition, "views", views)
+    {:ok, old} = WorkflowCatalog.publish(f.admin, definition, f.bindings, 1)
+    old_id = create_ticket(%{f | version: old})
+
+    current_definition =
+      Map.put(
+        f.definition,
+        "views",
+        Enum.map(views, fn view ->
+          %{view | "key" => "new_" <> view["key"], "type" => "table"}
+        end)
+      )
+
+    {:ok, current} = WorkflowCatalog.publish(f.admin, current_definition, f.bindings, 2)
+    create_ticket(%{f | version: current})
+    conn = login(conn, f.requester)
+    {:ok, process, _} = live(conn, ~p"/o/horizonte/processos/#{old.workflow_id}")
+    refute has_element?(process, "#record_presentations-old_19")
+    process |> element("#record-view-browser-next") |> render_click()
+    assert has_element?(process, "#record_presentations-old_19", "Visão anterior 19")
+    assert has_element?(process, "#record_presentations-old_20", "Visão anterior 20")
+    process |> element("#record_presentations-old_20") |> render_click()
+    assert has_element?(process, "#board-version[data-version-id='#{old.id}']")
+
+    {:ok, record, _} =
+      process
+      |> element("#open-process-record-#{old_id}")
+      |> render_click()
+      |> follow_redirect(conn)
+
+    {:ok, restored, _} =
+      record |> element("#record-back-process") |> render_click() |> follow_redirect(conn)
+
+    assert has_element?(restored, "#record_presentations-old_20[aria-pressed='true']")
+    assert has_element?(restored, "#record-view-browser-count", "Página 2 de 2")
+  end
+
+  test "board setup guidance is author-only and does not invent a board", %{conn: conn} do
+    f = workflow_fixture()
+    create_ticket(f)
+
+    {:ok, author, _} =
+      live(login(conn, f.admin), ~p"/o/horizonte/processos/#{f.version.workflow_id}")
+
+    assert has_element?(author, "#board-setup-guidance a[href='/o/horizonte/modelos']")
+    refute has_element?(author, "#record-presentations button", "Quadro de Acompanhamento")
+
+    {:ok, requester, _} =
+      live(
+        login(Phoenix.ConnTest.build_conn(), f.requester),
+        ~p"/o/horizonte/processos/#{f.version.workflow_id}"
+      )
+
+    refute has_element?(requester, "#board-setup-guidance")
   end
 
   defp board_fixture do

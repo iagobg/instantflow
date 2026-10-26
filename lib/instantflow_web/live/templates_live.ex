@@ -193,69 +193,69 @@ defmodule InstantflowWeb.TemplatesLive do
             <button id="new-workflow" class="btn primary" phx-disable-with="Criando…">Criar rascunho</button>
           </.form>
         </section>
-        <section class="card">
-          <h2>Importar modelo JSON</h2><p>
-            Somente a definição será importada. Mapeamentos locais precisam de revisão; a publicação é uma ação separada.
-          </p>
-          <.form
-            for={@import_form}
-            id="import-template-form"
-            phx-submit="import"
-            phx-change="validate-upload"
-          >
-            <.input
-              field={@import_form[:workflow_id]}
-              type="select"
-              label="Destino"
-              options={@targets}
-              prompt="Criar um modelo independente"
-            />
-            <.input
-              field={@import_form[:key]}
-              label="Nova chave (opcional, apenas para novo modelo)"
-              pattern="[a-z][a-z0-9_]{0,63}"
-              maxlength="64"
-            />
-            <label for={@uploads.template.ref}>Arquivo JSON (até 1 MiB)</label><.live_file_input upload={
-              @uploads.template
-            } />
-            <p :for={error <- upload_errors(@uploads.template)} role="alert">
-              {upload_message(error)}
-            </p>
-            <div :for={entry <- @uploads.template.entries} id={"upload-#{entry.ref}"}>
-              <p>{entry.client_name} · {entry.progress}%</p><p
-                :for={error <- upload_errors(@uploads.template, entry)}
-                role="alert"
-              >
-                {upload_message(error)}
-              </p>
-            </div>
-            <.input
-              field={@import_form[:json]}
-              type="textarea"
-              label="Ou cole o JSON"
-              maxlength="1048576"
-            />
-            <button id="import-template" class="btn primary" phx-disable-with="Validando…">Validar e criar rascunho</button>
-          </.form>
+        <section id="existing-drafts" class="card">
+          <h2>Rascunhos</h2><div id="template-drafts" phx-update="stream">
+            <p id="template-drafts-empty" class="empty-state">Nenhum rascunho nesta organização.</p>
+            <article :for={{id, draft} <- @streams.drafts} id={id} class="request-row">
+              <div>
+                <strong>{draft.definition["name"]}</strong><small>Revisão {draft.revision} · {if draft.published_version_id,
+                  do: "Publicado",
+                  else: "Em preparação"}</small>
+              </div><.link
+                id={"open-draft-#{draft.id}"}
+                navigate={~p"/o/#{@current_scope.organization.slug}/modelos/#{draft.id}"}
+                class="btn"
+              >Abrir</.link>
+            </article>
+          </div>
         </section>
       </div>
-      <section class="card template-section">
-        <h2>Rascunhos</h2><div id="template-drafts" phx-update="stream">
-          <p id="template-drafts-empty" class="empty-state">Nenhum rascunho nesta organização.</p>
-          <article :for={{id, draft} <- @streams.drafts} id={id} class="request-row">
-            <div>
-              <strong>{draft.definition["name"]}</strong><small>Revisão {draft.revision} · {if draft.published_version_id,
-                do: "Publicado",
-                else: "Em preparação"}</small>
-            </div><.link
-              id={"open-draft-#{draft.id}"}
-              navigate={~p"/o/#{@current_scope.organization.slug}/modelos/#{draft.id}"}
-              class="btn"
-            >Abrir</.link>
-          </article>
-        </div>
-      </section>
+      <details id="template-import" class="card template-section">
+        <summary>Importar modelo JSON</summary><p>
+          Somente a definição será importada. Mapeamentos locais precisam de revisão; a publicação é uma ação separada.
+        </p>
+        <.form
+          for={@import_form}
+          id="import-template-form"
+          phx-submit="import"
+          phx-change="validate-upload"
+        >
+          <.input
+            field={@import_form[:workflow_id]}
+            type="select"
+            label="Destino"
+            options={@targets}
+            prompt="Criar um modelo independente"
+          />
+          <.input
+            field={@import_form[:key]}
+            label="Nova chave (opcional, apenas para novo modelo)"
+            pattern="[a-z][a-z0-9_]{0,63}"
+            maxlength="64"
+          />
+          <label for={@uploads.template.ref}>Arquivo JSON (até 1 MiB)</label><.live_file_input upload={
+            @uploads.template
+          } />
+          <p :for={error <- upload_errors(@uploads.template)} role="alert">
+            {upload_message(error)}
+          </p>
+          <div :for={entry <- @uploads.template.entries} id={"upload-#{entry.ref}"}>
+            <p>{entry.client_name} · {entry.progress}%</p><p
+              :for={error <- upload_errors(@uploads.template, entry)}
+              role="alert"
+            >
+              {upload_message(error)}
+            </p>
+          </div>
+          <.input
+            field={@import_form[:json]}
+            type="textarea"
+            label="Ou cole o JSON"
+            maxlength="1048576"
+          />
+          <button id="import-template" class="btn primary" phx-disable-with="Validando…">Validar e criar rascunho</button>
+        </.form>
+      </details>
       <section class="card template-section">
         <h2>Últimas versões publicadas</h2><p>
           Clonar cria um rascunho independente da versão em uso.

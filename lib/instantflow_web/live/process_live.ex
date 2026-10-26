@@ -94,6 +94,7 @@ defmodule InstantflowWeb.ProcessLive do
   end
 
   defp load_params(params, socket) do
+    context = InstantflowWeb.RecordNavigation.context(params["context"])
     id = number(params["id"])
 
     workflow_id =
@@ -135,7 +136,9 @@ defmodule InstantflowWeb.ProcessLive do
                visit_id: id,
                workflow_id: workflow_id,
                page_key: page["key"],
-               record_view: params["view"] || socket.assigns.record_view,
+               record_view: context["view"] || params["view"],
+               record_view_page: context["view_page"] || 1,
+               record_filters: context["filters"] || %{},
                cart:
                  if(socket.assigns.workflow_id == workflow_id and socket.assigns.visit_id == id,
                    do: socket.assigns.cart,
@@ -188,7 +191,16 @@ defmodule InstantflowWeb.ProcessLive do
        record_filters: %{},
        record_form: to_form(%{}, as: :record_filter)
      )
-     |> load()}
+     |> navigate_records()}
+  end
+
+  def handle_event("record-presentation", %{"view" => key}, socket) do
+    if Enum.any?(socket.assigns.record_view_options, fn {_, value} -> value == key end) do
+      params = Map.put(socket.assigns.record_filters, "view", key)
+      handle_event("record-filters", %{"record_filter" => params}, socket)
+    else
+      {:noreply, load(socket)}
+    end
   end
 
   def handle_event("record-filters", %{"record_filter" => params}, socket) do
@@ -212,7 +224,7 @@ defmodule InstantflowWeb.ProcessLive do
        record_view: params["view"],
        record_form: to_form(filters, as: :record_filter)
      )
-     |> load()}
+     |> navigate_records()}
   end
 
   def handle_event("board-card-page", params, socket) do
@@ -228,7 +240,7 @@ defmodule InstantflowWeb.ProcessLive do
           Map.put(pages, column.id, params["page"])
         )
 
-      {:noreply, socket |> assign(:record_filters, filters) |> load()}
+      {:noreply, socket |> assign(:record_filters, filters) |> navigate_records()}
     else
       {:noreply, load(socket)}
     end
@@ -237,7 +249,7 @@ defmodule InstantflowWeb.ProcessLive do
   def handle_event("board-columns-page", params, socket) do
     if current_board?(socket, params["version_id"]) do
       filters = socket.assigns.record_filters |> Map.put("columns_page", params["page"])
-      {:noreply, socket |> assign(:record_filters, filters) |> load()}
+      {:noreply, socket |> assign(:record_filters, filters) |> navigate_records()}
     else
       {:noreply, load(socket)}
     end
@@ -253,14 +265,14 @@ defmodule InstantflowWeb.ProcessLive do
       |> Map.put("stage", "")
       |> Map.put("fields", %{})
 
-    {:noreply, socket |> assign(:record_filters, filters) |> load()}
+    {:noreply, socket |> assign(:record_filters, filters) |> navigate_records()}
   end
 
   def handle_event("record-page", %{"page" => page}, socket) do
     {:noreply,
      socket
      |> assign(:record_filters, Map.put(socket.assigns.record_filters, "page", page))
-     |> load()}
+     |> navigate_records()}
   end
 
   def handle_event("finance-create-account", %{"finance_account" => params}, socket) do
@@ -793,6 +805,26 @@ defmodule InstantflowWeb.ProcessLive do
     end
   end
 
+  defp record_context(socket) do
+    InstantflowWeb.RecordNavigation.context(%{
+      "view" => socket.assigns.record_view,
+      "view_page" => socket.assigns.record_view_page,
+      "page_key" => socket.assigns.page_key,
+      "filters" => socket.assigns.record_filters
+    })
+  end
+
+  defp navigate_records(socket) do
+    push_patch(socket,
+      to:
+        InstantflowWeb.RecordNavigation.process_path(
+          socket.assigns.current_scope,
+          socket.assigns.workflow_id,
+          record_context(socket)
+        )
+    )
+  end
+
   defp load_records(socket, version) do
     ready? = connected?(socket)
 
@@ -901,11 +933,25 @@ defmodule InstantflowWeb.ProcessLive do
       record_pages: Map.get(result, :pages, 1),
       record_views: Map.delete(discovery, :rows),
       record_view_options: Enum.map(views, &{&1.view_label, &1.key}),
+      show_board_setup?:
+        ready? and socket.assigns.current_scope.role == "admin" and
+          not Enum.any?(views, &(&1.type == "board")),
       record_stage_options: Enum.map(result.stages, &{&1.label, &1.id}),
       record_view_type: if(selected, do: selected.type, else: "table"),
       can_create_record:
         ready? && !Workspaces.operational?(version.definition) &&
           WorkflowCatalog.creatable?(socket.assigns.current_scope, version.workflow_id)
+    )
+    |> then(&assign(&1, :record_navigation, record_context(&1)))
+    |> stream(
+      :record_presentations,
+      Enum.map(views, fn view ->
+        view
+        |> Map.put(:id, view.key)
+        |> Map.put(:selected?, selected && view.key == selected.key)
+        |> Map.put(:disambiguate?, Enum.count(views, &(&1.type == view.type)) > 1)
+      end),
+      reset: true
     )
     |> stream(
       :process_records,
@@ -1001,19 +1047,34 @@ defmodule InstantflowWeb.ProcessLive do
           </p>
         </div>
       </div>
-      <.link
-        :if={@overview_flow_available? || @visit}
-        id="process-flow-link"
-        class="btn"
-        navigate={
-          if @visit do
-            ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/registros/#{@visit.session.ticket_id}/fluxo"
-          else
-            ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/fluxo"
-          end
-        }
-      >Ver fluxo publicado</.link>
-      <nav id="process-pages" aria-label="Páginas do processo" class="process-page-tabs">
+      <nav
+        id="process-view-navigation"
+        aria-label="Visualizações do processo"
+        class="process-page-tabs"
+      >
+        <.record_presentation_navigation :if={"records" in @blocks} {assigns} />
+        <.link
+          :if={@overview_flow_available? || @visit}
+          id="process-flow-link"
+          class="btn"
+          navigate={
+            if @visit do
+              ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/registros/#{@visit.session.ticket_id}/fluxo"
+            else
+              InstantflowWeb.RecordNavigation.with_context(
+                ~p"/o/#{@current_scope.organization.slug}/processos/#{@workflow_id}/fluxo",
+                @record_navigation
+              )
+            end
+          }
+        >Fluxo do Processo</.link>
+      </nav>
+      <nav
+        :if={length(@pages) > 1 || @blocks != ["records"]}
+        id="process-pages"
+        aria-label="Páginas do processo"
+        class="process-page-tabs"
+      >
         <.link
           :for={page <- @pages}
           id={"process-page-#{page["key"]}"}

@@ -16,7 +16,7 @@ defmodule InstantflowWeb.FlowLiveTest do
 
     assert has_element?(
              process,
-             "#process-flow-link[href='/o/horizonte/processos/#{f.version.workflow_id}/fluxo']"
+             "#process-flow-link[href^='/o/horizonte/processos/#{f.version.workflow_id}/fluxo']"
            )
 
     {:ok, flow, _} =
@@ -65,6 +65,17 @@ defmodule InstantflowWeb.FlowLiveTest do
 
     assert has_element?(flow, "#graph-nodes [data-stage='draft'][aria-current='step']")
     assert has_element?(flow, "#flow-stages [data-stage='draft'][aria-current='step']")
+
+    flow |> form("#graph-focus-form", graph: %{stage: "review"}) |> render_change()
+    assert has_element?(flow, "#graph-current-status", "Rascunho")
+    assert has_element?(flow, "#graph-inspection-status", "Em análise")
+    assert has_element?(flow, "#graph-inspection-connections", "Solicitar correção")
+    assert has_element?(flow, "#graph-nodes [data-stage='draft'][aria-current='step']")
+    flow |> element("#graph-overview") |> render_click()
+    refute has_element?(flow, "#graph-nodes .focused")
+    assert has_element?(flow, "#graph-current-status", "Rascunho")
+    flow |> element("#graph-current") |> render_click()
+    assert has_element?(flow, "#graph-nodes [data-stage='draft'].focused")
     assert {:ok, _} = transition(f.requester, id, "submit")
     Delivery.drain()
     assert has_element?(flow, "#graph-nodes [data-stage='review'][aria-current='step']")
