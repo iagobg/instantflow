@@ -71,15 +71,12 @@ defmodule InstantflowWeb.UserAuth do
                    fresh = Instantflow.Tenant.context_scope!(context)
                    fresh = Instantflow.Repo.preload(fresh, :department)
 
-                   navigation =
-                     Instantflow.WorkflowCatalog.Workspaces.navigation_in_context(context)
-
-                   {fresh, navigation}
+                   {fresh, assign_navigation(socket, context)}
                  end) do
               {:error, _} ->
                 {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
 
-              {:ok, {fresh, navigation}} ->
+              {:ok, {fresh, socket}} ->
                 if(
                   socket.view in [
                     InstantflowWeb.TemplateLive,
@@ -89,27 +86,19 @@ defmodule InstantflowWeb.UserAuth do
                   do:
                     {:halt,
                      Phoenix.LiveView.redirect(socket, to: "/o/#{fresh.organization.slug}")},
-                  else:
-                    {:cont,
-                     socket
-                     |> Phoenix.Component.assign(:current_scope, fresh)
-                     |> Phoenix.Component.assign(
-                       :workspace_navigation,
-                       navigation
-                     )}
+                  else: {:cont, Phoenix.Component.assign(socket, :current_scope, fresh)}
                 )
             end
           end)
         end
 
+        socket = Phoenix.Component.assign(socket, :workspace_navigation, [])
+        socket = Instantflow.Tenant.read_context(scope, &assign_navigation(socket, &1), socket)
+
         socket =
           socket
           |> Phoenix.LiveView.put_private(:validate_scope, validate)
           |> Phoenix.Component.assign(:current_scope, scope)
-          |> Phoenix.Component.assign(
-            :workspace_navigation,
-            Instantflow.WorkflowCatalog.Workspaces.navigation(scope)
-          )
           |> Phoenix.LiveView.attach_hook(:validate_session, :handle_event, fn _, _, socket ->
             validate.(socket)
           end)
@@ -131,7 +120,7 @@ defmodule InstantflowWeb.UserAuth do
             :workspaces_changed, socket ->
               InstantflowWeb.RefreshNotifications.coalesce(socket, :workspaces_changed)
 
-              case validate.(socket) do
+              case validate.(invalidate_navigation(socket)) do
                 {:halt, socket} ->
                   {:halt, socket}
 
@@ -165,7 +154,7 @@ defmodule InstantflowWeb.UserAuth do
                  ],
                  do: send(self(), :reconcile)
 
-              case validate.(socket) do
+              case validate.(invalidate_navigation(socket)) do
                 {:halt, socket} -> {:halt, socket}
                 {:cont, socket} -> {:halt, socket}
               end
@@ -200,4 +189,26 @@ defmodule InstantflowWeb.UserAuth do
         {:cont, socket}
     end
   end
+
+  # This key only controls a bounded presentation projection. Every callback
+  # still proves its session and loads current membership/grants before comparing.
+  # The generation arrives in the existing organization read, without another SQL call.
+  defp assign_navigation(socket, context) do
+    scope = Instantflow.Tenant.context_scope!(context)
+    key = {Instantflow.Access.fingerprint(scope), scope.organization.catalog_generation}
+
+    if socket.private[:workspace_navigation_key] == key do
+      socket
+    else
+      socket
+      |> Phoenix.Component.assign(
+        :workspace_navigation,
+        Instantflow.WorkflowCatalog.Workspaces.navigation_in_context(context)
+      )
+      |> Phoenix.LiveView.put_private(:workspace_navigation_key, key)
+    end
+  end
+
+  defp invalidate_navigation(socket),
+    do: Phoenix.LiveView.put_private(socket, :workspace_navigation_key, nil)
 end

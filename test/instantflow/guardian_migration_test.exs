@@ -87,6 +87,11 @@ defmodule Instantflow.GuardianMigrationTest do
       all_tables = tables ++ ~w(ticket_participants organization_events)
       migrated = snapshot(all_tables)
 
+      generations =
+        OperatorRepo.query!(
+          "SELECT organization_id, generation FROM workflow_catalog_generations ORDER BY organization_id"
+        ).rows
+
       archive_rows =
         OperatorRepo.query!(
           "SELECT row_to_json(r) FROM retired_workflow_versions r ORDER BY version_id"
@@ -106,6 +111,10 @@ defmodule Instantflow.GuardianMigrationTest do
 
       OperatorRepo.put_dynamic_repo(restored_owner)
       assert snapshot(all_tables) == migrated
+
+      assert OperatorRepo.query!(
+               "SELECT organization_id, generation FROM workflow_catalog_generations ORDER BY organization_id"
+             ).rows == generations
 
       assert OperatorRepo.query!(
                "SELECT row_to_json(r) FROM retired_workflow_versions r ORDER BY version_id"

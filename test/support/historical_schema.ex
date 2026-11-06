@@ -2,7 +2,24 @@ defmodule Instantflow.HistoricalSchema do
   @moduledoc "Current-command fixture seeding followed by a genuine pre-S10 schema before forward migration."
   alias Instantflow.OperatorRepo
 
+  def prepare_catalog_seed do
+    # Temporary compatibility for current Tenant reads while seeding old schemas.
+    # Removed before the real forward migration; never masks backfill coverage.
+    OperatorRepo.query!(
+      "CREATE TABLE workflow_catalog_generations (organization_id bigint PRIMARY KEY, generation bigint NOT NULL DEFAULT 0)"
+    )
+
+    OperatorRepo.query!("GRANT SELECT ON workflow_catalog_generations TO instantflow_runtime")
+  end
+
+  def finish_catalog_seed do
+    %{rows: [[0]]} = OperatorRepo.query!("SELECT count(*) FROM workflow_catalog_generations")
+    OperatorRepo.query!("DROP TABLE workflow_catalog_generations")
+  end
+
   def prepare_seed do
+    prepare_catalog_seed()
+
     OperatorRepo.query!(
       "CREATE TABLE retired_workflow_versions (version_id bigint PRIMARY KEY, organization_id bigint, reason text, inserted_at timestamp)"
     )
@@ -19,6 +36,7 @@ defmodule Instantflow.HistoricalSchema do
   end
 
   def finish_seed do
+    finish_catalog_seed()
     %{rows: [[0]]} = OperatorRepo.query!("SELECT count(*) FROM retired_workflow_versions")
     OperatorRepo.query!("DROP TABLE retired_workflow_versions")
     # All seed metadata must be historical empty defaults before stripping the
@@ -49,6 +67,15 @@ defmodule Instantflow.HistoricalSchema do
   end
 
   def assert_defaults do
+    # Populated forward migration must backfill every tenant's catalog token.
+    %{rows: [[0]]} =
+      OperatorRepo.query!("""
+      SELECT count(*) FROM (
+        SELECT organization_id, count(*) AS versions FROM workflow_versions GROUP BY organization_id
+      ) v FULL JOIN workflow_catalog_generations g USING (organization_id)
+      WHERE g.generation IS DISTINCT FROM v.versions
+      """)
+
     %{rows: [[0]]} =
       OperatorRepo.query!("SELECT count(*) FROM transition_events WHERE details <> '{}'::jsonb")
 

@@ -1,0 +1,26 @@
+{
+  "recorded_on": "2026-11-06",
+  "parent_commit": "73e603d",
+  "environment": "Local isolated PostgreSQL database with a simple approval workflow and a connected requester LiveView",
+  "method": "QueryProbe all-process capture of one transition-reason change after settling the LiveView mailbox. Baseline restores the parent UserAuth and Tenant read paths; candidate uses the same fixture with navigation reuse. The additive migration is present in both runs. Only aggregate counters are retained.",
+  "baseline": {"statements": 14, "rows": 10, "errors": 0, "update_locks": 2},
+  "candidate": {"statements": 13, "rows": 9, "errors": 0, "update_locks": 2},
+  "navigation_projection_queries": {"unchanged_event": 0, "periodic_recovery": 1, "grant_change": 1},
+  "correctness": [
+    "Every protected callback still validates the current session, user, organization, membership and grants.",
+    "Fresh access fingerprints and catalog generations invalidate presentation data even when broadcasts are missed.",
+    "Publication label and role-binding changes update both connected tabs on their next protected event.",
+    "Session expiry and membership revocation redirect even when navigation would otherwise be reused.",
+    "The generation changes atomically with publication; uncommitted and rolled-back publications are invisible to readers.",
+    "Runtime generation access is tenant scoped and read-only; the trigger function uses a fixed search path and has no public EXECUTE grant.",
+    "Populated forward migrations backfill counters; backup/restore retains the counters and application data."
+  ],
+  "deployment": "Apply the additive migration before new code. Its publication-table lock protects backfill and trigger installation. Keep the additive schema when rolling back application code.",
+  "validation": {"precommit_tests": 472, "precommit_failures": 0, "assets_build": "passed", "populated_migration_and_restore": "passed"},
+  "limitations": [
+    "The generation lookup adds a small indexed subquery to each scoped organization read, without adding a round trip.",
+    "Counters serialize publication changes within a tenant; normal reads do not lock the counter row.",
+    "The cache contains at most 25 navigation entries and is presentation data, never command authority.",
+    "Local SQL counts are not a hosted latency or capacity claim; full deferred-cycle and connection-occupancy measurements remain pending."
+  ]
+}

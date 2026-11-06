@@ -67,7 +67,21 @@ defmodule Instantflow.Tenant do
       if previous not in [nil, "", to_string(id)], do: Repo.rollback(:scope_mismatch)
       Repo.query!("SET LOCAL ROLE instantflow_runtime")
       Repo.query!("SELECT set_config('instantflow.organization_id', $1, true)", [to_string(id)])
-      organization = Repo.one(from o in Organization, where: o.id == ^id, lock: "FOR SHARE")
+
+      generation =
+        from g in "workflow_catalog_generations",
+          where: g.organization_id == parent_as(:organization).id,
+          select: g.generation
+
+      organization =
+        Repo.one(
+          from o in Organization,
+            as: :organization,
+            where: o.id == ^id,
+            select_merge: %{catalog_generation: coalesce(subquery(generation), 0)},
+            lock: "FOR SHARE"
+        )
+
       unless organization && organization.status == "active", do: Repo.rollback(:unavailable)
       result = fun.(organization)
       # Restore both settings even when nested in a caller's existing transaction

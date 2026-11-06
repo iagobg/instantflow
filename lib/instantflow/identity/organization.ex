@@ -6,6 +6,7 @@ defmodule Instantflow.Identity.Organization do
     field :slug, :string
     field :status, :string, default: "active"
     field :timezone, :string, default: "America/Sao_Paulo"
+    field :catalog_generation, :integer, virtual: true, default: 0
     timestamps(type: :utc_datetime)
   end
 end

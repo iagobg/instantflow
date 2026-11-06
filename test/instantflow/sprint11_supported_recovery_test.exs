@@ -20,7 +20,7 @@ defmodule Instantflow.Sprint11SupportedRecoveryTest do
 
   alias Instantflow.Identity.{Organization, Department, Membership, User}
 
-  test "supported builder population survives due-work migration, backup and runtime recovery" do
+  test "supported builder population survives efficiency migrations, backup and runtime recovery" do
     config = OperatorRepo.config() |> Keyword.take([:username, :password, :hostname, :port])
 
     control =
@@ -43,10 +43,12 @@ defmodule Instantflow.Sprint11SupportedRecoveryTest do
       OperatorRepo.put_dynamic_repo(owner)
       migrations = Application.app_dir(:instantflow, "priv/repo/migrations")
       Ecto.Migrator.run(OperatorRepo, migrations, :up, to: 20_261_023_160_944, log: false)
+      Instantflow.HistoricalSchema.prepare_catalog_seed()
       runtime = repo(Repo, source, :s11_source_runtime)
       Repo.put_dynamic_repo(runtime)
       first = populate("first")
       other = populate("second")
+      Instantflow.HistoricalSchema.finish_catalog_seed()
 
       tables =
         OperatorRepo.query!(
@@ -56,13 +58,20 @@ defmodule Instantflow.Sprint11SupportedRecoveryTest do
 
       before_migration = snapshot(tables)
 
-      assert [20_261_106_140_436] =
+      assert [20_261_106_140_436, 20_261_106_165_113] =
                Ecto.Migrator.run(OperatorRepo, migrations, :up, all: true, log: false)
 
       frozen = snapshot(tables)
 
       assert Map.delete(frozen, "schema_migrations") ==
                Map.delete(before_migration, "schema_migrations")
+
+      tables = tables ++ ["workflow_catalog_generations"]
+      frozen = snapshot(tables)
+
+      assert Enum.sort(
+               Enum.map(frozen["workflow_catalog_generations"], fn [row] -> row["generation"] end)
+             ) == [6, 6]
 
       assert Ecto.Migrator.run(OperatorRepo, migrations, :up, all: true, log: false) == []
       assert snapshot(tables) == frozen

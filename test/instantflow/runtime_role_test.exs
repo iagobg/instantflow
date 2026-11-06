@@ -122,6 +122,77 @@ defmodule Instantflow.RuntimeRoleTest do
     })
   end
 
+  test "catalog generations follow committed publications and are read-only and tenant scoped",
+       c do
+    generation = fn scope ->
+      Tenant.read_context(scope, &Tenant.context_scope!(&1).organization.catalog_generation)
+    end
+
+    assert generation.(c.a_scope) == 1
+    assert generation.(c.b_scope) == 0
+    assert Repo.query!("SELECT * FROM workflow_catalog_generations").rows == []
+
+    assert {:error, %Postgrex.Error{postgres: %{code: :insufficient_privilege}}} =
+             Repo.query("UPDATE workflow_catalog_generations SET generation = 0")
+
+    # Use a separate reader: the existing user FOR UPDATE intentionally conflicts
+    # with the publisher foreign key's key-share lock, independently of navigation.
+    reader_user =
+      OperatorRepo.insert!(
+        User.changeset(%User{email: "catalog-reader-#{c.a.id}@example.test"}, %{
+          name: "Catalog reader",
+          password: "fictional-password-123"
+        })
+      )
+
+    OperatorRepo.insert!(%Membership{
+      organization_id: c.a.id,
+      user_id: reader_user.id,
+      department_id: c.a_scope.department_id,
+      role: "staff"
+    })
+
+    reader = Identity.scope(reader_user.id, c.a.id)
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :catalog_writer
+        )
+      )
+
+    insert = """
+    INSERT INTO workflow_versions
+      (organization_id,workflow_id,number,definition,bindings,published_by_id,inserted_at,updated_at)
+    SELECT organization_id,workflow_id,$2,definition,bindings,published_by_id,now(),now()
+    FROM workflow_versions WHERE id=$1
+    """
+
+    Postgrex.query!(connection, "BEGIN")
+    Postgrex.query!(connection, insert, [c.version.id, 2])
+    assert generation.(reader) == 1
+    Postgrex.query!(connection, "COMMIT")
+    assert generation.(c.a_scope) == 2
+
+    Postgrex.query!(connection, "BEGIN")
+    Postgrex.query!(connection, insert, [c.version.id, 3])
+    Postgrex.query!(connection, "ROLLBACK")
+    assert generation.(c.a_scope) == 2
+    assert generation.(c.b_scope) == 0
+
+    assert {:ok, []} =
+             Tenant.raw(c.b.id, fn ->
+               Repo.query!("SELECT * FROM workflow_catalog_generations").rows
+             end)
+
+    assert [[true, ["search_path=pg_catalog"], false]] =
+             Repo.query!("""
+             SELECT prosecdef, proconfig,
+               EXISTS(SELECT FROM aclexplode(proacl) a WHERE a.grantee=0 AND a.privilege_type='EXECUTE')
+             FROM pg_proc WHERE oid='public.advance_workflow_catalog_generation()'::regprocedure
+             """).rows
+  end
+
   test "read contexts expire after rollback and preserve tenant isolation on connection reuse",
        c do
     owner = self()
