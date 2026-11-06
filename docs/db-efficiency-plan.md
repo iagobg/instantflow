@@ -168,13 +168,28 @@ Validation: 60 focused policy, runtime-role, LiveView and diagnostic tests passe
 
 Matching local probes reduce a participant record projection **26 → 20** statements and a named counselor projection **29 → 20**. Tests require one relationship/assignment source query per applicable composite read, compare policy decisions with live queries, reject expired context reuse, and recheck reassignment and revoked grants/relationships. See [policy fact evidence](evidence/db-efficiency-policy-facts-2026-11-06.json). Candidate directories and presence peer batches still need their own current reads; this is not a cross-request authorization cache. Validation: 28 focused policy/context/history tests, 31 fact-contract/runtime-role tests, and the complete `mix precommit --seed 0` gate passed **459 tests, zero failures**.
 
+**Increment 4e:** the endpoint now calls the Phoenix router directly. The former router-wide checkout kept a connection through password verification and HTML rendering, including on anonymous pages with no SQL. Individual queries and existing context transactions now acquire/release their own leases; the narrower composite authentication/read checkouts remain. Tenant settings, RLS, authorization gates, lock modes, command receipts and outbox atomicity retain their existing boundaries.
+
+The [matching local rerun](evidence/db-efficiency-http-connection-2026-11-06.json), using the same committed workload as increment 1b, shows:
+
+| Scenario | SQL statements before → after | Actual leases before → after | Connection holding time before → after |
+| --- | --- | --- | --- |
+| Anonymous login page | 0 → 0 | 1 → 0 | 0.24 → 0 ms |
+| Successful login, median of three | 3 → 3 | 1 → 3 | 97.1 → 5.1 ms |
+| Four concurrent logins | 12 → 12 | 4 → 12 | 392.3 → 14.6 connection-ms total |
+| HTTP + connected record mount | 158 → 158 | 6 → 13 | longest lease 92.4 → 20.4 ms |
+
+Average occupied connections during the four-login burst fall from 3.82 to 0.15; peak remains four. This is shorter holding time with more checkouts, not less password work: observed request windows remain about 100 ms. Full-cycle save, submit and retry statement counts remain 205, 359 and 235 respectively, with the same lease counts. Query savings in deferred refresh work remain a separate next increment. The mount is a single cold observation, not a latency benchmark. Observer controls and local timing variation remain material; these results do not establish hosted capacity.
+
+Validation: the occupied-pool regression proves the login/invitation pages and unauthenticated redirect remain available while another process holds the only connection. Twelve focused authentication/probe/HTTP tests and the committed-cycle harness passed. The full `mix precommit --seed 0` gate passed **484 tests, zero failures**. A final focused precommit pass reran all 12 affected tests after tightening supervised observer cleanup and the pool-occupancy barrier.
+
 Introduce an explicit internal API for already-authorized operations. Public context entry points still prove scope; internal projection/control helpers receive the fresh scope and fetched policy facts from the enclosing tenant transaction. A reusable context must be bound to the current process, organization, and transaction lifetime, and must not become a socket assign, cross-request cache, or authority passed into spawned tasks. Server-internal call discipline must be explicit and tested.
 
 Start with `WorkflowRuntime.get`, `RequestLive` loading, assignment/participant/communication controls, and presence. Fetch the ticket, immutable version, current grants, and relevant relationship/assignment facts once. Reuse the existing policy functions with supplied facts rather than issuing a query for each predicate. Extract a cohesive authorized record projection service; LiveViews retain forms, drafts, navigation, and rendering.
 
 Consolidate nested `Tenant.raw` setup and restoration without weakening scope mismatch detection. If the boundary owns the outer transaction, transaction-local settings naturally expire at commit/rollback. If called inside a pre-existing transaction, restore the prior role/context correctly. Test privileged fixture connections and the real non-owner runtime login. Avoid broadly changing transaction semantics and lock modes in this PR.
 
-Release the connection before rendering, external calls, or expensive password hashing. Review the router-wide `Repo.checkout` wrapper once composite reads have their own lease: today it spans the login controller's password verification. Measure checkout count and lease duration together so reducing round trips does not create longer connection occupancy.
+Release the connection before rendering, external calls, or expensive password hashing. The router-wide wrapper is removed in increment 4e; continue reviewing the remaining context boundaries when external work is introduced. Measure checkout count and lease duration together so reducing round trips does not create longer connection occupancy.
 
 **Acceptance:** a detail projection uses one scope/grant load per authorized boundary, with bounded batches for supporting facts. Public helper misuse fails closed; nested rollback, wrong-tenant nesting, task reuse, and pooled connection reuse preserve isolation. Existing command receipts, atomic capability composition, pinned version behavior, and read-policy parity pass unchanged.
 
@@ -311,6 +326,6 @@ The current [Checks workflow](../.github/workflows/checks.yml) invokes [publicat
 
 ## Completion and next implementation
 
-Increments 1a–1b, 2a, 2b, 3, 4a–4d, 5a–5e, 6a and 6b cover measurement, body-free bounded document browsing, due-work dispatch, independent retention, fresh authorization reuse, composed session/navigation and staff record reads, lightweight presence, batched list invalidations, queued refresh coalescing, navigation reuse and input debounce. Local committed-cycle and lease measurements now identify the router-wide checkout as the next change. Then address per-pass recipient deduplication and finance invalidation scope, expand the full-cycle matrix, and complete guarded hosted benchmark comparison before claiming capacity improvements. Leave lock refinement until the cheaper read paths and their concurrency tests are stable.
+Increments 1a–1b, 2a, 2b, 3, 4a–4e, 5a–5e, 6a and 6b cover measurement, body-free bounded document browsing, due-work dispatch, independent retention, fresh authorization reuse, composed session/navigation and staff record reads, lightweight presence, batched list invalidations, queued refresh coalescing, navigation reuse and input debounce. Local committed-cycle and lease measurements are established, and the router-wide connection hold has been removed. Next address per-pass recipient deduplication and finance invalidation scope, expand the full-cycle matrix, and complete guarded hosted benchmark comparison before claiming capacity improvements. Leave lock refinement until the cheaper read paths and their concurrency tests are stable.
 
 The work is complete when the candidate meets the fixed efficiency targets, preserves every correctness gate, passes the existing generalized workflow/recovery matrix, and records reproducible local and hosted results with the exact deployment and fixture identities. Update this plan with measured outcomes per step rather than marking progress from code changes alone.

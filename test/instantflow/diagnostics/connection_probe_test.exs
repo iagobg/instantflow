@@ -196,19 +196,34 @@ defmodule Instantflow.Diagnostics.ConnectionProbeTest do
   end
 
   test "owner death removes instrumentation", c do
-    parent = self()
-
     owner =
       Task.Supervisor.async_nolink(c.tasks, fn ->
-        Repo.put_dynamic_repo(c.runtime)
-        {:ok, probe} = ConnectionProbe.start_link(owner: self())
-        send(parent, {:probe, probe})
+        receive do: (:finish -> :ok)
       end)
 
-    assert_receive {:probe, probe}
+    probe =
+      start_supervised!(%{
+        id: :owned_probe,
+        start: {__MODULE__, :start_probe, [c.runtime, owner.pid]},
+        restart: :temporary
+      })
+
     monitor = Process.monitor(probe)
+    send(owner.pid, :finish)
     Task.await(owner)
     assert_receive {:DOWN, ^monitor, :process, ^probe, _}
+  end
+
+  # The observer resolves dynamic repositories in its starting process, here
+  # the test supervisor. Keep that process's prior repository setting intact.
+  def start_probe(runtime, owner) do
+    previous = Repo.put_dynamic_repo(runtime)
+
+    try do
+      ConnectionProbe.start_link(owner: owner)
+    after
+      Repo.put_dynamic_repo(previous)
+    end
   end
 
   defp await_queued(pool, deadline) do
