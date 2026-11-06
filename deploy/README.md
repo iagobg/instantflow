@@ -207,6 +207,23 @@ The runner verifies the direct-origin HTTPS route, starts a bounded SSH control 
 
 Public metadata records the selected application commit, digest, Checks/publication identity, historical fixture source commit/image/archive hash, workload and private manifest hashes, post-migration table/migration inventory, pool/resource limits, direct network route, pinned k6 image and controller/runner hashes. Actor identities, passwords, cookies and record contents are excluded. Raw browser output and private fixture files remain under ignored `.local/`. Host and generator resource samples are recorded separately. The host-side `operations/OPERATION_ID/campaign.json` survives a disconnected result stream.
 
+### Shared-record browser correctness
+
+[workloads/contention.cjs](workloads/contention.cjs) uses the existing school fixture's shared record and two or five distinct reviewer accounts. Three synchronized rounds require exactly one accepted same-section write, preserved drafts for every conflicting writer, and a fresh authorized read of the winner. The remaining scenarios verify explicit reconciliation, review invalidation, concurrent independent-section writes, requester permissions and a persisted terminal transition. The runner requires all expected outcome counts before reporting success.
+
+Run this functional profile through the same guarded campaign controller:
+
+```sh
+python3 deploy/benchmark_run.py --candidate /absolute/private/candidate.json \
+  --workload /absolute/checkout/deploy/workloads/contention.cjs \
+  --fixture /absolute/private/manifest.json --output /absolute/private/results \
+  --mode contention --users 5 \
+  --node /absolute/node-20-or-newer \
+  --playwright-package /absolute/playwright-core-1.64.1
+```
+
+Use `--baseline` in place of `--candidate PATH` for the historical arm. The browser driver uses separate cookie contexts under one controller and a 180-second deadline. It validates the installed runtime before any host mutation, records the Node executable, Playwright package and Chromium distribution hashes, and terminates its controller process group on success or failure. Playwright handles its detached browser groups on normal shutdown and SIGTERM. Detailed error output remains private because browser call logs can contain entered values. Duration options retain their defaults; this profile has no warmup or steady-state measurement window. It does not use k6, produce generator-container samples, or belong in `benchmark_compare.py`'s closed-load comparison. Host observation and matching database/image restoration still cover every run.
+
 Success requires a zero browser exit, nonzero checked business saves, zero failed checks/business failures, unchanged application identity at completion, and confirmed restoration. A passing pilot establishes the orchestration and functional contract; use repeated baseline/candidate runs with the same workload/resources/instrumentation for performance analysis. Install `benchmark_metrics.py` alongside the session to collect the database observations below.
 
 The [hosted runner rehearsal](../docs/evidence/db-efficiency-benchmark-provenance-2026-11-06.json) ran one user for ten measured seconds, completed six saves with six passing checks, and restored the original 15-record state. A separate real SSH disconnect rehearsal verified concurrent-controller exclusion, legacy-reset refusal and automatic restoration. Candidate/source separation, stale server metadata, partial control input, timeout, failed browser checks, incomplete recovery and publication-tag binding are covered by local tests.

@@ -2,6 +2,7 @@ import copy
 import json
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 import benchmark_host as host
@@ -54,3 +55,34 @@ class ProvenanceTest(unittest.TestCase):
             path.write_text("changed browser script")
             with self.assertRaises(host.GuardError):
                 provenance.workload_identity(path)
+
+    def test_checked_in_contention_script_matches_reviewed_digest(self):
+        path = Path(__file__).parent / "workloads" / "contention.cjs"
+        self.assertEqual(provenance.workload_identity(path)["sha256"], provenance.CONTENTION_SHA256)
+
+    def test_contention_requires_fixed_parameters_distinct_editors_and_shared_fixture(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "fixture.json"
+            fixture = {"contention_ticket_id": 99,
+                "teacher": {"user_id": 100, "email": "teacher@example.test", "password": "secret"},
+                "actors": [{"user_id": n, "ticket_id": n} for n in range(1, 11)]}
+            host.write_json(path, fixture)
+            args = SimpleNamespace(fixture=path, mode="contention", users=5, warmup=0, seconds=10)
+            workload = {"sha256": provenance.CONTENTION_SHA256}
+            contract = provenance.campaign_contract(args, workload)
+            self.assertEqual(contract["editor_contexts"], 5)
+            self.assertNotIn("secret", json.dumps(contract))
+            self.assertNotIn("teacher@", json.dumps(contract))
+            for key, value in [("users", 3), ("mode", "mixed"), ("warmup", 1), ("seconds", 180)]:
+                with self.subTest(key=key), self.assertRaises(host.GuardError):
+                    provenance.campaign_contract(SimpleNamespace(**{**vars(args), key: value}), workload)
+            for key, value in [("contention_ticket_id", 1), ("teacher", fixture["actors"][0]),
+                               ("contention_ticket_id", None)]:
+                path.write_text(json.dumps({**fixture, key: value}))
+                with self.subTest(key=key), self.assertRaises(host.GuardError):
+                    provenance.campaign_contract(args, workload)
+
+    def test_load_workload_cannot_claim_contention_scenarios(self):
+        args = SimpleNamespace(mode="contention")
+        with self.assertRaises(host.GuardError):
+            provenance.campaign_contract(args, {"sha256": provenance.WORKLOAD_SHA256})

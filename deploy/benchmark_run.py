@@ -17,6 +17,7 @@ import threading
 import time
 
 import benchmark_host as host
+import benchmark_browser as browser_driver
 import benchmark_provenance as provenance
 from benchmark_rollout import replace_json
 
@@ -141,6 +142,8 @@ def run(args):
     os.umask(0o077)
     application = host.validate_application(host.read_json(args.candidate) if args.candidate else host.baseline_application())
     fixture, workload = provenance.fixture_identity(args.fixture), provenance.workload_identity(args.workload)
+    contract = provenance.campaign_contract(args, workload)
+    runtime = browser_driver.identity(args.node, args.playwright_package) if contract["kind"] == "functional_contention" else None
     args.output.mkdir(mode=0o700, parents=True, exist_ok=True)
     host.private_path(args.output, directory=True)
     output = args.output / ("campaign-" + secrets.token_hex(6))
@@ -151,6 +154,11 @@ def run(args):
                 "runner": {"platform": platform.platform(), "cpus": os.cpu_count(),
                            "source_sha256": host.digest(Path(__file__))},
                 "interpretation": "Closed browser workload; pilots do not establish capacity"}
+    metadata["workload_contract"] = contract
+    if contract["kind"] == "functional_contention":
+        metadata.update(measurement_seconds=None, warmup_seconds=None,
+                        interpretation="Fixed functional contention scenarios; not a steady-state capacity measurement")
+        metadata["runner"]["browser"] = {k: v for k, v in runtime.items() if not k.startswith("_")}
     replace_json(output / "metadata.json", metadata)
     remote, ready, exit_code = None, None, None
     workload_passed = False
@@ -165,20 +173,19 @@ def run(args):
         metadata["provenance"] = provenance.manifest(application, ready, fixture, workload)
         metadata["status"] = "running"
         replace_json(output / "metadata.json", metadata)
-        container = "instantflow-k6-" + output.name
-        observer = threading.Thread(target=runner_samples, args=(container, output, stop), daemon=True)
-        observer.start()
-        with (output / "k6.log").open("wb") as log:
-            result = subprocess.run(k6_command(args, output, container), stdout=log, stderr=subprocess.STDOUT,
-                                    timeout=args.seconds + args.warmup + 180)
+        if runtime:
+            result = browser_driver.run(args, output, runtime)
+        else:
+            container = "instantflow-k6-" + output.name
+            observer = threading.Thread(target=runner_samples, args=(container, output, stop), daemon=True)
+            observer.start()
+            with (output / "k6.log").open("wb") as log:
+                result = subprocess.run(k6_command(args, output, container), stdout=log, stderr=subprocess.STDOUT,
+                                        timeout=args.seconds + args.warmup + 180)
         exit_code = result.returncode
         if exit_code == 0:
             metrics = json.loads((output / "summary.json").read_text())["metrics"]
-            host.require(metrics["business_saves"]["values"]["count"] > 0
-                         and metrics["business_failure"]["values"]["rate"] == 0
-                         and metrics["checks"]["values"]["passes"] > 0
-                         and metrics["checks"]["values"]["fails"] == 0,
-                         "Browser run lacks successful checked business operations")
+            provenance.validate_results(metrics, contract)
             workload_passed = True
     finally:
         stop.set()
@@ -187,7 +194,8 @@ def run(args):
         try:
             cleanup_container(output)
         finally:
-            metadata["k6_exit_code"] = exit_code
+            metadata["browser_exit_code"] = exit_code
+            metadata["k6_exit_code"] = None if runtime else exit_code
             metadata["status"] = "failed"
             if remote:
                 try:
@@ -227,9 +235,11 @@ def main():
     parser.add_argument("--fixture", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--users", type=int, choices=range(1, 11), default=1)
-    parser.add_argument("--mode", choices=["pilot", "mixed"], default="pilot")
+    parser.add_argument("--mode", choices=["pilot", "mixed", "contention"], default="pilot")
     parser.add_argument("--seconds", type=int, default=10)
     parser.add_argument("--warmup", type=int, default=0)
+    parser.add_argument("--node", type=Path, help="Node 20+ executable for the functional contention driver")
+    parser.add_argument("--playwright-package", type=Path, help="Existing playwright-core 1.64.1 package directory")
     args = parser.parse_args()
     host.require(1 <= args.seconds <= 180 and 0 <= args.warmup <= 60, "Invalid bounded workload duration")
     for name in ["workload", "fixture", "output"]:

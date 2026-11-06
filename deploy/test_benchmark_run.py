@@ -54,9 +54,11 @@ class RunnerTest(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
         self.args = SimpleNamespace(candidate=None, workload=self.root / "school.js", fixture=self.root / "manifest.json",
-                                    output=self.root / "results", users=1, mode="pilot", seconds=10, warmup=0)
+                                    output=self.root / "results", users=1, mode="pilot", seconds=10, warmup=0,
+                                    node=None, playwright_package=None)
         self.exit_code = 0
         self.summary_valid = True
+        self.contention_complete = True
         FakeRemote.instances = []
         FakeRemote.mismatch = False
         FakeRemote.recovery_failure = False
@@ -65,6 +67,8 @@ class RunnerTest(unittest.TestCase):
             (runner.platform, "platform", lambda: "test-runner"),
             (provenance, "fixture_identity", lambda path: {"archive_sha256": host.BASE_HASH, "source_commit": host.BASE_COMMIT}),
             (provenance, "workload_identity", lambda path: {"sha256": provenance.WORKLOAD_SHA256}),
+            (runner.browser_driver, "identity", lambda *_: {"driver": "playwright", "_node": "/test/node"}),
+            (runner.browser_driver, "run", lambda *_: self.browser(["local", "browser"])),
         ]:
             patcher = patch.object(target, name, value)
             patcher.start()
@@ -78,11 +82,19 @@ class RunnerTest(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
     def browser(self, command, **kwargs):
-        self.assertEqual(command[:2], ["docker", "run"])
-        self.assertIn(provenance.K6, command)
+        if self.args.mode == "contention":
+            self.assertEqual(command, ["local", "browser"])
+        else:
+            self.assertEqual(command[:2], ["docker", "run"])
+            self.assertIn(provenance.K6, command)
         output = next(self.args.output.iterdir())
         metrics = {"business_saves": {"values": {"count": 2}}, "business_failure": {"values": {"rate": 0}},
                    "checks": {"values": {"passes": 2, "fails": 0}}} if self.summary_valid else {}
+        if self.args.mode == "contention":
+            counts = {"business_saves": 6, "contention_rounds": 3, "expected_conflicts": 3,
+                      "preserved_drafts": 3 if self.contention_complete else 2,
+                      "explicit_reapplications": 1, "independent_section_saves": 2, "terminal_transitions": 1}
+            metrics.update({key: {"values": {"count": value}} for key, value in counts.items()})
         (output / "summary.json").write_text(json.dumps({"metrics": metrics}))
         return subprocess.CompletedProcess(command, self.exit_code)
 
@@ -132,5 +144,40 @@ class RunnerTest(unittest.TestCase):
         with patch.object(runner.subprocess, "run", side_effect=subprocess.TimeoutExpired("browser", 190)):
             with self.assertRaises(subprocess.TimeoutExpired):
                 runner.run(self.args)
+        self.assertEqual(self.metadata()["restoration"]["restoration"]["status"], "recovered")
+        self.assertEqual(FakeRemote.instances[0].commands[-1]["action"], "abort")
+
+    def contention(self):
+        self.args.mode, self.args.users = "contention", 2
+        host.write_json(self.args.fixture, {"contention_ticket_id": 99,
+            "teacher": {"user_id": 100, "email": "teacher@example.test", "password": "private"},
+            "actors": [{"user_id": n, "ticket_id": n} for n in range(1, 11)]})
+        return patch.object(provenance, "workload_identity", return_value={"sha256": provenance.CONTENTION_SHA256})
+
+    def test_contention_metadata_has_no_fictitious_measurement_window(self):
+        with self.contention():
+            runner.run(self.args)
+        metadata = self.metadata()
+        self.assertEqual(metadata["status"], "passed")
+        self.assertIsNone(metadata["measurement_seconds"])
+        self.assertIsNone(metadata["k6_exit_code"])
+        self.assertIsNone(metadata["provenance"]["k6_image"])
+        self.assertEqual(metadata["browser_exit_code"], 0)
+        self.assertNotIn("_node", metadata["runner"]["browser"])
+        self.assertEqual(metadata["workload_contract"]["editor_contexts"], 2)
+        self.assertNotIn("private", json.dumps(metadata))
+
+    def test_local_driver_timeout_aborts_and_restores_the_host(self):
+        with self.contention(), patch.object(runner.browser_driver, "run", side_effect=subprocess.TimeoutExpired("browser", 180)):
+            with self.assertRaises(subprocess.TimeoutExpired):
+                runner.run(self.args)
+        self.assertEqual(self.metadata()["restoration"]["restoration"]["status"], "recovered")
+        self.assertEqual(FakeRemote.instances[0].commands[-1]["action"], "abort")
+
+    def test_missing_conflict_preservation_aborts_even_with_zero_exit_and_passing_checks(self):
+        self.contention_complete = False
+        with self.contention(), self.assertRaisesRegex(host.GuardError, "Incomplete contention"):
+            runner.run(self.args)
+        self.assertEqual(self.metadata()["status"], "failed")
         self.assertEqual(self.metadata()["restoration"]["restoration"]["status"], "recovered")
         self.assertEqual(FakeRemote.instances[0].commands[-1]["action"], "abort")
