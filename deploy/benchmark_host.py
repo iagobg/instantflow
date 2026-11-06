@@ -181,8 +181,8 @@ def validate_credentials(root):
 
 
 class Host:
-    def command(self, args, *, label, input=None, stdin=None, stdout=None):
-        options = {"stderr": subprocess.PIPE, "timeout": 180, "check": False}
+    def command(self, args, *, label, input=None, stdin=None, stdout=None, timeout=180):
+        options = {"stderr": subprocess.PIPE, "timeout": timeout, "check": False}
         options["stdout"] = stdout if stdout is not None else subprocess.PIPE
         if input is not None:
             options["input"] = input

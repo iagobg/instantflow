@@ -12,7 +12,7 @@ import secrets
 import urllib.request
 
 import benchmark_host as host
-from benchmark_candidate import verify
+from benchmark_candidate import verify, verify_publication_run
 import benchmark_smoke
 
 
@@ -52,15 +52,7 @@ def verify_publication(application):
         verify(checks, application["application_commit"], "iagobg/instantflow")
         host.require(checks["id"] == application["checks_run_id"], "Checks run identity mismatch")
         run = github_run(application["publication_run_id"], application["publication_attempt"])
-        host.require(run["id"] == application["publication_run_id"]
-                     and run["run_attempt"] == application["publication_attempt"]
-                     and run["head_sha"] == application["application_commit"]
-                     and run["status"] == "completed" and run["conclusion"] == "success"
-                     and run["event"] == "workflow_dispatch"
-                     and run["path"].split("@", 1)[0] == ".github/workflows/benchmark-candidate.yml"
-                     and run["repository"]["full_name"] == "iagobg/instantflow"
-                     and run["head_repository"]["full_name"] == "iagobg/instantflow",
-                     "Candidate publication did not pass for this exact revision/attempt")
+        verify_publication_run(run, application)
     except Exception:
         raise host.GuardError("Candidate Checks/publication provenance could not be verified") from None
 
@@ -205,7 +197,7 @@ class Rollout(host.Host):
                                       "identity": identity, "smoke": smoke,
                                       "recovery_snapshot": journal["recovery_snapshot"]})
 
-    def switch(self, application, *, restore_id=None, fixture=False):
+    def switch(self, application, *, restore_id=None, fixture=False, hold=False):
         host.require(not (restore_id and fixture), "Select snapshot or frozen fixture, not both")
         self.guard()
         application = host.validate_application(application)
@@ -261,9 +253,13 @@ class Rollout(host.Host):
             self.start()
             identity = self.guard(transition=context, ready=True)
             smoke = self.smoke()
-            return self.complete(journal, {"operation_id": journal["id"], "status": "ready", "identity": identity,
+            result = {"operation_id": journal["id"], "status": "ready", "identity": identity,
                 "application": application, "recovery_snapshot": backup["snapshot_id"], "restored_snapshot": restore_id,
-                "frozen_fixture_restored": fixture, "inventory": self.inventory(host.DATABASE), "smoke": smoke})
+                "frozen_fixture_restored": fixture, "inventory": self.inventory(host.DATABASE), "smoke": smoke}
+            if hold:
+                replace_json(self.operation_folder(journal) / "ready.json", result)
+                return result
+            return self.complete(journal, result)
         except BaseException:
             try:
                 self.recover()

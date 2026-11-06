@@ -1,0 +1,160 @@
+{
+  "disconnect_checks": {
+    "disconnect_recovery_verified": true,
+    "host_lock_exclusion": true,
+    "legacy_reset_refused": true
+  },
+  "kind": "functional orchestration pilot, not a capacity measurement",
+  "limitations": [
+    "No candidate image published/deployed yet",
+    "No repeated performance comparison or PostgreSQL-specific sampling yet",
+    "External historical workload preserved; metadata identifies its reviewed hash"
+  ],
+  "observed_at": "2026-11-06",
+  "outcomes": {
+    "all_original_table_counts_and_versions_match": true,
+    "business_failure_rate": 0,
+    "checks": {
+      "fails": 0,
+      "passes": 6,
+      "rate": 1
+    },
+    "k6_exit_code": 0,
+    "original_records_restored": 15,
+    "restoration_status": "recovered",
+    "saves": 6
+  },
+  "provenance": {
+    "application": {
+      "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+      "platform": "linux/arm64",
+      "schema": 0
+    },
+    "fixture": {
+      "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+      "initial_records": 12,
+      "load_actors": 10,
+      "name": "school-v1",
+      "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+      "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+    },
+    "host_controller_sha256": {
+      "benchmark_candidate.py": "548e0509838c3398250376eef2ee392a0f9cfdd769cabc03271ea66b59abfb58",
+      "benchmark_host.py": "d464c234fab94fed365b4f2aeb77548f6fec102c51665c4b11179fa1e1ae5498",
+      "benchmark_provenance.py": "8ac15be29c9273e5da147b0f029fc1d04014859f24c3e9bd753a18261fcd837f",
+      "benchmark_rollout.py": "38afeaf22d99d77efe01c4b82dd8adfe618afe677a8e1bf15465aa66c86baba6",
+      "benchmark_session.py": "b1257a319bb7b78ab02d06f4a674a88674ed9ac07306568046c79c290351eef3",
+      "benchmark_smoke.py": "f10c6ba5cd1667642af3f0e15b68e4a3b439cd2508aaf666997409f58da86f1c",
+      "remote.py": "1100e88a66a12a903232c404ed1a1db1d6a9ba3fe404949ea01f1070e73ca02b"
+    },
+    "initial_inventory": {
+      "schema_versions": [
+        "20261020180524",
+        "20261020184948",
+        "20261020200807",
+        "20261020205338",
+        "20261021002628",
+        "20261021011853",
+        "20261021012546",
+        "20261021080918",
+        "20261021083132",
+        "20261021094238",
+        "20261021123137",
+        "20261021124325",
+        "20261021190401",
+        "20261021193830",
+        "20261021224308",
+        "20261021231607",
+        "20261021233544",
+        "20261022100818",
+        "20261022175214",
+        "20261023033124",
+        "20261023040903",
+        "20261023151405",
+        "20261023152158",
+        "20261023160944"
+      ],
+      "table_counts": {
+        "budget_accounts": 0,
+        "budget_entries": 0,
+        "budget_holds": 0,
+        "calculation_attempts": 0,
+        "calculation_reviews": 0,
+        "calculation_runs": 0,
+        "calculation_scripts": 0,
+        "calculation_switch": 1,
+        "calculation_switch_events": 0,
+        "catalog_products": 0,
+        "command_receipts": 36,
+        "delivery_attempts": 36,
+        "departments": 1,
+        "enrollments": 0,
+        "fulfillment_batches": 0,
+        "fulfillment_lines": 0,
+        "guardian_links": 0,
+        "invitations": 0,
+        "membership_grants": 12,
+        "memberships": 14,
+        "operation_day_closes": 0,
+        "operation_receipts": 0,
+        "organization_events": 12,
+        "organizations": 1,
+        "outbox_messages": 36,
+        "private_documents": 0,
+        "retired_workflow_versions": 0,
+        "schema_migrations": 24,
+        "section_assignments": 0,
+        "service_resources": 0,
+        "service_sessions": 0,
+        "sessions": 0,
+        "template_events": 3,
+        "ticket_participants": 0,
+        "ticket_sections": 24,
+        "tickets": 12,
+        "transition_events": 36,
+        "users": 14,
+        "workflow_drafts": 1,
+        "workflow_versions": 1,
+        "workflows": 1
+      }
+    },
+    "k6_image": "grafana/k6@sha256:8663335c8c1c5a40dd51823ef980c584761a4a084a2297fca29a29ee495c6bc1",
+    "operation_id": "operation-f0e8e9b222d9",
+    "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+    "recovery_snapshot": "snapshot-20261106T204645Z-91838a3a96d6",
+    "resources": {
+      "db_cpus": 1,
+      "db_memory_bytes": 1073741824,
+      "pool_size": 10,
+      "web_cpus": 2,
+      "web_memory_bytes": 2147483648
+    },
+    "schema": 1,
+    "target": "https://instantflow-benchmark.iagobussoletti.com.br",
+    "transport": {
+      "hostname": "instantflow-benchmark.iagobussoletti.com.br",
+      "origin_ip": "134.65.245.186",
+      "tls_verification": true
+    },
+    "workload": {
+      "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "name": "school-v1-browser",
+      "sha256": "5b7aa7011e796b3794847052e2e94d7820143a96d5a4088456f0ca468990aba6"
+    }
+  },
+  "schema": 1,
+  "validation": {
+    "deployment_tests": 68,
+    "failures": 0,
+    "mix_precommit_tests": 505,
+    "publication_workflow": "tag/source/run binding tested; YAML parsed; hosted publication pending"
+  },
+  "workload": {
+    "measurement_seconds": 10,
+    "mode": "pilot",
+    "users": 1,
+    "warmup_seconds": 0
+  }
+}

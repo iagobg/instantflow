@@ -1,6 +1,6 @@
 import copy
 import unittest
-from benchmark_candidate import manifest, verify
+from benchmark_candidate import manifest, verify, tag_checks_run_id, verify_publication_run
 
 
 class CandidateTest(unittest.TestCase):
@@ -47,3 +47,29 @@ class CandidateTest(unittest.TestCase):
             verify(self.run, "abc123", self.repository)
         with self.assertRaises(ValueError):
             verify(self.run, self.revision, "owner/repo;cmd")
+
+    def test_publication_tag_binds_exact_commit_and_checks_run(self):
+        self.assertEqual(tag_checks_run_id("refs/tags/benchmark-candidate-" + self.revision + "-123", self.revision), 123)
+        for ref in ["refs/heads/main", "refs/tags/benchmark-candidate-latest-123",
+                    "refs/tags/benchmark-candidate-" + "b" * 40 + "-123",
+                    "refs/tags/benchmark-candidate-" + self.revision + "-0",
+                    "refs/tags/benchmark-candidate-" + self.revision + "-123;command"]:
+            with self.assertRaises(ValueError):
+                tag_checks_run_id(ref, self.revision)
+
+    def test_publication_accepts_only_matching_successful_manual_or_explicit_tag_run(self):
+        application = manifest(self.run, self.revision, self.repository, "sha256:" + "b" * 64, 456, 1)
+        run = {**self.run, "id": 456, "run_attempt": 1, "event": "workflow_dispatch",
+               "path": ".github/workflows/benchmark-candidate.yml"}
+        verify_publication_run(run, application)
+        run.update(event="push", head_branch="benchmark-candidate-" + self.revision + "-123")
+        verify_publication_run(run, application)
+        for field, value in [("head_branch", "main"), ("head_branch", "benchmark-candidate-" + self.revision + "-999"),
+                             ("event", "pull_request"), ("conclusion", "failure"), ("run_attempt", 2)]:
+            with self.assertRaises(ValueError):
+                verify_publication_run({**run, field: value}, application)
+
+    def test_manifest_rejects_invalid_publication_identifiers(self):
+        for value in [0, -1, True, "1;command"]:
+            with self.assertRaises(ValueError):
+                manifest(self.run, self.revision, self.repository, "sha256:" + "b" * 64, value, 1)

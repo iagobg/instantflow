@@ -1,5 +1,7 @@
 name: Publish benchmark candidate
 on:
+  push:
+    tags: ['benchmark-candidate-*']
   workflow_dispatch:
     inputs:
       checks_run_id:
@@ -23,7 +25,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           CHECKS_RUN_ID: ${{ inputs.checks_run_id }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            CHECKS_RUN_ID=$(python3 deploy/benchmark_candidate.py tag-checks "$GITHUB_REF" "$GITHUB_SHA")
+          fi
           [[ "$CHECKS_RUN_ID" =~ ^[0-9]+$ ]]
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CHECKS_RUN_ID" > "$RUNNER_TEMP/checks-run.json"
           python3 deploy/benchmark_candidate.py verify "$RUNNER_TEMP/checks-run.json" "$GITHUB_SHA" "$GITHUB_REPOSITORY"
