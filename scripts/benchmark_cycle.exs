@@ -218,6 +218,8 @@ defmodule Instantflow.CycleBenchmark do
     # Stop connected views before the observer control; no recovery timer traffic.
     Enum.each(views, fn view -> GenServer.stop(view.pid) end)
 
+    burst = notification_burst(f, reviewer, tasks)
+
     report = %{
       environment: "Local disposable database; runtime login; committed writes; pool size 4",
       postgres: postgres,
@@ -231,6 +233,7 @@ defmodule Instantflow.CycleBenchmark do
       saves: saves,
       submit: Map.put(phases, :full_cycle, transition),
       retry: retry_report,
+      notification_burst: burst,
       observer_control: overhead(),
       completion:
         "Outbox empty after bounded drains on an independent connection; dispatcher committed; all three LiveViews rendered; both record revisions match storage; delivery failure and retry visible without a new ticket revision",
@@ -275,6 +278,39 @@ defmodule Instantflow.CycleBenchmark do
       WorkflowCatalog.publish(admin, WorkflowFixtures.definition_fixture(), bindings)
 
     %{admin: admin, requester: requester, reviewer: reviewer, version: version}
+  end
+
+  defp notification_burst(f, conn, tasks) do
+    # Twenty changed records fit in one configured dispatcher batch. Seed and
+    # commit changes before measuring only delivery and the connected list work.
+    ids = for _ <- 1..20, do: WorkflowFixtures.create_ticket(f)
+    drain(tasks)
+    {:ok, list, _} = live(conn, "/o/cycle/solicitacoes")
+    render(list)
+
+    for id <- ids do
+      {:ok, _} = WorkflowFixtures.save(f.requester, id, WorkflowFixtures.values())
+    end
+
+    before_attempts = OperatorRepo.aggregate(Instantflow.Delivery.Attempt, :count)
+
+    {_, report} =
+      measure(fn ->
+        drain(tasks)
+        render(list)
+        assert has_element?(list, "#requests-count", "21 disponíveis")
+
+        for id <- ids do
+          ticket = OperatorRepo.get!(Ticket, id)
+          assert ticket.refreshed_revision == ticket.revision
+        end
+
+        assert OperatorRepo.aggregate(Instantflow.Delivery.Attempt, :count) ==
+                 before_attempts + 20
+      end)
+
+    GenServer.stop(list.pid)
+    Map.merge(report, %{changed_records: 20, connected_list_views: 1, window: "deferred only"})
   end
 
   defp login(scope),

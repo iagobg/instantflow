@@ -1,0 +1,1669 @@
+{
+  "anonymous_login_page": {
+    "connections": {
+      "average_occupied": 0.0,
+      "complete": true,
+      "elapsed_ms": 2.325,
+      "failed_checkouts": 0,
+      "held_ms": 0.0,
+      "leases": 0,
+      "max_held_ms": 0.0,
+      "max_wait_ms": 0.0,
+      "outside_window": 0,
+      "overflow": false,
+      "peak_occupied": 0,
+      "unfinished": 0,
+      "unmatched_releases": 0,
+      "wait_ms": 0.0
+    },
+    "sql": {
+      "binary_bytes": 0,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "decode_time_ms": 0.0,
+      "elapsed_ms": 0.46,
+      "errors": 0,
+      "groups": {
+        "authorization": {
+          "binary_bytes": 0,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.0,
+          "errors": 0,
+          "query_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "rows": 0,
+          "statements": 0,
+          "total_time_ms": 0.0,
+          "update_locks": 0
+        },
+        "documents": {
+          "binary_bytes": 0,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.0,
+          "errors": 0,
+          "query_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "rows": 0,
+          "statements": 0,
+          "total_time_ms": 0.0,
+          "update_locks": 0
+        },
+        "history": {
+          "binary_bytes": 0,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.0,
+          "errors": 0,
+          "query_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "rows": 0,
+          "statements": 0,
+          "total_time_ms": 0.0,
+          "update_locks": 0
+        },
+        "other": {
+          "binary_bytes": 0,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.0,
+          "errors": 0,
+          "query_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "rows": 0,
+          "statements": 0,
+          "total_time_ms": 0.0,
+          "update_locks": 0
+        }
+      },
+      "query_time_ms": 0.0,
+      "queue_time_ms": 0.0,
+      "rows": 0,
+      "statements": 0,
+      "total_time_ms": 0.0,
+      "update_locks": 0
+    }
+  },
+  "completion": "Outbox empty after bounded drains on an independent connection; dispatcher committed; all three LiveViews rendered; both record revisions match storage; delivery failure and retry visible without a new ticket revision",
+  "connected_views": 3,
+  "disposable_database_removed": true,
+  "environment": "Local disposable database; runtime login; committed writes; pool size 4",
+  "four_concurrent_logins": {
+    "connections": {
+      "average_occupied": 0.12089127512104193,
+      "complete": true,
+      "elapsed_ms": 102.229,
+      "failed_checkouts": 0,
+      "held_ms": 12.358,
+      "leases": 12,
+      "max_held_ms": 2.289,
+      "max_wait_ms": 0.063,
+      "outside_window": 0,
+      "overflow": false,
+      "peak_occupied": 4,
+      "unfinished": 0,
+      "unmatched_releases": 0,
+      "wait_ms": 0.336
+    },
+    "sql": {
+      "binary_bytes": 584,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "decode_time_ms": 0.012,
+      "elapsed_ms": 102.06,
+      "errors": 0,
+      "groups": {
+        "authorization": {
+          "binary_bytes": 436,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.01,
+          "errors": 0,
+          "query_time_ms": 8.298,
+          "queue_time_ms": 1.034,
+          "rows": 8,
+          "statements": 8,
+          "total_time_ms": 9.342,
+          "update_locks": 0
+        },
+        "documents": {
+          "binary_bytes": 0,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.0,
+          "errors": 0,
+          "query_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "rows": 0,
+          "statements": 0,
+          "total_time_ms": 0.0,
+          "update_locks": 0
+        },
+        "history": {
+          "binary_bytes": 0,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.0,
+          "errors": 0,
+          "query_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "rows": 0,
+          "statements": 0,
+          "total_time_ms": 0.0,
+          "update_locks": 0
+        },
+        "other": {
+          "binary_bytes": 148,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.002,
+          "errors": 0,
+          "query_time_ms": 1.877,
+          "queue_time_ms": 1.492,
+          "rows": 4,
+          "statements": 4,
+          "total_time_ms": 3.372,
+          "update_locks": 0
+        }
+      },
+      "query_time_ms": 10.175,
+      "queue_time_ms": 2.526,
+      "rows": 12,
+      "statements": 12,
+      "total_time_ms": 12.714,
+      "update_locks": 0
+    }
+  },
+  "limitations": "Local synthetic workload, not a capacity estimate. HTTP/LiveView protocol driven in-process; no browser/network latency. Workers invoked explicitly without poll delay. No presence heartbeats or recovery timers. Operator-only validation queries excluded. Only the outer window traces leases; nested phase query counters add overhead. Control measures one probe pair and includes separate setup/teardown cost. Lease boundaries exclude final handoff bookkeeping.",
+  "login": [
+    {
+      "connections": {
+        "average_occupied": 0.08442211609282545,
+        "complete": true,
+        "elapsed_ms": 105.762,
+        "failed_checkouts": 0,
+        "held_ms": 8.928,
+        "leases": 3,
+        "max_held_ms": 6.668,
+        "max_wait_ms": 0.037,
+        "outside_window": 0,
+        "overflow": false,
+        "peak_occupied": 1,
+        "unfinished": 0,
+        "unmatched_releases": 0,
+        "wait_ms": 0.073
+      },
+      "sql": {
+        "binary_bytes": 146,
+        "content_bytes": 0,
+        "content_selections": 0,
+        "decode_time_ms": 0.007,
+        "elapsed_ms": 105.601,
+        "errors": 0,
+        "groups": {
+          "authorization": {
+            "binary_bytes": 109,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.005,
+            "errors": 0,
+            "query_time_ms": 6.888,
+            "queue_time_ms": 0.839,
+            "rows": 2,
+            "statements": 2,
+            "total_time_ms": 7.733,
+            "update_locks": 0
+          },
+          "documents": {
+            "binary_bytes": 0,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.0,
+            "errors": 0,
+            "query_time_ms": 0.0,
+            "queue_time_ms": 0.0,
+            "rows": 0,
+            "statements": 0,
+            "total_time_ms": 0.0,
+            "update_locks": 0
+          },
+          "history": {
+            "binary_bytes": 0,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.0,
+            "errors": 0,
+            "query_time_ms": 0.0,
+            "queue_time_ms": 0.0,
+            "rows": 0,
+            "statements": 0,
+            "total_time_ms": 0.0,
+            "update_locks": 0
+          },
+          "other": {
+            "binary_bytes": 37,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.002,
+            "errors": 0,
+            "query_time_ms": 0.698,
+            "queue_time_ms": 0.633,
+            "rows": 1,
+            "statements": 1,
+            "total_time_ms": 1.335,
+            "update_locks": 0
+          }
+        },
+        "query_time_ms": 7.586,
+        "queue_time_ms": 1.472,
+        "rows": 3,
+        "statements": 3,
+        "total_time_ms": 9.068,
+        "update_locks": 0
+      }
+    },
+    {
+      "connections": {
+        "average_occupied": 0.047725973809317125,
+        "complete": true,
+        "elapsed_ms": 98.977,
+        "failed_checkouts": 0,
+        "held_ms": 4.723,
+        "leases": 3,
+        "max_held_ms": 2.936,
+        "max_wait_ms": 0.075,
+        "outside_window": 0,
+        "overflow": false,
+        "peak_occupied": 1,
+        "unfinished": 0,
+        "unmatched_releases": 0,
+        "wait_ms": 0.116
+      },
+      "sql": {
+        "binary_bytes": 146,
+        "content_bytes": 0,
+        "content_selections": 0,
+        "decode_time_ms": 0.005,
+        "elapsed_ms": 98.79,
+        "errors": 0,
+        "groups": {
+          "authorization": {
+            "binary_bytes": 109,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.004,
+            "errors": 0,
+            "query_time_ms": 2.856,
+            "queue_time_ms": 0.734,
+            "rows": 2,
+            "statements": 2,
+            "total_time_ms": 3.596,
+            "update_locks": 0
+          },
+          "documents": {
+            "binary_bytes": 0,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.0,
+            "errors": 0,
+            "query_time_ms": 0.0,
+            "queue_time_ms": 0.0,
+            "rows": 0,
+            "statements": 0,
+            "total_time_ms": 0.0,
+            "update_locks": 0
+          },
+          "history": {
+            "binary_bytes": 0,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.0,
+            "errors": 0,
+            "query_time_ms": 0.0,
+            "queue_time_ms": 0.0,
+            "rows": 0,
+            "statements": 0,
+            "total_time_ms": 0.0,
+            "update_locks": 0
+          },
+          "other": {
+            "binary_bytes": 37,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.001,
+            "errors": 0,
+            "query_time_ms": 0.666,
+            "queue_time_ms": 0.596,
+            "rows": 1,
+            "statements": 1,
+            "total_time_ms": 1.263,
+            "update_locks": 0
+          }
+        },
+        "query_time_ms": 3.522,
+        "queue_time_ms": 1.33,
+        "rows": 3,
+        "statements": 3,
+        "total_time_ms": 4.859,
+        "update_locks": 0
+      }
+    },
+    {
+      "connections": {
+        "average_occupied": 0.05736777970826317,
+        "complete": true,
+        "elapsed_ms": 101.256,
+        "failed_checkouts": 0,
+        "held_ms": 5.808,
+        "leases": 3,
+        "max_held_ms": 2.891,
+        "max_wait_ms": 0.054,
+        "outside_window": 0,
+        "overflow": false,
+        "peak_occupied": 1,
+        "unfinished": 0,
+        "unmatched_releases": 0,
+        "wait_ms": 0.13
+      },
+      "sql": {
+        "binary_bytes": 146,
+        "content_bytes": 0,
+        "content_selections": 0,
+        "decode_time_ms": 0.008,
+        "elapsed_ms": 101.075,
+        "errors": 0,
+        "groups": {
+          "authorization": {
+            "binary_bytes": 109,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.007,
+            "errors": 0,
+            "query_time_ms": 3.654,
+            "queue_time_ms": 0.857,
+            "rows": 2,
+            "statements": 2,
+            "total_time_ms": 4.518,
+            "update_locks": 0
+          },
+          "documents": {
+            "binary_bytes": 0,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.0,
+            "errors": 0,
+            "query_time_ms": 0.0,
+            "queue_time_ms": 0.0,
+            "rows": 0,
+            "statements": 0,
+            "total_time_ms": 0.0,
+            "update_locks": 0
+          },
+          "history": {
+            "binary_bytes": 0,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.0,
+            "errors": 0,
+            "query_time_ms": 0.0,
+            "queue_time_ms": 0.0,
+            "rows": 0,
+            "statements": 0,
+            "total_time_ms": 0.0,
+            "update_locks": 0
+          },
+          "other": {
+            "binary_bytes": 37,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.001,
+            "errors": 0,
+            "query_time_ms": 0.639,
+            "queue_time_ms": 0.816,
+            "rows": 1,
+            "statements": 1,
+            "total_time_ms": 1.458,
+            "update_locks": 0
+          }
+        },
+        "query_time_ms": 4.293,
+        "queue_time_ms": 1.673,
+        "rows": 3,
+        "statements": 3,
+        "total_time_ms": 5.976,
+        "update_locks": 0
+      }
+    }
+  ],
+  "notification_burst": {
+    "changed_records": 20,
+    "connected_list_views": 1,
+    "connections": {
+      "average_occupied": 0.8948848414297691,
+      "complete": true,
+      "elapsed_ms": 59.012,
+      "failed_checkouts": 0,
+      "held_ms": 52.809,
+      "leases": 7,
+      "max_held_ms": 17.1,
+      "max_wait_ms": 0.091,
+      "outside_window": 0,
+      "overflow": false,
+      "peak_occupied": 2,
+      "unfinished": 0,
+      "unmatched_releases": 0,
+      "wait_ms": 0.278
+    },
+    "sql": {
+      "binary_bytes": 8269,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "decode_time_ms": 0.088,
+      "elapsed_ms": 58.83,
+      "errors": 0,
+      "groups": {
+        "authorization": {
+          "binary_bytes": 580,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.009,
+          "errors": 0,
+          "query_time_ms": 4.402,
+          "queue_time_ms": 0.0,
+          "rows": 12,
+          "statements": 15,
+          "total_time_ms": 4.412,
+          "update_locks": 8
+        },
+        "documents": {
+          "binary_bytes": 0,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.0,
+          "errors": 0,
+          "query_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "rows": 0,
+          "statements": 0,
+          "total_time_ms": 0.0,
+          "update_locks": 0
+        },
+        "history": {
+          "binary_bytes": 0,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.0,
+          "errors": 0,
+          "query_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "rows": 0,
+          "statements": 0,
+          "total_time_ms": 0.0,
+          "update_locks": 0
+        },
+        "other": {
+          "binary_bytes": 7689,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.079,
+          "errors": 0,
+          "query_time_ms": 36.335,
+          "queue_time_ms": 0.47,
+          "rows": 162,
+          "statements": 87,
+          "total_time_ms": 36.886,
+          "update_locks": 2
+        }
+      },
+      "query_time_ms": 40.737,
+      "queue_time_ms": 0.47,
+      "rows": 174,
+      "statements": 102,
+      "total_time_ms": 41.298,
+      "update_locks": 10
+    },
+    "window": "deferred only"
+  },
+  "observer_control": [
+    {
+      "observed_window_ms": 25.824,
+      "with_probes_ms": 39.496,
+      "without_probes_ms": 21.367
+    },
+    {
+      "observed_window_ms": 32.412,
+      "with_probes_ms": 49.469,
+      "without_probes_ms": 30.798
+    },
+    {
+      "observed_window_ms": 26.98,
+      "with_probes_ms": 45.976,
+      "without_probes_ms": 29.459
+    },
+    {
+      "observed_window_ms": 25.237,
+      "with_probes_ms": 41.483,
+      "without_probes_ms": 23.308
+    },
+    {
+      "observed_window_ms": 23.929,
+      "with_probes_ms": 39.462,
+      "without_probes_ms": 23.918
+    },
+    {
+      "observed_window_ms": 30.407,
+      "with_probes_ms": 42.767,
+      "without_probes_ms": 15.807
+    },
+    {
+      "observed_window_ms": 19.246,
+      "with_probes_ms": 30.06,
+      "without_probes_ms": 13.943
+    },
+    {
+      "observed_window_ms": 30.092,
+      "with_probes_ms": 44.977,
+      "without_probes_ms": 20.586
+    },
+    {
+      "observed_window_ms": 17.281,
+      "with_probes_ms": 29.453,
+      "without_probes_ms": 24.494
+    },
+    {
+      "observed_window_ms": 29.317,
+      "with_probes_ms": 40.977,
+      "without_probes_ms": 28.728
+    }
+  ],
+  "organization_members": 3,
+  "pool_size": 4,
+  "postgres": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+  "record_http_and_connected_mount": {
+    "connections": {
+      "average_occupied": 0.6071830625747113,
+      "complete": true,
+      "elapsed_ms": 154.247,
+      "failed_checkouts": 0,
+      "held_ms": 93.656,
+      "leases": 13,
+      "max_held_ms": 15.468,
+      "max_wait_ms": 0.04,
+      "outside_window": 0,
+      "overflow": false,
+      "peak_occupied": 1,
+      "unfinished": 0,
+      "unmatched_releases": 0,
+      "wait_ms": 0.36
+    },
+    "sql": {
+      "binary_bytes": 12956,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "decode_time_ms": 0.14,
+      "elapsed_ms": 154.095,
+      "errors": 0,
+      "groups": {
+        "authorization": {
+          "binary_bytes": 1799,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.037,
+          "errors": 0,
+          "query_time_ms": 13.78,
+          "queue_time_ms": 0.585,
+          "rows": 27,
+          "statements": 38,
+          "total_time_ms": 14.403,
+          "update_locks": 16
+        },
+        "documents": {
+          "binary_bytes": 0,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.005,
+          "errors": 0,
+          "query_time_ms": 1.35,
+          "queue_time_ms": 0.0,
+          "rows": 0,
+          "statements": 2,
+          "total_time_ms": 1.355,
+          "update_locks": 0
+        },
+        "history": {
+          "binary_bytes": 66,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.004,
+          "errors": 0,
+          "query_time_ms": 1.664,
+          "queue_time_ms": 0.0,
+          "rows": 4,
+          "statements": 2,
+          "total_time_ms": 1.668,
+          "update_locks": 0
+        },
+        "other": {
+          "binary_bytes": 11091,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.094,
+          "errors": 0,
+          "query_time_ms": 49.789,
+          "queue_time_ms": 1.714,
+          "rows": 77,
+          "statements": 116,
+          "total_time_ms": 51.598,
+          "update_locks": 2
+        }
+      },
+      "query_time_ms": 66.583,
+      "queue_time_ms": 2.299,
+      "rows": 108,
+      "statements": 158,
+      "total_time_ms": 69.024,
+      "update_locks": 18
+    }
+  },
+  "retry": {
+    "connections": {
+      "average_occupied": 1.2159420389918436,
+      "complete": true,
+      "elapsed_ms": 103.702,
+      "failed_checkouts": 0,
+      "held_ms": 126.096,
+      "leases": 21,
+      "max_held_ms": 12.511,
+      "max_wait_ms": 0.075,
+      "outside_window": 0,
+      "overflow": false,
+      "peak_occupied": 4,
+      "unfinished": 0,
+      "unmatched_releases": 0,
+      "wait_ms": 0.507
+    },
+    "sql": {
+      "binary_bytes": 20172,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "decode_time_ms": 0.14900000000000002,
+      "elapsed_ms": 103.518,
+      "errors": 0,
+      "groups": {
+        "authorization": {
+          "binary_bytes": 1819,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.027,
+          "errors": 0,
+          "query_time_ms": 19.412,
+          "queue_time_ms": 0.0,
+          "rows": 31,
+          "statements": 42,
+          "total_time_ms": 19.439,
+          "update_locks": 24
+        },
+        "documents": {
+          "binary_bytes": 0,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.002,
+          "errors": 0,
+          "query_time_ms": 0.943,
+          "queue_time_ms": 0.0,
+          "rows": 0,
+          "statements": 3,
+          "total_time_ms": 0.945,
+          "update_locks": 0
+        },
+        "history": {
+          "binary_bytes": 348,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.003,
+          "errors": 0,
+          "query_time_ms": 1.142,
+          "queue_time_ms": 0.0,
+          "rows": 18,
+          "statements": 3,
+          "total_time_ms": 1.146,
+          "update_locks": 0
+        },
+        "other": {
+          "binary_bytes": 18005,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.117,
+          "errors": 0,
+          "query_time_ms": 75.385,
+          "queue_time_ms": 2.517,
+          "rows": 130,
+          "statements": 186,
+          "total_time_ms": 78.02,
+          "update_locks": 9
+        }
+      },
+      "query_time_ms": 96.88199999999999,
+      "queue_time_ms": 2.517,
+      "rows": 179,
+      "statements": 234,
+      "total_time_ms": 99.54999999999998,
+      "update_locks": 33
+    }
+  },
+  "saves": [
+    {
+      "deferred": {
+        "sql": {
+          "binary_bytes": 13578,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.17600000000000002,
+          "elapsed_ms": 67.506,
+          "errors": 0,
+          "groups": {
+            "authorization": {
+              "binary_bytes": 1254,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.033,
+              "errors": 0,
+              "query_time_ms": 20.035,
+              "queue_time_ms": 0.0,
+              "rows": 22,
+              "statements": 29,
+              "total_time_ms": 20.069,
+              "update_locks": 16
+            },
+            "documents": {
+              "binary_bytes": 0,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.004,
+              "errors": 0,
+              "query_time_ms": 1.477,
+              "queue_time_ms": 0.0,
+              "rows": 0,
+              "statements": 2,
+              "total_time_ms": 1.481,
+              "update_locks": 0
+            },
+            "history": {
+              "binary_bytes": 110,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.002,
+              "errors": 0,
+              "query_time_ms": 1.187,
+              "queue_time_ms": 0.0,
+              "rows": 6,
+              "statements": 2,
+              "total_time_ms": 1.189,
+              "update_locks": 0
+            },
+            "other": {
+              "binary_bytes": 12214,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.137,
+              "errors": 0,
+              "query_time_ms": 59.04,
+              "queue_time_ms": 1.623,
+              "rows": 78,
+              "statements": 116,
+              "total_time_ms": 60.801,
+              "update_locks": 4
+            }
+          },
+          "query_time_ms": 81.739,
+          "queue_time_ms": 1.623,
+          "rows": 106,
+          "statements": 149,
+          "total_time_ms": 83.53999999999999,
+          "update_locks": 20
+        }
+      },
+      "full_cycle": {
+        "connections": {
+          "average_occupied": 1.241075533500171,
+          "complete": true,
+          "elapsed_ms": 103.205,
+          "failed_checkouts": 0,
+          "held_ms": 128.085,
+          "leases": 17,
+          "max_held_ms": 25.223,
+          "max_wait_ms": 0.06,
+          "outside_window": 0,
+          "overflow": false,
+          "peak_occupied": 4,
+          "unfinished": 0,
+          "unmatched_releases": 0,
+          "wait_ms": 0.481
+        },
+        "sql": {
+          "binary_bytes": 19382,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.20700000000000002,
+          "elapsed_ms": 103.061,
+          "errors": 0,
+          "groups": {
+            "authorization": {
+              "binary_bytes": 1705,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.036,
+              "errors": 0,
+              "query_time_ms": 22.156,
+              "queue_time_ms": 0.0,
+              "rows": 29,
+              "statements": 39,
+              "total_time_ms": 22.192,
+              "update_locks": 22
+            },
+            "documents": {
+              "binary_bytes": 0,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.004,
+              "errors": 0,
+              "query_time_ms": 1.691,
+              "queue_time_ms": 0.0,
+              "rows": 0,
+              "statements": 3,
+              "total_time_ms": 1.696,
+              "update_locks": 0
+            },
+            "history": {
+              "binary_bytes": 165,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.003,
+              "errors": 0,
+              "query_time_ms": 1.833,
+              "queue_time_ms": 0.0,
+              "rows": 10,
+              "statements": 4,
+              "total_time_ms": 1.837,
+              "update_locks": 0
+            },
+            "other": {
+              "binary_bytes": 17512,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.164,
+              "errors": 0,
+              "query_time_ms": 74.636,
+              "queue_time_ms": 2.193,
+              "rows": 106,
+              "statements": 159,
+              "total_time_ms": 76.995,
+              "update_locks": 7
+            }
+          },
+          "query_time_ms": 100.316,
+          "queue_time_ms": 2.193,
+          "rows": 145,
+          "statements": 205,
+          "total_time_ms": 102.72,
+          "update_locks": 29
+        }
+      },
+      "immediate": {
+        "sql": {
+          "binary_bytes": 5804,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.031,
+          "elapsed_ms": 35.358,
+          "errors": 0,
+          "groups": {
+            "authorization": {
+              "binary_bytes": 451,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.003,
+              "errors": 0,
+              "query_time_ms": 2.12,
+              "queue_time_ms": 0.0,
+              "rows": 7,
+              "statements": 10,
+              "total_time_ms": 2.123,
+              "update_locks": 6
+            },
+            "documents": {
+              "binary_bytes": 0,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.0,
+              "errors": 0,
+              "query_time_ms": 0.213,
+              "queue_time_ms": 0.0,
+              "rows": 0,
+              "statements": 1,
+              "total_time_ms": 0.214,
+              "update_locks": 0
+            },
+            "history": {
+              "binary_bytes": 55,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.001,
+              "errors": 0,
+              "query_time_ms": 0.646,
+              "queue_time_ms": 0.0,
+              "rows": 4,
+              "statements": 2,
+              "total_time_ms": 0.647,
+              "update_locks": 0
+            },
+            "other": {
+              "binary_bytes": 5298,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.027,
+              "errors": 0,
+              "query_time_ms": 15.595,
+              "queue_time_ms": 0.57,
+              "rows": 28,
+              "statements": 43,
+              "total_time_ms": 16.193,
+              "update_locks": 3
+            }
+          },
+          "query_time_ms": 18.574,
+          "queue_time_ms": 0.57,
+          "rows": 39,
+          "statements": 56,
+          "total_time_ms": 19.177,
+          "update_locks": 9
+        }
+      }
+    },
+    {
+      "deferred": {
+        "sql": {
+          "binary_bytes": 13622,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.109,
+          "elapsed_ms": 53.864,
+          "errors": 0,
+          "groups": {
+            "authorization": {
+              "binary_bytes": 1254,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.015,
+              "errors": 0,
+              "query_time_ms": 14.584,
+              "queue_time_ms": 0.0,
+              "rows": 22,
+              "statements": 29,
+              "total_time_ms": 14.6,
+              "update_locks": 16
+            },
+            "documents": {
+              "binary_bytes": 0,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.001,
+              "errors": 0,
+              "query_time_ms": 0.618,
+              "queue_time_ms": 0.0,
+              "rows": 0,
+              "statements": 2,
+              "total_time_ms": 0.62,
+              "update_locks": 0
+            },
+            "history": {
+              "binary_bytes": 154,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.001,
+              "errors": 0,
+              "query_time_ms": 0.715,
+              "queue_time_ms": 0.0,
+              "rows": 8,
+              "statements": 2,
+              "total_time_ms": 0.716,
+              "update_locks": 0
+            },
+            "other": {
+              "binary_bytes": 12214,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.092,
+              "errors": 0,
+              "query_time_ms": 47.919,
+              "queue_time_ms": 1.124,
+              "rows": 78,
+              "statements": 116,
+              "total_time_ms": 49.136,
+              "update_locks": 4
+            }
+          },
+          "query_time_ms": 63.836000000000006,
+          "queue_time_ms": 1.124,
+          "rows": 108,
+          "statements": 149,
+          "total_time_ms": 65.072,
+          "update_locks": 20
+        }
+      },
+      "full_cycle": {
+        "connections": {
+          "average_occupied": 1.2531650417896543,
+          "complete": true,
+          "elapsed_ms": 91.014,
+          "failed_checkouts": 0,
+          "held_ms": 114.056,
+          "leases": 17,
+          "max_held_ms": 14.754,
+          "max_wait_ms": 0.042,
+          "outside_window": 0,
+          "overflow": false,
+          "peak_occupied": 4,
+          "unfinished": 0,
+          "unmatched_releases": 0,
+          "wait_ms": 0.314
+        },
+        "sql": {
+          "binary_bytes": 19445,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.172,
+          "elapsed_ms": 90.855,
+          "errors": 0,
+          "groups": {
+            "authorization": {
+              "binary_bytes": 1705,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.022,
+              "errors": 0,
+              "query_time_ms": 17.569,
+              "queue_time_ms": 0.0,
+              "rows": 29,
+              "statements": 39,
+              "total_time_ms": 17.592,
+              "update_locks": 22
+            },
+            "documents": {
+              "binary_bytes": 0,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.002,
+              "errors": 0,
+              "query_time_ms": 1.051,
+              "queue_time_ms": 0.0,
+              "rows": 0,
+              "statements": 3,
+              "total_time_ms": 1.053,
+              "update_locks": 0
+            },
+            "history": {
+              "binary_bytes": 231,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.006,
+              "errors": 0,
+              "query_time_ms": 1.881,
+              "queue_time_ms": 0.0,
+              "rows": 13,
+              "statements": 4,
+              "total_time_ms": 1.887,
+              "update_locks": 0
+            },
+            "other": {
+              "binary_bytes": 17509,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.142,
+              "errors": 0,
+              "query_time_ms": 67.453,
+              "queue_time_ms": 1.695,
+              "rows": 106,
+              "statements": 159,
+              "total_time_ms": 69.291,
+              "update_locks": 7
+            }
+          },
+          "query_time_ms": 87.95400000000001,
+          "queue_time_ms": 1.695,
+          "rows": 148,
+          "statements": 205,
+          "total_time_ms": 89.823,
+          "update_locks": 29
+        }
+      },
+      "immediate": {
+        "sql": {
+          "binary_bytes": 5823,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.061000000000000006,
+          "elapsed_ms": 36.772,
+          "errors": 0,
+          "groups": {
+            "authorization": {
+              "binary_bytes": 451,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.007,
+              "errors": 0,
+              "query_time_ms": 2.984,
+              "queue_time_ms": 0.0,
+              "rows": 7,
+              "statements": 10,
+              "total_time_ms": 2.992,
+              "update_locks": 6
+            },
+            "documents": {
+              "binary_bytes": 0,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.001,
+              "errors": 0,
+              "query_time_ms": 0.432,
+              "queue_time_ms": 0.0,
+              "rows": 0,
+              "statements": 1,
+              "total_time_ms": 0.433,
+              "update_locks": 0
+            },
+            "history": {
+              "binary_bytes": 77,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.004,
+              "errors": 0,
+              "query_time_ms": 1.165,
+              "queue_time_ms": 0.0,
+              "rows": 5,
+              "statements": 2,
+              "total_time_ms": 1.17,
+              "update_locks": 0
+            },
+            "other": {
+              "binary_bytes": 5295,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.049,
+              "errors": 0,
+              "query_time_ms": 19.533,
+              "queue_time_ms": 0.571,
+              "rows": 28,
+              "statements": 43,
+              "total_time_ms": 20.154,
+              "update_locks": 3
+            }
+          },
+          "query_time_ms": 24.114,
+          "queue_time_ms": 0.571,
+          "rows": 40,
+          "statements": 56,
+          "total_time_ms": 24.749,
+          "update_locks": 9
+        }
+      }
+    },
+    {
+      "deferred": {
+        "sql": {
+          "binary_bytes": 13666,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.108,
+          "elapsed_ms": 51.141,
+          "errors": 0,
+          "groups": {
+            "authorization": {
+              "binary_bytes": 1254,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.02,
+              "errors": 0,
+              "query_time_ms": 16.679,
+              "queue_time_ms": 0.0,
+              "rows": 22,
+              "statements": 29,
+              "total_time_ms": 16.699,
+              "update_locks": 16
+            },
+            "documents": {
+              "binary_bytes": 0,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.0,
+              "errors": 0,
+              "query_time_ms": 0.464,
+              "queue_time_ms": 0.0,
+              "rows": 0,
+              "statements": 2,
+              "total_time_ms": 0.464,
+              "update_locks": 0
+            },
+            "history": {
+              "binary_bytes": 198,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.001,
+              "errors": 0,
+              "query_time_ms": 0.817,
+              "queue_time_ms": 0.0,
+              "rows": 10,
+              "statements": 2,
+              "total_time_ms": 0.818,
+              "update_locks": 0
+            },
+            "other": {
+              "binary_bytes": 12214,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.087,
+              "errors": 0,
+              "query_time_ms": 46.158,
+              "queue_time_ms": 1.228,
+              "rows": 78,
+              "statements": 116,
+              "total_time_ms": 47.474,
+              "update_locks": 4
+            }
+          },
+          "query_time_ms": 64.118,
+          "queue_time_ms": 1.228,
+          "rows": 110,
+          "statements": 149,
+          "total_time_ms": 65.455,
+          "update_locks": 20
+        }
+      },
+      "full_cycle": {
+        "connections": {
+          "average_occupied": 1.3160333972834704,
+          "complete": true,
+          "elapsed_ms": 86.938,
+          "failed_checkouts": 0,
+          "held_ms": 114.414,
+          "leases": 17,
+          "max_held_ms": 13.531,
+          "max_wait_ms": 0.051,
+          "outside_window": 0,
+          "overflow": false,
+          "peak_occupied": 4,
+          "unfinished": 0,
+          "unmatched_releases": 0,
+          "wait_ms": 0.348
+        },
+        "sql": {
+          "binary_bytes": 19511,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.156,
+          "elapsed_ms": 86.81,
+          "errors": 0,
+          "groups": {
+            "authorization": {
+              "binary_bytes": 1705,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.028,
+              "errors": 0,
+              "query_time_ms": 19.707,
+              "queue_time_ms": 0.0,
+              "rows": 29,
+              "statements": 39,
+              "total_time_ms": 19.735,
+              "update_locks": 22
+            },
+            "documents": {
+              "binary_bytes": 0,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.002,
+              "errors": 0,
+              "query_time_ms": 0.856,
+              "queue_time_ms": 0.0,
+              "rows": 0,
+              "statements": 3,
+              "total_time_ms": 0.859,
+              "update_locks": 0
+            },
+            "history": {
+              "binary_bytes": 297,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.004,
+              "errors": 0,
+              "query_time_ms": 1.605,
+              "queue_time_ms": 0.0,
+              "rows": 16,
+              "statements": 4,
+              "total_time_ms": 1.609,
+              "update_locks": 0
+            },
+            "other": {
+              "binary_bytes": 17509,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.122,
+              "errors": 0,
+              "query_time_ms": 65.7,
+              "queue_time_ms": 1.781,
+              "rows": 106,
+              "statements": 159,
+              "total_time_ms": 67.604,
+              "update_locks": 7
+            }
+          },
+          "query_time_ms": 87.868,
+          "queue_time_ms": 1.781,
+          "rows": 151,
+          "statements": 205,
+          "total_time_ms": 89.80699999999999,
+          "update_locks": 29
+        }
+      },
+      "immediate": {
+        "sql": {
+          "binary_bytes": 5845,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "decode_time_ms": 0.046000000000000006,
+          "elapsed_ms": 35.495,
+          "errors": 0,
+          "groups": {
+            "authorization": {
+              "binary_bytes": 451,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.007,
+              "errors": 0,
+              "query_time_ms": 3.027,
+              "queue_time_ms": 0.0,
+              "rows": 7,
+              "statements": 10,
+              "total_time_ms": 3.035,
+              "update_locks": 6
+            },
+            "documents": {
+              "binary_bytes": 0,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.001,
+              "errors": 0,
+              "query_time_ms": 0.392,
+              "queue_time_ms": 0.0,
+              "rows": 0,
+              "statements": 1,
+              "total_time_ms": 0.394,
+              "update_locks": 0
+            },
+            "history": {
+              "binary_bytes": 99,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.003,
+              "errors": 0,
+              "query_time_ms": 0.788,
+              "queue_time_ms": 0.0,
+              "rows": 6,
+              "statements": 2,
+              "total_time_ms": 0.791,
+              "update_locks": 0
+            },
+            "other": {
+              "binary_bytes": 5295,
+              "content_bytes": 0,
+              "content_selections": 0,
+              "decode_time_ms": 0.035,
+              "errors": 0,
+              "query_time_ms": 19.542,
+              "queue_time_ms": 0.552,
+              "rows": 28,
+              "statements": 43,
+              "total_time_ms": 20.13,
+              "update_locks": 3
+            }
+          },
+          "query_time_ms": 23.749000000000002,
+          "queue_time_ms": 0.552,
+          "rows": 41,
+          "statements": 56,
+          "total_time_ms": 24.349999999999998,
+          "update_locks": 9
+        }
+      }
+    }
+  ],
+  "submit": {
+    "deferred": {
+      "sql": {
+        "binary_bytes": 27648,
+        "content_bytes": 0,
+        "content_selections": 0,
+        "decode_time_ms": 0.17900000000000002,
+        "elapsed_ms": 84.593,
+        "errors": 0,
+        "groups": {
+          "authorization": {
+            "binary_bytes": 2508,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.037,
+            "errors": 0,
+            "query_time_ms": 30.534,
+            "queue_time_ms": 0.0,
+            "rows": 44,
+            "statements": 58,
+            "total_time_ms": 30.571,
+            "update_locks": 32
+          },
+          "documents": {
+            "binary_bytes": 0,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.002,
+            "errors": 0,
+            "query_time_ms": 1.259,
+            "queue_time_ms": 0.0,
+            "rows": 0,
+            "statements": 4,
+            "total_time_ms": 1.261,
+            "update_locks": 0
+          },
+          "history": {
+            "binary_bytes": 464,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.002,
+            "errors": 0,
+            "query_time_ms": 1.491,
+            "queue_time_ms": 0.0,
+            "rows": 24,
+            "statements": 4,
+            "total_time_ms": 1.494,
+            "update_locks": 0
+          },
+          "other": {
+            "binary_bytes": 24676,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.138,
+            "errors": 0,
+            "query_time_ms": 91.09,
+            "queue_time_ms": 2.437,
+            "rows": 165,
+            "statements": 234,
+            "total_time_ms": 93.666,
+            "update_locks": 8
+          }
+        },
+        "query_time_ms": 124.37400000000001,
+        "queue_time_ms": 2.437,
+        "rows": 233,
+        "statements": 300,
+        "total_time_ms": 126.99199999999999,
+        "update_locks": 40
+      }
+    },
+    "full_cycle": {
+      "connections": {
+        "average_occupied": 1.5245146321083567,
+        "complete": true,
+        "elapsed_ms": 129.819,
+        "failed_checkouts": 0,
+        "held_ms": 197.912,
+        "leases": 30,
+        "max_held_ms": 24.004,
+        "max_wait_ms": 0.118,
+        "outside_window": 0,
+        "overflow": false,
+        "peak_occupied": 4,
+        "unfinished": 0,
+        "unmatched_releases": 0,
+        "wait_ms": 0.915
+      },
+      "sql": {
+        "binary_bytes": 33589,
+        "content_bytes": 0,
+        "content_selections": 0,
+        "decode_time_ms": 0.22699999999999998,
+        "elapsed_ms": 129.651,
+        "errors": 0,
+        "groups": {
+          "authorization": {
+            "binary_bytes": 2959,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.043,
+            "errors": 0,
+            "query_time_ms": 33.641,
+            "queue_time_ms": 0.0,
+            "rows": 51,
+            "statements": 68,
+            "total_time_ms": 33.685,
+            "update_locks": 38
+          },
+          "documents": {
+            "binary_bytes": 0,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.002,
+            "errors": 0,
+            "query_time_ms": 1.627,
+            "queue_time_ms": 0.0,
+            "rows": 0,
+            "statements": 5,
+            "total_time_ms": 1.63,
+            "update_locks": 0
+          },
+          "history": {
+            "binary_bytes": 580,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.009,
+            "errors": 0,
+            "query_time_ms": 2.292,
+            "queue_time_ms": 0.0,
+            "rows": 31,
+            "statements": 6,
+            "total_time_ms": 2.301,
+            "update_locks": 0
+          },
+          "other": {
+            "binary_bytes": 30050,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.173,
+            "errors": 0,
+            "query_time_ms": 110.984,
+            "queue_time_ms": 2.951,
+            "rows": 196,
+            "statements": 279,
+            "total_time_ms": 114.109,
+            "update_locks": 11
+          }
+        },
+        "query_time_ms": 148.544,
+        "queue_time_ms": 2.951,
+        "rows": 278,
+        "statements": 358,
+        "total_time_ms": 151.725,
+        "update_locks": 49
+      }
+    },
+    "immediate": {
+      "sql": {
+        "binary_bytes": 5941,
+        "content_bytes": 0,
+        "content_selections": 0,
+        "decode_time_ms": 0.047,
+        "elapsed_ms": 44.754,
+        "errors": 0,
+        "groups": {
+          "authorization": {
+            "binary_bytes": 451,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.006,
+            "errors": 0,
+            "query_time_ms": 3.107,
+            "queue_time_ms": 0.0,
+            "rows": 7,
+            "statements": 10,
+            "total_time_ms": 3.113,
+            "update_locks": 6
+          },
+          "documents": {
+            "binary_bytes": 0,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.0,
+            "errors": 0,
+            "query_time_ms": 0.367,
+            "queue_time_ms": 0.0,
+            "rows": 0,
+            "statements": 1,
+            "total_time_ms": 0.368,
+            "update_locks": 0
+          },
+          "history": {
+            "binary_bytes": 116,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.006,
+            "errors": 0,
+            "query_time_ms": 0.801,
+            "queue_time_ms": 0.0,
+            "rows": 7,
+            "statements": 2,
+            "total_time_ms": 0.807,
+            "update_locks": 0
+          },
+          "other": {
+            "binary_bytes": 5374,
+            "content_bytes": 0,
+            "content_selections": 0,
+            "decode_time_ms": 0.035,
+            "errors": 0,
+            "query_time_ms": 19.893,
+            "queue_time_ms": 0.514,
+            "rows": 31,
+            "statements": 45,
+            "total_time_ms": 20.443,
+            "update_locks": 3
+          }
+        },
+        "query_time_ms": 24.168,
+        "queue_time_ms": 0.514,
+        "rows": 45,
+        "statements": 58,
+        "total_time_ms": 24.730999999999998,
+        "update_locks": 9
+      }
+    }
+  }
+}

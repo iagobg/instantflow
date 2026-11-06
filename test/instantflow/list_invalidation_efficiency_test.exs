@@ -18,6 +18,8 @@ defmodule Instantflow.ListInvalidationEfficiencyTest do
     id = create_ticket(f)
     assert Repo.aggregate(Membership, :count) == 3
     small = measure("invalidation_3_members", id)
+    ids = [id | for(_ <- 1..19, do: create_ticket(f))]
+    assert measure("invalidation_20_records_3_members", ids).statements == small.statements
     add_members(f, 1..100)
     medium = measure("invalidation_103_members", id)
     assert medium.statements == small.statements
@@ -25,6 +27,26 @@ defmodule Instantflow.ListInvalidationEfficiencyTest do
     large = measure("invalidation_1003_members", id)
     assert large.statements <= small.statements + 8
     assert large.errors == 0
+    assert measure("invalidation_20_records_1003_members", ids).statements == large.statements
+  end
+
+  test "batch recipients are the union of current access under each pinned version" do
+    f = workflow_fixture()
+    first = create_ticket(f)
+    bindings = Map.put(f.bindings, "roles", %{"requester" => ["admin"], "reviewer" => ["admin"]})
+
+    {:ok, latest} =
+      Instantflow.WorkflowCatalog.publish(f.admin, f.definition, bindings, f.version.number)
+
+    second = create_ticket(%{f | requester: f.admin, version: latest})
+
+    assert {:ok, _} = WorkflowRuntime.get(f.reviewer, first)
+    assert {:error, :not_found} = WorkflowRuntime.get(f.reviewer, second)
+    assert_notification(f.reviewer, [first, second], true)
+    assert_notification(f.admin, [first, second], true)
+
+    Repo.update_all(from(u in User, where: u.id == ^f.reviewer.user_id), set: [active: false])
+    assert_notification(f.reviewer, [first, second], false)
   end
 
   test "batched notifications agree with confidential assignment access, including reassignment" do
@@ -43,6 +65,11 @@ defmodule Instantflow.ListInvalidationEfficiencyTest do
 
     assert_notification(f.counselor, id, false)
     assert_notification(f.other_counselor, id, true)
+
+    second = Instantflow.IncidentFixtures.report(f)
+    Instantflow.IncidentFixtures.followup(f, second)
+    assert_notification(f.counselor, [id, second], true)
+    assert_notification(f.other_counselor, [id, second], true)
   end
 
   test "verified participants receive invalidations; revoked and inactive identities do not" do
@@ -71,7 +98,8 @@ defmodule Instantflow.ListInvalidationEfficiencyTest do
                  WorkflowRuntime.invalidate_lists(actor.organization_id, id)
                end)
 
-      if expected, do: assert_receive(:requests_changed), else: refute_receive(:requests_changed)
+      if expected, do: assert_receive(:requests_changed)
+      refute_receive :requests_changed
     after
       Phoenix.PubSub.unsubscribe(Instantflow.PubSub, topic)
     end

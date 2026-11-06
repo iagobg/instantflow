@@ -37,9 +37,9 @@ defmodule Instantflow.Delivery do
     end)
   end
 
-  defp apply_message!(organization_id, message) do
+  defp apply_message!(organization_id, message, refresh? \\ true) do
     if message && message.status == "pending" do
-      if message.kind == "refresh", do: refresh!(organization_id, message)
+      if refresh? and message.kind == "refresh", do: refresh!(organization_id, message)
       number = message.attempts + 1
 
       result =
@@ -109,15 +109,6 @@ defmodule Instantflow.Delivery do
               String.starts_with?(&1.key, "event:"))
         )
 
-      # Keep the selected per-organization bound, one immutable attempt per intent, and
-      # one authorization/broadcast pass per ticket, without repeated transaction setup.
-      refreshes
-      |> Enum.group_by(& &1.ticket_id)
-      |> Enum.sort_by(&elem(&1, 0))
-      |> Enum.each(fn {id, group} ->
-        refresh!(organization_id, hd(group), Map.fetch!(tickets, id))
-      end)
-
       if refreshes != [] do
         now = DateTime.utc_now(:second)
 
@@ -144,7 +135,8 @@ defmodule Instantflow.Delivery do
         )
       end
 
-      Enum.each(other, &apply_message!(organization_id, &1))
+      Enum.each(other, &apply_message!(organization_id, &1, false))
+      refresh_batch!(organization_id, messages, tickets)
       length(messages)
     end)
   end
@@ -154,23 +146,51 @@ defmodule Instantflow.Delivery do
   # Delivery outcomes change without changing the ticket revision and must always notify.
   defp refresh!(organization_id, message) do
     ticket = Repo.one!(from t in Ticket, where: t.id == ^message.ticket_id, lock: "FOR UPDATE")
-    refresh!(organization_id, message, ticket)
+    refresh_batch!(organization_id, [message], %{ticket.id => ticket})
   end
 
-  defp refresh!(organization_id, message, ticket) do
-    outcome? = String.starts_with?(message.key, "delivery-result:")
+  defp refresh_batch!(organization_id, messages, tickets) do
+    ids =
+      messages
+      |> Enum.filter(fn message ->
+        ticket = Map.fetch!(tickets, message.ticket_id)
 
-    if outcome? or ticket.revision > ticket.refreshed_revision do
-      WorkflowRuntime.invalidate_lists(organization_id, message.ticket_id)
-      Instantflow.Delivery.Curated.invalidate(message.ticket_id)
+        message.kind == "refresh" and
+          (String.starts_with?(message.key, "delivery-result:") or
+             ticket.revision > ticket.refreshed_revision)
+      end)
+      |> Enum.map(& &1.ticket_id)
+      |> Enum.uniq()
+      |> Enum.sort()
+
+    WorkflowRuntime.invalidate_lists(organization_id, ids)
+
+    for id <- ids do
+      Instantflow.Delivery.Curated.invalidate(id)
 
       Phoenix.PubSub.broadcast(
         Instantflow.PubSub,
-        topic(organization_id, message.ticket_id),
-        {:ticket_changed, organization_id, message.ticket_id}
+        topic(organization_id, id),
+        {:ticket_changed, organization_id, id}
       )
+    end
 
-      ticket |> Ecto.Changeset.change(refreshed_revision: ticket.revision) |> Repo.update!()
+    advanced =
+      Enum.filter(ids, fn id ->
+        ticket = Map.fetch!(tickets, id)
+        ticket.revision > ticket.refreshed_revision
+      end)
+
+    if advanced != [] do
+      now = DateTime.utc_now(:second)
+
+      Repo.update_all(
+        from(t in Ticket,
+          where: t.id in ^advanced,
+          update: [set: [refreshed_revision: t.revision, updated_at: ^now]]
+        ),
+        []
+      )
     end
   end
 

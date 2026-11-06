@@ -51,6 +51,50 @@ defmodule Instantflow.RefreshDeliveryTest do
     assert Repo.aggregate(Attempt, :count) == 1
   end
 
+  test "a multi-record batch notifies each list recipient once and retains every attempt" do
+    f = workflow_fixture()
+    ids = for _ <- 1..3, do: create_ticket(f)
+    for id <- ids, do: assert({:ok, _} = save(f.requester, id, values()))
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, WorkflowRuntime.list_topic(f.reviewer))
+    for id <- ids, do: Phoenix.PubSub.subscribe(Instantflow.PubSub, Delivery.topic(1, id))
+
+    assert [{1, {:ok, 6}}] = Delivery.drain()
+    assert_receive :requests_changed
+    refute_receive :requests_changed
+
+    for id <- ids do
+      assert_receive {:ticket_changed, 1, ^id}
+      refute_receive {:ticket_changed, 1, ^id}
+      assert %{revision: 2, refreshed_revision: 2} = Repo.get!(Ticket, id)
+    end
+
+    assert Repo.aggregate(Attempt, :count) == 6
+    assert Delivery.pending_ids(1) == []
+  end
+
+  test "a rolled-back batch retries every checkpoint and recipient without retained state" do
+    f = workflow_fixture()
+    ids = for _ <- 1..2, do: create_ticket(f)
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, WorkflowRuntime.list_topic(f.requester))
+
+    assert {:error, :crash} =
+             Repo.transaction(fn ->
+               Delivery.drain()
+               Repo.rollback(:crash)
+             end)
+
+    assert_receive :requests_changed
+    refute_receive :requests_changed
+    assert Repo.aggregate(Attempt, :count) == 0
+    for id <- ids, do: assert(Repo.get!(Ticket, id).refreshed_revision == 0)
+
+    assert [{1, {:ok, 2}}] = Delivery.drain()
+    assert_receive :requests_changed
+    refute_receive :requests_changed
+    assert Repo.aggregate(Attempt, :count) == 2
+    for id <- ids, do: assert(Repo.get!(Ticket, id).refreshed_revision == 1)
+  end
+
   test "simulation results still invalidate when the business revision is unchanged" do
     f = workflow_fixture()
     id = create_ticket(f)
@@ -72,5 +116,33 @@ defmodule Instantflow.RefreshDeliveryTest do
              Tenant.transaction(f.reviewer, fn _ ->
                Repo.aggregate(from(m in Message, where: m.status == "pending"), :count)
              end)
+  end
+
+  test "multiple outcome refreshes notify once without advancing a record checkpoint" do
+    f = workflow_fixture()
+    id = create_ticket(f)
+    Delivery.drain()
+    before = Repo.get!(Ticket, id)
+    event_id = Repo.get_by!(Message, ticket_id: id).event_id
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, Delivery.topic(1, id))
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, WorkflowRuntime.list_topic(f.reviewer))
+
+    for n <- 1..2 do
+      Repo.insert!(%Message{
+        organization_id: 1,
+        ticket_id: id,
+        event_id: event_id,
+        key: "delivery-result:synthetic:#{n}",
+        kind: "refresh"
+      })
+    end
+
+    assert [{1, {:ok, 2}}] = Delivery.drain()
+    assert_receive {:ticket_changed, 1, ^id}
+    assert_receive :requests_changed
+    refute_receive {:ticket_changed, 1, ^id}
+    refute_receive :requests_changed
+    assert Repo.get!(Ticket, id) == before
+    assert Repo.aggregate(Attempt, :count) == 3
   end
 end

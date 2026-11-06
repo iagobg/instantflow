@@ -259,7 +259,17 @@ defmodule Instantflow.RuntimeRoleTest do
              "pending"
   end
 
-  test "two independent dispatchers selecting the same intent commit one attempt", c do
+  test "two independent dispatchers commit each batch attempt and notify recipients once", c do
+    {:ok, second} =
+      WorkflowRuntime.command(c.a_scope, %{
+        "operation" => "create",
+        "key" => "second-dispatch-record",
+        "workflow_id" => c.version.workflow_id
+      })
+
+    ids = [c.ticket_id, second["ticket_id"]]
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, WorkflowRuntime.list_topic(c.a_scope))
+
     connection =
       start_supervised!(
         Supervisor.child_spec(
@@ -285,14 +295,42 @@ defmodule Instantflow.RuntimeRoleTest do
     assert wait_for_waiters(connection, c.database, 2, 1000)
     Postgrex.query!(connection, "COMMIT")
     results = Enum.map(tasks, &Task.await/1)
-    assert Enum.sort(for %{results: [{_, {:ok, count}}]} <- results, do: count) == [0, 1]
-    message = OperatorRepo.get_by!(Instantflow.Delivery.Message, ticket_id: c.ticket_id)
-    assert message.attempts == 1
+    assert Enum.sort(for %{results: [{_, {:ok, count}}]} <- results, do: count) == [0, 2]
+    assert_receive :requests_changed
+    refute_receive :requests_changed
 
-    assert OperatorRepo.aggregate(
-             from(a in Instantflow.Delivery.Attempt, where: a.outbox_message_id == ^message.id),
-             :count
-           ) == 1
+    for id <- ids do
+      message = OperatorRepo.get_by!(Instantflow.Delivery.Message, ticket_id: id)
+      assert message.attempts == 1
+      assert OperatorRepo.get!(Instantflow.WorkflowRuntime.Ticket, id).refreshed_revision == 1
+
+      assert OperatorRepo.aggregate(
+               from(a in Instantflow.Delivery.Attempt, where: a.outbox_message_id == ^message.id),
+               :count
+             ) == 1
+    end
+  end
+
+  test "batch invalidation cannot publish another tenant's record", c do
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, WorkflowRuntime.list_topic(c.a_scope))
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, WorkflowRuntime.list_topic(c.b_scope))
+
+    assert {:ok, _} =
+             Tenant.raw(c.b.id, fn ->
+               Tenant.authorization_gate!(c.b.id)
+               WorkflowRuntime.invalidate_lists(c.b.id, [c.ticket_id])
+             end)
+
+    refute_receive :requests_changed
+
+    assert {:ok, _} =
+             Tenant.raw(c.a.id, fn ->
+               Tenant.authorization_gate!(c.a.id)
+               WorkflowRuntime.invalidate_lists(c.a.id, [c.ticket_id])
+             end)
+
+    assert_receive :requests_changed
+    refute_receive :requests_changed
   end
 
   @tag capture_log: true

@@ -200,41 +200,8 @@ defmodule Instantflow.WorkflowRuntime do
   def list_topic(scope),
     do: "organization:#{scope.organization_id}:user:#{scope.user_id}:requests"
 
-  # Called by the tenant-bound outbox. Only authorized recipients get an invalidation,
-  # without record IDs or payloads; each recipient independently reauthorizes its query.
-  def invalidate_lists(organization_id, ticket_id) do
-    ticket = Repo.get(Ticket, ticket_id)
-    version = ticket && Repo.get(Version, ticket.workflow_version_id)
-
-    if version && ticket.organization_id == organization_id do
-      Instantflow.Finance.broadcast(organization_id)
-      invalidate_member_batch(organization_id, ticket, version, 0)
-    end
-  end
-
-  defp invalidate_member_batch(organization_id, ticket, version, after_id) do
-    members =
-      Repo.all(
-        from m in Instantflow.Identity.Membership,
-          join: u in Instantflow.Identity.User,
-          on: u.id == m.user_id,
-          where:
-            m.organization_id == ^organization_id and m.active and u.active and m.id > ^after_id,
-          order_by: m.id,
-          limit: 250
-      )
-      |> Instantflow.Access.load_many()
-
-    facts = AccessFacts.load(members, ticket, version)
-
-    Enum.each(members, fn member ->
-      if Policy.discover?(member, ticket, version, Map.fetch!(facts, member.id)),
-        do: Phoenix.PubSub.broadcast(Instantflow.PubSub, list_topic(member), :requests_changed)
-    end)
-
-    if length(members) == 250,
-      do: invalidate_member_batch(organization_id, ticket, version, List.last(members).id)
-  end
+  defdelegate invalidate_lists(organization_id, ticket_ids),
+    to: Instantflow.WorkflowRuntime.Notifications
 
   defp apply_command(actor, %{"operation" => "create"} = command, origin) do
     workflow =
