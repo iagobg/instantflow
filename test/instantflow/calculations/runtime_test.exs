@@ -205,6 +205,80 @@ defmodule Instantflow.Calculations.RuntimeTest do
     assert script_id == run.script_id
   end
 
+  test "terminal expiry blocks reuse and hides diagnostics before physical cleanup" do
+    %{f: f, id: id} = CalculationFixtures.fixture()
+    %{run: run, request: request} = CalculationFixtures.claim()
+
+    assert {:ok, "succeeded"} =
+             Calculations.finalize(
+               1,
+               run.id,
+               run.fence,
+               request,
+               CalculationFixtures.response(request)
+             )
+
+    old = DateTime.add(DateTime.utc_now(), -8, :day)
+    Repo.get!(Run, run.id) |> Ecto.Changeset.change(inserted_at: old) |> Repo.update!()
+    assert {:error, :calculation_required} = transition(f.reviewer, id, "approve")
+
+    Repo.get!(Run, run.id)
+    |> Ecto.Changeset.change(status: "failed", diagnostic: "expired diagnostic")
+    |> Repo.update!()
+
+    assert {:error, :calculation_required} = Calculations.control(f.requester, run.id, "retry")
+    assert {:error, :forbidden} = Calculations.control(f.requester, run.id, "cancel")
+    {:ok, data} = WorkflowRuntime.get(f.requester, id)
+    assert [%{status: "stale", diagnostic: nil}] = data.calculations
+    assert Repo.get!(Run, run.id).snapshot != %{}
+  end
+
+  test "bounded retention excludes active jobs and frozen retired snapshots" do
+    %{f: f} = CalculationFixtures.fixture()
+    %{run: run, request: request} = CalculationFixtures.claim()
+
+    assert {:ok, "succeeded"} =
+             Calculations.finalize(
+               1,
+               run.id,
+               run.fence,
+               request,
+               CalculationFixtures.response(request)
+             )
+
+    template = Repo.get!(Run, run.id) |> Map.take(Run.__schema__(:fields)) |> Map.drop([:id])
+    old = DateTime.add(DateTime.utc_now(), -8, :day)
+
+    rows =
+      for n <- 1..5,
+          do: %{template | action_key: "retention-#{n}", inserted_at: old, status: "failed"}
+
+    Repo.insert_all(Run, rows)
+    assert {:ok, {2, nil}} = Calculations.purge_expired(1, 2)
+    assert %{calculations: 3, failures: 0} = Instantflow.Maintenance.sweep()
+    # A current succeeded result remains; queued and running old jobs also stay intact.
+    Repo.insert_all(Run, [
+      %{template | action_key: "old-queued", inserted_at: old, status: "queued"},
+      %{template | action_key: "old-running", inserted_at: old, status: "running"}
+    ])
+
+    assert {:ok, {0, nil}} = Calculations.purge_expired(1)
+    Repo.get!(Run, run.id) |> Ecto.Changeset.change(inserted_at: old) |> Repo.update!()
+
+    Repo.insert_all("retired_workflow_versions", [
+      %{
+        version_id: f.version.id,
+        organization_id: 1,
+        reason: "Frozen synthetic history",
+        inserted_at: DateTime.utc_now(:second)
+      }
+    ])
+
+    assert %{calculations: 0} = Instantflow.Maintenance.sweep()
+    assert {:ok, {0, nil}} = Calculations.purge_expired(1)
+    assert Repo.get!(Run, run.id).snapshot != %{}
+  end
+
   test "global kill switch rejects in-flight results even after re-enabling" do
     CalculationFixtures.fixture()
     %{run: run, request: request} = CalculationFixtures.claim()

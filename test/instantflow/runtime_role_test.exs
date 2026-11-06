@@ -122,6 +122,178 @@ defmodule Instantflow.RuntimeRoleTest do
     })
   end
 
+  test "due-work control functions expose only bounded organization IDs to the runtime role", c do
+    assert Repo.query!("SELECT current_user").rows == [["instantflow_runtime"]]
+
+    assert Repo.query!("SELECT id FROM public.delivery_organizations($1, 1)", [c.a.id - 1]).rows ==
+             [[c.a.id]]
+
+    assert Repo.all(Instantflow.Delivery.Message) == []
+
+    for function <- ["delivery_organizations", "maintenance_organizations"] do
+      assert [[true, ["search_path=pg_catalog"], "TABLE(id bigint)", false]] =
+               Repo.query!(
+                 """
+                 SELECT prosecdef, proconfig, pg_get_function_result(p.oid),
+                   EXISTS(SELECT FROM aclexplode(p.proacl) a WHERE a.grantee=0 AND a.privilege_type='EXECUTE')
+                 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                 WHERE n.nspname='public' AND p.proname=$1
+                 """,
+                 [function]
+               ).rows
+    end
+
+    OperatorRepo.update!(Ecto.Changeset.change(c.a, status: "suspended"))
+
+    ids =
+      Repo.query!("SELECT id FROM public.delivery_organizations(0, 100)").rows |> List.flatten()
+
+    refute c.a.id in ids
+    refute c.b.id in ids
+
+    assert OperatorRepo.get_by!(Instantflow.Delivery.Message, ticket_id: c.ticket_id).status ==
+             "pending"
+  end
+
+  test "two independent dispatchers selecting the same intent commit one attempt", c do
+    connection =
+      start_supervised!(
+        Supervisor.child_spec(
+          {Postgrex, c.owner_config ++ [database: c.database]},
+          id: :delivery_gate
+        )
+      )
+
+    Postgrex.query!(connection, "BEGIN")
+    Postgrex.query!(connection, "SELECT id FROM tickets WHERE id=$1 FOR UPDATE", [c.ticket_id])
+    supervisor = start_supervised!(Task.Supervisor)
+    Application.put_env(:instantflow, :delivery_organizations_per_pass, 1)
+    on_exit(fn -> Application.delete_env(:instantflow, :delivery_organizations_per_pass) end)
+
+    tasks =
+      for _ <- 1..2 do
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          Repo.put_dynamic_repo(c.runtime)
+          Delivery.drain_page(c.a.id - 1)
+        end)
+      end
+
+    assert wait_for_waiters(connection, c.database, 2, 1000)
+    Postgrex.query!(connection, "COMMIT")
+    results = Enum.map(tasks, &Task.await/1)
+    assert Enum.sort(for %{results: [{_, {:ok, count}}]} <- results, do: count) == [0, 1]
+    message = OperatorRepo.get_by!(Instantflow.Delivery.Message, ticket_id: c.ticket_id)
+    assert message.attempts == 1
+
+    assert OperatorRepo.aggregate(
+             from(a in Instantflow.Delivery.Attempt, where: a.outbox_message_id == ^message.id),
+             :count
+           ) == 1
+  end
+
+  @tag capture_log: true
+  test "one failed tenant rolls back without blocking the next tenant's delivery", c do
+    workflow =
+      OperatorRepo.insert!(%Instantflow.WorkflowCatalog.Workflow{
+        organization_id: c.b.id,
+        key: "other",
+        name: "Other"
+      })
+
+    OperatorRepo.insert!(%Instantflow.WorkflowCatalog.Version{
+      organization_id: c.b.id,
+      workflow_id: workflow.id,
+      number: 1,
+      definition: c.version.definition,
+      bindings:
+        put_in(c.version.bindings, ["departments", "review_department"], c.b_scope.department_id),
+      published_by_id: c.a_scope.user_id
+    })
+
+    {:ok, result} =
+      WorkflowRuntime.command(c.b_scope, %{
+        "operation" => "create",
+        "key" => "other",
+        "workflow_id" => workflow.id
+      })
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :delivery_failure
+        )
+      )
+
+    Postgrex.query!(connection, """
+    CREATE FUNCTION pg_temp.reject_one_delivery() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN IF NEW.organization_id = #{c.a.id} THEN RAISE EXCEPTION 'synthetic failure'; END IF; RETURN NEW; END; $$
+    """)
+
+    Postgrex.query!(
+      connection,
+      "CREATE TRIGGER reject_one_delivery BEFORE UPDATE ON outbox_messages FOR EACH ROW EXECUTE FUNCTION pg_temp.reject_one_delivery()"
+    )
+
+    try do
+      page = Delivery.drain_page(c.a.id - 1)
+      assert {c.a.id, {:error, :dispatch_failed}} in page.results
+      assert {c.b.id, {:ok, 1}} in page.results
+
+      assert OperatorRepo.get_by!(Instantflow.Delivery.Message, ticket_id: c.ticket_id).status ==
+               "pending"
+
+      assert OperatorRepo.get_by!(Instantflow.Delivery.Message, ticket_id: result["ticket_id"]).status ==
+               "succeeded"
+    after
+      Postgrex.query!(connection, "DROP TRIGGER reject_one_delivery ON outbox_messages")
+    end
+
+    assert {c.a.id, {:ok, 1}} in Delivery.drain_page(c.a.id - 1).results
+  end
+
+  test "retention skips a locked file and later resumes it on an independent connection", c do
+    records =
+      for n <- 1..2 do
+        OperatorRepo.insert!(%Instantflow.Enrollment.Document{
+          organization_id: c.a.id,
+          ticket_id: c.ticket_id,
+          section_key: "request",
+          field_key: "proof",
+          object_key: Ecto.UUID.generate(),
+          filename: "synthetic-#{n}.pdf",
+          media_type: "application/pdf",
+          content: "synthetic",
+          size: 9,
+          sha256: :crypto.hash(:sha256, "synthetic"),
+          status: "quarantined",
+          uploaded_by_id: c.a_scope.user_id,
+          expires_at: DateTime.add(DateTime.utc_now(:second), -60)
+        })
+      end
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :retention_gate
+        )
+      )
+
+    Postgrex.query!(connection, "BEGIN")
+
+    Postgrex.query!(connection, "SELECT id FROM private_documents WHERE id=$1 FOR UPDATE", [
+      hd(records).id
+    ])
+
+    assert {:ok, {1, nil}} = Instantflow.PrivateDocuments.purge_expired(c.a.id, 1)
+    Postgrex.query!(connection, "COMMIT")
+    assert {:ok, {1, nil}} = Instantflow.PrivateDocuments.purge_expired(c.a.id, 1)
+
+    assert Enum.all?(
+             records,
+             &(OperatorRepo.get!(Instantflow.Enrollment.Document, &1.id).content == <<>>)
+           )
+  end
+
   test "a real non-owner login denies absent/wrong RLS context and cross-tenant raw SQL", c do
     connection =
       start_supervised!(

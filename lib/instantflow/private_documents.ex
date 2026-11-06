@@ -52,7 +52,8 @@ defmodule Instantflow.PrivateDocuments do
           count =
             Repo.aggregate(
               from(d in Document,
-                where: d.ticket_id == ^ticket.id and d.status in ["quarantined", "ready"]
+                where: d.ticket_id == ^ticket.id and d.status in ["quarantined", "ready"],
+                where: d.expires_at > ^now()
               ),
               :count
             )
@@ -221,7 +222,8 @@ defmodule Instantflow.PrivateDocuments do
 
   def download(_, _), do: {:error, :not_found}
 
-  def purge_expired(organization_id) do
+  def purge_expired(organization_id, limit \\ 100)
+      when is_integer(limit) and limit in 1..1000 do
     Tenant.raw(organization_id, fn ->
       archived =
         from t in Ticket,
@@ -230,14 +232,28 @@ defmodule Instantflow.PrivateDocuments do
           where: t.id == parent_as(:document).ticket_id,
           select: 1
 
-      Repo.update_all(
+      batch =
         from(d in Document,
           as: :document,
           where: d.expires_at <= ^now() and d.status in ["ready", "quarantined"],
-          where: not exists(subquery(archived))
-        ),
-        set: [status: "expired", content: <<>>]
-      )
+          where: not exists(subquery(archived)),
+          order_by: [asc: d.expires_at, asc: d.id],
+          limit: ^limit,
+          lock: "FOR UPDATE SKIP LOCKED",
+          select: d.id
+        )
+
+      # Materialize the bounded locked IDs before UPDATE. A locking subquery in
+      # an UPDATE predicate may be rescanned as the eligible rows change.
+      case Repo.all(batch) do
+        [] ->
+          {0, nil}
+
+        ids ->
+          Repo.update_all(from(d in Document, where: d.id in ^ids),
+            set: [status: "expired", content: <<>>]
+          )
+      end
     end)
   end
 
@@ -423,7 +439,13 @@ defmodule Instantflow.PrivateDocuments do
     end
   end
 
-  defp metadata(d), do: Map.take(d, @metadata_fields)
+  defp metadata(d) do
+    metadata = Map.take(d, @metadata_fields)
+
+    if d.status in ["ready", "quarantined"] and DateTime.compare(d.expires_at, now()) != :gt,
+      do: %{metadata | status: "expired"},
+      else: metadata
+  end
 
   defp safe_filename?(name),
     do:

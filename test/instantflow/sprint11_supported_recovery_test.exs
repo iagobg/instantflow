@@ -20,7 +20,7 @@ defmodule Instantflow.Sprint11SupportedRecoveryTest do
 
   alias Instantflow.Identity.{Organization, Department, Membership, User}
 
-  test "empty supported builder population survives migration, backup and runtime recovery" do
+  test "supported builder population survives due-work migration, backup and runtime recovery" do
     config = OperatorRepo.config() |> Keyword.take([:username, :password, :hostname, :port])
 
     control =
@@ -42,7 +42,7 @@ defmodule Instantflow.Sprint11SupportedRecoveryTest do
       owner = repo(OperatorRepo, source, :s11_source_owner)
       OperatorRepo.put_dynamic_repo(owner)
       migrations = Application.app_dir(:instantflow, "priv/repo/migrations")
-      Ecto.Migrator.run(OperatorRepo, migrations, :up, all: true, log: false)
+      Ecto.Migrator.run(OperatorRepo, migrations, :up, to: 20_261_023_160_944, log: false)
       runtime = repo(Repo, source, :s11_source_runtime)
       Repo.put_dynamic_repo(runtime)
       first = populate("first")
@@ -54,7 +54,16 @@ defmodule Instantflow.Sprint11SupportedRecoveryTest do
         ).rows
         |> List.flatten()
 
+      before_migration = snapshot(tables)
+
+      assert [20_261_106_140_436] =
+               Ecto.Migrator.run(OperatorRepo, migrations, :up, all: true, log: false)
+
       frozen = snapshot(tables)
+
+      assert Map.delete(frozen, "schema_migrations") ==
+               Map.delete(before_migration, "schema_migrations")
+
       assert Ecto.Migrator.run(OperatorRepo, migrations, :up, all: true, log: false) == []
       assert snapshot(tables) == frozen
       assert length(frozen["workflow_versions"]) == 12
@@ -74,6 +83,9 @@ defmodule Instantflow.Sprint11SupportedRecoveryTest do
       assert snapshot(tables) == frozen
       Repo.put_dynamic_repo(repo(Repo, restored, :s11_restore_runtime))
       assert Repo.all(Instantflow.WorkflowRuntime.Ticket) == []
+
+      assert Repo.query!("SELECT id FROM public.delivery_organizations(0, 100)").rows ==
+               Enum.sort([[first.admin.organization_id], [other.admin.organization_id]])
 
       for f <- [first, other] do
         assert {:ok, recovered} = WorkflowRuntime.get(f.admin, f.ticket)
@@ -126,6 +138,7 @@ defmodule Instantflow.Sprint11SupportedRecoveryTest do
             organizations: 2,
             processes: 12,
             exact_restore: true,
+            populated_due_work_migration: true,
             runtime_rls: true,
             private_bytes: true,
             pending_jobs:

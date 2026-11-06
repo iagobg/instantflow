@@ -70,8 +70,9 @@ defmodule Instantflow.Calculations do
               r.stage_revision == ^ticket.stage_revision and r.status == "succeeded"
       )
 
-    unless run && run.generation == generation && run.revisions == revisions(run.spec, sections),
-      do: Repo.rollback(:calculation_required)
+    unless run && not payload_expired?(run) && run.generation == generation &&
+             run.revisions == revisions(run.spec, sections),
+           do: Repo.rollback(:calculation_required)
 
     {_script, review} = Catalogue.resolve!(run.spec)
     unless run.review_generation == review.generation, do: Repo.rollback(:calculation_required)
@@ -266,17 +267,20 @@ defmodule Instantflow.Calculations do
       ticket = Repo.one!(from t in Ticket, where: t.id == ^original.ticket_id, lock: "FOR UPDATE")
       run = Repo.one!(from r in Run, where: r.id == ^id, lock: "FOR UPDATE")
       unless run.membership_id == a.id, do: Repo.rollback(:forbidden)
+      Instantflow.WorkflowCatalog.Retirement.require_active!(ticket.workflow_version_id)
 
       if operation == "retry" do
         generation = switch!()
         sections = Repo.all(from s in Section, where: s.ticket_id == ^ticket.id)
         version = Repo.get!(Version, ticket.workflow_version_id)
 
-        unless run.status in ~w(failed timed_out) and run.attempts < 3 and
+        unless run.status in ~w(failed timed_out) and not payload_expired?(run) and
+                 run.attempts < 3 and
                  current?(run, ticket, version, sections, generation),
                do: Repo.rollback(:calculation_required)
       else
-        unless run.status in ~w(queued running failed timed_out), do: Repo.rollback(:forbidden)
+        unless run.status in ~w(queued running failed timed_out) and not payload_expired?(run),
+          do: Repo.rollback(:forbidden)
       end
 
       if run.status == "running", do: attempt!(run, "cancelled")
@@ -317,6 +321,7 @@ defmodule Instantflow.Calculations do
       Repo.query!("SELECT enabled, generation FROM calculation_switch WHERE id = 1").rows
 
     enabled = enabled and Application.get_env(:instantflow, :calculation_execution, false)
+    retired? = Instantflow.WorkflowCatalog.Retirement.retired?(version.id)
 
     Repo.all(
       from r in Run,
@@ -328,6 +333,11 @@ defmodule Instantflow.Calculations do
         select: {r, review.enabled, review.generation}
     )
     |> Enum.map(fn {run, script_enabled, script_generation} ->
+      run =
+        if not retired? and payload_expired?(run),
+          do: %{run | status: "stale", diagnostic: nil},
+          else: run
+
       if run.status in ~w(queued running succeeded) and
            (not enabled or run.generation != generation or not script_enabled or
               run.review_generation != script_generation),
@@ -422,20 +432,49 @@ defmodule Instantflow.Calculations do
         on_conflict: :nothing
       )
 
-  def purge_expired(organization_id) do
-    cutoff = DateTime.add(DateTime.utc_now(), -7, :day)
+  def purge_expired(organization_id, limit \\ 100)
+      when is_integer(limit) and limit in 1..1000 do
+    cutoff = retention_cutoff()
 
     Tenant.raw(organization_id, fn ->
-      Repo.update_all(
+      archived =
+        from t in Ticket,
+          join: retired in "retired_workflow_versions",
+          on: retired.version_id == t.workflow_version_id,
+          where: t.id == parent_as(:run).ticket_id,
+          select: 1
+
+      batch =
         from(r in Run,
+          as: :run,
           where:
             r.inserted_at < ^cutoff and r.status not in ["queued", "running"] and
-              r.snapshot != ^%{}
-        ),
-        set: [snapshot: %{}, output: nil, diagnostic: nil, status: "stale"]
-      )
+              r.snapshot != ^%{},
+          where: not exists(subquery(archived)),
+          order_by: [asc: r.inserted_at, asc: r.id],
+          limit: ^limit,
+          lock: "FOR UPDATE SKIP LOCKED",
+          select: r.id
+        )
+
+      case Repo.all(batch) do
+        [] ->
+          {0, nil}
+
+        ids ->
+          Repo.update_all(from(r in Run, where: r.id in ^ids),
+            set: [snapshot: %{}, output: nil, diagnostic: nil, status: "stale"]
+          )
+      end
     end)
   end
+
+  defp retention_cutoff, do: DateTime.add(DateTime.utc_now(), -7, :day)
+
+  defp payload_expired?(run),
+    do:
+      run.status not in ["queued", "running"] and
+        DateTime.compare(run.inserted_at, retention_cutoff()) == :lt
 
   def invalidate!(ticket, section_key \\ nil) do
     runs =

@@ -13,6 +13,18 @@ config :instantflow,
   calculation_broker_token: System.get_env("PYTHON_BROKER_TOKEN"),
   calculation_broker_socket: broker_socket
 
+retention_interval = String.to_integer(System.get_env("RETENTION_INTERVAL_MS", "60000"))
+retention_batch = String.to_integer(System.get_env("RETENTION_BATCH_SIZE", "100"))
+
+unless retention_interval in 1_000..3_600_000,
+  do: raise("RETENTION_INTERVAL_MS must be between 1000 and 3600000")
+
+unless retention_batch in 1..1000, do: raise("RETENTION_BATCH_SIZE must be between 1 and 1000")
+
+config :instantflow,
+  maintenance_interval_ms: retention_interval,
+  maintenance_batch_size: retention_batch
+
 if operator_url = System.get_env("OPERATOR_DATABASE_URL") do
   config :instantflow, Instantflow.OperatorRepo,
     url: operator_url,

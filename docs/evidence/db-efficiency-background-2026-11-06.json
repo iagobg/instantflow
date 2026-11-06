@@ -1,0 +1,174 @@
+{
+  "recorded_on": "2026-11-06",
+  "parent_commit": "afadb35",
+  "baseline_commit": "10cb39783293765a858b6f342cf4803773048423",
+  "empty_pass_scenarios": [
+    {
+      "scenario": "empty_delivery_1",
+      "statements": 1,
+      "rows": 0,
+      "errors": 0,
+      "content_bytes": 0
+    },
+    {
+      "scenario": "empty_maintenance_1",
+      "statements": 1,
+      "rows": 0,
+      "errors": 0,
+      "content_bytes": 0
+    },
+    {
+      "scenario": "empty_delivery_10",
+      "statements": 1,
+      "rows": 0,
+      "errors": 0,
+      "content_bytes": 0
+    },
+    {
+      "scenario": "empty_maintenance_10",
+      "statements": 1,
+      "rows": 0,
+      "errors": 0,
+      "content_bytes": 0
+    },
+    {
+      "scenario": "empty_delivery_1000",
+      "statements": 1,
+      "rows": 0,
+      "errors": 0,
+      "content_bytes": 0
+    },
+    {
+      "scenario": "empty_maintenance_1000",
+      "statements": 1,
+      "rows": 0,
+      "errors": 0,
+      "content_bytes": 0
+    }
+  ],
+  "ten_minute_elapsed_observation": {
+    "rows": 0,
+    "errors": 0,
+    "passes": {
+      "delivery": 2380,
+      "maintenance": 10,
+      "delivery_failures": 0,
+      "maintenance_failures": 0
+    },
+    "environment": "Local disposable database; real non-owner runtime login; two independently supervised workers",
+    "pool_size": 10,
+    "groups": {
+      "other": {
+        "rows": 0,
+        "errors": 0,
+        "binary_bytes": 0,
+        "statements": 2390,
+        "content_bytes": 0,
+        "content_selections": 0,
+        "update_locks": 0,
+        "decode_time_ms": 7.694,
+        "query_time_ms": 1764.733,
+        "queue_time_ms": 1877.194,
+        "total_time_ms": 3649.621
+      },
+      "history": {
+        "rows": 0,
+        "errors": 0,
+        "binary_bytes": 0,
+        "statements": 0,
+        "content_bytes": 0,
+        "content_selections": 0,
+        "update_locks": 0,
+        "decode_time_ms": 0.0,
+        "query_time_ms": 0.0,
+        "queue_time_ms": 0.0,
+        "total_time_ms": 0.0
+      },
+      "documents": {
+        "rows": 0,
+        "errors": 0,
+        "binary_bytes": 0,
+        "statements": 0,
+        "content_bytes": 0,
+        "content_selections": 0,
+        "update_locks": 0,
+        "decode_time_ms": 0.0,
+        "query_time_ms": 0.0,
+        "queue_time_ms": 0.0,
+        "total_time_ms": 0.0
+      },
+      "authorization": {
+        "rows": 0,
+        "errors": 0,
+        "binary_bytes": 0,
+        "statements": 0,
+        "content_bytes": 0,
+        "content_selections": 0,
+        "update_locks": 0,
+        "decode_time_ms": 0.0,
+        "query_time_ms": 0.0,
+        "queue_time_ms": 0.0,
+        "total_time_ms": 0.0
+      }
+    },
+    "organizations": 10,
+    "maintenance_interval_ms": 60000,
+    "postgres": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+    "requested_duration_ms": 600000,
+    "delivery_interval_ms": 250,
+    "limitations": "Idle query/work counts only; concurrent local activity may affect timings. No hosted capacity claim. Binary bytes are decoded values, not wire traffic.",
+    "disposable_database_removed": true,
+    "binary_bytes": 0,
+    "elapsed_ms": 600002.011,
+    "statements": 2390,
+    "content_bytes": 0,
+    "content_selections": 0,
+    "update_locks": 0,
+    "decode_time_ms": 7.694,
+    "query_time_ms": 1764.733,
+    "queue_time_ms": 1877.194,
+    "total_time_ms": 3649.621
+  },
+  "fixed_pass_comparison": {
+    "method": "Measured SQL counts repeated for an equal number of scheduled passes; baseline wall-clock load was not rerun.",
+    "organizations": 10,
+    "delivery_passes": 2400,
+    "candidate_maintenance_passes": 10,
+    "baseline_statements_per_delivery_pass_including_retention": 301,
+    "baseline_statements_model": 722400,
+    "candidate_statements_measured": 2410,
+    "statement_reduction_percent": 99.6664
+  },
+  "correctness": [
+    "Real non-owner runtime login: due-work functions expose only bounded organization IDs; table RLS remains enforced.",
+    "Rotation preserves progress under a flooded tenant; suspension retains pending intents; worker restart recovers without a wakeup.",
+    "Two independent dispatchers competing for the same intent commit one attempt; an injected tenant failure rolls back while another tenant progresses.",
+    "Retention locks a bounded set of IDs, skips locked rows, and resumes them later; queued/running calculations and retired history remain intact.",
+    "Logical file expiry, quota release, and terminal calculation expiry do not depend on physical cleanup.",
+    "Populated forward migration preserves all business rows; full dump/restore retains runtime discovery, RLS, private bytes, receipts and authorized retry behavior."
+  ],
+  "limitations": [
+    "Local PostgreSQL 16.15 only; no hosted capacity or latency improvement claim.",
+    "The elapsed idle run used a separate application process and database; an unrelated test run shared the local PostgreSQL server, so timings are diagnostic only.",
+    "Candidate indexes and skewed backlog query plans remain to be measured before hosted rollout.",
+    "Calculation dispatch discovery is unchanged; Python execution was disabled in the idle observation."
+  ],
+  "recovery": {
+    "processes": 12,
+    "organizations": 2,
+    "tables": 41,
+    "exact_restore": true,
+    "populated_due_work_migration": true,
+    "runtime_rls": true,
+    "private_bytes": true
+  },
+  "validation": {
+    "focused_tests": 29,
+    "runtime_role_tests": 27,
+    "recreation_recovery_tests": 5,
+    "full_precommit_tests": 423,
+    "final_failures": 0,
+    "recreation_cleanup_commit": "3c307fa",
+    "initial_full_run": "423 tests, one sandbox queue failure; accumulating unused helper views fixed before final full pass; queue configuration unchanged"
+  }
+}

@@ -20,6 +20,17 @@ defmodule Instantflow.Application do
         ],
         else: []
 
+    # Existing rehearsal tools disable background delivery. Preserve that default,
+    # while allowing retention to be enabled/disabled independently when configured.
+    maintenance =
+      if Application.get_env(
+           :instantflow,
+           :maintenance_worker,
+           Application.get_env(:instantflow, :delivery_worker, true)
+         ),
+         do: [Instantflow.Maintenance.Worker],
+         else: []
+
     children =
       [
         InstantflowWeb.Telemetry,
@@ -30,7 +41,7 @@ defmodule Instantflow.Application do
         Instantflow.Collaboration.Presence,
         # Start to serve requests, typically the last entry
         InstantflowWeb.Endpoint
-      ] ++ delivery ++ calculations
+      ] ++ delivery ++ calculations ++ maintenance
 
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options

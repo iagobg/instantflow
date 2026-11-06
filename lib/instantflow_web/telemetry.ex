@@ -75,6 +75,16 @@ defmodule InstantflowWeb.Telemetry do
           "The time the connection spent waiting before being checked out for the query"
       ),
 
+      # Bounded background passes; metadata contains no tenant or record labels.
+      summary("instantflow.delivery.pass.duration", unit: {:native, :millisecond}),
+      sum("instantflow.delivery.pass.organizations"),
+      sum("instantflow.delivery.pass.failures"),
+      summary("instantflow.maintenance.pass.duration", unit: {:native, :millisecond}),
+      sum("instantflow.maintenance.pass.organizations"),
+      sum("instantflow.maintenance.pass.documents"),
+      sum("instantflow.maintenance.pass.calculations"),
+      sum("instantflow.maintenance.pass.failures"),
+
       # VM Metrics
       summary("vm.memory.total", unit: {:byte, :kilobyte}),
       summary("vm.total_run_queue_lengths.total"),

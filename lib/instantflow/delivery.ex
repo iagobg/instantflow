@@ -4,6 +4,7 @@ defmodule Instantflow.Delivery do
   alias Instantflow.{Repo, Tenant, WorkflowRuntime}
   alias Instantflow.Delivery.{Attempt, Message}
   alias Instantflow.WorkflowRuntime.Ticket
+  require Logger
 
   def pending_ids(organization_id) do
     case Tenant.raw(organization_id, fn ->
@@ -173,15 +174,42 @@ defmodule Instantflow.Delivery do
     end
   end
 
-  def drain do
-    %{rows: rows} = Repo.query!("SELECT id FROM dispatch_organizations()")
+  @doc "Process one bounded page. Repeated schedulers should retain drain_page/1's cursor."
+  def drain, do: drain_page().results
 
-    # Each organization receives one bounded batch each pass, irrespective of the preceding tenant's backlog.
-    Enum.map(rows, fn [id] ->
-      Instantflow.PrivateDocuments.purge_expired(id)
-      Instantflow.Calculations.purge_expired(id)
-      {id, process_batch(id, pending_ids(id))}
-    end)
+  def drain_page(cursor \\ 0) when is_integer(cursor) and cursor >= 0 do
+    started = System.monotonic_time()
+    limit = Application.get_env(:instantflow, :delivery_organizations_per_pass, 50)
+
+    %{rows: rows} =
+      Repo.query!("SELECT id FROM public.delivery_organizations($1, $2)", [cursor, limit])
+
+    results =
+      Enum.map(rows, fn [id] ->
+        # A failed tenant must not prevent progress for the rest of this page.
+        result =
+          try do
+            process_batch(id, pending_ids(id))
+          rescue
+            _ ->
+              Logger.warning("outbox_tenant_failed")
+              {:error, :dispatch_failed}
+          end
+
+        {id, result}
+      end)
+
+    :telemetry.execute(
+      [:instantflow, :delivery, :pass],
+      %{
+        duration: System.monotonic_time() - started,
+        organizations: length(rows),
+        failures: Enum.count(results, fn {_, result} -> match?({:error, _}, result) end)
+      },
+      %{}
+    )
+
+    %{cursor: if(rows == [], do: 0, else: rows |> List.last() |> hd()), results: results}
   end
 
   def retry(actor, id) do
