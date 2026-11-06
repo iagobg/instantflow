@@ -1,0 +1,99 @@
+{
+  "recorded_on": "2026-11-06",
+  "baseline_commit": "5af775f",
+  "environment": "Local isolated SQL sandbox; same lifecycle harness and seed; no hosted comparison",
+  "scenarios": [
+    {
+      "scenario": "record_mount_http_and_live",
+      "before_statements": 412,
+      "after_statements": 318,
+      "before_authorization_statements": 86,
+      "after_authorization_statements": 74
+    },
+    {
+      "scenario": "idle_heartbeat",
+      "before_statements": 153,
+      "after_statements": 113,
+      "before_authorization_statements": 31,
+      "after_authorization_statements": 25
+    },
+    {
+      "scenario": "reason_change",
+      "before_statements": 29,
+      "after_statements": 25,
+      "before_authorization_statements": 7,
+      "after_authorization_statements": 7
+    },
+    {
+      "scenario": "draft_change",
+      "before_statements": 62,
+      "after_statements": 43,
+      "before_authorization_statements": 14,
+      "after_authorization_statements": 11
+    },
+    {
+      "scenario": "save_submit",
+      "before_statements": 366,
+      "after_statements": 259,
+      "before_authorization_statements": 75,
+      "after_authorization_statements": 57
+    },
+    {
+      "scenario": "ticket_invalidation",
+      "before_statements": 213,
+      "after_statements": 155,
+      "before_authorization_statements": 44,
+      "after_authorization_statements": 35
+    },
+    {
+      "scenario": "invalidation_3_members",
+      "before_statements": 15,
+      "after_statements": 13,
+      "before_authorization_statements": 4,
+      "after_authorization_statements": 4
+    },
+    {
+      "scenario": "invalidation_103_members",
+      "before_statements": 115,
+      "after_statements": 113,
+      "before_authorization_statements": 104,
+      "after_authorization_statements": 104
+    },
+    {
+      "scenario": "idle_drain_1_org",
+      "before_statements": 1,
+      "after_statements": 1,
+      "before_authorization_statements": 0,
+      "after_authorization_statements": 0
+    },
+    {
+      "scenario": "idle_drain_10_orgs",
+      "before_statements": 1,
+      "after_statements": 1,
+      "before_authorization_statements": 0,
+      "after_authorization_statements": 0
+    },
+    {
+      "scenario": "detail_1_event",
+      "before_statements": 31,
+      "after_statements": 17,
+      "before_authorization_statements": 6,
+      "after_authorization_statements": 3
+    },
+    {
+      "scenario": "detail_1001_events",
+      "before_statements": 31,
+      "after_statements": 17,
+      "before_authorization_statements": 6,
+      "after_authorization_statements": 3
+    },
+    {
+      "scenario": "document_metadata_1mb",
+      "before_statements": 16,
+      "after_statements": 14,
+      "before_authorization_statements": 3,
+      "after_authorization_statements": 3
+    }
+  ],
+  "limitations": "Lifecycle windows do not guarantee complete deferred delivery work. Counts include transaction/role setup. Targets remain unchanged. No lock modes changed."
+}

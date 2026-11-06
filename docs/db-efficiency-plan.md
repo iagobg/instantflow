@@ -131,6 +131,12 @@ Candidate indexes, subject to representative plans: partial pending-outbox `(org
 
 ### Step 4 Compose reads inside one current authorization boundary
 
+**Increment 4a:** workflow detail reads, commands and receipt replay now use the fresh membership/grants already supplied by `Tenant.transaction`; they no longer open a nested scope reload. The private read helper cannot receive an external cached scope. Tenant setup reads the previous role and organization together and restores both together, including inside existing transactions. Authorization gates, user/membership locks, role switching, rollback behavior and organization checks remain in place. This is an initial reduction, not the complete composite record projection.
+
+The matching local probe reduces a detail read from 31 to 17 statements, both record mounts from 412 to 318, idle heartbeat from 153 to 113, reason change from 29 to 25, and save/refresh from 366 to 259. These are the existing synchronous diagnostic windows; complete deferred-cycle and hosted measurements remain pending. New tests require one user, membership and grant load for reads, commands and receipt replay, reject a revoked cached actor, and verify nested settings restoration after success and exceptions. See [authorization evidence](evidence/db-efficiency-authorization-2026-11-06.json).
+
+Validation: 41 focused authorization/isolation/runtime-role/diagnostic tests and `mix precommit --seed 0` passed 425 tests with zero failures.
+
 Introduce an explicit internal API for already-authorized operations. Public context entry points still prove scope; internal projection/control helpers receive the fresh scope and fetched policy facts from the enclosing tenant transaction. A reusable context must be bound to the current process, organization, and transaction lifetime, and must not become a socket assign, cross-request cache, or authority passed into spawned tasks. Server-internal call discipline must be explicit and tested.
 
 Start with `WorkflowRuntime.get`, `RequestLive` loading, assignment/participant/communication controls, and presence. Fetch the ticket, immutable version, current grants, and relevant relationship/assignment facts once. Reuse the existing policy functions with supplied facts rather than issuing a query for each predicate. Extract a cohesive authorized record projection service; LiveViews retain forms, drafts, navigation, and rendering.

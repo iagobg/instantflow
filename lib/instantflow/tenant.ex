@@ -43,20 +43,22 @@ defmodule Instantflow.Tenant do
   # Infrastructure only: invitations prove a token; jobs carry persisted ownership. Neither accepts browser tenant claims.
   def raw(id, fun) when is_integer(id) and id > 0 do
     Repo.transaction(fn ->
-      previous =
-        Repo.query!("SELECT current_setting('instantflow.organization_id', true)").rows
-        |> hd()
-        |> hd()
+      [[previous, previous_role]] =
+        Repo.query!("SELECT current_setting('instantflow.organization_id', true), current_user").rows
 
-      previous_role = Repo.query!("SELECT current_user").rows |> hd() |> hd()
       if previous not in [nil, "", to_string(id)], do: Repo.rollback(:scope_mismatch)
       Repo.query!("SET LOCAL ROLE instantflow_runtime")
       Repo.query!("SELECT set_config('instantflow.organization_id', $1, true)", [to_string(id)])
       organization = Repo.one(from o in Organization, where: o.id == ^id, lock: "FOR SHARE")
       unless organization && organization.status == "active", do: Repo.rollback(:unavailable)
       result = fun.()
-      Repo.query!("SELECT set_config('instantflow.organization_id', $1, true)", [previous || ""])
-      Repo.query!("SELECT set_config('role', $1, true)", [previous_role])
+      # Restore both settings even when nested in a caller's existing transaction
+      # (including a sandbox transaction); committing a savepoint does not reset them.
+      Repo.query!(
+        "SELECT set_config('instantflow.organization_id', $1, true), set_config('role', $2, true)",
+        [previous || "", previous_role]
+      )
+
       result
     end)
   end

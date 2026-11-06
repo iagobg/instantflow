@@ -1,7 +1,7 @@
 defmodule Instantflow.WorkflowRuntime do
   @moduledoc "Transactional guarded commands. Lock order: actor user, membership, workflow (create) or ticket, sections, receipt/outbox."
   import Ecto.Query
-  alias Instantflow.{Identity, Repo, Tenant}
+  alias Instantflow.{Repo, Tenant}
   alias Instantflow.WorkflowCatalog.{Capabilities, Definition, Version, Workflow}
 
   alias Instantflow.WorkflowRuntime.{
@@ -26,7 +26,7 @@ defmodule Instantflow.WorkflowRuntime do
 
       result =
         transaction.(actor, fn actor ->
-          actor = Identity.lock_scope!(actor)
+          # Tenant supplies current grants and holds the user/membership locks.
           digest = :crypto.hash(:sha256, :erlang.term_to_binary(command, [:deterministic]))
 
           receipt =
@@ -83,9 +83,9 @@ defmodule Instantflow.WorkflowRuntime do
 
   def get(actor, id), do: Tenant.read(actor, &get_scoped(&1, id), {:error, :not_found})
 
-  defp get_scoped(actor, id) do
-    with scope when not is_nil(scope) <- Identity.scope(actor.user_id, actor.organization_id),
-         %Ticket{} = ticket <- Repo.get(Ticket, id),
+  # Private to the enclosing Tenant.read callback; never use a caller's cached scope here.
+  defp get_scoped(scope, id) do
+    with %Ticket{} = ticket <- Repo.get(Ticket, id),
          %Version{} = version <- Repo.get(Version, ticket.workflow_version_id),
          true <- Policy.discover?(scope, ticket, version) do
       sections = Repo.all(from s in Section, where: s.ticket_id == ^ticket.id, order_by: s.key)
