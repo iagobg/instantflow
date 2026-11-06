@@ -333,6 +333,63 @@ defmodule Instantflow.RuntimeRoleTest do
     refute_receive :requests_changed
   end
 
+  test "direct delivery and a batch racing on one refresh commit one attempt", c do
+    connection =
+      start_supervised!(
+        Supervisor.child_spec(
+          {Postgrex, c.owner_config ++ [database: c.database]},
+          id: :direct_delivery_gate
+        )
+      )
+
+    org = c.a.id
+    id = c.ticket_id
+    message = OperatorRepo.get_by!(Instantflow.Delivery.Message, ticket_id: id)
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, Delivery.topic(org, id))
+    Postgrex.query!(connection, "BEGIN")
+    Postgrex.query!(connection, "SELECT id FROM tickets WHERE id=$1 FOR UPDATE", [id])
+    supervisor = start_supervised!(Task.Supervisor)
+    Application.put_env(:instantflow, :delivery_organizations_per_pass, 1)
+    on_exit(fn -> Application.delete_env(:instantflow, :delivery_organizations_per_pass) end)
+
+    tasks =
+      for operation <- [
+            fn -> Delivery.process(org, message.id) end,
+            fn -> Delivery.drain_page(org - 1) end
+          ] do
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          Repo.put_dynamic_repo(c.runtime)
+          operation.()
+        end)
+      end
+
+    assert wait_for_waiters(connection, c.database, 2, 1000)
+    Postgrex.query!(connection, "COMMIT")
+
+    processed =
+      Enum.map(tasks, fn task ->
+        case Task.await(task) do
+          {:ok, :already_processed} -> 0
+          {:ok, %Instantflow.Delivery.Message{status: "succeeded"}} -> 1
+          %{results: [{^org, {:ok, count}}]} -> count
+        end
+      end)
+
+    assert Enum.sum(processed) == 1
+    assert_receive {:ticket_changed, ^org, ^id}
+    refute_receive {:ticket_changed, ^org, ^id}
+    assert OperatorRepo.get!(Instantflow.Delivery.Message, message.id).attempts == 1
+
+    assert OperatorRepo.aggregate(
+             from(a in Instantflow.Delivery.Attempt,
+               where: a.outbox_message_id == ^message.id
+             ),
+             :count
+           ) == 1
+
+    assert OperatorRepo.get!(Instantflow.WorkflowRuntime.Ticket, id).refreshed_revision == 1
+  end
+
   @tag capture_log: true
   test "one failed tenant rolls back without blocking the next tenant's delivery", c do
     workflow =

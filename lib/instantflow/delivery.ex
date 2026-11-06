@@ -7,18 +7,20 @@ defmodule Instantflow.Delivery do
   require Logger
 
   def pending_ids(organization_id) do
-    case Tenant.raw(organization_id, fn ->
-           Repo.all(
-             from m in Message,
-               where: m.organization_id == ^organization_id and m.status == "pending",
-               order_by: m.id,
-               limit: ^Application.get_env(:instantflow, :delivery_batch_per_organization, 20),
-               select: m.id
-           )
-         end) do
+    case Tenant.raw(organization_id, fn -> pending_ids!(organization_id) end) do
       {:ok, ids} -> ids
       _ -> []
     end
+  end
+
+  defp pending_ids!(organization_id) do
+    Repo.all(
+      from m in Message,
+        where: m.organization_id == ^organization_id and m.status == "pending",
+        order_by: m.id,
+        limit: ^Application.get_env(:instantflow, :delivery_batch_per_organization, 20),
+        select: m.id
+    )
   end
 
   def process(organization_id, id) do
@@ -28,18 +30,26 @@ defmodule Instantflow.Delivery do
 
       if message do
         # Match retry/command lock order: organization, ticket, outbox row.
-        Repo.one!(from t in Ticket, where: t.id == ^message.ticket_id, lock: "FOR UPDATE")
+        ticket =
+          Repo.one!(from t in Ticket, where: t.id == ^message.ticket_id, lock: "FOR UPDATE")
+
         message = Repo.one(from m in Message, where: m.id == ^id, lock: "FOR UPDATE")
-        apply_message!(organization_id, message)
+
+        if message && message.status == "pending" do
+          result = apply_message!(organization_id, message)
+          refresh_batch!(organization_id, [message], %{ticket.id => ticket})
+          result
+        else
+          :already_processed
+        end
       else
         :already_processed
       end
     end)
   end
 
-  defp apply_message!(organization_id, message, refresh? \\ true) do
+  defp apply_message!(organization_id, message) do
     if message && message.status == "pending" do
-      if refresh? and message.kind == "refresh", do: refresh!(organization_id, message)
       number = message.attempts + 1
 
       result =
@@ -81,74 +91,73 @@ defmodule Instantflow.Delivery do
     end
   end
 
-  defp process_batch(_organization_id, []), do: {:ok, 0}
-
-  defp process_batch(organization_id, ids) do
+  defp process_batch(organization_id) do
     Tenant.raw(organization_id, fn ->
-      Tenant.authorization_gate!(organization_id)
-
-      ticket_ids =
-        Repo.all(from m in Message, where: m.id in ^ids, select: m.ticket_id, distinct: true)
-
-      tickets =
-        Repo.all(from t in Ticket, where: t.id in ^ticket_ids, order_by: t.id, lock: "FOR UPDATE")
-        |> Map.new(&{&1.id, &1})
-
-      messages =
-        Repo.all(
-          from m in Message,
-            where: m.id in ^ids and m.status == "pending",
-            order_by: m.id,
-            lock: "FOR UPDATE"
-        )
-
-      {refreshes, other} =
-        Enum.split_with(
-          messages,
-          &(&1.kind == "refresh" and &1.behavior == "success" and
-              String.starts_with?(&1.key, "event:"))
-        )
-
-      if refreshes != [] do
-        now = DateTime.utc_now(:second)
-
-        attempts =
-          Enum.map(
-            refreshes,
-            &%{
-              organization_id: organization_id,
-              outbox_message_id: &1.id,
-              number: &1.attempts + 1,
-              result: "succeeded",
-              actor_id: &1.retried_by_id,
-              inserted_at: now,
-              updated_at: now
-            }
-          )
-
-        Repo.insert_all(Attempt, attempts)
-        refresh_ids = Enum.map(refreshes, & &1.id)
-
-        Repo.update_all(from(m in Message, where: m.id in ^refresh_ids),
-          set: [status: "succeeded", updated_at: now],
-          inc: [attempts: 1]
-        )
-      end
-
-      Enum.each(other, &apply_message!(organization_id, &1, false))
-      refresh_batch!(organization_id, messages, tickets)
-      length(messages)
+      process_messages!(organization_id, pending_ids!(organization_id))
     end)
+  end
+
+  defp process_messages!(_organization_id, []), do: 0
+
+  defp process_messages!(organization_id, ids) do
+    Tenant.authorization_gate!(organization_id)
+
+    ticket_ids =
+      Repo.all(from m in Message, where: m.id in ^ids, select: m.ticket_id, distinct: true)
+
+    tickets =
+      Repo.all(from t in Ticket, where: t.id in ^ticket_ids, order_by: t.id, lock: "FOR UPDATE")
+      |> Map.new(&{&1.id, &1})
+
+    messages =
+      Repo.all(
+        from m in Message,
+          where: m.id in ^ids and m.status == "pending",
+          order_by: m.id,
+          lock: "FOR UPDATE"
+      )
+
+    {refreshes, other} =
+      Enum.split_with(
+        messages,
+        &(&1.kind == "refresh" and &1.behavior == "success" and
+            String.starts_with?(&1.key, "event:"))
+      )
+
+    if refreshes != [] do
+      now = DateTime.utc_now(:second)
+
+      attempts =
+        Enum.map(
+          refreshes,
+          &%{
+            organization_id: organization_id,
+            outbox_message_id: &1.id,
+            number: &1.attempts + 1,
+            result: "succeeded",
+            actor_id: &1.retried_by_id,
+            inserted_at: now,
+            updated_at: now
+          }
+        )
+
+      Repo.insert_all(Attempt, attempts)
+      refresh_ids = Enum.map(refreshes, & &1.id)
+
+      Repo.update_all(from(m in Message, where: m.id in ^refresh_ids),
+        set: [status: "succeeded", updated_at: now],
+        inc: [attempts: 1]
+      )
+    end
+
+    Enum.each(other, &apply_message!(organization_id, &1))
+    refresh_batch!(organization_id, messages, tickets)
+    length(messages)
   end
 
   # Business bursts may have several intents for the same committed revision. Persist
   # a checkpoint with attempt status, so a crash before commit retries the invalidation.
   # Delivery outcomes change without changing the ticket revision and must always notify.
-  defp refresh!(organization_id, message) do
-    ticket = Repo.one!(from t in Ticket, where: t.id == ^message.ticket_id, lock: "FOR UPDATE")
-    refresh_batch!(organization_id, [message], %{ticket.id => ticket})
-  end
-
   defp refresh_batch!(organization_id, messages, tickets) do
     ids =
       messages
@@ -207,7 +216,7 @@ defmodule Instantflow.Delivery do
         # A failed tenant must not prevent progress for the rest of this page.
         result =
           try do
-            process_batch(id, pending_ids(id))
+            process_batch(id)
           rescue
             _ ->
               Logger.warning("outbox_tenant_failed")

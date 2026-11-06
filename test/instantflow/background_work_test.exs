@@ -68,6 +68,33 @@ defmodule Instantflow.BackgroundWorkTest do
     assert report.statements < 0.1 * 301 * 2400
   end
 
+  test "a due core record is processed within the single-boundary SQL budget" do
+    f = workflow_fixture()
+    id = create_ticket(f)
+    {[{1, {:ok, 1}}], report} = measure("single_record_dispatch", &Delivery.drain/0)
+    assert report.statements <= 20
+    assert report.errors == 0
+    assert Repo.get!(Instantflow.WorkflowRuntime.Ticket, id).refreshed_revision == 1
+    assert Delivery.pending_ids(1) == []
+  end
+
+  test "direct refresh delivery reuses the locked record and remains replay-safe" do
+    f = workflow_fixture()
+    id = create_ticket(f)
+    [message] = Delivery.pending_ids(1)
+
+    {{:ok, %{status: "succeeded"}}, report} =
+      measure("direct_refresh_dispatch", fn ->
+        Delivery.process(1, message)
+      end)
+
+    assert report.statements <= 18
+    assert report.errors == 0
+    assert Repo.get!(Instantflow.WorkflowRuntime.Ticket, id).refreshed_revision == 1
+    assert {:ok, :already_processed} = Delivery.process(1, message)
+    assert Repo.aggregate(Instantflow.Delivery.Attempt, :count) == 1
+  end
+
   test "a flooded tenant cannot monopolize a rotating page" do
     f = workflow_fixture()
     first = create_ticket(f)
