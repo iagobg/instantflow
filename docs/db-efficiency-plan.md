@@ -87,6 +87,10 @@ On the dedicated benchmark database, enable `pg_stat_statements` and collect bef
 
 ### Step 2 Fetch document metadata without file bodies
 
+**Increment 2a:** metadata, object lookup, attachment validation and readiness queries now select explicit columns without content. List visibility predicates are applied in SQL before fetching document rows. Review and download prove current authority and state using metadata before fetching one body; receipt replay, explicit rejection and deletion fetch none. Successful review no longer sends the unchanged body back in its UPDATE. The existing tenant, actor and ticket locks are preserved.
+
+The maximum-size fixture (5,242,880 bytes) returns zero content bytes for metadata, with approximately 5.6 KB of decoded binary data across the entire authorized operation. The matching 1 MiB baseline scenario drops from 1,048,591 content bytes to zero. The [document measurement evidence](evidence/db-efficiency-documents-2026-11-06.json) includes denied/revoked/cross-tenant reads, quarantine, expiry before cleanup, attachment saves, transition guards, receipt replay, checksum rejection and authorized review/download. Focused document/context/LiveView tests pass (20 tests), and `mix precommit --seed 0` passes 405 tests. Historical metadata pagination is still pending as increment 2b; this change preserves the existing list API and does not silently truncate older documents. The full step 2 acceptance gate is not complete until that bound is implemented. No hosted image or database was changed for these increments.
+
 Change `PrivateDocuments.list/2` and related metadata/reference/readiness paths to select only the columns they need. Build readable field/section predicates before fetching metadata. Preserve full content selection for authorized downloads and integrity review. Retain the database storage design for now; external object storage is a separate capacity decision.
 
 Audit `document!/2`, `ready_ref?/3`, and attachment validation as well as the visible list: a guard that needs status, expiry, size, or ownership should not decode a multi-megabyte body. Bound historical metadata independently of the 20-active-file quota.
@@ -208,6 +212,6 @@ The current [Checks workflow](../.github/workflows/checks.yml) invokes [publicat
 
 ## Completion and next implementation
 
-Start with step 1 and the metadata change in step 2. The due-work dispatcher is the next isolated improvement, followed by the shared read boundary and lightweight live events. Leave lock refinement until the cheaper read paths and their concurrency tests are stable.
+Increment 1a is committed, and increment 2a implements body-free document metadata reads. Finish historical metadata pagination, the deferred-work/lease measurement boundaries and the guarded benchmark rollout path. The due-work dispatcher is the next background-work improvement, followed by the shared read boundary and lightweight live events. Leave lock refinement until the cheaper read paths and their concurrency tests are stable.
 
 The work is complete when the candidate meets the fixed efficiency targets, preserves every correctness gate, passes the existing generalized workflow/recovery matrix, and records reproducible local and hosted results with the exact deployment and fixture identities. Update this plan with measured outcomes per step rather than marking progress from code changes alone.

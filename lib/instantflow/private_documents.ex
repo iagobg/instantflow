@@ -7,6 +7,18 @@ defmodule Instantflow.PrivateDocuments do
   alias Instantflow.WorkflowRuntime.Ticket
   alias Instantflow.PrivateDocuments.Policy
   @max_size 5_242_880
+  @metadata_fields [
+    :id,
+    :object_key,
+    :filename,
+    :media_type,
+    :size,
+    :status,
+    :expires_at,
+    :section_key,
+    :field_key
+  ]
+  @reference_fields @metadata_fields ++ [:organization_id, :ticket_id, :uploaded_by_id]
 
   def upload(
         actor,
@@ -96,22 +108,21 @@ defmodule Instantflow.PrivateDocuments do
         unless d.status == "quarantined" and DateTime.compare(d.expires_at, now()) == :gt,
           do: Repo.rollback(:invalid_state)
 
+        # Read the body only after current authority, state and receipt checks.
+        # Rejecting a file needs no body; accepting it still verifies every byte.
+        body = if accept?, do: content!(d)
+
         ready =
-          accept? and media_type(d.content) == d.media_type and
-            byte_size(d.content) == d.size and
+          accept? and media_type(body.content) == d.media_type and
+            byte_size(body.content) == d.size and
             Policy.file?(section, d.field_key, d.media_type, d.size) and
-            :crypto.hash(:sha256, d.content) == d.sha256
+            :crypto.hash(:sha256, body.content) == body.sha256
 
         status = if ready, do: "ready", else: "rejected"
 
-        d =
-          Repo.update!(
-            Ecto.Changeset.change(d,
-              status: status,
-              reviewed_by_id: a.user_id,
-              content: if(ready, do: d.content, else: <<>>)
-            )
-          )
+        changes = %{status: status, reviewed_by_id: a.user_id}
+        changes = if ready, do: changes, else: Map.put(changes, :content, <<>>)
+        d = Repo.update!(Ecto.Changeset.change(d, changes))
 
         audit(a, "document_" <> status, d)
         record_change!(a, ticket, section, d.field_key, status)
@@ -145,17 +156,15 @@ defmodule Instantflow.PrivateDocuments do
       fn a ->
         {ticket, version} = ticket!(a, ticket_id)
 
-        Repo.all(from d in Document, where: d.ticket_id == ^ticket.id, order_by: [desc: d.id])
-        |> Enum.filter(fn d ->
-          allowed?(
-            a,
-            ticket,
-            version,
-            section!(version, d.section_key, d.field_key),
-            d.field_key,
-            :read
-          )
-        end)
+        readable = readable_fields(a, ticket, version)
+
+        Repo.all(
+          from d in Document,
+            where: d.ticket_id == ^ticket.id,
+            where: ^readable,
+            order_by: [desc: d.id],
+            select: struct(d, ^@reference_fields)
+        )
         |> Enum.map(fn d ->
           section = section!(version, d.section_key, d.field_key)
 
@@ -182,7 +191,7 @@ defmodule Instantflow.PrivateDocuments do
              do: Repo.rollback(:not_found)
 
       audit(a, "document_downloaded", d)
-      %{filename: d.filename, media_type: d.media_type, content: d.content}
+      %{filename: d.filename, media_type: d.media_type, content: content!(d).content}
     end)
   end
 
@@ -215,7 +224,7 @@ defmodule Instantflow.PrivateDocuments do
         key = values[field["key"]],
         not is_nil(key) do
       d =
-        Repo.get_by(Document,
+        Repo.get_by(from(d in Document, select: struct(d, [:status, :expires_at])),
           object_key: key,
           ticket_id: ticket.id,
           organization_id: actor.organization_id,
@@ -325,7 +334,7 @@ defmodule Instantflow.PrivateDocuments do
     [section, field] = String.split(ref, ".", parts: 2)
 
     d =
-      Repo.get_by(Document,
+      Repo.get_by(from(d in Document, select: struct(d, [:status, :expires_at])),
         organization_id: ticket.organization_id,
         ticket_id: ticket.id,
         section_key: section,
@@ -362,22 +371,35 @@ defmodule Instantflow.PrivateDocuments do
 
   defp document!(a, key),
     do:
-      Repo.get_by(Document, object_key: key, organization_id: a.organization_id) ||
+      Repo.get_by(from(d in Document, select: struct(d, ^@reference_fields)),
+        object_key: key,
+        organization_id: a.organization_id
+      ) ||
         Repo.rollback(:not_found)
 
-  defp metadata(d),
-    do:
-      Map.take(d, [
-        :id,
-        :object_key,
-        :filename,
-        :media_type,
-        :size,
-        :status,
-        :expires_at,
-        :section_key,
-        :field_key
-      ])
+  # Callers retain the ticket lock while authorizing and fetching the body.
+  defp content!(document) do
+    Repo.one!(
+      from d in Document,
+        where: d.id == ^document.id and d.organization_id == ^document.organization_id,
+        select: %{content: d.content, sha256: d.sha256}
+    )
+  end
+
+  defp readable_fields(actor, ticket, version) do
+    for section <- version.definition["sections"],
+        field <- section["fields"],
+        field["type"] == "attachment",
+        allowed?(actor, ticket, version, section, field["key"], :read),
+        reduce: dynamic(false) do
+      predicate ->
+        key = section["key"]
+        field_key = field["key"]
+        dynamic([d], ^predicate or (d.section_key == ^key and d.field_key == ^field_key))
+    end
+  end
+
+  defp metadata(d), do: Map.take(d, @metadata_fields)
 
   defp safe_filename?(name),
     do:
