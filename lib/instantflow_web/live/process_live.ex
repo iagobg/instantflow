@@ -71,6 +71,7 @@ defmodule InstantflowWeb.ProcessLive do
        overview_flow_available?: false,
        cart: %{},
        print_ticket: nil,
+       instant_labels: %{},
        command_key: Ecto.UUID.generate(),
        product_id: nil,
        product_revision: nil,
@@ -740,6 +741,7 @@ defmodule InstantflowWeb.ProcessLive do
           visit: visit,
           report: data.report,
           timezone: socket.assigns.current_scope.organization.timezone,
+          instant_labels: operational_timestamps(socket, visit, data.report),
           payment_options:
             Instantflow.WorkflowCatalog.OperationalContract.payment_options(
               if(visit, do: visit.version.definition, else: version.definition)
@@ -792,7 +794,8 @@ defmodule InstantflowWeb.ProcessLive do
           visit: nil,
           product_catalog: %{},
           cart: %{},
-          print_ticket: nil
+          print_ticket: nil,
+          instant_labels: %{}
         )
         |> stream(:cart_items, [], reset: true)
         |> stream(:products, [], reset: true)
@@ -803,6 +806,21 @@ defmodule InstantflowWeb.ProcessLive do
         |> stream(:consumption, [], reset: true)
       end
     end
+  end
+
+  defp operational_timestamps(socket, visit, report) do
+    batches = if visit, do: visit.batches, else: []
+    closed = if report && report.closed, do: [report.closed.inserted_at], else: []
+
+    print =
+      if socket.assigns.print_ticket, do: [socket.assigns.print_ticket.inserted_at], else: []
+
+    instants = Enum.map(batches, & &1.inserted_at) ++ closed ++ print
+
+    Instantflow.LocalTime.format_instants(
+      instants,
+      socket.assigns.current_scope.organization.timezone
+    )
   end
 
   defp record_context(socket) do

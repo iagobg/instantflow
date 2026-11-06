@@ -603,6 +603,7 @@ defmodule InstantflowWeb.RequestLive do
            attachment_options: [],
            document_count: 0,
            delivery_ids: [],
+           history_times: %{},
            history_before: nil,
            history_next_cursor: nil,
            deliveries_before: nil,
@@ -696,6 +697,11 @@ defmodule InstantflowWeb.RequestLive do
       delivery_ids: Enum.map(data.deliveries, & &1.id),
       history_before: Map.get(socket.assigns, :history_before),
       history_next_cursor: data.history_next_cursor,
+      history_times:
+        Instantflow.LocalTime.format_instants(
+          Enum.map(data.events, & &1.inserted_at),
+          socket.assigns.current_scope.organization.timezone
+        ),
       deliveries_before: Map.get(socket.assigns, :deliveries_before),
       deliveries_next_cursor: data.deliveries_next_cursor,
       assignment_search: to_form(%{"query" => assignment_query}, as: :assignment_search),
@@ -1402,9 +1408,9 @@ defmodule InstantflowWeb.RequestLive do
       <section class="card history-card">
         <h2>Histórico</h2><div id="history" phx-update="stream">
           <article :for={{id, event} <- @streams.events} id={id}>
-            <strong>{event_label(event, @data)}</strong><small> Pessoa #{event.actor_id} · {Instantflow.LocalTime.format(
-              event.inserted_at,
-              @current_scope.organization.timezone
+            <strong>{event_label(event, @data)}</strong><small> Pessoa #{event.actor_id} · {Map.fetch!(
+              @history_times,
+              event.inserted_at
             )}</small><p :if={event.reason}>{event.reason}</p>
           </article>
         </div>

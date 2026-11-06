@@ -1,5 +1,5 @@
 defmodule InstantflowWeb.OperationsPaginationLiveTest do
-  use InstantflowWeb.ConnCase, async: true
+  use InstantflowWeb.ConnCase, async: false
   import Phoenix.LiveViewTest
   import Instantflow.IdentityFixtures
   import Instantflow.OperationsFixtures
@@ -83,7 +83,12 @@ defmodule InstantflowWeb.OperationsPaginationLiveTest do
         })
     end
 
-    render_click(view, "reconcile", %{})
+    _ = :sys.get_state(view.pid)
+
+    {_, timestamp_queries} =
+      Instantflow.TimestampProbe.capture(fn -> render_click(view, "reconcile", %{}) end)
+
+    assert timestamp_queries == 1
     assert has_element?(view, "#batch-browser-count", "12 resultado(s)")
     view |> element("#batch-browser-next") |> render_click()
     last = Operations.visit(f.actor, session.id, version.workflow_id, %{"batches_page" => "2"})

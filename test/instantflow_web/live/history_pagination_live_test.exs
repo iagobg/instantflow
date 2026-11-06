@@ -1,5 +1,5 @@
 defmodule InstantflowWeb.HistoryPaginationLiveTest do
-  use InstantflowWeb.ConnCase, async: true
+  use InstantflowWeb.ConnCase, async: false
   import Phoenix.LiveViewTest
   import Instantflow.IdentityFixtures
   import Instantflow.WorkflowFixtures
@@ -34,6 +34,21 @@ defmodule InstantflowWeb.HistoryPaginationLiveTest do
     assert row_count(view, "#deliveries > .delivery-row") == 50
     assert :sys.get_state(view.pid).socket.assigns.data.events == []
     assert :sys.get_state(view.pid).socket.assigns.data.deliveries == []
+
+    {_, timestamp_queries} =
+      Instantflow.TimestampProbe.capture(fn -> render_hook(view, "reconcile", %{}) end)
+
+    assert timestamp_queries == 1
+    assert has_element?(view, "#history article small", "São Paulo")
+    Repo.update!(Ecto.Changeset.change(f.requester.organization, timezone: "Asia/Tokyo"))
+    render_hook(view, "reconcile", %{})
+    assert has_element?(view, "#history article small", "Asia/Tokyo")
+    refute has_element?(view, "#history article small", "São Paulo")
+
+    {_, heartbeat_queries} =
+      Instantflow.TimestampProbe.capture(fn -> render_hook(view, "heartbeat", %{}) end)
+
+    assert heartbeat_queries == 0
     view |> form("#section-form-notes", section: %{summary: "Keep this draft"}) |> render_change()
     view |> element("#older-history") |> render_click()
     assert row_count(view, "#history > article") == 50

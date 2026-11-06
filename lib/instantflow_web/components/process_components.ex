@@ -699,9 +699,9 @@ defmodule InstantflowWeb.ProcessComponents do
               do: "— CANCELAMENTO"}
           </h3>
           <p>
-            {status(batch.status)} · {@labels["actor"]}: {Instantflow.Operations.actor_name(batch)} · {Instantflow.LocalTime.format(
-              batch.inserted_at,
-              @timezone
+            {status(batch.status)} · {@labels["actor"]}: {Instantflow.Operations.actor_name(batch)} · {Map.fetch!(
+              @instant_labels,
+              batch.inserted_at
             )}
           </p>
           <p :if={batch.source_id}>Cancela o ticket #{batch.source_id}: {batch.reason}</p>
@@ -828,7 +828,7 @@ defmodule InstantflowWeb.ProcessComponents do
         )}. Não compõem vendas ou recebimentos; não ocupam recursos nem impedem o fechamento.
       </p>
       <p :if={@report.closed} id="day-closed">
-        Dia encerrado em {Instantflow.LocalTime.format(@report.closed.inserted_at, @timezone)}. Novos atendimentos devem usar um dia posterior.
+        Dia encerrado em {Map.fetch!(@instant_labels, @report.closed.inserted_at)}. Novos atendimentos devem usar um dia posterior.
       </p>
       <button
         :if={!@report.closed && @can_operate}
@@ -868,10 +868,7 @@ defmodule InstantflowWeb.ProcessComponents do
       <p>
         {@visit.session.resource_name} · Atendimento #{@visit.session.id}<br />{@labels["actor"]}: {Instantflow.Operations.actor_name(
           @print_ticket
-        )}<br />{Instantflow.LocalTime.format(
-          @print_ticket.inserted_at,
-          @timezone
-        )}<br />Ticket #{@print_ticket.id}
+        )}<br />{Map.fetch!(@instant_labels, @print_ticket.inserted_at)}<br />Ticket #{@print_ticket.id}
       </p>
       <p :if={@print_ticket.reason}>{@print_ticket.reason}</p>
       <div :for={line <- @print_ticket.lines} class="print-line">
