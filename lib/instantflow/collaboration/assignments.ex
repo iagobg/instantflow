@@ -130,7 +130,8 @@ defmodule Instantflow.Collaboration.Assignments do
     {updated, "Responsável local #{previous_id} → #{next_id}. " <> reason}
   end
 
-  defp eligible?(actor, version, spec) do
+  @doc "Pure role/department eligibility; this does not establish an assignment."
+  def eligible?(actor, version, spec) do
     actor.active &&
       Enum.any?(
         Access.profiles(actor),

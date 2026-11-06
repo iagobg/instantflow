@@ -125,6 +125,7 @@ defmodule Instantflow.WorkflowRuntime do
 
       {:ok,
        %{
+         authorization: Instantflow.Access.fingerprint(scope),
          archived?: archived?,
          ticket: ticket,
          version: %{version | definition: projected_definition, bindings: %{}},

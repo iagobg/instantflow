@@ -93,8 +93,18 @@ defmodule InstantflowWeb.RequestLive do
       definition = Enum.find(socket.assigns.data.section_definitions, &(&1["key"] == key))
       values = preserve_attachments(definition, socket.assigns.editors[key], values)
       editor = Editor.draft(socket.assigns.editors[key], values)
-      Presence.heartbeat(socket.assigns.current_scope, socket.assigns.data.ticket.id, key)
-      {:noreply, socket |> assign(active_section: key) |> put_editor(key, editor)}
+
+      projection =
+        Presence.heartbeat(socket.assigns.current_scope, socket.assigns.data.ticket.id, key)
+
+      case projection do
+        {:ok, _} ->
+          socket = socket |> assign(active_section: key) |> put_editor(key, editor)
+          refresh_presence(socket, projection)
+
+        _ ->
+          refresh(socket)
+      end
     else
       refresh(socket)
     end
@@ -482,15 +492,18 @@ defmodule InstantflowWeb.RequestLive do
   def handle_event("reconcile", _, socket), do: refresh(socket)
 
   def handle_event("heartbeat", _, socket) do
-    if socket.assigns.active_section,
-      do:
+    projection =
+      if socket.assigns.active_section do
         Presence.heartbeat(
           socket.assigns.current_scope,
           socket.assigns.data.ticket.id,
           socket.assigns.active_section
         )
+      else
+        Presence.project(socket.assigns.current_scope, socket.assigns.data.ticket.id)
+      end
 
-    refresh(socket)
+    refresh_presence(socket, projection)
   end
 
   def handle_info({:ticket_changed, organization_id, id}, socket) do
@@ -499,7 +512,11 @@ defmodule InstantflowWeb.RequestLive do
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket),
-    do: {:noreply, load_presence(socket)}
+    do:
+      refresh_presence(
+        socket,
+        Presence.project(socket.assigns.current_scope, socket.assigns.data.ticket.id)
+      )
 
   def handle_info(:reconcile, socket), do: refresh(socket)
   def handle_info(:permissions_changed, socket), do: refresh(socket)
@@ -677,6 +694,8 @@ defmodule InstantflowWeb.RequestLive do
       assignment_search: to_form(%{"query" => assignment_query}, as: :assignment_search),
       editors: editors,
       forms: forms,
+      active_section:
+        if(socket.assigns.active_section in data.editable, do: socket.assigns.active_section),
       participant_query: participant_query,
       participant_forms: participant_forms,
       communication_forms: Map.new(communications, &{&1.key, to_form(%{}, as: :release)}),
@@ -707,6 +726,26 @@ defmodule InstantflowWeb.RequestLive do
     assign(socket, :presence, Presence.editors(socket.assigns.current_scope, socket.assigns.data))
     |> stream(:sections, socket.assigns.data.sections, reset: true)
   end
+
+  defp refresh_presence(socket, {:ok, projection}) do
+    data = socket.assigns.data
+
+    if projection.authorization == data.authorization and
+         projection.revision == data.ticket.revision and
+         projection.version_id == data.ticket.workflow_version_id and
+         projection.archived? == data.archived? and
+         MapSet.new(projection.readable) == MapSet.new(data.sections, & &1.key) and
+         MapSet.new(projection.editable) == MapSet.new(data.editable) do
+      {:noreply,
+       socket
+       |> assign(:presence, projection.editors)
+       |> stream(:sections, data.sections, reset: true)}
+    else
+      refresh(socket)
+    end
+  end
+
+  defp refresh_presence(socket, _denied), do: refresh(socket)
 
   defp put_editor(socket, key, editor) do
     editors = Map.put(socket.assigns.editors, key, editor)

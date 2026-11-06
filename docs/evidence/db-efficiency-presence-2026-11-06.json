@@ -1,0 +1,91 @@
+{
+  "recorded_on": "2026-11-06",
+  "parent_commit": "70317af",
+  "baseline_commit": "5af775f",
+  "environment": "Local isolated SQL sandbox; background workers disabled",
+  "lifecycle": [
+    {
+      "scenario": "record_mount_http_and_live",
+      "baseline_statements": 412,
+      "after_authorization_statements": 318,
+      "after_presence_statements": 312,
+      "history_statements": 2,
+      "document_statements": 2
+    },
+    {
+      "scenario": "idle_heartbeat",
+      "baseline_statements": 153,
+      "after_authorization_statements": 113,
+      "after_presence_statements": 39,
+      "history_statements": 0,
+      "document_statements": 0
+    },
+    {
+      "scenario": "reason_change",
+      "baseline_statements": 29,
+      "after_authorization_statements": 25,
+      "after_presence_statements": 25,
+      "history_statements": 0,
+      "document_statements": 0
+    },
+    {
+      "scenario": "draft_change",
+      "baseline_statements": 62,
+      "after_authorization_statements": 43,
+      "after_presence_statements": 41,
+      "history_statements": 0,
+      "document_statements": 0
+    },
+    {
+      "scenario": "save_submit",
+      "baseline_statements": 366,
+      "after_authorization_statements": 259,
+      "after_presence_statements": 173,
+      "history_statements": 2,
+      "document_statements": 1
+    },
+    {
+      "scenario": "ticket_invalidation",
+      "baseline_statements": 213,
+      "after_authorization_statements": 155,
+      "after_presence_statements": 112,
+      "history_statements": 1,
+      "document_statements": 1
+    }
+  ],
+  "presence": [
+    {
+      "scenario": "presence_3_peers",
+      "statements": 16,
+      "history_statements": 0,
+      "document_statements": 0,
+      "content_bytes": 0
+    },
+    {
+      "scenario": "presence_103_peers",
+      "statements": 16,
+      "history_statements": 0,
+      "document_statements": 0,
+      "content_bytes": 0
+    },
+    {
+      "scenario": "presence_participant",
+      "statements": 17,
+      "history_statements": 0,
+      "document_statements": 0,
+      "content_bytes": 0
+    }
+  ],
+  "limitations": [
+    "Lifecycle probes do not guarantee the complete deferred delivery cycle.",
+    "The fixed mount, heartbeat, reason and save targets remain unmet; navigation and composite reads still need work.",
+    "No hosted comparison or capacity claim."
+  ],
+  "correctness": [
+    "Current role/department eligibility, named assignment and verified participant policies are retained.",
+    "Inactive, expired and unauthorized peers are excluded; retired records have no editing presence.",
+    "A heartbeat reconciles missed ticket changes and permissions while retaining authorized drafts.",
+    "A denied stale draft is discarded before it can reinsert an obsolete stream row.",
+    "Delivery invalidations still refresh even without a new ticket revision."
+  ]
+}

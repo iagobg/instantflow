@@ -22,6 +22,12 @@ defmodule Instantflow.Access do
   def profiles(actor),
     do: [%{role: actor.role, department_id: actor.department_id} | actor.grants]
 
+  @doc "A projection freshness signal, never proof of authority. Compare only freshly loaded scopes."
+  def fingerprint(actor) do
+    {actor.organization_id, actor.user_id, actor.id, actor.role, actor.department_id,
+     actor.grants |> Enum.map(&{&1.department_id, &1.role}) |> Enum.uniq() |> Enum.sort()}
+  end
+
   def role?(actor, roles), do: Enum.any?(profiles(actor), &(&1.role in roles))
   def department?(actor, id), do: Enum.any?(profiles(actor), &(&1.department_id == id))
 
