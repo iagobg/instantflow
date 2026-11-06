@@ -2,6 +2,7 @@
 import argparse
 from datetime import datetime
 import json
+import math
 from pathlib import Path
 import statistics
 
@@ -103,6 +104,40 @@ def timestamp(value):
     return parsed.timestamp()
 
 
+def sampled_resources(events, summary, resources):
+    """Describe sparse CPU samples inside the business window, not whole-run CPU."""
+    values = summary["metrics"]
+    start = values["measurement_start_unix_ms"]["values"]["value"] / 1000
+    end = values["measurement_end_unix_ms"]["values"]["value"] / 1000
+    # Docker stats spends time collecting each sample. Exclude boundaries so
+    # initialization/final reads are not presented as measured-phase CPU.
+    samples = [event["sample"] for event in events if event["event"] == "sample"
+               and start + 2 <= event["sample"]["unix_time"] <= end - 2]
+    host.require(len(samples) >= 2, "Insufficient CPU samples inside the measured window")
+    result = {"samples": len(samples), "boundary_margin_seconds": 2, "services": {},
+              "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases."}
+    names = {host.PROJECT + "-" + service for service in ["web", "db"]}
+    for sample in samples:
+        host.require(len(sample["containers"]) == 2 and {c["Name"] for c in sample["containers"]} == names,
+                     "Unexpected sampled container identity")
+    for service in ["web", "db"]:
+        quota = resources[service + "_cpus"]
+        host.require(isinstance(quota, (int, float)) and math.isfinite(quota) and quota > 0,
+                     "Invalid sampled CPU quota")
+        percentages = []
+        for sample in samples:
+            container = next(c for c in sample["containers"] if c["Name"] == host.PROJECT + "-" + service)
+            text = container["CPUPerc"]
+            host.require(isinstance(text, str) and text.endswith("%"), "Missing sampled CPU percentage")
+            value = float(text[:-1])
+            host.require(math.isfinite(value) and value >= 0, "Invalid sampled CPU percentage")
+            percentages.append(value)
+        result["services"][service] = {"quota_cores": quota,
+            "cpu_percent_of_one_core": spread(percentages),
+            "cpu_percent_of_quota": spread([value / quota for value in percentages])}
+    return result
+
+
 def compare(runs, *, users=(1, 5, 10), repetitions=3):
     """Require the declared matrix; missing/failed/mismatched runs fail closed."""
     host.require(repetitions >= 2 and users and len(set(users)) == len(users) and all(1 <= n <= 10 for n in users),
@@ -147,6 +182,7 @@ def compare(runs, *, users=(1, 5, 10), repetitions=3):
             "interpretation": [
                 "Latency summaries are medians/ranges of per-run p95 values, never pooled percentiles or confidence intervals.",
                 "Full-window SQL/CPU per verified cycle includes browser initialization, warmup, final reads, background work and observers.",
+                "The reviewed workload records latency only for operations completing inside the measured window; crossing-boundary cycles remain correctness-checked. Short windows are more sensitive to this censoring.",
                 "Closed workload throughput is not an equal-offered-rate headroom comparison.",
                 "No supported-capacity claim: the remaining contention, volume and longer-duration matrix must pass."]}
 
@@ -162,6 +198,12 @@ def main():
     runs = [(arm, json.loads((path / "metadata.json").read_text()), json.loads((path / "summary.json").read_text()))
             for arm in ["baseline", "candidate"] for path in getattr(args, arm)]
     report = compare(runs, users=args.users, repetitions=args.repetitions)
+    paths = args.baseline + args.candidate
+    report["sampled_resources"] = [
+        {"operation_id": metadata["provenance"]["operation_id"],
+         **sampled_resources([json.loads(line) for line in (path / "host-events.jsonl").read_text().splitlines()],
+                             summary, metadata["provenance"]["resources"])}
+        for path, (_arm, metadata, summary) in zip(paths, runs)]
     with args.output.open("x") as stream:
         stream.write(json.dumps(report, indent=2, sort_keys=True) + "\n")
 

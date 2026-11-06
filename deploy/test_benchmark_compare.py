@@ -144,3 +144,39 @@ class ComparisonTest(unittest.TestCase):
         m['restoration']['restoration']['operation_id'] = 'distinct'
         with self.assertRaisesRegex(host.GuardError, 'overlap'):
             compare.compare(runs, users=[1], repetitions=2)
+
+
+class ResourceSamplesTest(unittest.TestCase):
+    def inputs(self):
+        _, metadata, summary = run('baseline', 0)
+        start = summary['metrics']['measurement_start_unix_ms']['values']['value'] / 1000
+        events = [{'event': 'ready'}]
+        for offset, db, web in [(-10, 99, 199), (1, 98, 198), (5, 20, 40), (15, 40, 80), (29, 97, 197), (40, 96, 196)]:
+            events.append({'event': 'sample', 'sample': {'unix_time': start + offset, 'containers': [
+                {'Name': host.PROJECT + '-db', 'CPUPerc': str(db) + '%'},
+                {'Name': host.PROJECT + '-web', 'CPUPerc': str(web) + '%'}]}})
+        return events, summary, {'db_cpus': 1, 'web_cpus': 2}
+
+    def test_excludes_startup_boundary_and_final_reads_and_normalizes_quota(self):
+        result = compare.sampled_resources(*self.inputs())
+        self.assertEqual(result['samples'], 2)
+        self.assertEqual(result['services']['db']['cpu_percent_of_one_core'], {'min': 20, 'median': 30, 'max': 40})
+        self.assertEqual(result['services']['web']['cpu_percent_of_one_core']['median'], 60)
+        self.assertEqual(result['services']['web']['cpu_percent_of_quota']['median'], 30)
+
+    def test_missing_phase_samples_cannot_be_reported_as_idle_cpu(self):
+        events, summary, resources = self.inputs()
+        with self.assertRaisesRegex(host.GuardError, 'Insufficient'):
+            compare.sampled_resources(events[:3], summary, resources)
+
+    def test_wrong_container_nonfinite_cpu_or_invalid_quota_is_rejected(self):
+        for mutation in ['container', 'nan', 'negative', 'quota']:
+            events, summary, resources = self.inputs()
+            if mutation == 'container':
+                events[3]['sample']['containers'][0]['Name'] = 'serving-db'
+            elif mutation == 'quota':
+                resources['db_cpus'] = 0
+            else:
+                events[3]['sample']['containers'][0]['CPUPerc'] = 'nan%' if mutation == 'nan' else '-1%'
+            with self.subTest(mutation=mutation), self.assertRaises(host.GuardError):
+                compare.sampled_resources(events, summary, resources)
