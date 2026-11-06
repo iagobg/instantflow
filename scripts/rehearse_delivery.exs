@@ -565,16 +565,9 @@ defmodule Instantflow.DeliveryRehearsal do
       |> List.flatten()
 
     Map.new(tables, fn table ->
-      column =
-        case table do
-          "schema_migrations" -> "version"
-          "retired_workflow_versions" -> "version_id"
-          _ -> "id"
-        end
-
       rows =
         OperatorRepo.query!(
-          "SELECT row_to_json(row)::text FROM (SELECT * FROM #{table} ORDER BY #{column}) row"
+          "SELECT row_to_json(row)::text FROM #{table} row ORDER BY row_to_json(row)::text COLLATE \"C\""
         ).rows
 
       {table,

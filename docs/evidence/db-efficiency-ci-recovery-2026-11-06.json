@@ -1,0 +1,23 @@
+{
+  "cause": "Recovery snapshot assumed an id column for workflow_catalog_generations",
+  "failed_ci_run": "https://github.com/iagobg/instantflow/actions/runs/42292032572",
+  "fix": "Order complete row JSON using C collation for deterministic key-independent hashing",
+  "generation_table": {
+    "count": 2,
+    "sha256": "06e29674b9b30cbe4f67658533ccd01a23129a023c71f4768a13b0471a2141f1"
+  },
+  "mix_precommit": {
+    "failures": 0,
+    "tests": 505
+  },
+  "observed_at": "2026-11-06",
+  "public_tables_compared": 42,
+  "schema": 1,
+  "task_databases_removed": true,
+  "validation": {
+    "private_bytes_downloaded_after_restore": true,
+    "rollback_refused_without_data_change": true,
+    "runtime_rls_absent_context_denied": true,
+    "source_rows_equal_restored_rows": true
+  }
+}
