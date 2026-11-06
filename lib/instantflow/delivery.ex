@@ -1,9 +1,9 @@
 defmodule Instantflow.Delivery do
   @moduledoc "Organization-bound polling, bounded per tenant; suspension and finalization serialize on the organization lock."
   import Ecto.Query
-  alias Instantflow.{Repo, Tenant, WorkflowRuntime}
+  alias Instantflow.{Repo, Tenant}
   alias Instantflow.Delivery.{Attempt, Message}
-  alias Instantflow.WorkflowRuntime.Ticket
+  alias Instantflow.WorkflowRuntime.{Notifications, Ticket}
   require Logger
 
   def pending_ids(organization_id) do
@@ -163,11 +163,9 @@ defmodule Instantflow.Delivery do
       |> Enum.uniq()
       |> Enum.sort()
 
-    WorkflowRuntime.invalidate_lists(organization_id, ids)
+    Notifications.invalidate_recipients(organization_id, ids)
 
     for id <- ids do
-      Instantflow.Delivery.Curated.invalidate(id)
-
       Phoenix.PubSub.broadcast(
         Instantflow.PubSub,
         topic(organization_id, id),

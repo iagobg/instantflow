@@ -10,6 +10,7 @@ defmodule Instantflow.WorkflowRuntime.Notifications do
   """
   import Ecto.Query
   alias Instantflow.{Access, Repo, WorkflowRuntime}
+  alias Instantflow.Delivery.Curated
   alias Instantflow.Identity.{Membership, User}
   alias Instantflow.WorkflowCatalog.{Capabilities, Version}
   alias Instantflow.WorkflowRuntime.{AccessFacts, Policy, Ticket}
@@ -20,6 +21,25 @@ defmodule Instantflow.WorkflowRuntime.Notifications do
   def invalidate_lists(_organization_id, []), do: :ok
 
   def invalidate_lists(organization_id, ticket_ids) when is_list(ticket_ids) do
+    invalidate_list_recipients(organization_id, records(organization_id, ticket_ids))
+  end
+
+  @doc "Invalidate list and curated inbox recipients inside the outbox's tenant transaction."
+  def invalidate_recipients(_organization_id, []), do: :ok
+
+  def invalidate_recipients(organization_id, ticket_ids) do
+    records = records(organization_id, ticket_ids)
+    invalidate_list_recipients(organization_id, records)
+
+    communication_ids =
+      for {ticket, version} <- records,
+          Capabilities.enabled?(version.definition, "communications"),
+          do: ticket.id
+
+    Curated.invalidate(organization_id, communication_ids)
+  end
+
+  defp records(organization_id, ticket_ids) do
     tickets =
       Repo.all(
         from t in Ticket,
@@ -29,8 +49,10 @@ defmodule Instantflow.WorkflowRuntime.Notifications do
 
     version_ids = tickets |> Enum.map(& &1.workflow_version_id) |> Enum.uniq()
     versions = Repo.all(from v in Version, where: v.id in ^version_ids) |> Map.new(&{&1.id, &1})
-    records = Enum.map(tickets, &{&1, Map.fetch!(versions, &1.workflow_version_id)})
+    Enum.map(tickets, &{&1, Map.fetch!(versions, &1.workflow_version_id)})
+  end
 
+  defp invalidate_list_recipients(organization_id, records) do
     # Accounts can be shared by several workflows. Keep the organization-wide
     # signal for finance-capable pinned records, once for the whole batch.
     if Enum.any?(records, fn {_, version} ->

@@ -68,9 +68,34 @@ defmodule InstantflowWeb.CuratedMessagesLiveTest do
                BuilderFixtures.participant_command(f.id, f.recipient.id, "revoke", 2)
              )
 
-    send(inbox.pid, :communications_changed)
+    Delivery.drain()
     refute has_element?(inbox, "#curated-inbox article")
     assert has_element?(inbox, "#message-count", "0 mensagem")
+  end
+
+  test "delivery-result notifications refresh an inbox without a new record revision", %{
+    conn: conn
+  } do
+    f = CuratedFixtures.fixture()
+    {:ok, released} = CuratedFixtures.release(f)
+    Delivery.drain()
+    Delivery.drain()
+    {:ok, data} = Instantflow.WorkflowRuntime.get(f.admin, f.id)
+
+    {:ok, inbox, _} =
+      live(
+        login(conn, f.recipient),
+        ~p"/o/horizonte/processos/#{f.version.workflow_id}/comunicacoes"
+      )
+
+    assert has_element?(inbox, "#messages-#{released["message_id"]} p", "failed")
+    {:ok, _} = Delivery.retry(f.admin, released["message_id"])
+    Delivery.drain()
+    Delivery.drain()
+    assert has_element?(inbox, "#messages-#{released["message_id"]} p", "succeeded")
+    assert has_element?(inbox, "#curated-inbox article dd", "RELEASED-ORIGINAL")
+    assert {:ok, after_retry} = Instantflow.WorkflowRuntime.get(f.admin, f.id)
+    assert after_retry.ticket.revision == data.ticket.revision
   end
 
   test "typed communication authoring and synthetic preview publish without live record reads", %{

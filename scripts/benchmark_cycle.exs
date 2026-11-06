@@ -220,6 +220,7 @@ defmodule Instantflow.CycleBenchmark do
 
     burst = notification_burst(f, reviewer, tasks)
     unrelated_workspace = unrelated_workspace(f, tasks)
+    curated_burst = curated_burst(f, tasks)
 
     report = %{
       environment: "Local disposable database; runtime login; committed writes; pool size 4",
@@ -236,6 +237,7 @@ defmodule Instantflow.CycleBenchmark do
       retry: retry_report,
       notification_burst: burst,
       unrelated_workspace: unrelated_workspace,
+      curated_burst: curated_burst,
       observer_control: overhead(),
       completion:
         "Outbox empty after bounded drains on an independent connection; dispatcher committed; all three LiveViews rendered; both record revisions match storage; delivery failure and retry visible without a new ticket revision",
@@ -346,6 +348,105 @@ defmodule Instantflow.CycleBenchmark do
 
   defp login(scope),
     do: Plug.Test.init_test_session(build_conn(), user_token: Identity.create_session(scope.user))
+
+  defp curated_burst(f, tasks) do
+    user =
+      OperatorRepo.insert!(%User{
+        email: "curated-cycle@example.test",
+        name: "Synthetic",
+        password_hash: f.admin.user.password_hash
+      })
+
+    OperatorRepo.insert!(%Membership{
+      organization_id: f.admin.organization_id,
+      user_id: user.id,
+      department_id: f.admin.department_id,
+      role: "external"
+    })
+
+    recipient = Identity.scope(user.id, f.admin.organization_id)
+
+    bindings = %{
+      "roles" => %{"requester" => ["staff"], "reviewer" => ["admin"], "visitor" => ["external"]},
+      "departments" => %{"responsible" => f.admin.department_id}
+    }
+
+    {:ok, version} =
+      WorkflowCatalog.publish(
+        f.admin,
+        Instantflow.CuratedFixtures.definition("success"),
+        bindings
+      )
+
+    ids =
+      for _ <- 1..20 do
+        id = WorkflowFixtures.create_ticket(%{f | version: version})
+        {:ok, _} = WorkflowFixtures.save(f.requester, id, %{"summary" => "Released snapshot"})
+
+        for {operation, revision} <- [{"create", 0}, {"verify", 1}] do
+          {:ok, _} =
+            Instantflow.Participants.command(
+              f.admin,
+              Instantflow.BuilderFixtures.participant_command(
+                id,
+                recipient.id,
+                operation,
+                revision
+              )
+            )
+        end
+
+        {:ok, data} = Instantflow.WorkflowRuntime.get(f.admin, id)
+
+        {:ok, _} =
+          Instantflow.Delivery.Curated.release(
+            f.admin,
+            id,
+            "outcome",
+            recipient.id,
+            data.ticket.revision,
+            Ecto.UUID.generate()
+          )
+
+        id
+      end
+
+    drain(tasks)
+
+    {:ok, inbox, _} =
+      live(login(recipient), "/o/cycle/processos/#{version.workflow_id}/comunicacoes")
+
+    assert has_element?(inbox, "#message-count", "20 mensagem")
+    assert has_element?(inbox, "#curated-inbox article dd", "Released snapshot")
+    refute has_element?(inbox, "a[href*='/registros/']")
+
+    for id <- ids do
+      {:ok, _} = WorkflowFixtures.save(f.requester, id, %{"summary" => "Private revised value"})
+    end
+
+    probe = start_supervised!({QueryProbe, owner: inbox.pid})
+
+    {_, report} =
+      measure(fn ->
+        drain(tasks)
+        render(inbox)
+        assert has_element?(inbox, "#message-count", "20 mensagem")
+        assert has_element?(inbox, "#curated-inbox article dd", "Released snapshot")
+        refute has_element?(inbox, "#curated-inbox article dd", "Private revised value")
+        for id <- ids, do: assert_converged(id, [])
+      end)
+
+    inbox_queries = QueryProbe.finish(probe)
+    stop_supervised(QueryProbe)
+    GenServer.stop(inbox.pid)
+
+    Map.merge(report, %{
+      changed_records: 20,
+      connected_inboxes: 1,
+      inbox_queries: inbox_queries,
+      window: "deferred only"
+    })
+  end
 
   defp drain(tasks) do
     Task.Supervisor.async_nolink(tasks, fn -> drain_pending(10) end) |> Task.await(30_000)

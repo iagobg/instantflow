@@ -99,6 +99,19 @@ defmodule Instantflow.CuratedCommunicationsTest do
     assert Curated.options(forged) == []
     assert {:error, :not_found} = Curated.retry(forged, release["message_id"])
     assert Instantflow.WorkflowCatalog.Workspaces.installed(scope) == []
+
+    original_topic = "organization:1:user:#{f.recipient.user_id}"
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, original_topic)
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, "organization:#{org.id}:user:#{member.user_id}")
+    Tenant.raw(org.id, fn -> Curated.invalidate(org.id, [f.id]) end)
+    refute_receive :communications_changed
+    Tenant.raw(1, fn -> Curated.invalidate(org.id, [f.id]) end)
+    refute_receive :communications_changed
+    Tenant.raw(1, fn -> Curated.invalidate(1, [f.id]) end)
+    assert_receive :communications_changed
+    Phoenix.PubSub.unsubscribe(Instantflow.PubSub, original_topic)
+    Tenant.raw(1, fn -> Curated.invalidate(1, [f.id]) end)
+    refute_receive :communications_changed
   end
 
   defp measured(fun) do

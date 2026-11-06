@@ -399,15 +399,33 @@ defmodule Instantflow.Delivery.Curated do
     )
   end
 
-  def invalidate(ticket_id) do
+  @doc """
+  Notify every historical recipient in a bounded tenant record batch, once per
+  user, using pages of 250. Include revoked relationships and inactive members:
+  the signal must also clear stale inboxes, which recheck current eligibility.
+  Only a generic invalidation is published, never snapshot content or record IDs.
+  """
+  def invalidate(_organization_id, []), do: :ok
+
+  def invalidate(organization_id, ticket_ids),
+    do: invalidate_recipient_page(organization_id, ticket_ids, 0)
+
+  defp invalidate_recipient_page(organization_id, ticket_ids, after_user_id) do
+    releases =
+      from m in Message,
+        where:
+          m.organization_id == ^organization_id and m.ticket_id in ^ticket_ids and
+            m.recipient_membership_id == parent_as(:recipient).id,
+        select: 1
+
     ids =
       Repo.all(
-        from m in Message,
-          join: member in Instantflow.Identity.Membership,
-          on: member.id == m.recipient_membership_id,
-          where: m.ticket_id == ^ticket_id,
-          distinct: member.user_id,
-          limit: 100,
+        from member in Instantflow.Identity.Membership,
+          as: :recipient,
+          where: member.organization_id == ^organization_id and member.user_id > ^after_user_id,
+          where: exists(subquery(releases)),
+          order_by: member.user_id,
+          limit: 250,
           select: {member.organization_id, member.user_id}
       )
 
@@ -418,6 +436,9 @@ defmodule Instantflow.Delivery.Curated do
         :communications_changed
       )
     end)
+
+    if length(ids) == 250,
+      do: invalidate_recipient_page(organization_id, ticket_ids, ids |> List.last() |> elem(1))
   end
 
   defp inbox_query(scope, workflow_id) do
