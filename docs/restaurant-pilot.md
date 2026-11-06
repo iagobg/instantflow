@@ -18,7 +18,7 @@ Each visit creates a normal version-pinned `resource_service` workflow ticket th
 
 Processes are created, reviewed and published in the normal editor. Interface pages and reusable blocks are declared in the versioned definition. Block access uses symbolic process roles; settlement additionally respects the pinned workflow transition policy. The example binds its operator role to the local administrator.
 
-Tenant transactions revalidate membership and user activity, apply non-owner RLS and use composite ownership foreign keys. A tenant-specific advisory gate serializes operational writes after the authorization gate. This deliberately favors correctness at the first single-operator scale; load acceptance and resource quotas remain Sprint 12/11 work. Immutable lines, receipts and daily closures cannot be updated or deleted by the runtime. Catalog revision checks prevent silently charging a changed menu price after it was selected. All money uses integer cents.
+Tenant transactions revalidate membership and user activity, apply non-owner RLS and use composite ownership foreign keys. An organization-and-workflow-specific advisory gate serializes related operational writes after the authorization gate. Separate workflows can commit independently; commands in one workflow retain serialization for resource occupancy, catalog revisions and daily closing. Broader load acceptance remains in progress in the database-efficiency plan. Immutable lines, receipts and daily closures cannot be updated or deleted by the runtime. Catalog revision checks prevent silently charging a changed menu price after it was selected. All money uses integer cents.
 
 ## Walkthrough
 

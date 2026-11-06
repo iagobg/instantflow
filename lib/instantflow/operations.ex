@@ -15,11 +15,11 @@ defmodule Instantflow.Operations do
         version = command_version!(command)
         action = if operation in ~w(save_product add_resource), do: "configure", else: "operate"
         workflow_id = version.workflow_id
-        # Serialize resource occupancy, daily close and all related writes within this tenant.
+        # Serialize resource occupancy, daily close and related writes within this workflow.
         # Existing tenant authorization locks are acquired first; no background worker takes this gate.
         Repo.query!(
-          "SELECT pg_advisory_xact_lock(hashtextextended('operations:' || $1::text, 0))",
-          [to_string(scope.organization_id)]
+          "SELECT pg_advisory_xact_lock(hashtextextended('operations:' || $1::text || ':' || $2::text, 0))",
+          [to_string(scope.organization_id), to_string(workflow_id)]
         )
 
         digest = :crypto.hash(:sha256, :erlang.term_to_binary(command, [:deterministic]))
