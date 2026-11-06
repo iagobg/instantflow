@@ -95,6 +95,16 @@ class RunnerTest(unittest.TestCase):
                       "preserved_drafts": 3 if self.contention_complete else 2,
                       "explicit_reapplications": 1, "independent_section_saves": 2, "terminal_transitions": 1}
             metrics.update({key: {"values": {"count": value}} for key, value in counts.items()})
+        elif self.args.mode == "fixed-rate":
+            contract = provenance.rate_contract(self.args.users, self.args.warmup, self.args.seconds)
+            total = contract["actors"] * contract["cycles_per_actor"]
+            measured = contract["actors"] * contract["measured_cycles_per_actor"]
+            counts = {"business_saves": measured, "save_ack_ms": measured, "record_read_ms": measured,
+                      "scheduled_cycle_ms": measured, "schedule_lag_ms": total,
+                      "offered_cycles": total, "completed_cycles": total,
+                      "missed_start_deadlines": 0, "cycle_deadline_overruns": 0}
+            metrics.update({key: {"values": {"count": value, "min": 0, "max": 100}} for key, value in counts.items()})
+            metrics["checks"]["values"]["passes"] = total
         (output / "summary.json").write_text(json.dumps({"metrics": metrics}))
         return subprocess.CompletedProcess(command, self.exit_code)
 
@@ -108,6 +118,17 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual(metadata["provenance"]["fixture"]["source_commit"], host.BASE_COMMIT)
         self.assertEqual(FakeRemote.instances[0].commands[-1]["action"], "finish")
         self.assertTrue(FakeRemote.instances[0].closed)
+
+    def test_fixed_rate_run_preserves_schedule_and_requires_restoration(self):
+        self.args.mode = "fixed-rate"
+        self.args.users = 10
+        with patch.object(provenance, "workload_identity", return_value={"sha256": provenance.RATE_SHA256}):
+            runner.run(self.args)
+        metadata = self.metadata()
+        self.assertEqual(metadata["status"], "passed")
+        self.assertEqual(metadata["workload_contract"]["cycles_per_actor"], 2)
+        self.assertEqual(metadata["provenance"]["k6_image"], provenance.K6)
+        self.assertEqual(FakeRemote.instances[0].commands[-1]["action"], "finish")
 
     def test_browser_failure_aborts_and_preserves_recovery_evidence(self):
         self.exit_code = 99

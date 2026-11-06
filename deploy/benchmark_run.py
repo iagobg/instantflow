@@ -155,6 +155,8 @@ def run(args):
                            "source_sha256": host.digest(Path(__file__))},
                 "interpretation": "Closed browser workload; pilots do not establish capacity"}
     metadata["workload_contract"] = contract
+    if contract["kind"] == "fixed_rate_browser_load":
+        metadata["interpretation"] = "One cycle per actor every five seconds; missed slots fail; all scheduled saves are drained and checked"
     if contract["kind"] == "functional_contention":
         metadata.update(measurement_seconds=None, warmup_seconds=None,
                         interpretation="Fixed functional contention scenarios; not a steady-state capacity measurement")
@@ -235,7 +237,7 @@ def main():
     parser.add_argument("--fixture", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--users", type=int, choices=range(1, 11), default=1)
-    parser.add_argument("--mode", choices=["pilot", "mixed", "contention"], default="pilot")
+    parser.add_argument("--mode", choices=["pilot", "mixed", "contention", "fixed-rate"], default="pilot")
     parser.add_argument("--seconds", type=int, default=10)
     parser.add_argument("--warmup", type=int, default=0)
     parser.add_argument("--node", type=Path, help="Node 20+ executable for the functional contention driver")

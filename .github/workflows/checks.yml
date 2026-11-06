@@ -24,6 +24,10 @@ jobs:
       - run: mix precommit
       - run: python3 -m unittest discover -s runner -p 'test_*.py' -v
       - run: python3 -m unittest discover -s deploy -p 'test_*.py' -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: node --experimental-vm-modules deploy/test_school_rate.cjs
       - run: mix assets.setup && mix assets.build
       - run: mix ecto.create -r Instantflow.OperatorRepo && mix ecto.migrate -r Instantflow.OperatorRepo && mix instantflow.db_roles
       - run: python3 scripts/rehearse_01a.py

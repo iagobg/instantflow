@@ -226,6 +226,20 @@ Use `--baseline` in place of `--candidate PATH` for the historical arm. The brow
 
 Success requires a zero browser exit, nonzero checked business saves, zero failed checks/business failures, unchanged application identity at completion, and confirmed restoration. A passing pilot establishes the orchestration and functional contract; use repeated baseline/candidate runs with the same workload/resources/instrumentation for performance analysis. Install `benchmark_metrics.py` alongside the session to collect the database observations below.
 
+### Equal offered rate
+
+[workloads/school_rate.js](workloads/school_rate.js) retains the school login, explicit draft/save, revision acknowledgement and fresh-read persistence checks. Each actor starts one cycle every five seconds, staggered evenly across actors. At ten actors this offers two read/save cycles per second. There is at most one in-flight cycle per actor. A start more than 250 ms late or a cycle taking more than five seconds fails the run; missed slots are never skipped or followed by a catch-up burst. This tests one predefined rate point, not maximum capacity.
+
+```bash
+python3 deploy/benchmark_run.py --candidate /absolute/private/candidate.json \
+  --workload /absolute/checkout/deploy/workloads/school_rate.js \
+  --fixture /absolute/private/school-manifest.json \
+  --output /absolute/private/fixed-rate-results \
+  --mode fixed-rate --users 10 --warmup 60 --seconds 180
+```
+
+Use the same parameters with `--baseline`, with three repetitions per arm and balanced order. Warmup and measurement durations must be multiples of five seconds. The full profile requires exactly 480 offered/completed/verified cycles and 360 measured saves at ten actors. Every measured-cohort operation contributes latency, including acknowledgements after the nominal measurement end; the final authorized reads drain and verify all saves. Metadata records the fixed schedule, complete counts, scheduling lag and deadline checks. The runner and comparison reject missing counts, missed deadlines or altered contracts. Keep the reviewed workload hash and pinned k6 image identical across arms. The comparison accepts fixed-rate campaigns separately from closed-load campaigns and refuses to mix them. Scheduling tests run with `node --experimental-vm-modules deploy/test_school_rate.cjs` and exercise deadline failure, persistence failure, cohort completeness and boundary-crossing acknowledgements.
+
 The [hosted runner rehearsal](../docs/evidence/db-efficiency-benchmark-provenance-2026-11-06.json) ran one user for ten measured seconds, completed six saves with six passing checks, and restored the original 15-record state. A separate real SSH disconnect rehearsal verified concurrent-controller exclusion, legacy-reset refusal and automatic restoration. Candidate/source separation, stale server metadata, partial control input, timeout, failed browser checks, incomplete recovery and publication-tag binding are covered by local tests.
 
 ## Hosted database observations

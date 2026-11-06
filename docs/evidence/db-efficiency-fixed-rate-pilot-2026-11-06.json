@@ -1,0 +1,312 @@
+{
+  "application": {
+    "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+    "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+    "platform": "linux/arm64",
+    "schema": 0
+  },
+  "conditions": {
+    "fixture": {
+      "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+      "initial_records": 12,
+      "load_actors": 10,
+      "name": "school-v1",
+      "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+      "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+    },
+    "host_controller_sha256": {
+      "benchmark_candidate.py": "5aaf42436dffb9861fb090e0446d3b3f9cf0bfb966adc6c561194a6397e6f397",
+      "benchmark_host.py": "bb2094c996e69aba63f2fb36c6a7d0f427c520355a5d423de3e21724779b2f05",
+      "benchmark_metrics.py": "df9a625c9a77f13aaa00579d10f860330c9927937705bbcb62e31652578c5eab",
+      "benchmark_metrics_setup.py": "c467407f0c29d4fa9b94969e7962e749a857004f6c07525b93023092a5589d2b",
+      "benchmark_provenance.py": "0e9dbd143a943e228231e9833d099cbd94a3252ff0d91ca5acee469ecb40eacd",
+      "benchmark_rollout.py": "39c749799ecc75c2ae7326e876bff7a7ebd6fcdf812777edbb08dd82093a42d7",
+      "benchmark_session.py": "9847e22d399c97833ab6122d39bb52eb26db2bfcc1c21ef14b3a5fefa14f1e2e",
+      "benchmark_smoke.py": "f10c6ba5cd1667642af3f0e15b68e4a3b439cd2508aaf666997409f58da86f1c",
+      "remote.py": "1100e88a66a12a903232c404ed1a1db1d6a9ba3fe404949ea01f1070e73ca02b"
+    },
+    "k6_image": "grafana/k6@sha256:8663335c8c1c5a40dd51823ef980c584761a4a084a2297fca29a29ee495c6bc1",
+    "measurement_seconds": 10,
+    "mode": "fixed-rate",
+    "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+    "postgres_metrics_settings": {
+      "server_version_num": "160015",
+      "shared_preload_libraries": "pg_stat_statements",
+      "track_activities": "on",
+      "track_counts": "on",
+      "track_io_timing": "on",
+      "track_wal_io_timing": "on"
+    },
+    "resources": {
+      "db_cpus": 1,
+      "db_memory_bytes": 1073741824,
+      "pool_size": 10,
+      "web_cpus": 2,
+      "web_memory_bytes": 2147483648
+    },
+    "route_verification": {
+      "remote_ip": "134.65.245.186",
+      "status": 200,
+      "tls_verified": true
+    },
+    "runner": {
+      "cpus": 24,
+      "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "source_sha256": "5785b2fd9d05d5c5aeab3d46811d622a029e494467a44aa1f2964536dbfb3320"
+    },
+    "statement_statistics_available": true,
+    "target": "https://instantflow-benchmark.iagobussoletti.com.br",
+    "transport": {
+      "hostname": "instantflow-benchmark.iagobussoletti.com.br",
+      "origin_ip": "134.65.245.186",
+      "tls_verification": true
+    },
+    "warmup_seconds": 0,
+    "workload": {
+      "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "name": "school-v1-fixed-rate",
+      "sha256": "7e4bb432b145f3da3c8fa22bec7479afa6db0f5e0afd0a3ef5af0e7fac413b36"
+    },
+    "workload_contract": {
+      "cycles_per_actor": 2,
+      "interval_ms_per_actor": 5000,
+      "kind": "fixed_rate_browser_load",
+      "max_cycle_ms": 5000,
+      "max_start_lag_ms": 250,
+      "measured_cycles_per_actor": 2,
+      "measurement_window": "All arrivals in the measured cohort, including acknowledgements after window end"
+    }
+  },
+  "date": "2026-11-06",
+  "fixture": {
+    "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+    "initial_records": 12,
+    "load_actors": 10,
+    "name": "school-v1",
+    "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+    "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+    "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+  },
+  "independent_final_inventory": {
+    "identity": {
+      "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "database": "instantflow_benchmark",
+      "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+      "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+      "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+      "pool_size": 10,
+      "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+      "project": "instantflow-benchmark",
+      "root": "/home/ubuntu/apps/instantflow-benchmark"
+    },
+    "live_inventory": {
+      "schema_versions": [
+        "20261020180524",
+        "20261020184948",
+        "20261020200807",
+        "20261020205338",
+        "20261021002628",
+        "20261021011853",
+        "20261021012546",
+        "20261021080918",
+        "20261021083132",
+        "20261021094238",
+        "20261021123137",
+        "20261021124325",
+        "20261021190401",
+        "20261021193830",
+        "20261021224308",
+        "20261021231607",
+        "20261021233544",
+        "20261022100818",
+        "20261022175214",
+        "20261023033124",
+        "20261023040903",
+        "20261023151405",
+        "20261023152158",
+        "20261023160944"
+      ],
+      "table_counts": {
+        "budget_accounts": 0,
+        "budget_entries": 0,
+        "budget_holds": 0,
+        "calculation_attempts": 0,
+        "calculation_reviews": 0,
+        "calculation_runs": 0,
+        "calculation_scripts": 0,
+        "calculation_switch": 1,
+        "calculation_switch_events": 0,
+        "catalog_products": 0,
+        "command_receipts": 48,
+        "delivery_attempts": 48,
+        "departments": 1,
+        "enrollments": 0,
+        "fulfillment_batches": 0,
+        "fulfillment_lines": 0,
+        "guardian_links": 0,
+        "invitations": 0,
+        "membership_grants": 14,
+        "memberships": 15,
+        "operation_day_closes": 0,
+        "operation_receipts": 0,
+        "organization_events": 14,
+        "organizations": 1,
+        "outbox_messages": 48,
+        "private_documents": 0,
+        "retired_workflow_versions": 0,
+        "schema_migrations": 24,
+        "section_assignments": 0,
+        "service_resources": 0,
+        "service_sessions": 0,
+        "sessions": 4,
+        "template_events": 3,
+        "ticket_participants": 0,
+        "ticket_sections": 30,
+        "tickets": 15,
+        "transition_events": 48,
+        "users": 15,
+        "workflow_drafts": 1,
+        "workflow_versions": 1,
+        "workflows": 1
+      }
+    }
+  },
+  "limitations": [
+    "Ten-second baseline pilot with no warmup; the original three-repetition 60/180-second comparison is still required.",
+    "The complete scheduled cohort contributes latency; CPU/SQL counters cover the full observed run including setup and final reads.",
+    "Two cycles per second at ten actors is one fixed offered-rate point, not a maximum capacity claim."
+  ],
+  "metrics": {
+    "business_saves": {
+      "count": 20,
+      "rate": 0.4832492942828217
+    },
+    "checks": {
+      "fails": 0,
+      "passes": 20,
+      "rate": 1
+    },
+    "completed_cycles": {
+      "count": 20,
+      "rate": 0.4832492942828217
+    },
+    "cycle_deadline_overruns": {
+      "count": 0,
+      "rate": 0
+    },
+    "missed_start_deadlines": {
+      "count": 0,
+      "rate": 0
+    },
+    "offered_cycles": {
+      "count": 20,
+      "rate": 0.4832492942828217
+    },
+    "schedule_lag_ms": {
+      "avg": 0.65,
+      "count": 20,
+      "max": 1,
+      "med": 1,
+      "min": 0,
+      "p(90)": 1,
+      "p(95)": 1,
+      "p(99)": 1
+    },
+    "scheduled_cycle_ms": {
+      "avg": 871.45,
+      "count": 20,
+      "max": 1416,
+      "med": 803,
+      "min": 767,
+      "p(90)": 1044.5000000000005,
+      "p(95)": 1392.25,
+      "p(99)": 1411.25
+    }
+  },
+  "prior_inventory_matched": true,
+  "purpose": "Fixed offered-rate driver functional pilot, not a capacity or performance acceptance comparison",
+  "restoration": {
+    "identity": {
+      "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "database": "instantflow_benchmark",
+      "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+      "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+      "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+      "pool_size": 10,
+      "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+      "project": "instantflow-benchmark",
+      "root": "/home/ubuntu/apps/instantflow-benchmark"
+    },
+    "operation_id": "operation-6c5cdbd602d3",
+    "recovery_snapshot": "snapshot-20261106T233541Z-d82d6e9cd505",
+    "smoke": {
+      "authenticated_record_read": true,
+      "logout": true,
+      "tls_verified": true,
+      "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+    },
+    "status": "recovered"
+  },
+  "schema": 1,
+  "validation": {
+    "application_tests_at_lock_commit": 528,
+    "deployment_python_tests": 108,
+    "scheduling_node_tests": 5
+  },
+  "verified_pilot": {
+    "cpu_throttled_usec": {
+      "db": 74969,
+      "web": 329997
+    },
+    "database_average_cpu_cores": 0.11394612436974402,
+    "database_cpu_seconds": 4.994794,
+    "database_cpu_seconds_per_verified_cycle": 0.24973969999999998,
+    "deadlocks": 0,
+    "ended_at": "2026-11-06T23:36:47.399447+00:00",
+    "max_scheduled_cycle_ms": 1416,
+    "max_start_lag_ms": 1,
+    "measured_saves": 20,
+    "measured_saves_per_second": 2.0,
+    "observation_seconds": 43.83469843864441,
+    "offered_cycles": 20,
+    "offered_cycles_per_second": 2.0,
+    "operation_id": "operation-6c5cdbd602d3",
+    "pending_outbox_after": {
+      "count": 0,
+      "oldest_seconds": null
+    },
+    "pending_outbox_before": {
+      "count": 0,
+      "oldest_seconds": null
+    },
+    "record_read_p95_ms": 645.5500000000003,
+    "restoration_confirmed": true,
+    "save_ack_p95_ms": 517.0000000000001,
+    "scheduled_cycle_p95_ms": 1392.25,
+    "sql_calls": 33724,
+    "sql_calls_per_verified_cycle": 1686.2,
+    "started_at": "2026-11-06T23:35:35.457973+00:00",
+    "statement_execution_ms": 775.968698,
+    "users": 10,
+    "verified_cycles_including_warmup": 20,
+    "web_average_cpu_cores": 0.2244697089401099,
+    "web_cpu_seconds": 9.839562,
+    "web_cpu_seconds_per_verified_cycle": 0.49197810000000003
+  },
+  "workload": {
+    "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+    "name": "school-v1-fixed-rate",
+    "sha256": "7e4bb432b145f3da3c8fa22bec7479afa6db0f5e0afd0a3ef5af0e7fac413b36"
+  },
+  "workload_contract": {
+    "actors": 10,
+    "cycles_per_actor": 2,
+    "interval_ms_per_actor": 5000,
+    "kind": "fixed_rate_browser_load",
+    "max_cycle_ms": 5000,
+    "max_start_lag_ms": 250,
+    "measured_cycles_per_actor": 2,
+    "measurement_window": "All arrivals in the measured cohort, including acknowledgements after window end"
+  }
+}

@@ -22,8 +22,8 @@ def inspect_run(metadata, summary):
     """Validate actual identities, correctness and counter epochs before reduction."""
     m, p, r, values = metadata, metadata["provenance"], metadata["restoration"], summary["metrics"]
     application = host.validate_application(m["application"])
-    host.require(m["status"] == "passed" and m["k6_exit_code"] == 0 and m["mode"] == "mixed",
-                 "Comparison requires successful mixed browser campaigns")
+    host.require(m["status"] == "passed" and m["k6_exit_code"] == 0 and m["mode"] in {"mixed", "fixed-rate"},
+                 "Comparison requires successful mixed or fixed-rate browser campaigns")
     host.require(application == p["application"] == r["application"]
                  and r["final_identity"]["application_commit"] == application["application_commit"]
                  and r["final_identity"]["image"] == application["image"]
@@ -32,8 +32,13 @@ def inspect_run(metadata, summary):
                  and r["restoration"]["operation_id"] == r["operation_id"],
                  "Application identity or restoration mismatch")
     host.require(p["fixture"] == m["fixture"] and p["workload"] == m["workload"]
-                 and p["workload"]["sha256"] == provenance.WORKLOAD_SHA256,
+                 and p["workload"]["sha256"] == (provenance.RATE_SHA256 if m["mode"] == "fixed-rate" else provenance.WORKLOAD_SHA256),
                  "Fixture or reviewed workload mismatch")
+    contract = (provenance.rate_contract(m["users"], m["warmup_seconds"], m["measurement_seconds"])
+                if m["mode"] == "fixed-rate" else {"kind": "closed_browser_load"})
+    host.require(m.get("workload_contract", {"kind": "closed_browser_load"}) == contract,
+                 "Workload contract differs from the declared schedule")
+    provenance.validate_results(values, contract)
     host.require(p["statement_statistics_available"], "Comparison requires statement statistics")
     delta = metrics.difference(r["metrics_before"], r["metrics_after"])
     host.require(delta == r["metrics_delta"]
@@ -91,6 +96,13 @@ def inspect_run(metadata, summary):
     }
     signature = {key: p[key] for key in COMPARABLE}
     signature.update({key: m[key] for key in ["runner", "route_verification", "mode", "warmup_seconds", "measurement_seconds"]})
+    signature["workload_contract"] = {key: value for key, value in contract.items() if key != "actors"}
+    if m["mode"] == "fixed-rate":
+        row.update(offered_cycles=values["offered_cycles"]["values"]["count"],
+                   offered_cycles_per_second=m["users"] / 5,
+                   max_start_lag_ms=values["schedule_lag_ms"]["values"]["max"],
+                   scheduled_cycle_p95_ms=values["scheduled_cycle_ms"]["values"]["p(95)"],
+                   max_scheduled_cycle_ms=values["scheduled_cycle_ms"]["values"]["max"])
     return application, signature, row
 
 
@@ -175,6 +187,7 @@ def compare(runs, *, users=(1, 5, 10), repetitions=3):
             baseline, candidate = (arms[arm]["variation"][field]["median"] for arm in ["baseline", "candidate"])
             changes[field] = None if baseline == 0 else (candidate / baseline - 1) * 100
         levels.append({"users": n, **arms, "median_change_percent": changes})
+    fixed_rate = signature["mode"] == "fixed-rate"
     return {"schema": 1, "applications": identities, "conditions": signature,
             "repetitions_per_arm_and_level": repetitions, "levels": levels,
             "original_timing_and_repetitions": signature["warmup_seconds"] == 60
@@ -182,9 +195,11 @@ def compare(runs, *, users=(1, 5, 10), repetitions=3):
             "interpretation": [
                 "Latency summaries are medians/ranges of per-run p95 values, never pooled percentiles or confidence intervals.",
                 "Full-window SQL/CPU per verified cycle includes browser initialization, warmup, final reads, background work and observers.",
-                "The reviewed workload records latency only for operations completing inside the measured window; crossing-boundary cycles remain correctness-checked. Short windows are more sensitive to this censoring.",
-                "Closed workload throughput is not an equal-offered-rate headroom comparison.",
-                "No supported-capacity claim: the remaining contention, volume and longer-duration matrix must pass."]}
+                ("Every scheduled measured-cohort operation contributes latency, including acknowledgements after the nominal window end. Missed slots and incomplete cycles fail."
+                 if fixed_rate else "The closed workload records latency only for operations completing inside the measured window; crossing-boundary cycles remain correctness-checked. Short windows are more sensitive to this censoring."),
+                ("Both arms sustain the same staggered offered rate: one read/save cycle per actor every five seconds; this is one rate point, not a capacity limit."
+                 if fixed_rate else "Closed workload throughput is not an equal-offered-rate headroom comparison."),
+                "A comparison alone does not establish supported capacity; assess the complete correctness, volume and recovery evidence."]}
 
 
 def main():
