@@ -386,6 +386,17 @@ Validation: **102 deployment-tool tests** pass, including controller timeout/des
 
 Run representative large/skewed local workloads and the complete regression gate before the first lock refinement. Repeat the relevant concurrency and breadth checks after each lock change; reserve the full duration and equal-offered-rate comparison for the integrated candidate. Broad validation is an intermediate gate as well as a release gate.
 
+**Increment 8b — representative local breadth gate:** four existing harness profiles passed the unchanged latency, tenant-fairness, memory, payload, page-size and TCP-counter checks. Every profile used ten organizations, 10,000 records, 50 concurrent actors and the real non-owner runtime login with pool ten. One cold round, two warmup rounds and twenty warm rounds produce 4,200 measured reads plus 400 warmup reads across the four profiles. Each run used a separate disposable database, removed after completion; no local build/test or hosted browser campaign overlapped the measurements.
+
+| Profile | Warm overall p95 | Worst tenant warm p95 |
+| --- | ---: | ---: |
+| Equal-volume baseline | 97.2 ms | 99.0 ms |
+| Combined skew, 100 processes/100 versions per tenant-process, 99 hidden per visible record, 50 fields | 218.0 ms | 229.0 ms |
+| Uneven operational data | 234.0 ms | 266.3 ms |
+| Uneven participants, 100 processes per tenant | 465.8 ms | 472.9 ms |
+
+The combined fixture contains **100,000 published versions**. The participant case passes the 500 ms p95 target with limited margin; its maximum individual warm read was 506.9 ms. Keep it in subsequent checks rather than interpreting a passing p95 as spare capacity. [Local evidence](evidence/db-efficiency-local-breadth-2026-11-06.json) retains source/compiled identities, dimensions, per-tenant statistics, memory/payload bounds and report hashes. Cold means the first actor read after fixture generation; caches are not cold. VM growth divided by fifty workers is an aggregate, not the largest individual allocation. These local results are an intermediate four-case gate, not completion of the full acceptance matrix or a hosted capacity claim.
+
 Keep pool size ten and the existing CPU/memory quotas during the first comparisons. Only after eliminating unnecessary work should evidence justify pool sizing, additional indexes, immutable-definition caches, or more database CPU. Cache only immutable published bodies/mappings by organization and immutable version identity, with explicit memory bounds; keep mutable grants, relationships, assignments, retirement state, and session decisions current.
 
 If significant SQL remains, rank normalized statements by total execution and planning cost. Obtain `EXPLAIN (ANALYZE, BUFFERS, WAL)` under the runtime role and matching tenant context on disposable benchmark data. Do not benchmark an owner-bypass-RLS plan or run write plans against retained data. Include large history, many distinct policy versions, and skewed tenant volume before deciding on indexes or materialized read models.
