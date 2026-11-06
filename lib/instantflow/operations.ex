@@ -10,15 +10,22 @@ defmodule Instantflow.Operations do
 
   def command(actor, %{"operation" => operation, "key" => key} = command)
       when operation in @operations and is_binary(key) and byte_size(key) in 1..120 do
+    # An enclosing transaction may issue a later configuration/closing command.
+    # Keep its first gate exclusive rather than upgrading a shared gate later.
+    exclusive? = Repo.in_transaction?() or operation in ~w(save_product add_resource close_day)
+
     result =
       Tenant.transaction(actor, fn scope ->
-        version = command_version!(command)
+        {version, session} = command_context!(command)
         action = if operation in ~w(save_product add_resource), do: "configure", else: "operate"
         workflow_id = version.workflow_id
-        # Serialize resource occupancy, daily close and related writes within this workflow.
-        # Existing tenant authorization locks are acquired first; no background worker takes this gate.
+        # Configuration and closing fence every operational write in the workflow.
+        # Ordinary commands share this gate, then lock their resource or ticket.
+        function =
+          if exclusive?, do: "pg_advisory_xact_lock", else: "pg_advisory_xact_lock_shared"
+
         Repo.query!(
-          "SELECT pg_advisory_xact_lock(hashtextextended('operations:' || $1::text || ':' || $2::text, 0))",
+          "SELECT #{function}(hashtextextended('operations:' || $1::text || ':' || $2::text, 0))",
           [to_string(scope.organization_id), to_string(workflow_id)]
         )
 
@@ -46,7 +53,8 @@ defmodule Instantflow.Operations do
         if receipt do
           receipt.result
         else
-          value = execute(scope, workflow_id, operation, command)
+          session = lock_session!(session)
+          value = execute(scope, workflow_id, operation, command, session)
 
           Repo.insert!(%Receipt{
             organization_id: scope.organization_id,
@@ -197,7 +205,7 @@ defmodule Instantflow.Operations do
 
   def parse_money(_), do: :error
 
-  defp execute(a, workflow_id, "save_product", c) do
+  defp execute(a, workflow_id, "save_product", c, _session) do
     attrs = %{
       name: text!(c["name"], 120),
       category: text!(c["category"], 80),
@@ -229,7 +237,7 @@ defmodule Instantflow.Operations do
     %{"id" => product.id}
   end
 
-  defp execute(a, workflow_id, "add_resource", c) do
+  defp execute(a, workflow_id, "add_resource", c, _session) do
     name = text!(c["name"], 80)
 
     if Repo.exists?(from r in Resource, where: r.workflow_id == ^workflow_id and r.name == ^name),
@@ -245,8 +253,8 @@ defmodule Instantflow.Operations do
     %{"id" => resource.id}
   end
 
-  defp execute(a, workflow_id, "open_session", c) do
-    resource = find!(Resource, c["resource_id"], workflow_id)
+  defp execute(a, workflow_id, "open_session", c, _session) do
+    resource = find!(Resource, c["resource_id"], workflow_id, true)
     waiter = responsible_actor!(c)
     date = date!(c["business_date"])
     open_day!(date, workflow_id, organization_timezone!(a))
@@ -286,8 +294,8 @@ defmodule Instantflow.Operations do
     %{"id" => session.id}
   end
 
-  defp execute(a, workflow_id, "submit_batch", c) do
-    session = open_session!(c["session_id"], workflow_id)
+  defp execute(a, workflow_id, "submit_batch", c, session) do
+    open_session!(session)
     lines = c["lines"]
     unless is_list(lines) and length(lines) in 1..100, do: Repo.rollback(:invalid_values)
     waiter = responsible_actor!(c, session.waiter)
@@ -340,17 +348,17 @@ defmodule Instantflow.Operations do
     %{"ids" => ids}
   end
 
-  defp execute(_a, workflow_id, "handoff", c) do
-    batch = find!(Batch, c["batch_id"], workflow_id)
-    open_session!(batch.session_id, workflow_id)
+  defp execute(_a, workflow_id, "handoff", c, session) do
+    batch = find_batch!(c["batch_id"], workflow_id, session.id)
+    open_session!(session)
     unless batch.status == "pending", do: Repo.rollback(:invalid_state)
     change!(batch, status: "handed")
     %{"id" => batch.id}
   end
 
-  defp execute(a, workflow_id, "cancel_batch", c) do
-    batch = find!(Batch, c["batch_id"], workflow_id)
-    open_session!(batch.session_id, workflow_id)
+  defp execute(a, workflow_id, "cancel_batch", c, session) do
+    batch = find_batch!(c["batch_id"], workflow_id, session.id)
+    open_session!(session)
     reason = text!(c["reason"], 500)
 
     unless batch.kind == "order" and batch.status != "cancelled",
@@ -387,16 +395,16 @@ defmodule Instantflow.Operations do
     %{"id" => cancellation.id}
   end
 
-  defp execute(_a, workflow_id, "print_ticket", c) do
-    batch = find!(Batch, c["batch_id"], workflow_id)
+  defp execute(_a, workflow_id, "print_ticket", c, session) do
+    batch = find_batch!(c["batch_id"], workflow_id, session.id)
     unless batch.status != "cancelled", do: Repo.rollback(:invalid_state)
     change!(batch, print_count: batch.print_count + 1)
     # A request to open a print dialog is not evidence of physical printing or handoff.
     %{"id" => batch.id, "copy" => batch.print_count + 1}
   end
 
-  defp execute(a, workflow_id, "settle", c) do
-    session = open_session!(c["session_id"], workflow_id)
+  defp execute(a, _workflow_id, "settle", c, session) do
+    open_session!(session)
     contract = OperationalContract.resolve(session_version!(session).definition)
     unless c["payment_method"] in contract["payment_methods"], do: Repo.rollback(:invalid_values)
 
@@ -434,7 +442,7 @@ defmodule Instantflow.Operations do
     %{"id" => session.id, "total" => total}
   end
 
-  defp execute(a, workflow_id, "close_day", c) do
+  defp execute(a, workflow_id, "close_day", c, _session) do
     date = date!(c["business_date"])
     open_day!(date, workflow_id, organization_timezone!(a))
     summary = report!(date, workflow_id)
@@ -493,19 +501,19 @@ defmodule Instantflow.Operations do
 
   # Session commands use immutable business rules and current grants, including replay.
   # The shared catalog remains governed by the latest published workspace.
-  defp command_version!(command) do
+  defp command_context!(command) do
     case command["operation"] do
       operation when operation in ~w(submit_batch settle) ->
         session = command_row!(Session, command["session_id"])
-        scoped_session_version!(session, command["workflow_id"])
+        {scoped_session_version!(session, command["workflow_id"]), session}
 
       operation when operation in ~w(handoff cancel_batch print_ticket) ->
         batch = command_row!(Batch, command["batch_id"])
         session = batch && Repo.get(Session, batch.session_id)
-        scoped_session_version!(session, command["workflow_id"])
+        {scoped_session_version!(session, command["workflow_id"]), session}
 
       _ ->
-        workspace_version!(command["workflow_id"])
+        {workspace_version!(command["workflow_id"]), nil}
     end
   end
 
@@ -561,11 +569,29 @@ defmodule Instantflow.Operations do
       Repo.exists?(from r in Resource, where: r.workflow_id == ^version.workflow_id)
   end
 
-  defp open_session!(id, workflow_id) do
-    session = find!(Session, id, workflow_id)
+  defp lock_session!(nil), do: nil
+
+  defp lock_session!(session) do
+    # Match the generic runtime's ticket-first order. Its terminal transition
+    # checks checkout state; settlement must never hold the session while
+    # waiting for a ticket held by that runtime. Every visit command takes
+    # these locks, including print requests on already settled visits.
+    find!(
+      Instantflow.WorkflowRuntime.Ticket,
+      session.ticket_id,
+      session.workflow_id,
+      true
+    )
+
+    locked = find!(Session, session.id, session.workflow_id, true)
+    unless locked.ticket_id == session.ticket_id, do: Repo.rollback(:not_found)
+    locked
+  end
+
+  defp open_session!(session) do
     unless session.status == "open", do: Repo.rollback(:invalid_state)
     timezone = Repo.get!(Instantflow.Identity.Organization, session.organization_id).timezone
-    open_day!(session.business_date, workflow_id, timezone)
+    open_day!(session.business_date, session.workflow_id, timezone)
     session
   end
 
@@ -583,12 +609,22 @@ defmodule Instantflow.Operations do
     unless Workspaces.allowed?(scope, version, action), do: Repo.rollback(:forbidden)
   end
 
-  defp find!(module, id, workflow_id) when is_integer(id),
-    do:
-      Repo.one(from row in module, where: row.id == ^id and row.workflow_id == ^workflow_id) ||
-        Repo.rollback(:not_found)
+  defp find!(module, id, workflow_id, lock? \\ false)
 
-  defp find!(_, _, _), do: Repo.rollback(:not_found)
+  defp find!(module, id, workflow_id, lock?) when is_integer(id) do
+    query = from row in module, where: row.id == ^id and row.workflow_id == ^workflow_id
+    query = if lock?, do: lock(query, "FOR UPDATE"), else: query
+    Repo.one(query) || Repo.rollback(:not_found)
+  end
+
+  defp find!(_, _, _, _), do: Repo.rollback(:not_found)
+
+  defp find_batch!(id, workflow_id, session_id) do
+    Repo.one(
+      from b in Batch,
+        where: b.id == ^id and b.workflow_id == ^workflow_id and b.session_id == ^session_id
+    ) || Repo.rollback(:not_found)
+  end
 
   defp text!(text, max) when is_binary(text) do
     value = String.trim(text)
