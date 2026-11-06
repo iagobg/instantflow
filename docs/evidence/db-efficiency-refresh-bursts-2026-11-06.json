@@ -1,0 +1,88 @@
+{
+  "recorded_on": "2026-11-06",
+  "parent_commit": "c0148bd",
+  "environment": "Local isolated PostgreSQL sandbox; sequential LiveView tests with collaborative record and operations fixtures",
+  "method": {
+    "baseline": "The same five burst scenarios with the parent UserAuth hook, before coalescing. Cost equality assertions were disabled for this baseline diagnostic only; behavior assertions remained enabled.",
+    "candidate": "RefreshCoalescingLiveTest with coalescing enabled and all assertions enabled.",
+    "window": "Settle preceding messages with sys.get_state; suspend the LiveView, enqueue the named burst, resume it within QueryProbe scope all, then render as the completion barrier.",
+    "counts": "All observed SQL statements, including transaction and authorization setup; rows are all returned rows, not distinct business records.",
+    "max_additional_messages_per_callback": 100,
+    "delivery_burst_size": 20,
+    "permission_and_record_burst_size": 3,
+    "capture": "Aggregate counters only; no SQL parameters or protected content are retained."
+  },
+  "comparisons": [
+    {
+      "scenario": "record_single",
+      "baseline": {"statements": 34, "rows": 24, "update_locks": 5, "errors": 0},
+      "candidate": {"statements": 34, "rows": 24, "update_locks": 5, "errors": 0}
+    },
+    {
+      "scenario": "record_30_notifications",
+      "baseline": {"statements": 1020, "rows": 720, "update_locks": 150, "errors": 0},
+      "candidate": {"statements": 34, "rows": 24, "update_locks": 5, "errors": 0}
+    },
+    {
+      "scenario": "record_30_notifications_second_tab",
+      "baseline": {"statements": 1020, "rows": 720, "update_locks": 150, "errors": 0},
+      "candidate": {"statements": 34, "rows": 24, "update_locks": 5, "errors": 0}
+    },
+    {
+      "scenario": "delivery_same_revision",
+      "baseline": {"statements": 680, "rows": 500, "update_locks": 100, "errors": 0},
+      "candidate": {"statements": 34, "rows": 25, "update_locks": 5, "errors": 0}
+    },
+    {
+      "scenario": "presence_single",
+      "baseline": {"statements": 28, "rows": 19, "update_locks": 4, "errors": 0},
+      "candidate": {"statements": 28, "rows": 19, "update_locks": 4, "errors": 0}
+    },
+    {
+      "scenario": "presence_30_notifications",
+      "baseline": {"statements": 840, "rows": 570, "update_locks": 120, "errors": 0},
+      "candidate": {"statements": 28, "rows": 19, "update_locks": 4, "errors": 0}
+    },
+    {
+      "scenario": "permission_and_record",
+      "baseline": {"statements": 105, "rows": 75, "update_locks": 15, "errors": 0},
+      "candidate": {"statements": 35, "rows": 25, "update_locks": 5, "errors": 0}
+    },
+    {
+      "scenario": "operations_single",
+      "baseline": {"statements": 61, "rows": 40, "update_locks": 8, "errors": 0},
+      "candidate": {"statements": 61, "rows": 40, "update_locks": 8, "errors": 0}
+    },
+    {
+      "scenario": "operations_30_notifications",
+      "baseline": {"statements": 1830, "rows": 1200, "update_locks": 240, "errors": 0},
+      "candidate": {"statements": 61, "rows": 40, "update_locks": 8, "errors": 0}
+    }
+  ],
+  "correctness": [
+    "Each surviving callback retains current session and projection authorization.",
+    "Mixed permission and record invalidations remove revoked drafts and retain unrelated authorized drafts.",
+    "Delivery outcomes refresh even when the ticket revision is unchanged.",
+    "Presence retains its lightweight projection without history or document queries.",
+    "Commands, access revocation, periodic revalidation, unrelated records and unrelated tenants are not consumed.",
+    "Notifications arriving during SQL cause another current projection after the in-flight read."
+  ],
+  "validation": {
+    "baseline_scenarios": 5,
+    "baseline_failures": 0,
+    "focused_tests_before_in_flight_regression": 22,
+    "focused_failures": 0,
+    "new_mailbox_and_liveview_tests": 8,
+    "precommit_command": "MIX_TEST_PARTITION=_facts_20261106 mix precommit --seed 0",
+    "precommit_tests": 467,
+    "precommit_failures": 0,
+    "assets_build": "passed"
+  },
+  "limitations": [
+    "The bursts are deliberately queued to measure coalescing; sequential notification costs remain unchanged.",
+    "Only staff record and process workspaces participate; upstream publication deduplication remains pending.",
+    "The cap bounds consumed messages, not scanning cost across unrelated mailbox entries.",
+    "Local statement counts are not hosted latency or concurrency capacity estimates.",
+    "Complete deferred-cycle and connection-occupancy measurement remains pending."
+  ]
+}

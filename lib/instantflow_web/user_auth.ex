@@ -129,6 +129,8 @@ defmodule InstantflowWeb.UserAuth do
           end)
           |> Phoenix.LiveView.attach_hook(:tenant_lifecycle, :handle_info, fn
             :workspaces_changed, socket ->
+              InstantflowWeb.RefreshNotifications.coalesce(socket, :workspaces_changed)
+
               case validate.(socket) do
                 {:halt, socket} ->
                   {:halt, socket}
@@ -169,6 +171,8 @@ defmodule InstantflowWeb.UserAuth do
               end
 
             :permissions_changed, socket ->
+              InstantflowWeb.RefreshNotifications.coalesce(socket, :permissions_changed)
+
               case validate.(socket) do
                 {:halt, socket} ->
                   {:halt, socket}
@@ -188,7 +192,8 @@ defmodule InstantflowWeb.UserAuth do
                      else: {:halt, socket}
               end
 
-            _, socket ->
+            message, socket ->
+              InstantflowWeb.RefreshNotifications.coalesce(socket, message)
               validate.(socket)
           end)
 
