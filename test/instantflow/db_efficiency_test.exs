@@ -112,7 +112,9 @@ defmodule Instantflow.DbEfficiencyTest do
 
     Repo.insert_all(Instantflow.WorkflowRuntime.Event, rows)
     {:ok, grown} = measure("detail_1001_events", fn -> WorkflowRuntime.get(f.requester, id) end)
-    assert length(grown.events) == length(initial.events) + 1000
+    assert length(initial.events) == 1
+    assert length(grown.events) == 50
+    assert grown.history_next_cursor
   end
 
   test "document metadata result excludes content" do

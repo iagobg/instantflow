@@ -240,14 +240,14 @@ defmodule Instantflow.Delivery do
             lock: "FOR UPDATE"
         )
 
-      case WorkflowRuntime.get(actor, ticket.id) do
-        {:ok, data} ->
-          unless data.can_retry && Enum.any?(data.deliveries, &(&1.id == id)),
-            do: Repo.rollback(:forbidden)
+      version = Repo.get!(Instantflow.WorkflowCatalog.Version, ticket.workflow_version_id)
+      events = Instantflow.WorkflowRuntime.History.authorized_query(actor, ticket, version)
+      deliveries = Instantflow.WorkflowRuntime.History.deliveries_query(events, ticket)
 
-        _ ->
-          Repo.rollback(:forbidden)
-      end
+      unless Instantflow.WorkflowRuntime.Policy.discover?(actor, ticket, version) and
+               Instantflow.WorkflowRuntime.Policy.retry?(actor, ticket, version) and
+               Repo.exists?(from m in deliveries, where: m.id == ^id),
+             do: Repo.rollback(:forbidden)
 
       Instantflow.WorkflowCatalog.Retirement.require_active!(ticket.workflow_version_id)
 

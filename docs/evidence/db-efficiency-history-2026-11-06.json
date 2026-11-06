@@ -1,0 +1,543 @@
+{
+  "recorded_on": "2026-11-06",
+  "parent_commit": "72801cc",
+  "environment": "Local isolated SQL sandbox and synthetic histories; runtime role inside tenant reads",
+  "page_size": 50,
+  "lookahead_rows": 1,
+  "scenarios": [
+    {
+      "rows": 63,
+      "errors": 0,
+      "groups": {
+        "other": {
+          "rows": 10,
+          "errors": 0,
+          "statements": 13,
+          "content_bytes": 0,
+          "binary_bytes": 3016,
+          "content_selections": 0,
+          "query_time_ms": 3.512,
+          "update_locks": 0,
+          "total_time_ms": 3.542,
+          "queue_time_ms": 0.023,
+          "decode_time_ms": 0.006
+        },
+        "history": {
+          "rows": 51,
+          "errors": 0,
+          "statements": 1,
+          "content_bytes": 0,
+          "binary_bytes": 1122,
+          "content_selections": 0,
+          "query_time_ms": 0.732,
+          "update_locks": 0,
+          "total_time_ms": 0.733,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.001
+        },
+        "authorization": {
+          "rows": 2,
+          "errors": 0,
+          "statements": 3,
+          "content_bytes": 0,
+          "binary_bytes": 122,
+          "content_selections": 0,
+          "query_time_ms": 0.777,
+          "update_locks": 2,
+          "total_time_ms": 0.78,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.002
+        },
+        "documents": {
+          "rows": 0,
+          "errors": 0,
+          "statements": 0,
+          "content_bytes": 0,
+          "binary_bytes": 0,
+          "content_selections": 0,
+          "query_time_ms": 0.0,
+          "update_locks": 0,
+          "total_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.0
+        }
+      },
+      "scenario": "history_1001",
+      "statements": 17,
+      "content_bytes": 0,
+      "binary_bytes": 4260,
+      "content_selections": 0,
+      "query_time_ms": 5.021,
+      "update_locks": 2,
+      "total_time_ms": 5.055,
+      "queue_time_ms": 0.023,
+      "decode_time_ms": 0.009000000000000001,
+      "elapsed_ms": 6.781
+    },
+    {
+      "rows": 63,
+      "errors": 0,
+      "groups": {
+        "other": {
+          "rows": 10,
+          "errors": 0,
+          "statements": 13,
+          "content_bytes": 0,
+          "binary_bytes": 3016,
+          "content_selections": 0,
+          "query_time_ms": 3.092,
+          "update_locks": 0,
+          "total_time_ms": 3.116,
+          "queue_time_ms": 0.018,
+          "decode_time_ms": 0.006
+        },
+        "history": {
+          "rows": 51,
+          "errors": 0,
+          "statements": 1,
+          "content_bytes": 0,
+          "binary_bytes": 1122,
+          "content_selections": 0,
+          "query_time_ms": 3.935,
+          "update_locks": 0,
+          "total_time_ms": 3.939,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.003
+        },
+        "authorization": {
+          "rows": 2,
+          "errors": 0,
+          "statements": 3,
+          "content_bytes": 0,
+          "binary_bytes": 122,
+          "content_selections": 0,
+          "query_time_ms": 0.629,
+          "update_locks": 2,
+          "total_time_ms": 0.629,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.0
+        },
+        "documents": {
+          "rows": 0,
+          "errors": 0,
+          "statements": 0,
+          "content_bytes": 0,
+          "binary_bytes": 0,
+          "content_selections": 0,
+          "query_time_ms": 0.0,
+          "update_locks": 0,
+          "total_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.0
+        }
+      },
+      "scenario": "history_10001",
+      "statements": 17,
+      "content_bytes": 0,
+      "binary_bytes": 4260,
+      "content_selections": 0,
+      "query_time_ms": 7.656000000000001,
+      "update_locks": 2,
+      "total_time_ms": 7.683999999999999,
+      "queue_time_ms": 0.018,
+      "decode_time_ms": 0.009000000000000001,
+      "elapsed_ms": 9.244
+    },
+    {
+      "rows": 413,
+      "errors": 0,
+      "groups": {
+        "other": {
+          "rows": 283,
+          "errors": 0,
+          "statements": 216,
+          "content_bytes": 0,
+          "binary_bytes": 21658,
+          "content_selections": 0,
+          "query_time_ms": 51.934,
+          "update_locks": 2,
+          "total_time_ms": 65.825,
+          "queue_time_ms": 13.758,
+          "decode_time_ms": 0.132
+        },
+        "history": {
+          "rows": 102,
+          "errors": 0,
+          "statements": 2,
+          "content_bytes": 0,
+          "binary_bytes": 2244,
+          "content_selections": 0,
+          "query_time_ms": 0.898,
+          "update_locks": 0,
+          "total_time_ms": 0.9,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.001
+        },
+        "authorization": {
+          "rows": 28,
+          "errors": 0,
+          "statements": 39,
+          "content_bytes": 0,
+          "binary_bytes": 1943,
+          "content_selections": 0,
+          "query_time_ms": 9.352,
+          "update_locks": 16,
+          "total_time_ms": 9.383,
+          "queue_time_ms": 0.011,
+          "decode_time_ms": 0.019
+        },
+        "documents": {
+          "rows": 0,
+          "errors": 0,
+          "statements": 2,
+          "content_bytes": 0,
+          "binary_bytes": 0,
+          "content_selections": 0,
+          "query_time_ms": 0.75,
+          "update_locks": 0,
+          "total_time_ms": 0.752,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.002
+        }
+      },
+      "scenario": "history_page_mount_103",
+      "statements": 259,
+      "content_bytes": 0,
+      "binary_bytes": 25845,
+      "content_selections": 0,
+      "query_time_ms": 62.934,
+      "update_locks": 18,
+      "total_time_ms": 76.86,
+      "queue_time_ms": 13.768999999999998,
+      "decode_time_ms": 0.154,
+      "elapsed_ms": 115.21
+    },
+    {
+      "rows": 11,
+      "errors": 0,
+      "groups": {
+        "other": {
+          "rows": 8,
+          "errors": 0,
+          "statements": 13,
+          "content_bytes": 0,
+          "binary_bytes": 2505,
+          "content_selections": 0,
+          "query_time_ms": 3.927,
+          "update_locks": 0,
+          "total_time_ms": 3.951,
+          "queue_time_ms": 0.018,
+          "decode_time_ms": 0.005
+        },
+        "history": {
+          "rows": 1,
+          "errors": 0,
+          "statements": 1,
+          "content_bytes": 0,
+          "binary_bytes": 11,
+          "content_selections": 0,
+          "query_time_ms": 0.216,
+          "update_locks": 0,
+          "total_time_ms": 0.216,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.0
+        },
+        "authorization": {
+          "rows": 2,
+          "errors": 0,
+          "statements": 3,
+          "content_bytes": 0,
+          "binary_bytes": 124,
+          "content_selections": 0,
+          "query_time_ms": 0.712,
+          "update_locks": 2,
+          "total_time_ms": 0.713,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.001
+        },
+        "documents": {
+          "rows": 0,
+          "errors": 0,
+          "statements": 0,
+          "content_bytes": 0,
+          "binary_bytes": 0,
+          "content_selections": 0,
+          "query_time_ms": 0.0,
+          "update_locks": 0,
+          "total_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.0
+        }
+      },
+      "scenario": "detail_1_event",
+      "statements": 17,
+      "content_bytes": 0,
+      "binary_bytes": 2640,
+      "content_selections": 0,
+      "query_time_ms": 4.8549999999999995,
+      "update_locks": 2,
+      "total_time_ms": 4.88,
+      "queue_time_ms": 0.018,
+      "decode_time_ms": 0.006,
+      "elapsed_ms": 6.707
+    },
+    {
+      "rows": 61,
+      "errors": 0,
+      "groups": {
+        "other": {
+          "rows": 8,
+          "errors": 0,
+          "statements": 13,
+          "content_bytes": 0,
+          "binary_bytes": 2505,
+          "content_selections": 0,
+          "query_time_ms": 3.295,
+          "update_locks": 0,
+          "total_time_ms": 3.326,
+          "queue_time_ms": 0.026,
+          "decode_time_ms": 0.003
+        },
+        "history": {
+          "rows": 51,
+          "errors": 0,
+          "statements": 1,
+          "content_bytes": 0,
+          "binary_bytes": 1122,
+          "content_selections": 0,
+          "query_time_ms": 0.344,
+          "update_locks": 0,
+          "total_time_ms": 0.344,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.0
+        },
+        "authorization": {
+          "rows": 2,
+          "errors": 0,
+          "statements": 3,
+          "content_bytes": 0,
+          "binary_bytes": 124,
+          "content_selections": 0,
+          "query_time_ms": 0.577,
+          "update_locks": 2,
+          "total_time_ms": 0.578,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.0
+        },
+        "documents": {
+          "rows": 0,
+          "errors": 0,
+          "statements": 0,
+          "content_bytes": 0,
+          "binary_bytes": 0,
+          "content_selections": 0,
+          "query_time_ms": 0.0,
+          "update_locks": 0,
+          "total_time_ms": 0.0,
+          "queue_time_ms": 0.0,
+          "decode_time_ms": 0.0
+        }
+      },
+      "scenario": "detail_1001_events",
+      "statements": 17,
+      "content_bytes": 0,
+      "binary_bytes": 3751,
+      "content_selections": 0,
+      "query_time_ms": 4.215999999999999,
+      "update_locks": 2,
+      "total_time_ms": 4.248,
+      "queue_time_ms": 0.026,
+      "decode_time_ms": 0.003,
+      "elapsed_ms": 5.812
+    }
+  ],
+  "validation": {
+    "focused_tests": 32,
+    "precommit_tests": 455,
+    "failures": 0
+  },
+  "correctness": [
+    "Visibility is applied before LIMIT using the existing pinned policy decisions.",
+    "History uses exclusive revision cursors; deliveries use independent ID cursors.",
+    "Hidden newer events, malformed operations, concurrent appends and pinned versions are covered.",
+    "Older failed deliveries remain retryable through a targeted current-authority check.",
+    "LiveView paging preserves drafts, reconciles selected pages, and removes revoked history.",
+    "Full event and delivery lists are no longer retained in both socket data and streams."
+  ],
+  "limitations": [
+    "These are row/statement bounds, not hosted capacity measurements.",
+    "Hidden rows can still require index traversal before 51 authorized rows are found.",
+    "Calculation attempt collections and broader query/lease instrumentation remain separate work.",
+    "Timestamp formatting is still per history row in this increment."
+  ],
+  "runtime_role_plans_after_analyze": [
+    {
+      "role": [
+        [
+          "instantflow_runtime"
+        ]
+      ],
+      "explain": [
+        {
+          "Execution Time": 0.038,
+          "Plan": {
+            "Actual Loops": 1,
+            "Actual Rows": 51,
+            "Actual Startup Time": 0.012,
+            "Actual Total Time": 0.024,
+            "Async Capable": false,
+            "Local Dirtied Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Written Blocks": 0,
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Plan Rows": 51,
+            "Plan Width": 113,
+            "Plans": [
+              {
+                "Actual Loops": 1,
+                "Actual Rows": 51,
+                "Actual Startup Time": 0.011,
+                "Actual Total Time": 0.022,
+                "Alias": "t0",
+                "Async Capable": false,
+                "Filter": "((organization_id = (NULLIF(current_setting('instantflow.organization_id'::text, true), ''::text))::bigint) AND ((operation = ANY ('{create,submit,request_correction,resubmit,approve,reject,cancel_draft,cancel_review,cancel_correction,save:request,save:notes}'::text[])) OR (\"substring\"(operation, '^participant:[^:]*:(.*)$'::text) = ANY ('{}'::text[])) OR (split_part(\"substring\"(operation, '^document:[^:]*:(.*)$'::text), '.'::text, 1) = ANY ('{request,notes}'::text[]))))",
+                "Index Cond": "(ticket_id = '921'::bigint)",
+                "Index Name": "transition_events_ticket_id_revision_index",
+                "Local Dirtied Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Written Blocks": 0,
+                "Node Type": "Index Scan",
+                "Parallel Aware": false,
+                "Parent Relationship": "Outer",
+                "Plan Rows": 10000,
+                "Plan Width": 113,
+                "Relation Name": "transition_events",
+                "Rows Removed by Filter": 0,
+                "Rows Removed by Index Recheck": 0,
+                "Scan Direction": "Backward",
+                "Shared Dirtied Blocks": 0,
+                "Shared Hit Blocks": 3,
+                "Shared Read Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Startup Cost": 0.31,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Total Cost": 1276.17
+              }
+            ],
+            "Shared Dirtied Blocks": 0,
+            "Shared Hit Blocks": 3,
+            "Shared Read Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Startup Cost": 0.31,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Total Cost": 6.82
+          },
+          "Planning": {
+            "Local Dirtied Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Written Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Hit Blocks": 75,
+            "Shared Read Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.23,
+          "Triggers": []
+        }
+      ],
+      "scenario": "10001_visible_events"
+    },
+    {
+      "role": [
+        [
+          "instantflow_runtime"
+        ]
+      ],
+      "explain": [
+        {
+          "Execution Time": 5.515,
+          "Plan": {
+            "Actual Loops": 1,
+            "Actual Rows": 51,
+            "Actual Startup Time": 5.486,
+            "Actual Total Time": 5.501,
+            "Async Capable": false,
+            "Local Dirtied Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Written Blocks": 0,
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Plan Rows": 51,
+            "Plan Width": 113,
+            "Plans": [
+              {
+                "Actual Loops": 1,
+                "Actual Rows": 51,
+                "Actual Startup Time": 5.457,
+                "Actual Total Time": 5.469,
+                "Alias": "t0",
+                "Async Capable": false,
+                "Filter": "((organization_id = (NULLIF(current_setting('instantflow.organization_id'::text, true), ''::text))::bigint) AND ((operation = ANY ('{create,submit,request_correction,resubmit,approve,reject,cancel_draft,cancel_review,cancel_correction,save:request,save:notes}'::text[])) OR (\"substring\"(operation, '^participant:[^:]*:(.*)$'::text) = ANY ('{}'::text[])) OR (split_part(\"substring\"(operation, '^document:[^:]*:(.*)$'::text), '.'::text, 1) = ANY ('{request,notes}'::text[]))))",
+                "Index Cond": "(ticket_id = '921'::bigint)",
+                "Index Name": "transition_events_ticket_id_revision_index",
+                "Local Dirtied Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Written Blocks": 0,
+                "Node Type": "Index Scan",
+                "Parallel Aware": false,
+                "Parent Relationship": "Outer",
+                "Plan Rows": 10110,
+                "Plan Width": 113,
+                "Relation Name": "transition_events",
+                "Rows Removed by Filter": 10000,
+                "Rows Removed by Index Recheck": 0,
+                "Scan Direction": "Backward",
+                "Shared Dirtied Blocks": 0,
+                "Shared Hit Blocks": 233,
+                "Shared Read Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Startup Cost": 0.32,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Total Cost": 2234.3
+              }
+            ],
+            "Shared Dirtied Blocks": 0,
+            "Shared Hit Blocks": 233,
+            "Shared Read Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Startup Cost": 0.32,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Total Cost": 11.58
+          },
+          "Planning": {
+            "Local Dirtied Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Written Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Hit Blocks": 69,
+            "Shared Read Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.15,
+          "Triggers": []
+        }
+      ],
+      "scenario": "10001_visible_with_10000_hidden_newer_events"
+    }
+  ]
+}

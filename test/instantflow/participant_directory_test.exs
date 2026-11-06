@@ -151,6 +151,38 @@ defmodule Instantflow.ParticipantDirectoryTest do
     assert {:ok, _} = WorkflowFixtures.transition(f.admin, f.id, "complete")
   end
 
+  test "SQL history visibility matches relationship policy including malformed suffixes", f do
+    operations =
+      ~w(participant:create:claimant participant:verify:claimant participant:legacy:claimant
+      participant:verify:claimant:extra participant:claimant document:upload:request.contact
+      document:legacy:customer_details document:upload:unknown.field release:unknown)
+
+    for {operation, revision} <- Enum.with_index(operations, 4),
+        do: Instantflow.HistoryFixtures.append(f.clerk, f.id, revision..revision, operation)
+
+    for actor <- [f.admin, f.clerk, f.visitor] do
+      Instantflow.Tenant.read(actor, fn fresh ->
+        ticket = Repo.get!(Instantflow.WorkflowRuntime.Ticket, f.id)
+
+        expected =
+          Repo.all(from e in Instantflow.WorkflowRuntime.Event, where: e.ticket_id == ^f.id)
+          |> Enum.filter(
+            &Instantflow.WorkflowRuntime.Policy.history?(fresh, ticket, f.version, &1)
+          )
+          |> Enum.map(& &1.id)
+          |> Enum.sort()
+
+        actual =
+          Instantflow.WorkflowRuntime.History.authorized_query(fresh, ticket, f.version)
+          |> Repo.all()
+          |> Enum.map(& &1.id)
+          |> Enum.sort()
+
+        assert actual == expected
+      end)
+    end
+  end
+
   test "subject references require a subject relationship and retain portable symbolic declarations",
        f do
     subject =

@@ -82,14 +82,15 @@ defmodule Instantflow.WorkflowRuntime do
 
   def command(_, _, _), do: {:error, :invalid_command}
 
-  def get(actor, id), do: Tenant.read(actor, &get_scoped(&1, id), {:error, :not_found})
+  def get(actor, id, options \\ []),
+    do: Tenant.read(actor, &get_scoped(&1, id, options), {:error, :not_found})
 
   # Private to the enclosing Tenant.read callback; never use a caller's cached scope here.
-  defp get_scoped(scope, id) do
+  defp get_scoped(scope, id, options) do
     with %Ticket{} = ticket <- Repo.get(Ticket, id),
          %Version{} = version <- Repo.get(Version, ticket.workflow_version_id),
          true <- Policy.discover?(scope, ticket, version) do
-      project(scope, ticket, version, [])
+      project(scope, ticket, version, options)
     else
       _ -> {:error, :not_found}
     end
@@ -113,11 +114,7 @@ defmodule Instantflow.WorkflowRuntime do
 
     keys = Enum.map(readable, & &1["key"])
 
-    events =
-      Repo.all(from e in Event, where: e.ticket_id == ^ticket.id, order_by: [desc: e.revision])
-      |> Enum.filter(&Policy.history?(scope, ticket, version, &1))
-
-    event_ids = Enum.map(events, & &1.id)
+    pages = Instantflow.WorkflowRuntime.History.pages(scope, ticket, version, options)
 
     directory =
       Instantflow.Participants.Directory.project(
@@ -181,15 +178,10 @@ defmodule Instantflow.WorkflowRuntime do
          )
          |> Enum.map(&Map.take(&1, ~w(key label require_reason kind))),
        calculations: Instantflow.Calculations.statuses(scope, ticket, version),
-       events: events,
-       deliveries:
-         Repo.all(
-           from m in Message,
-             where:
-               m.ticket_id == ^ticket.id and m.kind != "refresh" and m.event_id in ^event_ids and
-                 m.payload == ^%{},
-             order_by: m.id
-         )
+       events: pages.history.rows,
+       history_next_cursor: pages.history.next_cursor,
+       deliveries: pages.deliveries.rows,
+       deliveries_next_cursor: pages.deliveries.next_cursor
      }}
   end
 

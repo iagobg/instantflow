@@ -270,9 +270,10 @@ defmodule InstantflowWeb.RequestLive do
   end
 
   def handle_event("retry", %{"id" => id}, socket) do
-    message = Enum.find(socket.assigns.data.deliveries, &(to_string(&1.id) == id))
+    message_id = integer(id)
 
-    case message && Delivery.retry(socket.assigns.current_scope, message.id) do
+    case message_id in socket.assigns.delivery_ids &&
+           Delivery.retry(socket.assigns.current_scope, message_id) do
       {:ok, _} -> refresh(clear_flash(socket, :error))
       {:error, error} -> failure(socket, error)
       _ -> failure(socket, :forbidden)
@@ -349,6 +350,26 @@ defmodule InstantflowWeb.RequestLive do
       {:error, error} -> failure(socket, error)
     end
   end
+
+  def handle_event("older-history", _, socket) do
+    case socket.assigns.history_next_cursor do
+      nil -> {:noreply, socket}
+      cursor -> socket |> assign(:history_before, cursor) |> refresh()
+    end
+  end
+
+  def handle_event("recent-history", _, socket),
+    do: socket |> assign(:history_before, nil) |> refresh()
+
+  def handle_event("older-deliveries", _, socket) do
+    case socket.assigns.deliveries_next_cursor do
+      nil -> {:noreply, socket}
+      cursor -> socket |> assign(:deliveries_before, cursor) |> refresh()
+    end
+  end
+
+  def handle_event("recent-deliveries", _, socket),
+    do: socket |> assign(:deliveries_before, nil) |> refresh()
 
   def handle_event("older-private-documents", _, socket) do
     case socket.assigns.documents_next_cursor do
@@ -556,7 +577,9 @@ defmodule InstantflowWeb.RequestLive do
       participant_query: Map.get(socket.assigns, :participant_query, ""),
       communication_query: Map.get(socket.assigns, :communication_query, ""),
       directory_queries: Map.get(socket.assigns, :directory_queries, %{}),
-      documents_before: Map.get(socket.assigns, :documents_before)
+      documents_before: Map.get(socket.assigns, :documents_before),
+      history_before: Map.get(socket.assigns, :history_before),
+      deliveries_before: Map.get(socket.assigns, :deliveries_before)
     ]
 
     case RecordProjection.load(
@@ -579,6 +602,11 @@ defmodule InstantflowWeb.RequestLive do
            dirty: false,
            attachment_options: [],
            document_count: 0,
+           delivery_ids: [],
+           history_before: nil,
+           history_next_cursor: nil,
+           deliveries_before: nil,
+           deliveries_next_cursor: nil,
            documents_before: nil,
            documents_next_cursor: nil,
            reference_search_forms: %{},
@@ -664,7 +692,12 @@ defmodule InstantflowWeb.RequestLive do
       document_count: length(documents.rows),
       documents_before: documents_before,
       documents_next_cursor: documents.next_cursor,
-      data: data,
+      data: %{data | events: [], deliveries: []},
+      delivery_ids: Enum.map(data.deliveries, & &1.id),
+      history_before: Map.get(socket.assigns, :history_before),
+      history_next_cursor: data.history_next_cursor,
+      deliveries_before: Map.get(socket.assigns, :deliveries_before),
+      deliveries_next_cursor: data.deliveries_next_cursor,
       assignment_search: to_form(%{"query" => assignment_query}, as: :assignment_search),
       editors: editors,
       forms: forms,
@@ -1349,6 +1382,20 @@ defmodule InstantflowWeb.RequestLive do
                 >Tentar novamente</button>
               </div>
             </div>
+            <div class="actions">
+              <button
+                :if={@deliveries_next_cursor}
+                id="older-deliveries"
+                class="btn"
+                phx-click="older-deliveries"
+              >Entregas anteriores</button>
+              <button
+                :if={@deliveries_before}
+                id="recent-deliveries"
+                class="btn"
+                phx-click="recent-deliveries"
+              >Entregas recentes</button>
+            </div>
           </section>
         </aside>
       </div>
@@ -1360,6 +1407,10 @@ defmodule InstantflowWeb.RequestLive do
               @current_scope.organization.timezone
             )}</small><p :if={event.reason}>{event.reason}</p>
           </article>
+        </div>
+        <div class="actions">
+          <button :if={@history_next_cursor} id="older-history" class="btn" phx-click="older-history">Eventos anteriores</button>
+          <button :if={@history_before} id="recent-history" class="btn" phx-click="recent-history">Eventos recentes</button>
         </div>
       </section>
     </Layouts.app>
