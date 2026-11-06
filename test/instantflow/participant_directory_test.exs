@@ -83,6 +83,42 @@ defmodule Instantflow.ParticipantDirectoryTest do
              WorkflowFixtures.save(f.admin, f.id, %{"contact" => [f.relationship]})
   end
 
+  test "composite reference searches keep policy, selected labels and current relationships", f do
+    alias Instantflow.WorkflowRuntime.RecordProjection
+    options = [directory_queries: %{"request.contact" => "no matching name"}]
+    {:ok, projection} = RecordProjection.load(f.admin, f.id, options)
+    assert projection.data.reference_options["request.contact"] == []
+
+    assert {:ok, _} =
+             WorkflowFixtures.save(f.admin, f.id, %{
+               "summary" => "Atendimento",
+               "contact" => f.relationship
+             })
+
+    {:ok, selected} = RecordProjection.load(f.admin, f.id, options)
+
+    assert selected.data.reference_options["request.contact"] == [
+             {f.visitor.user.name, f.relationship}
+           ]
+
+    assert selected.data.reference_labels["request.contact"][f.relationship] ==
+             f.visitor.user.name
+
+    {:ok, external} = RecordProjection.load(f.visitor, f.id, options)
+    refute Map.has_key?(external.data.reference_options, "request.contact")
+
+    assert {:ok, _} =
+             Participants.command(
+               f.admin,
+               BuilderFixtures.participant_command(f.id, f.visitor.id, "revoke", 2)
+             )
+
+    {:ok, revoked} = RecordProjection.load(f.admin, f.id, options)
+    assert revoked.data.reference_options["request.contact"] == []
+    assert revoked.data.reference_labels["request.contact"] == %{}
+    assert {:error, :not_found} = RecordProjection.load(f.visitor, f.id, options)
+  end
+
   test "revocation removes labels/options and prevents saves or transitions using stale selections",
        f do
     assert {:ok, _} =

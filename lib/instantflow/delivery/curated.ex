@@ -275,6 +275,13 @@ defmodule Instantflow.Delivery.Curated do
     )
   end
 
+  @doc false
+  def controls_in_context(context, id, search) do
+    scope = Tenant.context_scope!(context)
+    {ticket, version} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, id)
+    controls(scope, ticket, version, search)
+  end
+
   def successes(ticket, version) do
     if Communications.specs(version.definition) == [] do
       []

@@ -166,43 +166,58 @@ defmodule Instantflow.PrivateDocuments do
       fn a ->
         {ticket, version} = ticket!(a, ticket_id)
 
-        readable = readable_fields(a, ticket, version)
-        cursor = if before_id, do: dynamic([d], d.id < ^before_id), else: dynamic(true)
-
-        documents =
-          Repo.all(
-            from d in Document,
-              where: d.ticket_id == ^ticket.id,
-              where: ^readable,
-              where: ^cursor,
-              order_by: [desc: d.id],
-              limit: @page_size + 1,
-              select: struct(d, ^@reference_fields)
-          )
-
-        rows =
-          documents
-          |> Enum.take(@page_size)
-          |> Enum.map(fn d ->
-            section = section!(version, d.section_key, d.field_key)
-
-            Map.put(
-              metadata(d),
-              :can_review,
-              Policy.reviewer?(a, ticket, version, section, d.field_key, d.uploaded_by_id)
-            )
-          end)
-
-        %{
-          rows: rows,
-          next_cursor: if(length(documents) > @page_size, do: List.last(rows).id)
-        }
+        list_page_scoped(a, ticket, version, before_id)
       end,
       %{rows: [], next_cursor: nil}
     )
   end
 
   def list_page(_, _, _), do: %{rows: [], next_cursor: nil}
+
+  @doc false
+  def list_page_in_context(context, ticket_id, before_id) do
+    scope = Tenant.context_scope!(context)
+    {ticket, version} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, ticket_id)
+
+    if is_nil(before_id) or
+         (is_integer(before_id) and before_id > 0 and before_id < 9_223_372_036_854_775_807),
+       do: list_page_scoped(scope, ticket, version, before_id),
+       else: %{rows: [], next_cursor: nil}
+  end
+
+  defp list_page_scoped(a, ticket, version, before_id) do
+    readable = readable_fields(a, ticket, version)
+    cursor = if before_id, do: dynamic([d], d.id < ^before_id), else: dynamic(true)
+
+    documents =
+      Repo.all(
+        from d in Document,
+          where: d.ticket_id == ^ticket.id,
+          where: ^readable,
+          where: ^cursor,
+          order_by: [desc: d.id],
+          limit: @page_size + 1,
+          select: struct(d, ^@reference_fields)
+      )
+
+    rows =
+      documents
+      |> Enum.take(@page_size)
+      |> Enum.map(fn d ->
+        section = section!(version, d.section_key, d.field_key)
+
+        Map.put(
+          metadata(d),
+          :can_review,
+          Policy.reviewer?(a, ticket, version, section, d.field_key, d.uploaded_by_id)
+        )
+      end)
+
+    %{
+      rows: rows,
+      next_cursor: if(length(documents) > @page_size, do: List.last(rows).id)
+    }
+  end
 
   def download(actor, key) when is_binary(key) do
     Tenant.transaction(actor, fn a ->

@@ -74,7 +74,7 @@ defmodule Instantflow.Participants.Directory do
   end
 
   @doc false
-  def project(actor, ticket, version, sections, readable) do
+  def project(actor, ticket, version, sections, readable, queries \\ %{}) do
     Enum.reduce(readable, %{options: %{}, labels: %{}}, fn section, result ->
       stored = Enum.find(sections, &(&1.key == section["key"]))
 
@@ -83,7 +83,17 @@ defmodule Instantflow.Participants.Directory do
           ref = section["key"] <> "." <> field["key"]
           value = stored.values[field["key"]]
           label = selected(actor, ticket, version, section, field, value)
-          options = options_scoped(actor, ticket, version, section, field, value, "")
+
+          options =
+            options_scoped(
+              actor,
+              ticket,
+              version,
+              section,
+              field,
+              value,
+              Map.get(queries, ref, "")
+            )
 
           %{
             options: Map.put(result.options, ref, options),

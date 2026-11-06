@@ -1,0 +1,87 @@
+{
+  "recorded_on": "2026-11-06",
+  "parent_commit": "4b96aa9",
+  "environment": "Local isolated SQL sandbox; same workflow fixture and synchronous lifecycle capture windows",
+  "baseline_statements": {
+    "record_mount_http_and_live": 290,
+    "idle_heartbeat": 28,
+    "reason_change": 14,
+    "draft_change": 30,
+    "save_submit": 151,
+    "ticket_invalidation": 101
+  },
+  "candidate": [
+    {
+      "scenario": "record_mount_http_and_live",
+      "statements": 160,
+      "rows": 108,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 18
+    },
+    {
+      "scenario": "idle_heartbeat",
+      "statements": 28,
+      "rows": 19,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 4
+    },
+    {
+      "scenario": "reason_change",
+      "statements": 14,
+      "rows": 10,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 2
+    },
+    {
+      "scenario": "draft_change",
+      "statements": 30,
+      "rows": 20,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 4
+    },
+    {
+      "scenario": "save_submit",
+      "statements": 86,
+      "rows": 59,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 13
+    },
+    {
+      "scenario": "ticket_invalidation",
+      "statements": 36,
+      "rows": 25,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 5
+    }
+  ],
+  "correctness": [
+    "One current user/membership/grant load for the entire record projection.",
+    "Current record policy parity with standalone reads and controls; no implicit administrator access.",
+    "Ticket/version cache remains within the read context and separates record IDs.",
+    "Expired contexts fail closed in every projection helper.",
+    "Directory searches retain current selection labels and remove revoked relationships.",
+    "An independent runtime-role reader queued behind grant revocation observes the revoked permission.",
+    "Existing LiveView draft/conflict, document pagination and curated communication tests remain enabled."
+  ],
+  "limitations": [
+    "No hosted latency or capacity claim; no hosted deployment.",
+    "Full deferred delivery and invalidation-cycle attribution and connection-lease measurements remain pending.",
+    "The existing document ticket lock now spans the combined projection; lock modes were not weakened.",
+    "History and deliveries remain unbounded. Timestamp formatting still issues per-row SQL during rendering.",
+    "Some supporting relationship/assignment policy facts are still queried more than once. Navigation caching and refresh coalescing remain pending."
+  ],
+  "validation": {
+    "focused_tests": 60,
+    "focused_failures": 0,
+    "full_precommit_tests": 448,
+    "full_precommit_failures": 0,
+    "assets_build": "passed",
+    "focused_and_precommit_lifecycle_counts_match": true
+  }
+}

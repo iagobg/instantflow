@@ -2,6 +2,7 @@ defmodule InstantflowWeb.RequestLive do
   use InstantflowWeb, :live_view
   alias Instantflow.{Delivery, WorkflowRuntime}
   alias Instantflow.Collaboration.{Editor, Presence}
+  alias Instantflow.WorkflowRuntime.RecordProjection
   import InstantflowWeb.FieldInput, only: [field_input: 1]
   alias InstantflowWeb.RuntimeErrors
 
@@ -53,8 +54,9 @@ defmodule InstantflowWeb.RequestLive do
           )
         end
 
-        case WorkflowRuntime.get(socket.assigns.current_scope, id) do
-          {:ok, data} when is_nil(workflow_id) or data.ticket.workflow_id == workflow_id ->
+        case RecordProjection.load(socket.assigns.current_scope, id) do
+          {:ok, %{data: data} = projection}
+          when is_nil(workflow_id) or data.ticket.workflow_id == workflow_id ->
             {:ok,
              socket
              |> assign(
@@ -75,7 +77,7 @@ defmodule InstantflowWeb.RequestLive do
                max_entries: 1,
                max_file_size: 5_242_880
              )
-             |> load(data)}
+             |> load(projection)}
 
           _ ->
             unavailable(socket)
@@ -463,30 +465,14 @@ defmodule InstantflowWeb.RequestLive do
         socket
       )
       when is_binary(query) do
-    scope = socket.assigns.current_scope
+    queries =
+      Map.put(
+        Map.get(socket.assigns, :directory_queries, %{}),
+        section <> "." <> field,
+        String.slice(query, 0, 100)
+      )
 
-    case WorkflowRuntime.get(scope, socket.assigns.data.ticket.id) do
-      {:ok, data} ->
-        ref = section <> "." <> field
-
-        options =
-          Instantflow.Participants.Directory.options(scope, data.ticket.id, section, field, query)
-
-        queries =
-          Map.put(
-            Map.get(socket.assigns, :directory_queries, %{}),
-            ref,
-            String.slice(query, 0, 100)
-          )
-
-        {:noreply,
-         socket
-         |> assign(:directory_queries, queries)
-         |> load(%{data | reference_options: Map.put(data.reference_options, ref, options)})}
-
-      _ ->
-        refresh(socket)
-    end
+    refresh(assign(socket, :directory_queries, queries))
   end
 
   def handle_event("reconcile", _, socket), do: refresh(socket)
@@ -565,9 +551,21 @@ defmodule InstantflowWeb.RequestLive do
   end
 
   defp refresh(socket) do
-    case WorkflowRuntime.get(socket.assigns.current_scope, socket.assigns.data.ticket.id) do
-      {:ok, data} ->
-        {:noreply, load(socket, data)}
+    options = [
+      assignment_query: Map.get(socket.assigns, :assignment_query, ""),
+      participant_query: Map.get(socket.assigns, :participant_query, ""),
+      communication_query: Map.get(socket.assigns, :communication_query, ""),
+      directory_queries: Map.get(socket.assigns, :directory_queries, %{}),
+      documents_before: Map.get(socket.assigns, :documents_before)
+    ]
+
+    case RecordProjection.load(
+           socket.assigns.current_scope,
+           socket.assigns.data.ticket.id,
+           options
+         ) do
+      {:ok, projection} ->
+        {:noreply, load(socket, projection)}
 
       _ ->
         # Redirect stops the view and its monitored upload channels, including
@@ -616,39 +614,21 @@ defmodule InstantflowWeb.RequestLive do
        |> put_flash(:error, "Solicitação não encontrada ou sem acesso.")
        |> push_navigate(to: ~p"/o/#{socket.assigns.current_scope.organization.slug}/solicitacoes")}
 
-  defp load(socket, data) do
+  defp load(socket, %{
+         data: data,
+         management: management,
+         communications: communications,
+         documents: documents,
+         presence: presence
+       }) do
     assignment_query = Map.get(socket.assigns, :assignment_query, "")
-
-    data = %{
-      data
-      | assignments:
-          Instantflow.Collaboration.Assignments.controls_for(
-            socket.assigns.current_scope,
-            data.ticket.id,
-            assignment_query
-          )
-    }
 
     editors = Editor.reconcile(socket.assigns.editors, data)
     forms = Map.new(editors, fn {key, editor} -> {key, to_form(editor.values, as: :section)} end)
     participant_query = Map.get(socket.assigns, :participant_query, "")
 
-    management =
-      Instantflow.Participants.controls(
-        socket.assigns.current_scope,
-        data.ticket.id,
-        participant_query
-      )
-
     participant_forms = Map.new(management.controls, &{&1.key, to_form(%{}, as: :participant)})
     communication_query = Map.get(socket.assigns, :communication_query, "")
-
-    communications =
-      Instantflow.Delivery.Curated.controls_for(
-        socket.assigns.current_scope,
-        data.ticket.id,
-        communication_query
-      )
 
     directory_queries = Map.get(socket.assigns, :directory_queries, %{})
 
@@ -677,15 +657,9 @@ defmodule InstantflowWeb.RequestLive do
 
     documents_before = Map.get(socket.assigns, :documents_before)
 
-    documents =
-      Instantflow.PrivateDocuments.list_page(
-        socket.assigns.current_scope,
-        data.ticket.id,
-        documents_before
-      )
-
     socket
     |> assign(
+      presence: presence,
       attachment_options: attachment_options,
       document_count: length(documents.rows),
       documents_before: documents_before,
@@ -719,12 +693,6 @@ defmodule InstantflowWeb.RequestLive do
     |> stream(:events, data.events, reset: true)
     |> stream(:deliveries, data.deliveries, reset: true)
     |> stream(:calculations, data.calculations, reset: true)
-    |> load_presence()
-  end
-
-  defp load_presence(socket) do
-    assign(socket, :presence, Presence.editors(socket.assigns.current_scope, socket.assigns.data))
-    |> stream(:sections, socket.assigns.data.sections, reset: true)
   end
 
   defp refresh_presence(socket, {:ok, projection}) do

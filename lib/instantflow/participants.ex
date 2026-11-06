@@ -120,62 +120,73 @@ defmodule Instantflow.Participants do
         ticket = Repo.get(Ticket, ticket_id) || Repo.rollback(:not_found)
         version = Repo.get!(Version, ticket.workflow_version_id)
 
-        specs =
-          Enum.filter(
-            Map.get(version.definition, "participants", []),
-            &manage?(scope, ticket, version, &1["key"])
-          )
-
-        query = String.slice(String.trim(search), 0, 100)
-
-        controls =
-          Enum.map(specs, fn spec ->
-            candidates =
-              Repo.all(
-                from [m, u] in candidate_query(scope, version, spec["key"]),
-                  left_join: r in Relationship,
-                  on:
-                    r.membership_id == m.id and r.ticket_id == ^ticket.id and
-                      r.relationship == ^spec["key"],
-                  where:
-                    is_nil(r.id) and
-                      (fragment("strpos(lower(?), lower(?)) > 0", u.name, ^query) or
-                         fragment("strpos(lower(?), lower(?)) > 0", u.email, ^query)),
-                  distinct: m.id,
-                  order_by: m.id,
-                  limit: 25,
-                  select: {u.name, m.id}
-              )
-
-            %{id: spec["key"], key: spec["key"], label: spec["label"], candidates: candidates}
-          end)
-
-        relationships =
-          Enum.flat_map(specs, fn spec ->
-            Repo.all(
-              from r in Relationship,
-                join: m in assoc(r, :membership),
-                join: u in assoc(m, :user),
-                where:
-                  r.organization_id == ^scope.organization_id and r.ticket_id == ^ticket.id and
-                    r.relationship == ^spec["key"] and is_nil(r.legacy_guardian_link_id),
-                order_by: r.id,
-                limit: 100,
-                select: %{
-                  id: r.id,
-                  key: r.relationship,
-                  membership_id: m.id,
-                  name: u.name,
-                  status: r.status,
-                  revision: r.revision
-                }
-            )
-          end)
-
-        %{controls: controls, relationships: relationships}
+        controls_scoped(scope, ticket, version, search)
       end,
       %{controls: [], relationships: []}
     )
+  end
+
+  @doc false
+  def controls_in_context(context, ticket_id, search) do
+    scope = Tenant.context_scope!(context)
+    {ticket, version} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, ticket_id)
+    controls_scoped(scope, ticket, version, search)
+  end
+
+  defp controls_scoped(scope, ticket, version, search) do
+    specs =
+      Enum.filter(
+        Map.get(version.definition, "participants", []),
+        &manage?(scope, ticket, version, &1["key"])
+      )
+
+    query = String.slice(String.trim(search), 0, 100)
+
+    controls =
+      Enum.map(specs, fn spec ->
+        candidates =
+          Repo.all(
+            from [m, u] in candidate_query(scope, version, spec["key"]),
+              left_join: r in Relationship,
+              on:
+                r.membership_id == m.id and r.ticket_id == ^ticket.id and
+                  r.relationship == ^spec["key"],
+              where:
+                is_nil(r.id) and
+                  (fragment("strpos(lower(?), lower(?)) > 0", u.name, ^query) or
+                     fragment("strpos(lower(?), lower(?)) > 0", u.email, ^query)),
+              distinct: m.id,
+              order_by: m.id,
+              limit: 25,
+              select: {u.name, m.id}
+          )
+
+        %{id: spec["key"], key: spec["key"], label: spec["label"], candidates: candidates}
+      end)
+
+    relationships =
+      Enum.flat_map(specs, fn spec ->
+        Repo.all(
+          from r in Relationship,
+            join: m in assoc(r, :membership),
+            join: u in assoc(m, :user),
+            where:
+              r.organization_id == ^scope.organization_id and r.ticket_id == ^ticket.id and
+                r.relationship == ^spec["key"] and is_nil(r.legacy_guardian_link_id),
+            order_by: r.id,
+            limit: 100,
+            select: %{
+              id: r.id,
+              key: r.relationship,
+              membership_id: m.id,
+              name: u.name,
+              status: r.status,
+              revision: r.revision
+            }
+        )
+      end)
+
+    %{controls: controls, relationships: relationships}
   end
 
   defp participant_roles(version, key) do

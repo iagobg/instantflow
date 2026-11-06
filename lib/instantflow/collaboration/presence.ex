@@ -26,6 +26,22 @@ defmodule Instantflow.Collaboration.Presence do
     end
   end
 
+  @doc false
+  def editors_in_context(context, id) do
+    scope = Tenant.context_scope!(context)
+    {ticket, version} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, id)
+    facts = Map.fetch!(AccessFacts.load([scope], ticket, version), scope.id)
+
+    keys =
+      version.definition["sections"]
+      |> Enum.filter(&Policy.section?(scope, ticket, version, &1, :read, facts))
+      |> Enum.map(& &1["key"])
+
+    if keys == [] or Retirement.retired?(version.id),
+      do: [],
+      else: authorized_editors(scope, ticket, version, keys)
+  end
+
   @doc "Current presence and access shape, without section values, history, files or control directories."
   def project(scope, ticket_id, active_section \\ nil) do
     Tenant.read(

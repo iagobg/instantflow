@@ -89,84 +89,108 @@ defmodule Instantflow.WorkflowRuntime do
     with %Ticket{} = ticket <- Repo.get(Ticket, id),
          %Version{} = version <- Repo.get(Version, ticket.workflow_version_id),
          true <- Policy.discover?(scope, ticket, version) do
-      sections = Repo.all(from s in Section, where: s.ticket_id == ^ticket.id, order_by: s.key)
-
-      readable =
-        Enum.filter(
-          version.definition["sections"],
-          &Policy.section?(scope, ticket, version, &1, :read)
-        )
-
-      keys = Enum.map(readable, & &1["key"])
-
-      events =
-        Repo.all(from e in Event, where: e.ticket_id == ^id, order_by: [desc: e.revision])
-        |> Enum.filter(&Policy.history?(scope, ticket, version, &1))
-
-      event_ids = Enum.map(events, & &1.id)
-
-      directory =
-        Instantflow.Participants.Directory.project(scope, ticket, version, sections, readable)
-
-      projected_definition =
-        version.definition
-        |> Map.take(~w(name stages transitions))
-        |> Map.put(
-          "sections",
-          Enum.map(readable, &Map.take(&1, ~w(key label classification fields)))
-        )
-        |> Map.update!("transitions", fn edges ->
-          Enum.filter(edges, fn edge ->
-            Policy.history?(scope, ticket, version, %{operation: edge["key"]})
-          end)
-          |> Enum.map(&Map.take(&1, ~w(key label from to kind)))
-        end)
-
-      archived? = Instantflow.WorkflowCatalog.Retirement.retired?(version.id)
-
-      {:ok,
-       %{
-         authorization: Instantflow.Access.fingerprint(scope),
-         archived?: archived?,
-         ticket: ticket,
-         version: %{version | definition: projected_definition, bindings: %{}},
-         sections: Enum.filter(sections, &(&1.key in keys)),
-         reference_options: directory.options,
-         reference_labels: directory.labels,
-         section_definitions:
-           Enum.map(readable, &Map.take(&1, ~w(key label classification fields))),
-         assignments:
-           if(archived?,
-             do: [],
-             else: Instantflow.Collaboration.Assignments.controls(scope, ticket, version)
-           ),
-         can_retry: not archived? and Policy.retry?(scope, ticket, version),
-         editable:
-           Enum.filter(
-             readable,
-             &(not archived? and Policy.section?(scope, ticket, version, &1, :edit))
-           )
-           |> Enum.map(& &1["key"]),
-         transitions:
-           Enum.filter(
-             version.definition["transitions"],
-             &(not archived? and Policy.transition?(scope, ticket, version, &1))
-           )
-           |> Enum.map(&Map.take(&1, ~w(key label require_reason kind))),
-         calculations: Instantflow.Calculations.statuses(scope, ticket, version),
-         events: events,
-         deliveries:
-           Repo.all(
-             from m in Message,
-               where:
-                 m.ticket_id == ^id and m.kind != "refresh" and m.event_id in ^event_ids and
-                   m.payload == ^%{},
-               order_by: m.id
-           )
-       }}
+      project(scope, ticket, version, [])
     else
       _ -> {:error, :not_found}
     end
+  end
+
+  @doc false
+  def get_in_context(context, id, options \\ []) do
+    scope = Tenant.context_scope!(context)
+    {ticket, version} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, id)
+    project(scope, ticket, version, options)
+  end
+
+  defp project(scope, ticket, version, options) do
+    sections = Repo.all(from s in Section, where: s.ticket_id == ^ticket.id, order_by: s.key)
+
+    readable =
+      Enum.filter(
+        version.definition["sections"],
+        &Policy.section?(scope, ticket, version, &1, :read)
+      )
+
+    keys = Enum.map(readable, & &1["key"])
+
+    events =
+      Repo.all(from e in Event, where: e.ticket_id == ^ticket.id, order_by: [desc: e.revision])
+      |> Enum.filter(&Policy.history?(scope, ticket, version, &1))
+
+    event_ids = Enum.map(events, & &1.id)
+
+    directory =
+      Instantflow.Participants.Directory.project(
+        scope,
+        ticket,
+        version,
+        sections,
+        readable,
+        Keyword.get(options, :directory_queries, %{})
+      )
+
+    projected_definition =
+      version.definition
+      |> Map.take(~w(name stages transitions))
+      |> Map.put(
+        "sections",
+        Enum.map(readable, &Map.take(&1, ~w(key label classification fields)))
+      )
+      |> Map.update!("transitions", fn edges ->
+        Enum.filter(edges, fn edge ->
+          Policy.history?(scope, ticket, version, %{operation: edge["key"]})
+        end)
+        |> Enum.map(&Map.take(&1, ~w(key label from to kind)))
+      end)
+
+    archived? = Instantflow.WorkflowCatalog.Retirement.retired?(version.id)
+
+    {:ok,
+     %{
+       authorization: Instantflow.Access.fingerprint(scope),
+       archived?: archived?,
+       ticket: ticket,
+       version: %{version | definition: projected_definition, bindings: %{}},
+       sections: Enum.filter(sections, &(&1.key in keys)),
+       reference_options: directory.options,
+       reference_labels: directory.labels,
+       section_definitions:
+         Enum.map(readable, &Map.take(&1, ~w(key label classification fields))),
+       assignments:
+         if(archived?,
+           do: [],
+           else:
+             Instantflow.Collaboration.Assignments.controls(
+               scope,
+               ticket,
+               version,
+               Keyword.get(options, :assignment_query, "")
+             )
+         ),
+       can_retry: not archived? and Policy.retry?(scope, ticket, version),
+       editable:
+         Enum.filter(
+           readable,
+           &(not archived? and Policy.section?(scope, ticket, version, &1, :edit))
+         )
+         |> Enum.map(& &1["key"]),
+       transitions:
+         Enum.filter(
+           version.definition["transitions"],
+           &(not archived? and Policy.transition?(scope, ticket, version, &1))
+         )
+         |> Enum.map(&Map.take(&1, ~w(key label require_reason kind))),
+       calculations: Instantflow.Calculations.statuses(scope, ticket, version),
+       events: events,
+       deliveries:
+         Repo.all(
+           from m in Message,
+             where:
+               m.ticket_id == ^ticket.id and m.kind != "refresh" and m.event_id in ^event_ids and
+                 m.payload == ^%{},
+             order_by: m.id
+         )
+     }}
   end
 
   defdelegate search(actor, filters \\ %{}), to: Instantflow.WorkflowRuntime.Projections

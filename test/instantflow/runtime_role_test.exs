@@ -929,6 +929,62 @@ defmodule Instantflow.RuntimeRoleTest do
            ) == 1
   end
 
+  test "queued composite projection observes a committed grant revocation", c do
+    alias Instantflow.WorkflowRuntime.RecordProjection
+    {id, _} = collaborative_ticket(c)
+
+    {:ok, {_, grant}} =
+      Instantflow.Access.grant(c.a_scope, c.a_scope.id, c.a_scope.department_id, "finance")
+
+    {:ok, before} = RecordProjection.load(c.a_scope, id)
+    assert "finance" in before.data.editable
+
+    parent = self()
+    supervisor = start_supervised!(Task.Supervisor)
+
+    revoker =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        Repo.transaction(fn ->
+          result = Instantflow.Access.revoke(c.a_scope, grant.id)
+          send(parent, :projection_revocation_holds_gate)
+
+          receive do
+            :commit -> result
+          after
+            5000 -> Repo.rollback(:barrier_timeout)
+          end
+        end)
+      end)
+
+    assert_receive :projection_revocation_holds_gate, 5000
+
+    reader =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+        RecordProjection.load(c.a_scope, id)
+      end)
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec(
+          {Postgrex, c.owner_config ++ [database: c.database]},
+          id: :projection_gate_observer
+        )
+      )
+
+    assert wait_for_waiters(connection, c.database, 1, 1000)
+    send(revoker.pid, :commit)
+    assert {:ok, {:ok, _}} = Task.await(revoker)
+    assert {:ok, projection} = Task.await(reader)
+    refute "finance" in projection.data.editable
+    refute Enum.any?(projection.data.sections, &(&1.key == "finance"))
+
+    assert Repo.query!("SELECT NULLIF(current_setting('instantflow.organization_id', true), '')").rows ==
+             [[nil]]
+  end
+
   test "overlapping draft saves and publication use real non-owner connections and compare revisions",
        c do
     alias Instantflow.WorkflowCatalog.{Draft, Templates, TemplateEvent}

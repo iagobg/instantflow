@@ -135,6 +135,10 @@ defmodule InstantflowWeb.ParticipantDirectoryLiveTest do
 
     refute has_element?(view, "#section-request-contact option[value='#{reference}']")
 
+    render_hook(view, "reconcile", %{})
+    assert has_element?(view, "#directory-search-request-contact input[value='does-not-exist']")
+    refute has_element?(view, "#section-request-contact option[value='#{reference}']")
+
     view
     |> form("#directory-search-request-contact", directory: %{query: visitor.user.name})
     |> render_change()
