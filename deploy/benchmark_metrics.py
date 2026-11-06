@@ -25,7 +25,8 @@ SELECT json_build_object(
    'track_activities', current_setting('track_activities'), 'track_counts', current_setting('track_counts'),
    'track_io_timing', current_setting('track_io_timing'), 'track_wal_io_timing', current_setting('track_wal_io_timing'),
    'shared_preload_libraries', current_setting('shared_preload_libraries')),
- 'statements_available', EXISTS(SELECT FROM pg_extension WHERE extname='pg_stat_statements')
+ 'statements_available', EXISTS(SELECT FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace
+   WHERE e.extname='pg_stat_statements' AND n.nspname='instantflow_benchmark_metrics')
    AND 'pg_stat_statements'=ANY(string_to_array(current_setting('shared_preload_libraries'), ','))
 );
 """.replace("DB_COLUMNS", ", ".join(DATABASE_COUNTERS))
@@ -52,14 +53,30 @@ SELECT json_build_object(
 STATEMENTS_SQL = """
 SET statement_timeout='5s';
 SELECT json_build_object(
- 'info', (SELECT row_to_json(i) FROM pg_stat_statements_info i),
+ 'info', (SELECT row_to_json(i) FROM instantflow_benchmark_metrics.pg_stat_statements_info i),
  'queries', (SELECT coalesce(json_agg(s), '[]') FROM (
     SELECT queryid::text AS query_id, toplevel, STMT_COLUMNS
-    FROM pg_stat_statements
+    FROM instantflow_benchmark_metrics.pg_stat_statements
     WHERE dbid=(SELECT oid FROM pg_database WHERE datname=current_database())
       AND userid=(SELECT oid FROM pg_roles WHERE rolname='instantflow_runtime')
     ORDER BY queryid, toplevel) s));
 """.replace("STMT_COLUMNS", ", ".join(STATEMENT_COUNTERS))
+
+
+def ensure_extension(controller):
+    config = host.read_json(host.ROOT / "compose.json")
+    if config["services"]["db"].get("command") != host.METRICS_COMMAND:
+        return
+    host.require(controller.sql(host.DATABASE, "SHOW shared_preload_libraries;") == "pg_stat_statements",
+                 "Statement statistics were not preloaded")
+    schema = controller.sql(host.DATABASE,
+        "SELECT coalesce((SELECT extnamespace::regnamespace::text FROM pg_extension WHERE extname='pg_stat_statements'), '');")
+    host.require(schema in {"", "instantflow_benchmark_metrics"}, "Unexpected statement extension schema")
+    controller.sql(host.DATABASE, """
+        CREATE SCHEMA IF NOT EXISTS instantflow_benchmark_metrics AUTHORIZATION postgres;
+        REVOKE ALL ON SCHEMA instantflow_benchmark_metrics FROM PUBLIC, instantflow_runtime;
+        CREATE EXTENSION IF NOT EXISTS pg_stat_statements WITH SCHEMA instantflow_benchmark_metrics;
+    """)
 
 
 def cpu_counters(text):

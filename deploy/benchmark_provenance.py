@@ -58,7 +58,8 @@ def manifest(application, ready, fixture, workload):
 def controller_hashes():
     folder = Path(__file__).resolve().parent
     names = ["benchmark_host.py", "benchmark_rollout.py", "benchmark_candidate.py",
-             "benchmark_smoke.py", "benchmark_session.py", "benchmark_metrics.py", "benchmark_provenance.py", "remote.py"]
+             "benchmark_smoke.py", "benchmark_session.py", "benchmark_metrics.py", "benchmark_metrics_setup.py",
+             "benchmark_provenance.py", "remote.py"]
     # In a checkout the compatibility wrapper retains its descriptive source name.
     if not (folder / "remote.py").exists():
         names[-1] = "benchmark_legacy.py"

@@ -63,6 +63,7 @@ class FakeHost(host.Host):
                 "Name": "/" + host.PROJECT + "-" + service, "Image": "sha256:application-bytes",
                 "Config": {
                     "Image": image, "User": "nobody:nogroup" if service == "web" else "",
+                    "Cmd": ["postgres"] if service == "db" else ["/app/bin/instantflow", "start"],
                     "Env": [k + "=" + v for k, v in host.read_env(root / (service + ".env")).items()],
                     "Labels": {
                         "com.docker.compose.project": host.PROJECT, "com.docker.compose.service": service,
@@ -385,6 +386,16 @@ class BenchmarkHostTest(unittest.TestCase):
                 with self.assertRaises(host.GuardError):
                     host.Host().sql(database, "SELECT 1;")
             docker.assert_not_called()
+
+    def test_operator_clients_disable_statement_tracking_without_changing_runtime(self):
+        with patch.object(host.Host, "command", return_value=b"") as command:
+            for client in ["psql", "pg_dump", "pg_restore"]:
+                host.Host().docker("exec", "-i", host.PROJECT + "-db", client, label="operator")
+                args = command.call_args.args[0]
+                self.assertIn("PGOPTIONS=-c pg_stat_statements.track=none", args)
+                self.assertLess(args.index("--env"), args.index(host.PROJECT + "-db"))
+            host.Host().docker("exec", host.PROJECT + "-web", "cat", "/sys/fs/cgroup/cpu.stat", label="counter")
+            self.assertNotIn("--env", command.call_args.args[0])
 
 
 if __name__ == "__main__":

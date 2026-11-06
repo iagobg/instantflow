@@ -14,6 +14,7 @@ import urllib.request
 import benchmark_host as host
 from benchmark_candidate import verify, verify_publication_run
 import benchmark_smoke
+import benchmark_metrics
 
 
 def sync_directory(path):
@@ -162,6 +163,7 @@ class Rollout(host.Host):
         self.runtime_guard()
         host.require(self.sql(host.DATABASE, "BEGIN; SET LOCAL ROLE instantflow_runtime; SELECT count(*) FROM public.tickets; ROLLBACK;") == "0",
                      "Restored runtime RLS does not fail closed")
+        benchmark_metrics.ensure_extension(self)
 
     def start(self):
         self.compose("up", "-d", "--no-deps", "--pull", "never", "--wait", "--wait-timeout", "90", "web")

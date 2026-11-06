@@ -24,6 +24,9 @@ BASE_HASH = "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c"
 CONFIG_FILES = ("compose.json", "fixture.json", "db.env", "web.env", "operator-private.json")
 SNAPSHOT_PATTERN = r"snapshot-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{12}"
 VERIFY_PREFIX = "instantflow_benchmark_verify_"
+METRICS_COMMAND = ["postgres", "-c", "shared_preload_libraries=pg_stat_statements",
+                   "-c", "compute_query_id=on", "-c", "track_io_timing=on",
+                   "-c", "track_wal_io_timing=on", "-c", "pg_stat_statements.track=top"]
 
 
 def baseline_application():
@@ -129,8 +132,10 @@ def validate_config(config, marker, application=None):
     web, db = config["services"]["web"], config["services"]["db"]
     common = {"image", "container_name", "env_file", "restart", "cpus", "mem_limit",
               "networks", "healthcheck", "logging"}
+    db_fields = common | {"volumes"} | ({"command"} if "command" in db else set())
     require(set(web) == common | {"init", "environment", "ports", "cap_drop", "security_opt"}
-            and set(db) == common | {"volumes"}, "Unexpected service options")
+            and set(db) == db_fields, "Unexpected service options")
+    require("command" not in db or db["command"] == METRICS_COMMAND, "Unexpected PostgreSQL instrumentation command")
     require(web["image"] == application["image"] and db["image"] == POSTGRES_IMAGE,
             "Compose image differs from immutable application manifest")
     require(web["container_name"] == PROJECT + "-web" and db["container_name"] == PROJECT + "-db",
@@ -196,6 +201,13 @@ class Host:
         return result.stdout
 
     def docker(self, *args, label, **kwargs):
+        args = list(args)
+        if args and args[0] == "exec" and PROJECT + "-db" in args:
+            index = args.index(PROJECT + "-db")
+            if args[index + 1:index + 2] in [["psql"], ["pg_dump"], ["pg_restore"]]:
+                # These clients always use the operator login. Keep monitor/dump
+                # queries out of statement tracking without changing role globals.
+                args[index:index] = ["--env", "PGOPTIONS=-c pg_stat_statements.track=none"]
         return self.command(["sudo", "-n", "docker", "--host", "unix:///var/run/docker.sock", *args],
                             label=label, **kwargs)
 
@@ -206,7 +218,7 @@ class Host:
                            "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", database,
                            input=statement.encode(), label="database inspection").decode().strip()
 
-    def guard(self, *, stopped=False, transition=None, ready=False):
+    def guard(self, *, stopped=False, transition=None, ready=False, maintenance=False):
         require(ROOT.resolve() == ROOT and Path(__file__).resolve().parent == ROOT,
                 "Wrong benchmark management directory")
         private_path(ROOT, directory=True)
@@ -217,6 +229,9 @@ class Host:
         if transition is None:
             require(not (ROOT / "pending-operation.json").exists(),
                     "Interrupted operation requires benchmark_rollout.py recover")
+        if not maintenance:
+            require(not (ROOT / "pending-metrics.json").exists(),
+                    "Interrupted metrics setup requires benchmark_metrics_setup.py recover")
         db_env, web_env = validate_credentials(ROOT)
         require(digest(private_path(ROOT / "baseline.dump")) == BASE_HASH, "Frozen baseline checksum mismatch")
 
@@ -224,15 +239,23 @@ class Host:
             containers = json.loads(self.docker("inspect", PROJECT + "-web", PROJECT + "-db",
                                                label="container identity"))
         except GuardError:
-            if not transition or ready:
+            if maintenance and not ready:
+                missing = not self.docker("ps", "-aq", "--filter", "name=^/" + PROJECT + "-db$",
+                                          label="missing database inspection").strip()
+                require(missing, "Existing benchmark database could not be inspected")
+                web = json.loads(self.docker("inspect", PROJECT + "-web", label="web identity"))
+                require(len(web) == 1, "Unexpected web inspection")
+                containers = [web[0], None]
+            elif not transition or ready:
                 raise
-            # Compose can be interrupted between deleting and recreating web.
-            missing = not self.docker("ps", "-aq", "--filter", "name=^/" + PROJECT + "-web$",
-                                      label="missing benchmark web inspection").strip()
-            require(missing, "Existing benchmark web could not be inspected")
-            database = json.loads(self.docker("inspect", PROJECT + "-db", label="database identity"))
-            require(len(database) == 1, "Unexpected database inspection")
-            containers = [None, database[0]]
+            else:
+                # Compose can be interrupted between deleting and recreating web.
+                missing = not self.docker("ps", "-aq", "--filter", "name=^/" + PROJECT + "-web$",
+                                          label="missing benchmark web inspection").strip()
+                require(missing, "Existing benchmark web could not be inspected")
+                database = json.loads(self.docker("inspect", PROJECT + "-db", label="database identity"))
+                require(len(database) == 1, "Unexpected database inspection")
+                containers = [None, database[0]]
         require(len(containers) == 2, "Unexpected container inspection")
         for container, service, image, cpus, memory, env in [
             (containers[0], "web", application["image"], 2_000_000_000, 2_147_483_648, web_env),
@@ -249,10 +272,10 @@ class Host:
                     and labels.get("com.docker.compose.project.working_dir") == str(ROOT)
                     and labels.get("com.docker.compose.project.config_files") == str(ROOT / "compose.json"),
                     "Running container identity differs from benchmark configuration")
-            if service != "web" or ready or not (stopped or transition):
+            if ready or (not maintenance and (service != "web" or not (stopped or transition))):
                 require(container["State"]["Running"] and container["State"]["Health"]["Status"] == "healthy",
                         "Benchmark containers must be running and healthy")
-            elif stopped:
+            elif stopped and service == "web":
                 require(not container["State"]["Running"], "Benchmark web must be stopped")
             require(container["HostConfig"]["NanoCpus"] == cpus
                     and container["HostConfig"]["Memory"] == memory
@@ -272,6 +295,8 @@ class Host:
                     PROJECT + "_database", "oracle-caddy-web",
                 }, "Unexpected running web topology")
             else:
+                commands = [["postgres"], METRICS_COMMAND] if maintenance and not ready else [config["services"]["db"].get("command", ["postgres"])]
+                require(container["Config"]["Cmd"] in commands, "Running PostgreSQL command differs")
                 mounts = container["Mounts"]
                 require(len(mounts) == 1 and mounts[0]["Type"] == "volume"
                         and mounts[0]["Name"] == PROJECT + "_data"
@@ -295,16 +320,20 @@ class Host:
                 and volume["Name"] == PROJECT + "_data"
                 and volume["Labels"].get("com.docker.compose.project") == PROJECT,
                 "Database network or volume belongs to another stack")
+        identity = {"root": str(ROOT), "project": PROJECT, "database": DATABASE,
+                    "application_commit": application["application_commit"], "image": application["image"],
+                    "postgres_image": POSTGRES_IMAGE,
+                    "fixture_sha256": BASE_HASH, "endpoint_host": web_env["PHX_HOST"], "pool_size": 10}
+        if maintenance and (not containers[1] or not containers[1]["State"]["Running"]
+                            or containers[1]["State"]["Health"]["Status"] != "healthy"):
+            return identity  # Only configuration/lifecycle recovery is authorized in this state.
         databases = self.sql("postgres", "SELECT datname FROM pg_database WHERE NOT datistemplate ORDER BY datname;").splitlines()
         require(databases == [DATABASE, "postgres"] or (transition and databases == ["postgres"]),
                 "Database container is not exclusive to the benchmark")
         if not transition:
             require(self.sql(DATABASE, "SELECT current_database();") == DATABASE, "Wrong connected database")
             self.runtime_guard()
-        return {"root": str(ROOT), "project": PROJECT, "database": DATABASE,
-                "application_commit": application["application_commit"], "image": application["image"],
-                "postgres_image": POSTGRES_IMAGE,
-                "fixture_sha256": BASE_HASH, "endpoint_host": web_env["PHX_HOST"], "pool_size": 10}
+        return identity
 
     def image_identity(self, application):
         validate_application(application)
