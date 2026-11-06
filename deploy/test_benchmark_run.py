@@ -26,6 +26,7 @@ class FakeRemote:
         self.ready = {"status": "ready", "application": host.baseline_application(),
                       "frozen_fixture_restored": True, "operation_id": "operation-" + "1" * 12,
                       "recovery_snapshot": "snapshot-example", "controller_sha256": {"controller": "test"},
+                      "metrics_settings": {}, "statement_statistics_available": False,
                       "inventory": {"table_counts": {"organizations": 1, "workflows": 1, "tickets": 12}},
                       "identity": {"image": host.BASE_IMAGE, "application_commit": host.BASE_COMMIT,
                                    "database": host.DATABASE, "project": host.PROJECT,

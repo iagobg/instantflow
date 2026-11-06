@@ -50,13 +50,15 @@ def manifest(application, ready, fixture, workload):
             "resources": {"web_cpus": 2, "web_memory_bytes": 2_147_483_648,
                           "db_cpus": 1, "db_memory_bytes": 1_073_741_824, "pool_size": 10},
             "postgres_image": host.POSTGRES_IMAGE, "k6_image": K6,
+            "postgres_metrics_settings": ready["metrics_settings"],
+            "statement_statistics_available": ready["statement_statistics_available"],
             "host_controller_sha256": ready["controller_sha256"]}
 
 
 def controller_hashes():
     folder = Path(__file__).resolve().parent
     names = ["benchmark_host.py", "benchmark_rollout.py", "benchmark_candidate.py",
-             "benchmark_smoke.py", "benchmark_session.py", "benchmark_provenance.py", "remote.py"]
+             "benchmark_smoke.py", "benchmark_session.py", "benchmark_metrics.py", "benchmark_provenance.py", "remote.py"]
     # In a checkout the compatibility wrapper retains its descriptive source name.
     if not (folder / "remote.py").exists():
         names[-1] = "benchmark_legacy.py"

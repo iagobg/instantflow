@@ -20,7 +20,8 @@ class ProvenanceTest(unittest.TestCase):
                  "identity": {"image": application["image"], "application_commit": application["application_commit"],
                               "fixture_sha256": host.BASE_HASH, "database": host.DATABASE, "project": host.PROJECT,
                               "postgres_image": host.POSTGRES_IMAGE, "pool_size": 10, "endpoint_host": host.DOMAIN},
-                 "controller_sha256": {"script": "synthetic"}}
+                 "controller_sha256": {"script": "synthetic"}, "metrics_settings": {},
+                 "statement_statistics_available": False}
         result = provenance.manifest(application, ready, fixture, {"sha256": provenance.WORKLOAD_SHA256})
         self.assertEqual(result["application"]["application_commit"], "a" * 40)
         self.assertEqual(result["fixture"]["source_commit"], host.BASE_COMMIT)

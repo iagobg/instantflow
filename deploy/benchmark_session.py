@@ -11,6 +11,7 @@ import sys
 import time
 
 import benchmark_host as host
+import benchmark_metrics as metrics
 from benchmark_provenance import controller_hashes
 from benchmark_rollout import Rollout, replace_json
 
@@ -45,11 +46,14 @@ class Channel:
 class Session:
     def __init__(self, controller, channel):
         self.controller, self.channel = controller, channel
+        self.sample_count = 0
 
     def sample(self):
+        self.sample_count += 1
         data = self.controller.docker("stats", "--no-stream", "--format", "{{json .}}",
             host.PROJECT + "-web", host.PROJECT + "-db", label="benchmark resource sample", timeout=10)
-        return {"unix_time": time.time(), "containers": [json.loads(line) for line in data.decode().splitlines()]}
+        return {"unix_time": time.time(), "containers": [json.loads(line) for line in data.decode().splitlines()],
+                "postgres": metrics.capture(self.controller, activity_only=True)}
 
     def run(self):
         request = self.channel.receive(15)
@@ -62,6 +66,10 @@ class Session:
         journal = self.controller.journal()
         report = {"operation_id": journal["id"], "application": application, "status": "interrupted"}
         try:
+            before = metrics.capture(self.controller)
+            report["metrics_before"] = before
+            ready["metrics_settings"] = before["settings"]
+            ready["statement_statistics_available"] = before["statements_available"]
             ready["controller_sha256"] = controller_hashes()
             self.channel.emit({"event": "ready", "ready": ready})
             command = self.channel.receive(request["hold_seconds"], self.sample)
@@ -74,6 +82,10 @@ class Session:
             report["final_identity"] = self.controller.guard(transition=self.controller.context(journal), ready=True)
             self.controller.runtime_guard()
             report["final_inventory"] = self.controller.inventory(host.DATABASE)
+            after = metrics.capture(self.controller)
+            report["metrics_after"] = after
+            report["metrics_delta"] = metrics.difference(before, after)
+            report["activity_samples"] = self.sample_count
         except Exception:
             report["status"] = "failed"
         finally:

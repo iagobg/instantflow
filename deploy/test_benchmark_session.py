@@ -40,8 +40,14 @@ class FakeChannel:
 
 
 class SessionTest(unittest.TestCase):
-    setUp = fixture.BenchmarkHostTest.setUp
     write = fixture.BenchmarkHostTest.write
+
+    def setUp(self):
+        fixture.BenchmarkHostTest.setUp(self)
+        for name, value in [("capture", {"settings": {}, "statements_available": False}), ("difference", {})]:
+            patcher = patch.object(session.metrics, name, return_value=value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def test_completion_abort_timeout_and_disconnect_restore_original_state_under_one_lock(self):
         for completion in ["finish", "abort", "expired", "disconnected", "unknown"]:
