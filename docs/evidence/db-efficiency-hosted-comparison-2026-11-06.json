@@ -1,0 +1,2115 @@
+{
+  "applications": {
+    "baseline": {
+      "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+      "platform": "linux/arm64",
+      "schema": 0
+    },
+    "candidate": {
+      "application_commit": "6320f6aae390e4c563a761f82f93caf55ad0c836",
+      "checks_run_id": 42293617762,
+      "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42293617762",
+      "image": "ghcr.io/iagobg/instantflow@sha256:b11786265c5c32bfbc21ec60a71b63dbc727f72abe5b85480e5ef4bfa8f260ff",
+      "platform": "linux/arm64",
+      "publication_attempt": 1,
+      "publication_run_id": 42294802445,
+      "schema": 2
+    }
+  },
+  "comparison_source_sha256": "69c63480e2474b79315056978159ab3ae73c69ab3156b5039942edb418cba293",
+  "conditions": {
+    "fixture": {
+      "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+      "initial_records": 12,
+      "load_actors": 10,
+      "name": "school-v1",
+      "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+      "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+    },
+    "host_controller_sha256": {
+      "benchmark_candidate.py": "5aaf42436dffb9861fb090e0446d3b3f9cf0bfb966adc6c561194a6397e6f397",
+      "benchmark_host.py": "bb2094c996e69aba63f2fb36c6a7d0f427c520355a5d423de3e21724779b2f05",
+      "benchmark_metrics.py": "df9a625c9a77f13aaa00579d10f860330c9927937705bbcb62e31652578c5eab",
+      "benchmark_metrics_setup.py": "c467407f0c29d4fa9b94969e7962e749a857004f6c07525b93023092a5589d2b",
+      "benchmark_provenance.py": "13fc3dca638792fe5cb27d01545ea0b01d2f546c1733aef587c8c0dd6ea7baf7",
+      "benchmark_rollout.py": "39c749799ecc75c2ae7326e876bff7a7ebd6fcdf812777edbb08dd82093a42d7",
+      "benchmark_session.py": "9847e22d399c97833ab6122d39bb52eb26db2bfcc1c21ef14b3a5fefa14f1e2e",
+      "benchmark_smoke.py": "f10c6ba5cd1667642af3f0e15b68e4a3b439cd2508aaf666997409f58da86f1c",
+      "remote.py": "1100e88a66a12a903232c404ed1a1db1d6a9ba3fe404949ea01f1070e73ca02b"
+    },
+    "k6_image": "grafana/k6@sha256:8663335c8c1c5a40dd51823ef980c584761a4a084a2297fca29a29ee495c6bc1",
+    "measurement_seconds": 30,
+    "mode": "mixed",
+    "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+    "postgres_metrics_settings": {
+      "server_version_num": "160015",
+      "shared_preload_libraries": "pg_stat_statements",
+      "track_activities": "on",
+      "track_counts": "on",
+      "track_io_timing": "on",
+      "track_wal_io_timing": "on"
+    },
+    "resources": {
+      "db_cpus": 1,
+      "db_memory_bytes": 1073741824,
+      "pool_size": 10,
+      "web_cpus": 2,
+      "web_memory_bytes": 2147483648
+    },
+    "route_verification": {
+      "remote_ip": "134.65.245.186",
+      "status": 200,
+      "tls_verified": true
+    },
+    "runner": {
+      "cpus": 24,
+      "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "source_sha256": "cf99c89c6b93069e8bc9f0dee93e29375e85ca0ce2d3271a61cb5f9868294076"
+    },
+    "statement_statistics_available": true,
+    "target": "https://instantflow-benchmark.iagobussoletti.com.br",
+    "transport": {
+      "hostname": "instantflow-benchmark.iagobussoletti.com.br",
+      "origin_ip": "134.65.245.186",
+      "tls_verification": true
+    },
+    "warmup_seconds": 10,
+    "workload": {
+      "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "name": "school-v1-browser",
+      "sha256": "5b7aa7011e796b3794847052e2e94d7820143a96d5a4088456f0ca468990aba6"
+    }
+  },
+  "diagnostic_plan": {
+    "application_candidate": {
+      "application_commit": "6320f6aae390e4c563a761f82f93caf55ad0c836",
+      "checks_run_id": 42293617762,
+      "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42293617762",
+      "image": "ghcr.io/iagobg/instantflow@sha256:b11786265c5c32bfbc21ec60a71b63dbc727f72abe5b85480e5ef4bfa8f260ff",
+      "platform": "linux/arm64",
+      "publication_attempt": 1,
+      "publication_run_id": 42294802445,
+      "schema": 2
+    },
+    "created_at": "2026-11-06T21:19:54.327818+00:00",
+    "deadline_utc": "2026-11-06T21:56:00+00:00",
+    "idle_seconds": 15,
+    "kind": "short diagnostic; not original acceptance campaign",
+    "measurement_seconds": 30,
+    "order": [
+      [
+        "baseline",
+        "candidate"
+      ],
+      [
+        "candidate",
+        "baseline"
+      ],
+      [
+        "baseline",
+        "candidate"
+      ]
+    ],
+    "repetitions": 3,
+    "source_sha256": "243f3fa9c83ec6d73c981ca7443e492936923b9c8be959dda3d17dfc6cf44411",
+    "stop_rules": [
+      "browser or restoration failure",
+      "deadlocks",
+      "pending outbox older than 30 seconds",
+      "save/read p95 above 3000 ms",
+      "CPU usage above 80 percent of quota or throttled time above 10 percent of observation window",
+      "generator sampled CPU or memory above 80 percent of host capacity"
+    ],
+    "users": [
+      1,
+      5,
+      10
+    ],
+    "warmup_seconds": 10
+  },
+  "final_host_verification": {
+    "benchmark_database_container_unchanged_since_instrumentation": true,
+    "identity": {
+      "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "database": "instantflow_benchmark",
+      "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+      "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+      "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+      "pool_size": 10,
+      "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+      "project": "instantflow-benchmark",
+      "root": "/home/ubuntu/apps/instantflow-benchmark"
+    },
+    "inventory": {
+      "schema_versions": [
+        "20261020180524",
+        "20261020184948",
+        "20261020200807",
+        "20261020205338",
+        "20261021002628",
+        "20261021011853",
+        "20261021012546",
+        "20261021080918",
+        "20261021083132",
+        "20261021094238",
+        "20261021123137",
+        "20261021124325",
+        "20261021190401",
+        "20261021193830",
+        "20261021224308",
+        "20261021231607",
+        "20261021233544",
+        "20261022100818",
+        "20261022175214",
+        "20261023033124",
+        "20261023040903",
+        "20261023151405",
+        "20261023152158",
+        "20261023160944"
+      ],
+      "table_counts": {
+        "budget_accounts": 0,
+        "budget_entries": 0,
+        "budget_holds": 0,
+        "calculation_attempts": 0,
+        "calculation_reviews": 0,
+        "calculation_runs": 0,
+        "calculation_scripts": 0,
+        "calculation_switch": 1,
+        "calculation_switch_events": 0,
+        "catalog_products": 0,
+        "command_receipts": 48,
+        "delivery_attempts": 48,
+        "departments": 1,
+        "enrollments": 0,
+        "fulfillment_batches": 0,
+        "fulfillment_lines": 0,
+        "guardian_links": 0,
+        "invitations": 0,
+        "membership_grants": 14,
+        "memberships": 15,
+        "operation_day_closes": 0,
+        "operation_receipts": 0,
+        "organization_events": 14,
+        "organizations": 1,
+        "outbox_messages": 48,
+        "private_documents": 0,
+        "retired_workflow_versions": 0,
+        "schema_migrations": 24,
+        "section_assignments": 0,
+        "service_resources": 0,
+        "service_sessions": 0,
+        "sessions": 4,
+        "template_events": 3,
+        "ticket_participants": 0,
+        "ticket_sections": 30,
+        "tickets": 15,
+        "transition_events": 48,
+        "users": 15,
+        "workflow_drafts": 1,
+        "workflow_versions": 1,
+        "workflows": 1
+      }
+    },
+    "local_postgres_returned_to_initial_stopped_state": true,
+    "local_test_database_removed": true,
+    "no_pending_journal": true,
+    "original_inventory_matches": true,
+    "original_record_count": 15,
+    "settings": {
+      "server_version_num": "160015",
+      "shared_preload_libraries": "pg_stat_statements",
+      "track_activities": "on",
+      "track_counts": "on",
+      "track_io_timing": "on",
+      "track_wal_io_timing": "on"
+    },
+    "smoke": {
+      "authenticated_record_read": true,
+      "logout": true,
+      "tls_verified": true,
+      "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+    },
+    "statement_statistics_available": true,
+    "unrelated_container_ids_and_images_unchanged": true
+  },
+  "generator_capacity": {
+    "cpus": 24,
+    "memory_bytes": 33555456000
+  },
+  "idle_controls": [
+    {
+      "arm": "baseline",
+      "db_cpu_seconds": 0.993734,
+      "observation_seconds": 16.068025827407837,
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "pending_outbox_before": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration_status": "recovered",
+      "settings": {
+        "server_version_num": "160015",
+        "shared_preload_libraries": "pg_stat_statements",
+        "track_activities": "on",
+        "track_counts": "on",
+        "track_io_timing": "on",
+        "track_wal_io_timing": "on"
+      },
+      "sql_calls": 1922,
+      "sql_calls_per_second": 119.61643705610506,
+      "web_cpu_seconds": 0.454686
+    },
+    {
+      "arm": "candidate",
+      "db_cpu_seconds": 0.706201,
+      "observation_seconds": 16.047082901000977,
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "pending_outbox_before": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration_status": "recovered",
+      "settings": {
+        "server_version_num": "160015",
+        "shared_preload_libraries": "pg_stat_statements",
+        "track_activities": "on",
+        "track_counts": "on",
+        "track_io_timing": "on",
+        "track_wal_io_timing": "on"
+      },
+      "sql_calls": 64,
+      "sql_calls_per_second": 3.98826381061494,
+      "web_cpu_seconds": 0.137454
+    }
+  ],
+  "interpretation": [
+    "Latency summaries are medians/ranges of per-run p95 values, never pooled percentiles or confidence intervals.",
+    "Full-window SQL/CPU per verified cycle includes browser initialization, warmup, final reads, background work and observers.",
+    "The reviewed workload records latency only for operations completing inside the measured window; crossing-boundary cycles remain correctness-checked. Short windows are more sensitive to this censoring.",
+    "Closed workload throughput is not an equal-offered-rate headroom comparison.",
+    "No supported-capacity claim: the remaining contention, volume and longer-duration matrix must pass.",
+    "Backend/lock/CPU samples are periodic observations, not peak occupancy or Ecto connection lease measurements. Idle controls include observer cost and are not subtracted from workload totals."
+  ],
+  "levels": [
+    {
+      "baseline": {
+        "runs": [
+          {
+            "cpu_throttled_usec": {
+              "db": 0,
+              "web": 0
+            },
+            "database_average_cpu_cores": 0.07867040601330463,
+            "database_cpu_seconds": 5.846547,
+            "database_cpu_seconds_per_verified_cycle": 0.2541976956521739,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:23:08.208567+00:00",
+            "measured_saves": 16,
+            "measured_saves_per_second": 0.5333333333333333,
+            "observation_seconds": 74.3169801235199,
+            "operation_id": "operation-eda8d5ab2425",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 466.75,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 334.75,
+            "sql_calls": 36980,
+            "sql_calls_per_verified_cycle": 1607.8260869565217,
+            "started_at": "2026-11-06T21:21:25.568313+00:00",
+            "statement_execution_ms": 442.41930500000007,
+            "users": 1,
+            "verified_cycles_including_warmup": 23,
+            "web_average_cpu_cores": 0.11191058875342912,
+            "web_cpu_seconds": 8.316857,
+            "web_cpu_seconds_per_verified_cycle": 0.3616024782608696
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 0,
+              "web": 0
+            },
+            "database_average_cpu_cores": 0.0772228877413381,
+            "database_cpu_seconds": 5.714355,
+            "database_cpu_seconds_per_verified_cycle": 0.24845021739130435,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:28:19.240886+00:00",
+            "measured_saves": 16,
+            "measured_saves_per_second": 0.5333333333333333,
+            "observation_seconds": 73.99820399284363,
+            "operation_id": "operation-d9ac0af4b222",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 475.8,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 318.25,
+            "sql_calls": 36939,
+            "sql_calls_per_verified_cycle": 1606.0434782608695,
+            "started_at": "2026-11-06T21:26:37.217950+00:00",
+            "statement_execution_ms": 431.79406,
+            "users": 1,
+            "verified_cycles_including_warmup": 23,
+            "web_average_cpu_cores": 0.11010334792433529,
+            "web_cpu_seconds": 8.14745,
+            "web_cpu_seconds_per_verified_cycle": 0.3542369565217391
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 0,
+              "web": 0
+            },
+            "database_average_cpu_cores": 0.07738651178916298,
+            "database_cpu_seconds": 5.733001,
+            "database_cpu_seconds_per_verified_cycle": 0.24926091304347825,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:30:01.455152+00:00",
+            "measured_saves": 16,
+            "measured_saves_per_second": 0.5333333333333333,
+            "observation_seconds": 74.08269047737122,
+            "operation_id": "operation-7fb9b3b659f4",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 446,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 319.25,
+            "sql_calls": 36954,
+            "sql_calls_per_verified_cycle": 1606.695652173913,
+            "started_at": "2026-11-06T21:28:19.251813+00:00",
+            "statement_execution_ms": 432.34181200000006,
+            "users": 1,
+            "verified_cycles_including_warmup": 23,
+            "web_average_cpu_cores": 0.11175313621376694,
+            "web_cpu_seconds": 8.278973,
+            "web_cpu_seconds_per_verified_cycle": 0.35995534782608696
+          }
+        ],
+        "variation": {
+          "database_average_cpu_cores": {
+            "max": 0.07867040601330463,
+            "median": 0.07738651178916298,
+            "min": 0.0772228877413381
+          },
+          "database_cpu_seconds_per_verified_cycle": {
+            "max": 0.2541976956521739,
+            "median": 0.24926091304347825,
+            "min": 0.24845021739130435
+          },
+          "measured_saves_per_second": {
+            "max": 0.5333333333333333,
+            "median": 0.5333333333333333,
+            "min": 0.5333333333333333
+          },
+          "record_read_p95_ms": {
+            "max": 475.8,
+            "median": 466.75,
+            "min": 446
+          },
+          "save_ack_p95_ms": {
+            "max": 334.75,
+            "median": 319.25,
+            "min": 318.25
+          },
+          "sql_calls_per_verified_cycle": {
+            "max": 1607.8260869565217,
+            "median": 1606.695652173913,
+            "min": 1606.0434782608695
+          },
+          "web_average_cpu_cores": {
+            "max": 0.11191058875342912,
+            "median": 0.11175313621376694,
+            "min": 0.11010334792433529
+          },
+          "web_cpu_seconds_per_verified_cycle": {
+            "max": 0.3616024782608696,
+            "median": 0.35995534782608696,
+            "min": 0.3542369565217391
+          }
+        }
+      },
+      "candidate": {
+        "runs": [
+          {
+            "cpu_throttled_usec": {
+              "db": 0,
+              "web": 0
+            },
+            "database_average_cpu_cores": 0.04317319256284107,
+            "database_cpu_seconds": 3.193603,
+            "database_cpu_seconds_per_verified_cycle": 0.12774412,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:24:52.834507+00:00",
+            "measured_saves": 18,
+            "measured_saves_per_second": 0.6,
+            "observation_seconds": 73.97189807891846,
+            "operation_id": "operation-ab3dc61d1108",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 396.95,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 261.15,
+            "sql_calls": 8672,
+            "sql_calls_per_verified_cycle": 346.88,
+            "started_at": "2026-11-06T21:23:08.219642+00:00",
+            "statement_execution_ms": 280.368688,
+            "users": 1,
+            "verified_cycles_including_warmup": 25,
+            "web_average_cpu_cores": 0.039840927116076105,
+            "web_cpu_seconds": 2.947109,
+            "web_cpu_seconds_per_verified_cycle": 0.11788436000000001
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 0,
+              "web": 0
+            },
+            "database_average_cpu_cores": 0.04299272804672409,
+            "database_cpu_seconds": 3.189389,
+            "database_cpu_seconds_per_verified_cycle": 0.12757556,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:26:37.206791+00:00",
+            "measured_saves": 18,
+            "measured_saves_per_second": 0.6,
+            "observation_seconds": 74.18438291549683,
+            "operation_id": "operation-bd377ec99921",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 368.8999999999999,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 261.3,
+            "sql_calls": 8673,
+            "sql_calls_per_verified_cycle": 346.92,
+            "started_at": "2026-11-06T21:24:52.846278+00:00",
+            "statement_execution_ms": 298.66369199999997,
+            "users": 1,
+            "verified_cycles_including_warmup": 25,
+            "web_average_cpu_cores": 0.03975029358078001,
+            "web_cpu_seconds": 2.948851,
+            "web_cpu_seconds_per_verified_cycle": 0.11795404
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 0,
+              "web": 0
+            },
+            "database_average_cpu_cores": 0.04156024807476726,
+            "database_cpu_seconds": 3.0189,
+            "database_cpu_seconds_per_verified_cycle": 0.1257875,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:31:44.370921+00:00",
+            "measured_saves": 18,
+            "measured_saves_per_second": 0.6,
+            "observation_seconds": 72.6391236782074,
+            "operation_id": "operation-da62ae55f050",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 398.09999999999997,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 269.79999999999995,
+            "sql_calls": 8342,
+            "sql_calls_per_verified_cycle": 347.5833333333333,
+            "started_at": "2026-11-06T21:30:01.467904+00:00",
+            "statement_execution_ms": 275.06109399999997,
+            "users": 1,
+            "verified_cycles_including_warmup": 24,
+            "web_average_cpu_cores": 0.03921766750133104,
+            "web_cpu_seconds": 2.848737,
+            "web_cpu_seconds_per_verified_cycle": 0.118697375
+          }
+        ],
+        "variation": {
+          "database_average_cpu_cores": {
+            "max": 0.04317319256284107,
+            "median": 0.04299272804672409,
+            "min": 0.04156024807476726
+          },
+          "database_cpu_seconds_per_verified_cycle": {
+            "max": 0.12774412,
+            "median": 0.12757556,
+            "min": 0.1257875
+          },
+          "measured_saves_per_second": {
+            "max": 0.6,
+            "median": 0.6,
+            "min": 0.6
+          },
+          "record_read_p95_ms": {
+            "max": 398.09999999999997,
+            "median": 396.95,
+            "min": 368.8999999999999
+          },
+          "save_ack_p95_ms": {
+            "max": 269.79999999999995,
+            "median": 261.3,
+            "min": 261.15
+          },
+          "sql_calls_per_verified_cycle": {
+            "max": 347.5833333333333,
+            "median": 346.92,
+            "min": 346.88
+          },
+          "web_average_cpu_cores": {
+            "max": 0.039840927116076105,
+            "median": 0.03975029358078001,
+            "min": 0.03921766750133104
+          },
+          "web_cpu_seconds_per_verified_cycle": {
+            "max": 0.118697375,
+            "median": 0.11795404,
+            "min": 0.11788436000000001
+          }
+        }
+      },
+      "median_change_percent": {
+        "database_average_cpu_cores": -44.444158222486664,
+        "database_cpu_seconds_per_verified_cycle": -48.81846558198751,
+        "measured_saves_per_second": 12.5,
+        "record_read_p95_ms": -14.954472415640064,
+        "save_ack_p95_ms": -18.151918559122937,
+        "sql_calls_per_verified_cycle": -78.40785841857443,
+        "web_average_cpu_cores": -64.43026573791748,
+        "web_cpu_seconds_per_verified_cycle": -67.23092441538341
+      },
+      "users": 1
+    },
+    {
+      "baseline": {
+        "runs": [
+          {
+            "cpu_throttled_usec": {
+              "db": 314476,
+              "web": 48306
+            },
+            "database_average_cpu_cores": 0.23446496927356736,
+            "database_cpu_seconds": 17.452611,
+            "database_cpu_seconds_per_verified_cycle": 0.16011569724770644,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:33:27.090070+00:00",
+            "measured_saves": 76,
+            "measured_saves_per_second": 2.533333333333333,
+            "observation_seconds": 74.43589997291565,
+            "operation_id": "operation-f64965270767",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 523.8,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 362.75,
+            "sql_calls": 141673,
+            "sql_calls_per_verified_cycle": 1299.7522935779816,
+            "started_at": "2026-11-06T21:31:44.383279+00:00",
+            "statement_execution_ms": 1776.1905530000008,
+            "users": 5,
+            "verified_cycles_including_warmup": 109,
+            "web_average_cpu_cores": 0.40199316473486213,
+            "web_cpu_seconds": 29.922723,
+            "web_cpu_seconds_per_verified_cycle": 0.2745203944954129
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 180338,
+              "web": 89539
+            },
+            "database_average_cpu_cores": 0.23561721481692247,
+            "database_cpu_seconds": 17.595007,
+            "database_cpu_seconds_per_verified_cycle": 0.15995460909090908,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:38:37.282787+00:00",
+            "measured_saves": 76,
+            "measured_saves_per_second": 2.533333333333333,
+            "observation_seconds": 74.67623710632324,
+            "operation_id": "operation-e5c580f73841",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 526.15,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 374.75,
+            "sql_calls": 142930,
+            "sql_calls_per_verified_cycle": 1299.3636363636363,
+            "started_at": "2026-11-06T21:36:54.502454+00:00",
+            "statement_execution_ms": 1876.786569999999,
+            "users": 5,
+            "verified_cycles_including_warmup": 110,
+            "web_average_cpu_cores": 0.40054100419405414,
+            "web_cpu_seconds": 29.910895,
+            "web_cpu_seconds_per_verified_cycle": 0.27191722727272727
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 274305,
+              "web": 68751
+            },
+            "database_average_cpu_cores": 0.23776044941245847,
+            "database_cpu_seconds": 17.680324,
+            "database_cpu_seconds_per_verified_cycle": 0.16220480733944953,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:40:20.034592+00:00",
+            "measured_saves": 76,
+            "measured_saves_per_second": 2.533333333333333,
+            "observation_seconds": 74.36192202568054,
+            "operation_id": "operation-73e04c4d0de9",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 559.6,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 373.25,
+            "sql_calls": 141448,
+            "sql_calls_per_verified_cycle": 1297.6880733944954,
+            "started_at": "2026-11-06T21:38:37.293929+00:00",
+            "statement_execution_ms": 1852.3807369999997,
+            "users": 5,
+            "verified_cycles_including_warmup": 109,
+            "web_average_cpu_cores": 0.396913691792515,
+            "web_cpu_seconds": 29.515265,
+            "web_cpu_seconds_per_verified_cycle": 0.270782247706422
+          }
+        ],
+        "variation": {
+          "database_average_cpu_cores": {
+            "max": 0.23776044941245847,
+            "median": 0.23561721481692247,
+            "min": 0.23446496927356736
+          },
+          "database_cpu_seconds_per_verified_cycle": {
+            "max": 0.16220480733944953,
+            "median": 0.16011569724770644,
+            "min": 0.15995460909090908
+          },
+          "measured_saves_per_second": {
+            "max": 2.533333333333333,
+            "median": 2.533333333333333,
+            "min": 2.533333333333333
+          },
+          "record_read_p95_ms": {
+            "max": 559.6,
+            "median": 526.15,
+            "min": 523.8
+          },
+          "save_ack_p95_ms": {
+            "max": 374.75,
+            "median": 373.25,
+            "min": 362.75
+          },
+          "sql_calls_per_verified_cycle": {
+            "max": 1299.7522935779816,
+            "median": 1299.3636363636363,
+            "min": 1297.6880733944954
+          },
+          "web_average_cpu_cores": {
+            "max": 0.40199316473486213,
+            "median": 0.40054100419405414,
+            "min": 0.396913691792515
+          },
+          "web_cpu_seconds_per_verified_cycle": {
+            "max": 0.2745203944954129,
+            "median": 0.27191722727272727,
+            "min": 0.270782247706422
+          }
+        }
+      },
+      "candidate": {
+        "runs": [
+          {
+            "cpu_throttled_usec": {
+              "db": 78101,
+              "web": 47917
+            },
+            "database_average_cpu_cores": 0.09413908097419549,
+            "database_cpu_seconds": 6.903304,
+            "database_cpu_seconds_per_verified_cycle": 0.05752753333333334,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:35:10.998551+00:00",
+            "measured_saves": 90,
+            "measured_saves_per_second": 3.0,
+            "observation_seconds": 73.33090496063232,
+            "operation_id": "operation-6d0957cc6a1d",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 398.74999999999994,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 272.1,
+            "sql_calls": 39093,
+            "sql_calls_per_verified_cycle": 325.775,
+            "started_at": "2026-11-06T21:33:27.101146+00:00",
+            "statement_execution_ms": 919.1940299999997,
+            "users": 5,
+            "verified_cycles_including_warmup": 120,
+            "web_average_cpu_cores": 0.16121412938169283,
+            "web_cpu_seconds": 11.821978,
+            "web_cpu_seconds_per_verified_cycle": 0.09851648333333334
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 10464,
+              "web": 31210
+            },
+            "database_average_cpu_cores": 0.09752158112184241,
+            "database_cpu_seconds": 7.146477,
+            "database_cpu_seconds_per_verified_cycle": 0.059553975,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:36:54.492010+00:00",
+            "measured_saves": 90,
+            "measured_saves_per_second": 3.0,
+            "observation_seconds": 73.2809796333313,
+            "operation_id": "operation-0e782286b37a",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 399.54999999999995,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 270,
+            "sql_calls": 39054,
+            "sql_calls_per_verified_cycle": 325.45,
+            "started_at": "2026-11-06T21:35:11.009123+00:00",
+            "statement_execution_ms": 968.2534949999998,
+            "users": 5,
+            "verified_cycles_including_warmup": 120,
+            "web_average_cpu_cores": 0.15956130852106698,
+            "web_cpu_seconds": 11.692809,
+            "web_cpu_seconds_per_verified_cycle": 0.097440075
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 0,
+              "web": 21821
+            },
+            "database_average_cpu_cores": 0.09557162235261174,
+            "database_cpu_seconds": 6.974843,
+            "database_cpu_seconds_per_verified_cycle": 0.058123691666666664,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:42:03.418653+00:00",
+            "measured_saves": 90,
+            "measured_saves_per_second": 3.0,
+            "observation_seconds": 72.98027205467224,
+            "operation_id": "operation-4cc284145970",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 377.55,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 263.55,
+            "sql_calls": 39110,
+            "sql_calls_per_verified_cycle": 325.9166666666667,
+            "started_at": "2026-11-06T21:40:20.046903+00:00",
+            "statement_execution_ms": 892.2053149999998,
+            "users": 5,
+            "verified_cycles_including_warmup": 120,
+            "web_average_cpu_cores": 0.16138617558422716,
+            "web_cpu_seconds": 11.778007,
+            "web_cpu_seconds_per_verified_cycle": 0.09815005833333333
+          }
+        ],
+        "variation": {
+          "database_average_cpu_cores": {
+            "max": 0.09752158112184241,
+            "median": 0.09557162235261174,
+            "min": 0.09413908097419549
+          },
+          "database_cpu_seconds_per_verified_cycle": {
+            "max": 0.059553975,
+            "median": 0.058123691666666664,
+            "min": 0.05752753333333334
+          },
+          "measured_saves_per_second": {
+            "max": 3.0,
+            "median": 3.0,
+            "min": 3.0
+          },
+          "record_read_p95_ms": {
+            "max": 399.54999999999995,
+            "median": 398.74999999999994,
+            "min": 377.55
+          },
+          "save_ack_p95_ms": {
+            "max": 272.1,
+            "median": 270,
+            "min": 263.55
+          },
+          "sql_calls_per_verified_cycle": {
+            "max": 325.9166666666667,
+            "median": 325.775,
+            "min": 325.45
+          },
+          "web_average_cpu_cores": {
+            "max": 0.16138617558422716,
+            "median": 0.16121412938169283,
+            "min": 0.15956130852106698
+          },
+          "web_cpu_seconds_per_verified_cycle": {
+            "max": 0.09851648333333334,
+            "median": 0.09815005833333333,
+            "min": 0.097440075
+          }
+        }
+      },
+      "median_change_percent": {
+        "database_average_cpu_cores": -59.437759067446706,
+        "database_cpu_seconds_per_verified_cycle": -63.69894228624779,
+        "measured_saves_per_second": 18.42105263157896,
+        "record_read_p95_ms": -24.213627292597174,
+        "save_ack_p95_ms": -27.662424648359007,
+        "sql_calls_per_verified_cycle": -74.92811166305185,
+        "web_average_cpu_cores": -59.750904977611775,
+        "web_cpu_seconds_per_verified_cycle": -63.90443543509258
+      },
+      "users": 5
+    },
+    {
+      "baseline": {
+        "runs": [
+          {
+            "cpu_throttled_usec": {
+              "db": 1938844,
+              "web": 317057
+            },
+            "database_average_cpu_cores": 0.421198696211039,
+            "database_cpu_seconds": 31.443242,
+            "database_cpu_seconds_per_verified_cycle": 0.15565961386138616,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:43:46.264744+00:00",
+            "measured_saves": 144,
+            "measured_saves_per_second": 4.8,
+            "observation_seconds": 74.65180277824402,
+            "operation_id": "operation-ff33ad291641",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 628.25,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 419,
+            "sql_calls": 253786,
+            "sql_calls_per_verified_cycle": 1256.3663366336634,
+            "started_at": "2026-11-06T21:42:03.430423+00:00",
+            "statement_execution_ms": 3968.7816599999987,
+            "users": 10,
+            "verified_cycles_including_warmup": 202,
+            "web_average_cpu_cores": 0.6700379111886274,
+            "web_cpu_seconds": 50.019538,
+            "web_cpu_seconds_per_verified_cycle": 0.24762147524752473
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 2157061,
+              "web": 301446
+            },
+            "database_average_cpu_cores": 0.42503371740111046,
+            "database_cpu_seconds": 31.648404,
+            "database_cpu_seconds_per_verified_cycle": 0.15590346798029556,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:48:57.713009+00:00",
+            "measured_saves": 147,
+            "measured_saves_per_second": 4.9,
+            "observation_seconds": 74.46092557907104,
+            "operation_id": "operation-e3310c25e342",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 641.65,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 438.19999999999993,
+            "sql_calls": 255276,
+            "sql_calls_per_verified_cycle": 1257.5172413793102,
+            "started_at": "2026-11-06T21:47:15.056898+00:00",
+            "statement_execution_ms": 3958.110832,
+            "users": 10,
+            "verified_cycles_including_warmup": 203,
+            "web_average_cpu_cores": 0.6784609593168888,
+            "web_cpu_seconds": 50.518831,
+            "web_cpu_seconds_per_verified_cycle": 0.24886123645320196
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 2437874,
+              "web": 321843
+            },
+            "database_average_cpu_cores": 0.42232144652766906,
+            "database_cpu_seconds": 31.419202,
+            "database_cpu_seconds_per_verified_cycle": 0.15631443781094526,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:50:40.347123+00:00",
+            "measured_saves": 146,
+            "measured_saves_per_second": 4.866666666666666,
+            "observation_seconds": 74.3964159488678,
+            "operation_id": "operation-48fda7444792",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 639.95,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 425.5,
+            "sql_calls": 252608,
+            "sql_calls_per_verified_cycle": 1256.7562189054727,
+            "started_at": "2026-11-06T21:48:57.724934+00:00",
+            "statement_execution_ms": 4083.789049000005,
+            "users": 10,
+            "verified_cycles_including_warmup": 201,
+            "web_average_cpu_cores": 0.6777354440656671,
+            "web_cpu_seconds": 50.421088,
+            "web_cpu_seconds_per_verified_cycle": 0.250851184079602
+          }
+        ],
+        "variation": {
+          "database_average_cpu_cores": {
+            "max": 0.42503371740111046,
+            "median": 0.42232144652766906,
+            "min": 0.421198696211039
+          },
+          "database_cpu_seconds_per_verified_cycle": {
+            "max": 0.15631443781094526,
+            "median": 0.15590346798029556,
+            "min": 0.15565961386138616
+          },
+          "measured_saves_per_second": {
+            "max": 4.9,
+            "median": 4.866666666666666,
+            "min": 4.8
+          },
+          "record_read_p95_ms": {
+            "max": 641.65,
+            "median": 639.95,
+            "min": 628.25
+          },
+          "save_ack_p95_ms": {
+            "max": 438.19999999999993,
+            "median": 425.5,
+            "min": 419
+          },
+          "sql_calls_per_verified_cycle": {
+            "max": 1257.5172413793102,
+            "median": 1256.7562189054727,
+            "min": 1256.3663366336634
+          },
+          "web_average_cpu_cores": {
+            "max": 0.6784609593168888,
+            "median": 0.6777354440656671,
+            "min": 0.6700379111886274
+          },
+          "web_cpu_seconds_per_verified_cycle": {
+            "max": 0.250851184079602,
+            "median": 0.24886123645320196,
+            "min": 0.24762147524752473
+          }
+        }
+      },
+      "candidate": {
+        "runs": [
+          {
+            "cpu_throttled_usec": {
+              "db": 153265,
+              "web": 192859
+            },
+            "database_average_cpu_cores": 0.1646472335400557,
+            "database_cpu_seconds": 12.178165,
+            "database_cpu_seconds_per_verified_cycle": 0.05074235416666666,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:45:30.805147+00:00",
+            "measured_saves": 173,
+            "measured_saves_per_second": 5.766666666666667,
+            "observation_seconds": 73.96519660949707,
+            "operation_id": "operation-e8dc380025fc",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 427.19999999999993,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 280.8,
+            "sql_calls": 77421,
+            "sql_calls_per_verified_cycle": 322.5875,
+            "started_at": "2026-11-06T21:43:46.275551+00:00",
+            "statement_execution_ms": 1827.1933089999998,
+            "users": 10,
+            "verified_cycles_including_warmup": 240,
+            "web_average_cpu_cores": 0.30772701274855385,
+            "web_cpu_seconds": 22.761089,
+            "web_cpu_seconds_per_verified_cycle": 0.09483787083333332
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 274676,
+              "web": 223961
+            },
+            "database_average_cpu_cores": 0.1636833057439883,
+            "database_cpu_seconds": 12.089461,
+            "database_cpu_seconds_per_verified_cycle": 0.050372754166666665,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:47:15.044174+00:00",
+            "measured_saves": 172,
+            "measured_saves_per_second": 5.733333333333333,
+            "observation_seconds": 73.85885167121887,
+            "operation_id": "operation-448fd050061a",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 406.2499999999999,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 280.45,
+            "sql_calls": 77477,
+            "sql_calls_per_verified_cycle": 322.8208333333333,
+            "started_at": "2026-11-06T21:45:30.811689+00:00",
+            "statement_execution_ms": 1814.5524169999999,
+            "users": 10,
+            "verified_cycles_including_warmup": 240,
+            "web_average_cpu_cores": 0.30040010774559406,
+            "web_cpu_seconds": 22.187207,
+            "web_cpu_seconds_per_verified_cycle": 0.09244669583333334
+          },
+          {
+            "cpu_throttled_usec": {
+              "db": 132766,
+              "web": 289741
+            },
+            "database_average_cpu_cores": 0.1579693099226537,
+            "database_cpu_seconds": 11.765894,
+            "database_cpu_seconds_per_verified_cycle": 0.049436529411764706,
+            "deadlocks": 0,
+            "ended_at": "2026-11-06T21:52:25.184456+00:00",
+            "measured_saves": 170,
+            "measured_saves_per_second": 5.666666666666667,
+            "observation_seconds": 74.48215103149414,
+            "operation_id": "operation-ab82f9a63ed9",
+            "pending_outbox_after": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "pending_outbox_before": {
+              "count": 0,
+              "oldest_seconds": null
+            },
+            "record_read_p95_ms": 439,
+            "restoration_confirmed": true,
+            "save_ack_p95_ms": 289,
+            "sql_calls": 76659,
+            "sql_calls_per_verified_cycle": 322.0966386554622,
+            "started_at": "2026-11-06T21:50:40.358418+00:00",
+            "statement_execution_ms": 1774.987511,
+            "users": 10,
+            "verified_cycles_including_warmup": 238,
+            "web_average_cpu_cores": 0.29368591933858906,
+            "web_cpu_seconds": 21.874359,
+            "web_cpu_seconds_per_verified_cycle": 0.09190907142857142
+          }
+        ],
+        "variation": {
+          "database_average_cpu_cores": {
+            "max": 0.1646472335400557,
+            "median": 0.1636833057439883,
+            "min": 0.1579693099226537
+          },
+          "database_cpu_seconds_per_verified_cycle": {
+            "max": 0.05074235416666666,
+            "median": 0.050372754166666665,
+            "min": 0.049436529411764706
+          },
+          "measured_saves_per_second": {
+            "max": 5.766666666666667,
+            "median": 5.733333333333333,
+            "min": 5.666666666666667
+          },
+          "record_read_p95_ms": {
+            "max": 439,
+            "median": 427.19999999999993,
+            "min": 406.2499999999999
+          },
+          "save_ack_p95_ms": {
+            "max": 289,
+            "median": 280.8,
+            "min": 280.45
+          },
+          "sql_calls_per_verified_cycle": {
+            "max": 322.8208333333333,
+            "median": 322.5875,
+            "min": 322.0966386554622
+          },
+          "web_average_cpu_cores": {
+            "max": 0.30772701274855385,
+            "median": 0.30040010774559406,
+            "min": 0.29368591933858906
+          },
+          "web_cpu_seconds_per_verified_cycle": {
+            "max": 0.09483787083333332,
+            "median": 0.09244669583333334,
+            "min": 0.09190907142857142
+          }
+        }
+      },
+      "median_change_percent": {
+        "database_average_cpu_cores": -61.242009590137094,
+        "database_cpu_seconds_per_verified_cycle": -67.68977956729402,
+        "measured_saves_per_second": 17.808219178082197,
+        "record_read_p95_ms": -33.24478474880852,
+        "save_ack_p95_ms": -34.00705052878966,
+        "sql_calls_per_verified_cycle": -74.3317363266405,
+        "web_average_cpu_cores": -55.675904163500164,
+        "web_cpu_seconds_per_verified_cycle": -62.85211101942032
+      },
+      "users": 10
+    }
+  ],
+  "original_timing_and_repetitions": false,
+  "repetitions_per_arm_and_level": 3,
+  "sampling_observations": [
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "baseline",
+      "campaign": "campaign-024d6ece0e3e",
+      "generator_max_cpu_percent": 60.8,
+      "generator_max_memory_percent": 1.17,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 1,
+      "max_sampled_pending_outbox_age_seconds": 0,
+      "max_sampled_pending_outbox_count": 0,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 9.96,
+              "median": 7.585,
+              "min": 4.7
+            },
+            "cpu_percent_of_quota": {
+              "max": 9.96,
+              "median": 7.585,
+              "min": 4.7
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 24.84,
+              "median": 15.36,
+              "min": 12.15
+            },
+            "cpu_percent_of_quota": {
+              "max": 12.42,
+              "median": 7.68,
+              "min": 6.075
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 1,
+      "users": 1
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "candidate",
+      "campaign": "campaign-5f4c5628f87d",
+      "generator_max_cpu_percent": 57.16,
+      "generator_max_memory_percent": 1.21,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 0,
+      "max_sampled_pending_outbox_age_seconds": 0.837552,
+      "max_sampled_pending_outbox_count": 1,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 7.79,
+              "median": 3.775,
+              "min": 2.41
+            },
+            "cpu_percent_of_quota": {
+              "max": 7.79,
+              "median": 3.775,
+              "min": 2.41
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 7.99,
+              "median": 5.805,
+              "min": 3.55
+            },
+            "cpu_percent_of_quota": {
+              "max": 3.995,
+              "median": 2.9025,
+              "min": 1.775
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 1,
+      "users": 1
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "candidate",
+      "campaign": "campaign-9c34ee90934c",
+      "generator_max_cpu_percent": 50.14,
+      "generator_max_memory_percent": 1.14,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 0,
+      "max_sampled_pending_outbox_age_seconds": 0.315785,
+      "max_sampled_pending_outbox_count": 1,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 3,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 6.1,
+              "median": 2.2,
+              "min": 1.53
+            },
+            "cpu_percent_of_quota": {
+              "max": 6.1,
+              "median": 2.2,
+              "min": 1.53
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 8.34,
+              "median": 6.54,
+              "min": 5.55
+            },
+            "cpu_percent_of_quota": {
+              "max": 4.17,
+              "median": 3.27,
+              "min": 2.775
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 2,
+      "users": 1
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "baseline",
+      "campaign": "campaign-a3aefc22b7fa",
+      "generator_max_cpu_percent": 49.73,
+      "generator_max_memory_percent": 1.14,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 0,
+      "max_sampled_pending_outbox_age_seconds": 0,
+      "max_sampled_pending_outbox_count": 0,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 8.5,
+              "median": 8.045,
+              "min": 7.61
+            },
+            "cpu_percent_of_quota": {
+              "max": 8.5,
+              "median": 8.045,
+              "min": 7.61
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 15.23,
+              "median": 13.33,
+              "min": 10.97
+            },
+            "cpu_percent_of_quota": {
+              "max": 7.615,
+              "median": 6.665,
+              "min": 5.485
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 2,
+      "users": 1
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "baseline",
+      "campaign": "campaign-cf7e944ca320",
+      "generator_max_cpu_percent": 55.65,
+      "generator_max_memory_percent": 1.02,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 0,
+      "max_sampled_pending_outbox_age_seconds": 0,
+      "max_sampled_pending_outbox_count": 0,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 13.26,
+              "median": 7.235,
+              "min": 6.55
+            },
+            "cpu_percent_of_quota": {
+              "max": 13.26,
+              "median": 7.235,
+              "min": 6.55
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 18.03,
+              "median": 16.630000000000003,
+              "min": 12.26
+            },
+            "cpu_percent_of_quota": {
+              "max": 9.015,
+              "median": 8.315000000000001,
+              "min": 6.13
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 3,
+      "users": 1
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "candidate",
+      "campaign": "campaign-c0b446703a9b",
+      "generator_max_cpu_percent": 51.94,
+      "generator_max_memory_percent": 1.08,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 1,
+      "max_sampled_pending_outbox_age_seconds": 0.783445,
+      "max_sampled_pending_outbox_count": 1,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 4.09,
+              "median": 3.5549999999999997,
+              "min": 2.79
+            },
+            "cpu_percent_of_quota": {
+              "max": 4.09,
+              "median": 3.5549999999999997,
+              "min": 2.79
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 6.14,
+              "median": 4.49,
+              "min": 2.38
+            },
+            "cpu_percent_of_quota": {
+              "max": 3.07,
+              "median": 2.245,
+              "min": 1.19
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 3,
+      "users": 1
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "baseline",
+      "campaign": "campaign-9b59e7e569d9",
+      "generator_max_cpu_percent": 266.95,
+      "generator_max_memory_percent": 5.17,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 3,
+      "max_sampled_pending_outbox_age_seconds": 0.978341,
+      "max_sampled_pending_outbox_count": 2,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 40.9,
+              "median": 31.415,
+              "min": 28.99
+            },
+            "cpu_percent_of_quota": {
+              "max": 40.9,
+              "median": 31.415,
+              "min": 28.99
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 90.02,
+              "median": 74.95,
+              "min": 56.87
+            },
+            "cpu_percent_of_quota": {
+              "max": 45.01,
+              "median": 37.475,
+              "min": 28.435
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 1,
+      "users": 5
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "candidate",
+      "campaign": "campaign-b8f493d071e9",
+      "generator_max_cpu_percent": 300.26,
+      "generator_max_memory_percent": 5.24,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 1,
+      "max_sampled_pending_outbox_age_seconds": 0,
+      "max_sampled_pending_outbox_count": 0,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 16.23,
+              "median": 11.92,
+              "min": 6.48
+            },
+            "cpu_percent_of_quota": {
+              "max": 16.23,
+              "median": 11.92,
+              "min": 6.48
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 40.91,
+              "median": 26.07,
+              "min": 12.87
+            },
+            "cpu_percent_of_quota": {
+              "max": 20.455,
+              "median": 13.035,
+              "min": 6.435
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 1,
+      "users": 5
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "candidate",
+      "campaign": "campaign-3c4f8dcf90b9",
+      "generator_max_cpu_percent": 290.09,
+      "generator_max_memory_percent": 5.25,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 0,
+      "max_sampled_pending_outbox_age_seconds": 0.311991,
+      "max_sampled_pending_outbox_count": 3,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 22.16,
+              "median": 15.915,
+              "min": 11.59
+            },
+            "cpu_percent_of_quota": {
+              "max": 22.16,
+              "median": 15.915,
+              "min": 11.59
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 28.4,
+              "median": 16.52,
+              "min": 10.67
+            },
+            "cpu_percent_of_quota": {
+              "max": 14.2,
+              "median": 8.26,
+              "min": 5.335
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 2,
+      "users": 5
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "baseline",
+      "campaign": "campaign-cfab55b6ba2d",
+      "generator_max_cpu_percent": 253.59,
+      "generator_max_memory_percent": 5.01,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 3,
+      "max_sampled_pending_outbox_age_seconds": 1.043851,
+      "max_sampled_pending_outbox_count": 1,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 55.28,
+              "median": 52.879999999999995,
+              "min": 40.76
+            },
+            "cpu_percent_of_quota": {
+              "max": 55.28,
+              "median": 52.879999999999995,
+              "min": 40.76
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 88.94,
+              "median": 61.835,
+              "min": 47.41
+            },
+            "cpu_percent_of_quota": {
+              "max": 44.47,
+              "median": 30.9175,
+              "min": 23.705
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 2,
+      "users": 5
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "baseline",
+      "campaign": "campaign-8f739242d557",
+      "generator_max_cpu_percent": 255.77,
+      "generator_max_memory_percent": 5.27,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 4,
+      "max_sampled_pending_outbox_age_seconds": 1.163053,
+      "max_sampled_pending_outbox_count": 3,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 56.24,
+              "median": 37.38,
+              "min": 23.74
+            },
+            "cpu_percent_of_quota": {
+              "max": 56.24,
+              "median": 37.38,
+              "min": 23.74
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 88.77,
+              "median": 70.565,
+              "min": 52.86
+            },
+            "cpu_percent_of_quota": {
+              "max": 44.385,
+              "median": 35.2825,
+              "min": 26.43
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 3,
+      "users": 5
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "candidate",
+      "campaign": "campaign-919a50437374",
+      "generator_max_cpu_percent": 282.52,
+      "generator_max_memory_percent": 5.06,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 1,
+      "max_sampled_pending_outbox_age_seconds": 0.452373,
+      "max_sampled_pending_outbox_count": 3,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 22.97,
+              "median": 15.515,
+              "min": 6.6
+            },
+            "cpu_percent_of_quota": {
+              "max": 22.97,
+              "median": 15.515,
+              "min": 6.6
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 35.93,
+              "median": 23.475,
+              "min": 13.62
+            },
+            "cpu_percent_of_quota": {
+              "max": 17.965,
+              "median": 11.7375,
+              "min": 6.81
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 3,
+      "users": 5
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "baseline",
+      "campaign": "campaign-0b83b5894a81",
+      "generator_max_cpu_percent": 681.76,
+      "generator_max_memory_percent": 9.41,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 6,
+      "max_sampled_pending_outbox_age_seconds": 0.782465,
+      "max_sampled_pending_outbox_count": 2,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 85.85,
+              "median": 83.91499999999999,
+              "min": 82.66
+            },
+            "cpu_percent_of_quota": {
+              "max": 85.85,
+              "median": 83.91499999999999,
+              "min": 82.66
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 129.11,
+              "median": 112.015,
+              "min": 100.97
+            },
+            "cpu_percent_of_quota": {
+              "max": 64.555,
+              "median": 56.0075,
+              "min": 50.485
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 1,
+      "users": 10
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "candidate",
+      "campaign": "campaign-5449ca3be186",
+      "generator_max_cpu_percent": 667.32,
+      "generator_max_memory_percent": 10.52,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 3,
+      "max_sampled_pending_outbox_age_seconds": 1.082918,
+      "max_sampled_pending_outbox_count": 3,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 38.28,
+              "median": 27.384999999999998,
+              "min": 12.34
+            },
+            "cpu_percent_of_quota": {
+              "max": 38.28,
+              "median": 27.384999999999998,
+              "min": 12.34
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 68.85,
+              "median": 51.99,
+              "min": 33.99
+            },
+            "cpu_percent_of_quota": {
+              "max": 34.425,
+              "median": 25.995,
+              "min": 16.995
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 1,
+      "users": 10
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "candidate",
+      "campaign": "campaign-54714efe1369",
+      "generator_max_cpu_percent": 542.13,
+      "generator_max_memory_percent": 10.26,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 2,
+      "max_sampled_pending_outbox_age_seconds": 0.45796,
+      "max_sampled_pending_outbox_count": 3,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 34.2,
+              "median": 27.630000000000003,
+              "min": 18.6
+            },
+            "cpu_percent_of_quota": {
+              "max": 34.2,
+              "median": 27.630000000000003,
+              "min": 18.6
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 72.42,
+              "median": 37.165,
+              "min": 25.96
+            },
+            "cpu_percent_of_quota": {
+              "max": 36.21,
+              "median": 18.5825,
+              "min": 12.98
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 2,
+      "users": 10
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "baseline",
+      "campaign": "campaign-69386b878d02",
+      "generator_max_cpu_percent": 649.29,
+      "generator_max_memory_percent": 10.12,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 7,
+      "max_sampled_pending_outbox_age_seconds": 0.885836,
+      "max_sampled_pending_outbox_count": 2,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 3,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 74.1,
+              "median": 71.95,
+              "min": 70.9
+            },
+            "cpu_percent_of_quota": {
+              "max": 74.1,
+              "median": 71.95,
+              "min": 70.9
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 126.34,
+              "median": 125.42,
+              "min": 120.3
+            },
+            "cpu_percent_of_quota": {
+              "max": 63.17,
+              "median": 62.71,
+              "min": 60.15
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 2,
+      "users": 10
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "baseline",
+      "campaign": "campaign-affcb290eded",
+      "generator_max_cpu_percent": 783.47,
+      "generator_max_memory_percent": 10.32,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 6,
+      "max_sampled_pending_outbox_age_seconds": 1.00853,
+      "max_sampled_pending_outbox_count": 1,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 83.26,
+              "median": 77.135,
+              "min": 74.22
+            },
+            "cpu_percent_of_quota": {
+              "max": 83.26,
+              "median": 77.135,
+              "min": 74.22
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 134.03,
+              "median": 117.085,
+              "min": 113.04
+            },
+            "cpu_percent_of_quota": {
+              "max": 67.015,
+              "median": 58.5425,
+              "min": 56.52
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 3,
+      "users": 10
+    },
+    {
+      "activity_samples_including_boundaries": 12,
+      "arm": "candidate",
+      "campaign": "campaign-d5b30c4f4088",
+      "generator_max_cpu_percent": 917.83,
+      "generator_max_memory_percent": 9.27,
+      "generator_samples": 17,
+      "max_sampled_active_or_idle_transaction_backends": 2,
+      "max_sampled_pending_outbox_age_seconds": 1.150963,
+      "max_sampled_pending_outbox_count": 6,
+      "max_sampled_ungranted_locks": 0,
+      "measured_phase_cpu_samples": {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "samples": 4,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 40.8,
+              "median": 28.405,
+              "min": 19.94
+            },
+            "cpu_percent_of_quota": {
+              "max": 40.8,
+              "median": 28.405,
+              "min": 19.94
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 65.83,
+              "median": 43.655,
+              "min": 21.69
+            },
+            "cpu_percent_of_quota": {
+              "max": 32.915,
+              "median": 21.8275,
+              "min": 10.845
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      "repetition": 3,
+      "users": 10
+    }
+  ],
+  "schema": 1,
+  "validation": {
+    "application_tests": 505,
+    "browser_runs_passed": 18,
+    "deployment_tool_tests": 91,
+    "failures": 0,
+    "idle_controls_passed": 2,
+    "matched_restorations": 20,
+    "measured_saves": 1552,
+    "tooling_checks": {
+      "commit": "b0ed30925a8b4c57f51bdf9eef5027bae5b9e6db",
+      "conclusion": "success",
+      "run_id": 42299398146,
+      "url": "https://github.com/iagobg/instantflow/actions/runs/42299398146"
+    }
+  }
+}
