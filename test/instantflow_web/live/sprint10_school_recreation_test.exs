@@ -377,6 +377,7 @@ defmodule InstantflowWeb.Sprint10SchoolRecreationTest do
     |> render_submit()
 
     refute has_element?(page, "#flash-error")
+    close_record(page)
   end
 
   defp transition(actor, v, id, edge, reason \\ "") do
@@ -387,6 +388,16 @@ defmodule InstantflowWeb.Sprint10SchoolRecreationTest do
     |> render_submit(%{"transition" => Copy.key(edge)})
 
     refute has_element?(page, "#flash-error")
+    close_record(page)
+  end
+
+  # These helpers perform a single browser action. Keeping every helper's view
+  # subscribed creates an accidental growing fan-out on one sandbox connection.
+  # Views explicitly opened by the scenarios remain connected for their assertions.
+  defp close_record(page) do
+    ref = Process.monitor(page.pid)
+    GenServer.stop(page.pid, :normal)
+    assert_receive {:DOWN, ^ref, :process, _, :normal}
   end
 
   defp link(actor, member, id, relationship) do
