@@ -141,3 +141,27 @@ Backups are local pre-deploy snapshots without automatic retention or off-host r
 The initial database contained no user accounts or demonstration seeds. Administrator/organization bootstrap is separate from deployment; production demo seeds are intentionally refused by the application.
 
 Python execution is explicitly disabled in Compose. The deployment's success does not establish gVisor containment, uploaded-code execution readiness, or capacity for real workloads. Those boundaries remain documented in [python-readiness.md](../docs/python-readiness.md) and [python-calculations.md](../docs/python-calculations.md).
+
+## Dedicated benchmark preservation
+
+[benchmark_host.py](benchmark_host.py) implements the preservation prerequisite for the [database efficiency campaign](../docs/db-efficiency-plan.md). It runs as `ubuntu` from its installed location at `/home/ubuntu/apps/instantflow-benchmark/benchmark_host.py`, using Python 3.10+ and noninteractive sudo access to the local Docker socket. This version supports the recorded historical benchmark image only. It has no deployment, migration or benchmark-reset command.
+
+The controller checks the fixed path/project/database, frozen fixture hash, exact Compose topology, private file ownership/modes, separate runtime credentials, actual container labels, image digest/revision/architecture, resource limits, loopback port, internal network, private volume and restricted runtime role. It refuses a database container containing unrelated databases. Unexpected configuration is an error requiring review; there is no target/path override or guard-bypass option.
+
+After copying the reviewed controller to that exact location with mode `0600`, use:
+
+```sh
+ssh portfolio-server 'python3 /home/ubuntu/apps/instantflow-benchmark/benchmark_host.py inspect'
+ssh portfolio-server 'python3 /home/ubuntu/apps/instantflow-benchmark/benchmark_host.py snapshot'
+ssh portfolio-server 'python3 /home/ubuntu/apps/instantflow-benchmark/benchmark_host.py verify-snapshot --snapshot SNAPSHOT_ID'
+```
+
+`snapshot` writes a new private directory under `snapshots/`, containing `database.dump`, the five configuration files and a checksum manifest. PostgreSQL's [custom-format dump uses a consistent transaction snapshot while the application stays online](https://www.postgresql.org/docs/16/app-pgdump.html). The controller restores that dump into a randomly named `instantflow_benchmark_verify_*` database, inventories every public table and migration, checks that the runtime role sees zero tickets without tenant context, and drops only the database it successfully created. Inventory counts therefore describe the restored archive rather than a later observation of the live database. No record values or SQL parameters enter the report.
+
+The completion manifest is written only after restore verification, temporary-database cleanup and a second configuration/identity check succeed. Dump, restore, RLS, cleanup or configuration-drift failures leave an incomplete private directory without a completion manifest. A failed CREATE does not authorize dropping an existing database. `verify-snapshot` checks identity and checksums, then repeats the restore and inventory comparison. If a killed process leaves a verification database behind, the next target guard refuses to proceed; investigate that explicitly before removing it.
+
+Snapshots contain database contents and credentials. Keep directories at `0700`, files at `0600`, and workstation copies under ignored `.local/benchmark-preservation/`. Copy the complete snapshot and verify every manifest checksum before treating the off-host copy as usable. Only sanitized summaries belong in Git. This is a same-cluster restore rehearsal and private off-host copy, not a complete host-loss recovery rehearsal; PostgreSQL globals and the shared Caddy stack are outside this archive.
+
+All controller operations hold `.benchmark-control.lock`. The existing historical benchmark reset/runner tools do not yet participate in this lock and must not run concurrently. Candidate deployment, operator-only migration, authenticated smoke, campaign-wide locking, baseline/candidate runner manifests and restoration of the benchmark database itself remain separate implementation work. Preserve the snapshot before using those future operations.
+
+On 2026-11-06, the hosted target passed its guard, the snapshot passed two restore checks, and the private workstation copy matched all archive/configuration checksums. The archive contains 41 public tables and the current 15 tickets, rather than the frozen fixture's 12. Live table counts, application identity and all running container IDs/start times remained unchanged. See [sanitized preservation evidence](../docs/evidence/db-efficiency-benchmark-preservation-2026-11-06.json). Tests cover wrong targets, configuration drift, private permissions, unexpected runtime privileges, partial/tampered snapshots, restore/cleanup failures and concurrent controller invocations.
