@@ -19,6 +19,24 @@ defmodule Instantflow.Access do
     %{actor | grants: grants}
   end
 
+  @doc "Load grants for a bounded batch of current memberships inside the tenant authorization gate."
+  def load_many([]), do: []
+
+  def load_many(members) do
+    unless Repo.in_transaction?(),
+      do: raise(ArgumentError, "Grant batches require a tenant authorization transaction")
+
+    ids = Enum.map(members, & &1.id)
+
+    grants =
+      Repo.all(from g in Grant, where: g.membership_id in ^ids)
+      |> Enum.group_by(&{&1.organization_id, &1.membership_id})
+
+    Enum.map(members, fn member ->
+      %{member | grants: Map.get(grants, {member.organization_id, member.id}, [])}
+    end)
+  end
+
   def profiles(actor),
     do: [%{role: actor.role, department_id: actor.department_id} | actor.grants]
 

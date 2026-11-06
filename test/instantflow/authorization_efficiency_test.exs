@@ -60,4 +60,16 @@ defmodule Instantflow.AuthorizationEfficiencyTest do
       "SELECT NULLIF(current_setting('instantflow.organization_id', true), ''), current_user"
     ).rows
   end
+
+  test "batch policy helpers require an enclosing transaction" do
+    f = workflow_fixture()
+    id = create_ticket(f)
+    ticket = Repo.get!(Instantflow.WorkflowRuntime.Ticket, id)
+
+    assert_raise ArgumentError, fn -> Instantflow.Access.load_many([f.requester]) end
+
+    assert_raise ArgumentError, fn ->
+      Instantflow.WorkflowRuntime.AccessFacts.load([f.requester], ticket, f.version)
+    end
+  end
 end

@@ -1,0 +1,57 @@
+{
+  "recorded_on": "2026-11-06",
+  "parent_commit": "551ac8f",
+  "environment": "Local isolated SQL sandbox; same base workflow and synthetic memberships",
+  "batch_size": 250,
+  "scenarios": [
+    {
+      "members": 3,
+      "statements": 11,
+      "errors": 0
+    },
+    {
+      "members": 103,
+      "statements": 11,
+      "errors": 0
+    },
+    {
+      "members": 1003,
+      "statements": 19,
+      "errors": 0
+    }
+  ],
+  "baseline": {
+    "initial_commit": "5af775f",
+    "initial_3_members": 15,
+    "initial_103_members": 115,
+    "after_authorization_3_members": 13,
+    "after_authorization_103_members": 113
+  },
+  "correctness": [
+    "Notification selection matches authorized record reads for the reporter, dean, named counselor, unassigned counselor and administrator.",
+    "Reassignment stops notifications to the previous counselor and admits the new eligible counselor.",
+    "Verified participant access is honored; revoked participants and inactive users are excluded.",
+    "Shared grant and policy-fact helpers reject nonempty calls outside a transaction.",
+    "Existing durable attempt, retry, unchanged-revision delivery, RLS and real-connection concurrency tests remain enabled."
+  ],
+  "limitations": [
+    "This measures statement volume, not hosted capacity or latency.",
+    "Per-pass notification deduplication and finance-topic narrowing remain pending.",
+    "A large membership population still requires one bounded pass through all eligible members.",
+    "Draft and save capture windows vary by one statement with asynchronous work; full deferred-cycle measurement remains pending."
+  ],
+  "validation": {
+    "focused_tests": 47,
+    "full_precommit_tests": 435,
+    "failures": 0,
+    "assets_build": "passed"
+  },
+  "final_lifecycle_counts": {
+    "record_mount_http_and_live": 312,
+    "idle_heartbeat": 39,
+    "reason_change": 25,
+    "draft_change": 42,
+    "save_submit": 172,
+    "ticket_invalidation": 112
+  }
+}

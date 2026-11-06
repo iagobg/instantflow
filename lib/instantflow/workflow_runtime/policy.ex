@@ -2,8 +2,8 @@ defmodule Instantflow.WorkflowRuntime.Policy do
   @moduledoc "Deny-by-default role, department, relationship, stage, and section policies."
   alias Instantflow.Access
 
-  def discover?(actor, ticket, version) do
-    Enum.any?(version.definition["sections"], &section?(actor, ticket, version, &1, :read))
+  def discover?(actor, ticket, version, facts \\ :live) do
+    Enum.any?(version.definition["sections"], &section?(actor, ticket, version, &1, :read, facts))
   end
 
   def create?(actor, version) do

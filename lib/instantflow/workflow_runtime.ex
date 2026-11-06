@@ -5,6 +5,7 @@ defmodule Instantflow.WorkflowRuntime do
   alias Instantflow.WorkflowCatalog.{Capabilities, Definition, Version, Workflow}
 
   alias Instantflow.WorkflowRuntime.{
+    AccessFacts,
     Event,
     Guards,
     Policy,
@@ -179,20 +180,34 @@ defmodule Instantflow.WorkflowRuntime do
     ticket = Repo.get(Ticket, ticket_id)
     version = ticket && Repo.get(Version, ticket.workflow_version_id)
 
-    if version do
+    if version && ticket.organization_id == organization_id do
       Instantflow.Finance.broadcast(organization_id)
+      invalidate_member_batch(organization_id, ticket, version, 0)
+    end
+  end
 
+  defp invalidate_member_batch(organization_id, ticket, version, after_id) do
+    members =
       Repo.all(
         from m in Instantflow.Identity.Membership,
-          where: m.organization_id == ^organization_id and m.active
+          join: u in Instantflow.Identity.User,
+          on: u.id == m.user_id,
+          where:
+            m.organization_id == ^organization_id and m.active and u.active and m.id > ^after_id,
+          order_by: m.id,
+          limit: 250
       )
-      |> Enum.each(fn member ->
-        scope = Instantflow.Access.load(member)
+      |> Instantflow.Access.load_many()
 
-        if Policy.discover?(scope, ticket, version),
-          do: Phoenix.PubSub.broadcast(Instantflow.PubSub, list_topic(scope), :requests_changed)
-      end)
-    end
+    facts = AccessFacts.load(members, ticket, version)
+
+    Enum.each(members, fn member ->
+      if Policy.discover?(member, ticket, version, Map.fetch!(facts, member.id)),
+        do: Phoenix.PubSub.broadcast(Instantflow.PubSub, list_topic(member), :requests_changed)
+    end)
+
+    if length(members) == 250,
+      do: invalidate_member_batch(organization_id, ticket, version, List.last(members).id)
   end
 
   defp apply_command(actor, %{"operation" => "create"} = command, origin) do
