@@ -1,0 +1,1012 @@
+{
+  "schema": 1,
+  "application": {
+    "application_commit": "e1c5be45b99da66e819822d2c5ecdab7c535d5a2",
+    "checks_run_id": 42307354290,
+    "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42307354290",
+    "image": "ghcr.io/iagobg/instantflow@sha256:3aee403a203b313226f132cc9e7bcdf1c81066a99dea9a86c7317d58b9342417",
+    "platform": "linux/arm64",
+    "publication_attempt": 1,
+    "publication_run_id": 42308169629,
+    "schema": 2
+  },
+  "artifact": {
+    "archive_sha256": "4cce0cd3ed0fab16823e3117232c6d8104df8ad05e3be97ae0e78d3edea2feb3",
+    "artifact_id": 13547441717,
+    "publication_run_id": 42308169629
+  },
+  "runs": [
+    {
+      "application": {
+        "application_commit": "e1c5be45b99da66e819822d2c5ecdab7c535d5a2",
+        "checks_run_id": 42307354290,
+        "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42307354290",
+        "image": "ghcr.io/iagobg/instantflow@sha256:3aee403a203b313226f132cc9e7bcdf1c81066a99dea9a86c7317d58b9342417",
+        "platform": "linux/arm64",
+        "publication_attempt": 1,
+        "publication_run_id": 42308169629,
+        "schema": 2
+      },
+      "mode": "contention",
+      "users": 5,
+      "started_at": "2026-11-06T22:58:08.256463+00:00",
+      "ended_at": "2026-11-06T22:58:53.769036+00:00",
+      "measurement_seconds": null,
+      "warmup_seconds": null,
+      "runner": {
+        "browser": {
+          "chromium_distribution_sha256": "683417229aba0e488f43f8be9277b5ddc44eae42aa05fca6d8cd27bb82b485ba",
+          "chromium_version": "156.0.8078.4",
+          "driver": "playwright",
+          "driver_source_sha256": "f7c5def263322740fc1450d22abadbd212b7e4a7ae56d35f5fcc6d31442867fe",
+          "node_sha256": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
+          "node_version": "v24.22.0",
+          "package_sha256": "1aee7fc2f91a8d7745fa075bd6896df3bfcde2c00ccdcbbc3249f220382b5fa9",
+          "playwright_version": "1.64.1"
+        },
+        "cpus": 24,
+        "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "source_sha256": "1f3cc6be77e3dffdf72b8cb1dcb8b405d49e54ab3dd03a1d19cd5fc6377fa173"
+      },
+      "provenance": {
+        "application": {
+          "application_commit": "e1c5be45b99da66e819822d2c5ecdab7c535d5a2",
+          "checks_run_id": 42307354290,
+          "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42307354290",
+          "image": "ghcr.io/iagobg/instantflow@sha256:3aee403a203b313226f132cc9e7bcdf1c81066a99dea9a86c7317d58b9342417",
+          "platform": "linux/arm64",
+          "publication_attempt": 1,
+          "publication_run_id": 42308169629,
+          "schema": 2
+        },
+        "fixture": {
+          "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "initial_records": 12,
+          "load_actors": 10,
+          "name": "school-v1",
+          "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+          "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+        },
+        "host_controller_sha256": {
+          "benchmark_candidate.py": "5aaf42436dffb9861fb090e0446d3b3f9cf0bfb966adc6c561194a6397e6f397",
+          "benchmark_host.py": "bb2094c996e69aba63f2fb36c6a7d0f427c520355a5d423de3e21724779b2f05",
+          "benchmark_metrics.py": "df9a625c9a77f13aaa00579d10f860330c9927937705bbcb62e31652578c5eab",
+          "benchmark_metrics_setup.py": "c467407f0c29d4fa9b94969e7962e749a857004f6c07525b93023092a5589d2b",
+          "benchmark_provenance.py": "67e9386ad600f36abf64df30cac35196caa3c198481157dcf5dff69f06bc902f",
+          "benchmark_rollout.py": "39c749799ecc75c2ae7326e876bff7a7ebd6fcdf812777edbb08dd82093a42d7",
+          "benchmark_session.py": "9847e22d399c97833ab6122d39bb52eb26db2bfcc1c21ef14b3a5fefa14f1e2e",
+          "benchmark_smoke.py": "f10c6ba5cd1667642af3f0e15b68e4a3b439cd2508aaf666997409f58da86f1c",
+          "remote.py": "1100e88a66a12a903232c404ed1a1db1d6a9ba3fe404949ea01f1070e73ca02b"
+        },
+        "initial_inventory": {
+          "schema_versions": [
+            "20261020180524",
+            "20261020184948",
+            "20261020200807",
+            "20261020205338",
+            "20261021002628",
+            "20261021011853",
+            "20261021012546",
+            "20261021080918",
+            "20261021083132",
+            "20261021094238",
+            "20261021123137",
+            "20261021124325",
+            "20261021190401",
+            "20261021193830",
+            "20261021224308",
+            "20261021231607",
+            "20261021233544",
+            "20261022100818",
+            "20261022175214",
+            "20261023033124",
+            "20261023040903",
+            "20261023151405",
+            "20261023152158",
+            "20261023160944",
+            "20261106140436",
+            "20261106165113"
+          ],
+          "table_counts": {
+            "budget_accounts": 0,
+            "budget_entries": 0,
+            "budget_holds": 0,
+            "calculation_attempts": 0,
+            "calculation_reviews": 0,
+            "calculation_runs": 0,
+            "calculation_scripts": 0,
+            "calculation_switch": 1,
+            "calculation_switch_events": 0,
+            "catalog_products": 0,
+            "command_receipts": 36,
+            "delivery_attempts": 36,
+            "departments": 1,
+            "enrollments": 0,
+            "fulfillment_batches": 0,
+            "fulfillment_lines": 0,
+            "guardian_links": 0,
+            "invitations": 0,
+            "membership_grants": 12,
+            "memberships": 14,
+            "operation_day_closes": 0,
+            "operation_receipts": 0,
+            "organization_events": 12,
+            "organizations": 1,
+            "outbox_messages": 36,
+            "private_documents": 0,
+            "retired_workflow_versions": 0,
+            "schema_migrations": 26,
+            "section_assignments": 0,
+            "service_resources": 0,
+            "service_sessions": 0,
+            "sessions": 0,
+            "template_events": 3,
+            "ticket_participants": 0,
+            "ticket_sections": 24,
+            "tickets": 12,
+            "transition_events": 36,
+            "users": 14,
+            "workflow_catalog_generations": 1,
+            "workflow_drafts": 1,
+            "workflow_versions": 1,
+            "workflows": 1
+          }
+        },
+        "k6_image": null,
+        "operation_id": "operation-837061dc3a39",
+        "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+        "postgres_metrics_settings": {
+          "server_version_num": "160015",
+          "shared_preload_libraries": "pg_stat_statements",
+          "track_activities": "on",
+          "track_counts": "on",
+          "track_io_timing": "on",
+          "track_wal_io_timing": "on"
+        },
+        "recovery_snapshot": "snapshot-20261106T225814Z-a5c0490750e1",
+        "resources": {
+          "db_cpus": 1,
+          "db_memory_bytes": 1073741824,
+          "pool_size": 10,
+          "web_cpus": 2,
+          "web_memory_bytes": 2147483648
+        },
+        "schema": 1,
+        "statement_statistics_available": true,
+        "target": "https://instantflow-benchmark.iagobussoletti.com.br",
+        "transport": {
+          "hostname": "instantflow-benchmark.iagobussoletti.com.br",
+          "origin_ip": "134.65.245.186",
+          "tls_verification": true
+        },
+        "workload": {
+          "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "name": "school-v1-contention",
+          "sha256": "30a993dbc339f8ad1f1ff384ee678e2fff9e7e0d161f009b57ec353ede047d35"
+        }
+      },
+      "workload_contract": {
+        "browser_deadline_seconds": 180,
+        "controller_processes": 1,
+        "editor_contexts": 5,
+        "kind": "functional_contention",
+        "measurement_window": "No steady-state timing window; fixed correctness scenarios",
+        "rounds": 3
+      },
+      "campaign": "campaign-693fb593fe42",
+      "metadata_sha256": "8b8945000fa47de5ebc214e95f6b7ec26104a7b0f81d223891e0e65412057219",
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-837061dc3a39",
+        "recovery_snapshot": "snapshot-20261106T225814Z-a5c0490750e1",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "observed_deadlocks": 0,
+      "final_pending_outbox": 0,
+      "metrics": {
+        "checks": {
+          "values": {
+            "passes": 41,
+            "fails": 0
+          }
+        },
+        "business_saves": {
+          "values": {
+            "count": 6
+          }
+        },
+        "business_failure": {
+          "values": {
+            "rate": 0
+          }
+        },
+        "expected_conflicts": {
+          "values": {
+            "count": 12
+          }
+        },
+        "preserved_drafts": {
+          "values": {
+            "count": 12
+          }
+        },
+        "contention_rounds": {
+          "values": {
+            "count": 3
+          }
+        },
+        "explicit_reapplications": {
+          "values": {
+            "count": 1
+          }
+        },
+        "independent_section_saves": {
+          "values": {
+            "count": 2
+          }
+        },
+        "terminal_transitions": {
+          "values": {
+            "count": 1
+          }
+        },
+        "contention_round_ms": {
+          "samples": [
+            98,
+            88,
+            96
+          ]
+        }
+      },
+      "checks": [
+        {
+          "name": "browser uses the verified direct-origin HTTPS route",
+          "passes": 6,
+          "fails": 0
+        },
+        {
+          "name": "requester remains unable to edit or approve during review",
+          "passes": 1,
+          "fails": 0
+        },
+        {
+          "name": "editors start from the same section revision",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "same-section contention accepts exactly one writer",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "winning revision contains exactly the winning draft",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "conflicting writer retains its original revision and draft",
+          "passes": 12,
+          "fails": 0
+        },
+        {
+          "name": "fresh authorized read confirms the sole committed winner",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "independent or reconciled write has no conflict",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "accepted write advances its section exactly once",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "clean peer must review new data before approval",
+          "passes": 1,
+          "fails": 0
+        },
+        {
+          "name": "explicit reconciliation persists the chosen draft",
+          "passes": 1,
+          "fails": 0
+        },
+        {
+          "name": "fresh read retains both concurrent independent-section writes",
+          "passes": 1,
+          "fails": 0
+        },
+        {
+          "name": "fresh-state approval persists a terminal read-only record",
+          "passes": 1,
+          "fails": 0
+        }
+      ]
+    },
+    {
+      "application": {
+        "application_commit": "e1c5be45b99da66e819822d2c5ecdab7c535d5a2",
+        "checks_run_id": 42307354290,
+        "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42307354290",
+        "image": "ghcr.io/iagobg/instantflow@sha256:3aee403a203b313226f132cc9e7bcdf1c81066a99dea9a86c7317d58b9342417",
+        "platform": "linux/arm64",
+        "publication_attempt": 1,
+        "publication_run_id": 42308169629,
+        "schema": 2
+      },
+      "mode": "mixed",
+      "users": 10,
+      "started_at": "2026-11-06T22:58:53.838911+00:00",
+      "ended_at": "2026-11-06T23:00:38.932914+00:00",
+      "measurement_seconds": 30,
+      "warmup_seconds": 10,
+      "runner": {
+        "cpus": 24,
+        "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "source_sha256": "1f3cc6be77e3dffdf72b8cb1dcb8b405d49e54ab3dd03a1d19cd5fc6377fa173"
+      },
+      "provenance": {
+        "application": {
+          "application_commit": "e1c5be45b99da66e819822d2c5ecdab7c535d5a2",
+          "checks_run_id": 42307354290,
+          "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42307354290",
+          "image": "ghcr.io/iagobg/instantflow@sha256:3aee403a203b313226f132cc9e7bcdf1c81066a99dea9a86c7317d58b9342417",
+          "platform": "linux/arm64",
+          "publication_attempt": 1,
+          "publication_run_id": 42308169629,
+          "schema": 2
+        },
+        "fixture": {
+          "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "initial_records": 12,
+          "load_actors": 10,
+          "name": "school-v1",
+          "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+          "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+        },
+        "host_controller_sha256": {
+          "benchmark_candidate.py": "5aaf42436dffb9861fb090e0446d3b3f9cf0bfb966adc6c561194a6397e6f397",
+          "benchmark_host.py": "bb2094c996e69aba63f2fb36c6a7d0f427c520355a5d423de3e21724779b2f05",
+          "benchmark_metrics.py": "df9a625c9a77f13aaa00579d10f860330c9927937705bbcb62e31652578c5eab",
+          "benchmark_metrics_setup.py": "c467407f0c29d4fa9b94969e7962e749a857004f6c07525b93023092a5589d2b",
+          "benchmark_provenance.py": "67e9386ad600f36abf64df30cac35196caa3c198481157dcf5dff69f06bc902f",
+          "benchmark_rollout.py": "39c749799ecc75c2ae7326e876bff7a7ebd6fcdf812777edbb08dd82093a42d7",
+          "benchmark_session.py": "9847e22d399c97833ab6122d39bb52eb26db2bfcc1c21ef14b3a5fefa14f1e2e",
+          "benchmark_smoke.py": "f10c6ba5cd1667642af3f0e15b68e4a3b439cd2508aaf666997409f58da86f1c",
+          "remote.py": "1100e88a66a12a903232c404ed1a1db1d6a9ba3fe404949ea01f1070e73ca02b"
+        },
+        "initial_inventory": {
+          "schema_versions": [
+            "20261020180524",
+            "20261020184948",
+            "20261020200807",
+            "20261020205338",
+            "20261021002628",
+            "20261021011853",
+            "20261021012546",
+            "20261021080918",
+            "20261021083132",
+            "20261021094238",
+            "20261021123137",
+            "20261021124325",
+            "20261021190401",
+            "20261021193830",
+            "20261021224308",
+            "20261021231607",
+            "20261021233544",
+            "20261022100818",
+            "20261022175214",
+            "20261023033124",
+            "20261023040903",
+            "20261023151405",
+            "20261023152158",
+            "20261023160944",
+            "20261106140436",
+            "20261106165113"
+          ],
+          "table_counts": {
+            "budget_accounts": 0,
+            "budget_entries": 0,
+            "budget_holds": 0,
+            "calculation_attempts": 0,
+            "calculation_reviews": 0,
+            "calculation_runs": 0,
+            "calculation_scripts": 0,
+            "calculation_switch": 1,
+            "calculation_switch_events": 0,
+            "catalog_products": 0,
+            "command_receipts": 36,
+            "delivery_attempts": 36,
+            "departments": 1,
+            "enrollments": 0,
+            "fulfillment_batches": 0,
+            "fulfillment_lines": 0,
+            "guardian_links": 0,
+            "invitations": 0,
+            "membership_grants": 12,
+            "memberships": 14,
+            "operation_day_closes": 0,
+            "operation_receipts": 0,
+            "organization_events": 12,
+            "organizations": 1,
+            "outbox_messages": 36,
+            "private_documents": 0,
+            "retired_workflow_versions": 0,
+            "schema_migrations": 26,
+            "section_assignments": 0,
+            "service_resources": 0,
+            "service_sessions": 0,
+            "sessions": 0,
+            "template_events": 3,
+            "ticket_participants": 0,
+            "ticket_sections": 24,
+            "tickets": 12,
+            "transition_events": 36,
+            "users": 14,
+            "workflow_catalog_generations": 1,
+            "workflow_drafts": 1,
+            "workflow_versions": 1,
+            "workflows": 1
+          }
+        },
+        "k6_image": "grafana/k6@sha256:8663335c8c1c5a40dd51823ef980c584761a4a084a2297fca29a29ee495c6bc1",
+        "operation_id": "operation-6c539e5c67fb",
+        "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+        "postgres_metrics_settings": {
+          "server_version_num": "160015",
+          "shared_preload_libraries": "pg_stat_statements",
+          "track_activities": "on",
+          "track_counts": "on",
+          "track_io_timing": "on",
+          "track_wal_io_timing": "on"
+        },
+        "recovery_snapshot": "snapshot-20261106T225900Z-fcc8ab4fd93c",
+        "resources": {
+          "db_cpus": 1,
+          "db_memory_bytes": 1073741824,
+          "pool_size": 10,
+          "web_cpus": 2,
+          "web_memory_bytes": 2147483648
+        },
+        "schema": 1,
+        "statement_statistics_available": true,
+        "target": "https://instantflow-benchmark.iagobussoletti.com.br",
+        "transport": {
+          "hostname": "instantflow-benchmark.iagobussoletti.com.br",
+          "origin_ip": "134.65.245.186",
+          "tls_verification": true
+        },
+        "workload": {
+          "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "name": "school-v1-browser",
+          "sha256": "5b7aa7011e796b3794847052e2e94d7820143a96d5a4088456f0ca468990aba6"
+        }
+      },
+      "workload_contract": {
+        "kind": "closed_browser_load"
+      },
+      "campaign": "campaign-7ab866995ceb",
+      "metadata_sha256": "06c6837d258e4799f73681a3a6e81b35f21b219d5f9bba90d663ebc6c1617a50",
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-6c539e5c67fb",
+        "recovery_snapshot": "snapshot-20261106T225900Z-fcc8ab4fd93c",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "observed_deadlocks": 0,
+      "final_pending_outbox": 0,
+      "validated_diagnostic": {
+        "operation_id": "operation-6c539e5c67fb",
+        "users": 10,
+        "started_at": "2026-11-06T22:58:53.838911+00:00",
+        "ended_at": "2026-11-06T23:00:38.932914+00:00",
+        "measured_saves": 170,
+        "verified_cycles_including_warmup": 232,
+        "save_ack_p95_ms": 295.65,
+        "record_read_p95_ms": 456.65,
+        "measured_saves_per_second": 5.666666666666667,
+        "observation_seconds": 74.72418093681335,
+        "sql_calls": 74844,
+        "sql_calls_per_verified_cycle": 322.6034482758621,
+        "statement_execution_ms": 1711.7135319999995,
+        "database_cpu_seconds": 11.787496,
+        "web_cpu_seconds": 21.725572,
+        "database_cpu_seconds_per_verified_cycle": 0.05080817241379311,
+        "web_cpu_seconds_per_verified_cycle": 0.09364470689655172,
+        "database_average_cpu_cores": 0.15774674077682416,
+        "web_average_cpu_cores": 0.29074352810064397,
+        "cpu_throttled_usec": {
+          "web": 236936,
+          "db": 288894
+        },
+        "deadlocks": 0,
+        "pending_outbox_before": {
+          "count": 0,
+          "oldest_seconds": null
+        },
+        "pending_outbox_after": {
+          "count": 0,
+          "oldest_seconds": null
+        },
+        "restoration_confirmed": true
+      },
+      "checks": [
+        {
+          "passes": 222,
+          "fails": 0,
+          "name": "fresh authorized read retains last saved value",
+          "path": "::fresh authorized read retains last saved value",
+          "id": "30dd43e95aaf80b35b02a3a77ac8f263"
+        },
+        {
+          "id": "f0752d81eb068ac3b6210124c19e184f",
+          "passes": 10,
+          "fails": 0,
+          "name": "final fresh read confirms persisted save",
+          "path": "::final fresh read confirms persisted save"
+        }
+      ]
+    },
+    {
+      "application": {
+        "application_commit": "e1c5be45b99da66e819822d2c5ecdab7c535d5a2",
+        "checks_run_id": 42307354290,
+        "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42307354290",
+        "image": "ghcr.io/iagobg/instantflow@sha256:3aee403a203b313226f132cc9e7bcdf1c81066a99dea9a86c7317d58b9342417",
+        "platform": "linux/arm64",
+        "publication_attempt": 1,
+        "publication_run_id": 42308169629,
+        "schema": 2
+      },
+      "mode": "contention",
+      "users": 2,
+      "started_at": "2026-11-06T22:57:26.074373+00:00",
+      "ended_at": "2026-11-06T22:58:07.290685+00:00",
+      "measurement_seconds": null,
+      "warmup_seconds": null,
+      "runner": {
+        "browser": {
+          "chromium_distribution_sha256": "683417229aba0e488f43f8be9277b5ddc44eae42aa05fca6d8cd27bb82b485ba",
+          "chromium_version": "156.0.8078.4",
+          "driver": "playwright",
+          "driver_source_sha256": "f7c5def263322740fc1450d22abadbd212b7e4a7ae56d35f5fcc6d31442867fe",
+          "node_sha256": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
+          "node_version": "v24.22.0",
+          "package_sha256": "1aee7fc2f91a8d7745fa075bd6896df3bfcde2c00ccdcbbc3249f220382b5fa9",
+          "playwright_version": "1.64.1"
+        },
+        "cpus": 24,
+        "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "source_sha256": "1f3cc6be77e3dffdf72b8cb1dcb8b405d49e54ab3dd03a1d19cd5fc6377fa173"
+      },
+      "provenance": {
+        "application": {
+          "application_commit": "e1c5be45b99da66e819822d2c5ecdab7c535d5a2",
+          "checks_run_id": 42307354290,
+          "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42307354290",
+          "image": "ghcr.io/iagobg/instantflow@sha256:3aee403a203b313226f132cc9e7bcdf1c81066a99dea9a86c7317d58b9342417",
+          "platform": "linux/arm64",
+          "publication_attempt": 1,
+          "publication_run_id": 42308169629,
+          "schema": 2
+        },
+        "fixture": {
+          "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "initial_records": 12,
+          "load_actors": 10,
+          "name": "school-v1",
+          "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+          "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+        },
+        "host_controller_sha256": {
+          "benchmark_candidate.py": "5aaf42436dffb9861fb090e0446d3b3f9cf0bfb966adc6c561194a6397e6f397",
+          "benchmark_host.py": "bb2094c996e69aba63f2fb36c6a7d0f427c520355a5d423de3e21724779b2f05",
+          "benchmark_metrics.py": "df9a625c9a77f13aaa00579d10f860330c9927937705bbcb62e31652578c5eab",
+          "benchmark_metrics_setup.py": "c467407f0c29d4fa9b94969e7962e749a857004f6c07525b93023092a5589d2b",
+          "benchmark_provenance.py": "67e9386ad600f36abf64df30cac35196caa3c198481157dcf5dff69f06bc902f",
+          "benchmark_rollout.py": "39c749799ecc75c2ae7326e876bff7a7ebd6fcdf812777edbb08dd82093a42d7",
+          "benchmark_session.py": "9847e22d399c97833ab6122d39bb52eb26db2bfcc1c21ef14b3a5fefa14f1e2e",
+          "benchmark_smoke.py": "f10c6ba5cd1667642af3f0e15b68e4a3b439cd2508aaf666997409f58da86f1c",
+          "remote.py": "1100e88a66a12a903232c404ed1a1db1d6a9ba3fe404949ea01f1070e73ca02b"
+        },
+        "initial_inventory": {
+          "schema_versions": [
+            "20261020180524",
+            "20261020184948",
+            "20261020200807",
+            "20261020205338",
+            "20261021002628",
+            "20261021011853",
+            "20261021012546",
+            "20261021080918",
+            "20261021083132",
+            "20261021094238",
+            "20261021123137",
+            "20261021124325",
+            "20261021190401",
+            "20261021193830",
+            "20261021224308",
+            "20261021231607",
+            "20261021233544",
+            "20261022100818",
+            "20261022175214",
+            "20261023033124",
+            "20261023040903",
+            "20261023151405",
+            "20261023152158",
+            "20261023160944",
+            "20261106140436",
+            "20261106165113"
+          ],
+          "table_counts": {
+            "budget_accounts": 0,
+            "budget_entries": 0,
+            "budget_holds": 0,
+            "calculation_attempts": 0,
+            "calculation_reviews": 0,
+            "calculation_runs": 0,
+            "calculation_scripts": 0,
+            "calculation_switch": 1,
+            "calculation_switch_events": 0,
+            "catalog_products": 0,
+            "command_receipts": 36,
+            "delivery_attempts": 36,
+            "departments": 1,
+            "enrollments": 0,
+            "fulfillment_batches": 0,
+            "fulfillment_lines": 0,
+            "guardian_links": 0,
+            "invitations": 0,
+            "membership_grants": 12,
+            "memberships": 14,
+            "operation_day_closes": 0,
+            "operation_receipts": 0,
+            "organization_events": 12,
+            "organizations": 1,
+            "outbox_messages": 36,
+            "private_documents": 0,
+            "retired_workflow_versions": 0,
+            "schema_migrations": 26,
+            "section_assignments": 0,
+            "service_resources": 0,
+            "service_sessions": 0,
+            "sessions": 0,
+            "template_events": 3,
+            "ticket_participants": 0,
+            "ticket_sections": 24,
+            "tickets": 12,
+            "transition_events": 36,
+            "users": 14,
+            "workflow_catalog_generations": 1,
+            "workflow_drafts": 1,
+            "workflow_versions": 1,
+            "workflows": 1
+          }
+        },
+        "k6_image": null,
+        "operation_id": "operation-e7b7a42eba17",
+        "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+        "postgres_metrics_settings": {
+          "server_version_num": "160015",
+          "shared_preload_libraries": "pg_stat_statements",
+          "track_activities": "on",
+          "track_counts": "on",
+          "track_io_timing": "on",
+          "track_wal_io_timing": "on"
+        },
+        "recovery_snapshot": "snapshot-20261106T225734Z-17de055157ad",
+        "resources": {
+          "db_cpus": 1,
+          "db_memory_bytes": 1073741824,
+          "pool_size": 10,
+          "web_cpus": 2,
+          "web_memory_bytes": 2147483648
+        },
+        "schema": 1,
+        "statement_statistics_available": true,
+        "target": "https://instantflow-benchmark.iagobussoletti.com.br",
+        "transport": {
+          "hostname": "instantflow-benchmark.iagobussoletti.com.br",
+          "origin_ip": "134.65.245.186",
+          "tls_verification": true
+        },
+        "workload": {
+          "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "name": "school-v1-contention",
+          "sha256": "30a993dbc339f8ad1f1ff384ee678e2fff9e7e0d161f009b57ec353ede047d35"
+        }
+      },
+      "workload_contract": {
+        "browser_deadline_seconds": 180,
+        "controller_processes": 1,
+        "editor_contexts": 2,
+        "kind": "functional_contention",
+        "measurement_window": "No steady-state timing window; fixed correctness scenarios",
+        "rounds": 3
+      },
+      "campaign": "campaign-f925f0e5aab1",
+      "metadata_sha256": "a277fec43bd58769dd8af1a34728ca07bf9d5b3cb361a8f722794836dcbe1605",
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-e7b7a42eba17",
+        "recovery_snapshot": "snapshot-20261106T225734Z-17de055157ad",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "observed_deadlocks": 0,
+      "final_pending_outbox": 0,
+      "metrics": {
+        "checks": {
+          "values": {
+            "passes": 29,
+            "fails": 0
+          }
+        },
+        "business_saves": {
+          "values": {
+            "count": 6
+          }
+        },
+        "business_failure": {
+          "values": {
+            "rate": 0
+          }
+        },
+        "expected_conflicts": {
+          "values": {
+            "count": 3
+          }
+        },
+        "preserved_drafts": {
+          "values": {
+            "count": 3
+          }
+        },
+        "contention_rounds": {
+          "values": {
+            "count": 3
+          }
+        },
+        "explicit_reapplications": {
+          "values": {
+            "count": 1
+          }
+        },
+        "independent_section_saves": {
+          "values": {
+            "count": 2
+          }
+        },
+        "terminal_transitions": {
+          "values": {
+            "count": 1
+          }
+        },
+        "contention_round_ms": {
+          "samples": [
+            69,
+            64,
+            83
+          ]
+        }
+      },
+      "checks": [
+        {
+          "name": "browser uses the verified direct-origin HTTPS route",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "requester remains unable to edit or approve during review",
+          "passes": 1,
+          "fails": 0
+        },
+        {
+          "name": "editors start from the same section revision",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "same-section contention accepts exactly one writer",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "winning revision contains exactly the winning draft",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "conflicting writer retains its original revision and draft",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "fresh authorized read confirms the sole committed winner",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "independent or reconciled write has no conflict",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "accepted write advances its section exactly once",
+          "passes": 3,
+          "fails": 0
+        },
+        {
+          "name": "clean peer must review new data before approval",
+          "passes": 1,
+          "fails": 0
+        },
+        {
+          "name": "explicit reconciliation persists the chosen draft",
+          "passes": 1,
+          "fails": 0
+        },
+        {
+          "name": "fresh read retains both concurrent independent-section writes",
+          "passes": 1,
+          "fails": 0
+        },
+        {
+          "name": "fresh-state approval persists a terminal read-only record",
+          "passes": 1,
+          "fails": 0
+        }
+      ]
+    }
+  ],
+  "final_host": {
+    "identity": {
+      "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "database": "instantflow_benchmark",
+      "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+      "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+      "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+      "pool_size": 10,
+      "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+      "project": "instantflow-benchmark",
+      "root": "/home/ubuntu/apps/instantflow-benchmark"
+    },
+    "live_inventory": {
+      "schema_versions": [
+        "20261020180524",
+        "20261020184948",
+        "20261020200807",
+        "20261020205338",
+        "20261021002628",
+        "20261021011853",
+        "20261021012546",
+        "20261021080918",
+        "20261021083132",
+        "20261021094238",
+        "20261021123137",
+        "20261021124325",
+        "20261021190401",
+        "20261021193830",
+        "20261021224308",
+        "20261021231607",
+        "20261021233544",
+        "20261022100818",
+        "20261022175214",
+        "20261023033124",
+        "20261023040903",
+        "20261023151405",
+        "20261023152158",
+        "20261023160944"
+      ],
+      "table_counts": {
+        "budget_accounts": 0,
+        "budget_entries": 0,
+        "budget_holds": 0,
+        "calculation_attempts": 0,
+        "calculation_reviews": 0,
+        "calculation_runs": 0,
+        "calculation_scripts": 0,
+        "calculation_switch": 1,
+        "calculation_switch_events": 0,
+        "catalog_products": 0,
+        "command_receipts": 48,
+        "delivery_attempts": 48,
+        "departments": 1,
+        "enrollments": 0,
+        "fulfillment_batches": 0,
+        "fulfillment_lines": 0,
+        "guardian_links": 0,
+        "invitations": 0,
+        "membership_grants": 14,
+        "memberships": 15,
+        "operation_day_closes": 0,
+        "operation_receipts": 0,
+        "organization_events": 14,
+        "organizations": 1,
+        "outbox_messages": 48,
+        "private_documents": 0,
+        "retired_workflow_versions": 0,
+        "schema_migrations": 24,
+        "section_assignments": 0,
+        "service_resources": 0,
+        "service_sessions": 0,
+        "sessions": 4,
+        "template_events": 3,
+        "ticket_participants": 0,
+        "ticket_sections": 30,
+        "tickets": 15,
+        "transition_events": 48,
+        "users": 15,
+        "workflow_drafts": 1,
+        "workflow_versions": 1,
+        "workflows": 1
+      }
+    }
+  },
+  "cleanup": {
+    "task_browser_container_removed": true,
+    "task_browser_controllers_exited": true,
+    "local_test_database_removed": true,
+    "task_started_local_postgres_stopped": true
+  },
+  "limitations": [
+    "One candidate run per scenario; no baseline comparison or capacity conclusion.",
+    "Mixed diagnostic uses ten seconds warmup and thirty seconds measurement; the original duration/repetition acceptance contract remains pending.",
+    "All full-window runtime work includes initialization, idle/background/observer work and warmup.",
+    "Periodic backend samples do not measure exact Ecto connection holding or exact lock/outbox peaks.",
+    "PostgreSQL cumulative counters can lag."
+  ]
+}
