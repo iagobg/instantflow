@@ -7,6 +7,7 @@ defmodule Instantflow.Collaboration.Presence do
   alias Instantflow.WorkflowCatalog.{Retirement, Version}
   alias Instantflow.WorkflowRuntime.{AccessFacts, Policy, Ticket}
   @peer_batch_size 250
+  @publication_interval 15
 
   def heartbeat(scope, ticket_id, section) do
     case project(scope, ticket_id, section) do
@@ -89,11 +90,28 @@ defmodule Instantflow.Collaboration.Presence do
 
   defp touch(scope, ticket_id, section) do
     topic = topic(scope.organization_id, ticket_id)
-    meta = %{membership_id: scope.id, section: section, seen_at: System.system_time(:second)}
+    key = to_string(scope.id)
+    pid = self()
+    now = System.system_time(:second)
 
-    case update(self(), topic, to_string(scope.id), meta) do
-      {:error, :nopresence} -> track(self(), topic, to_string(scope.id), meta)
-      result -> result
+    # Authorization has already been refreshed by project/3. Reuse only this
+    # tab's recent liveness metadata, never its permission or peer projection.
+    # A section change, missing entry or backwards clock jump publishes at once.
+    current = Phoenix.Tracker.get_by_key(__MODULE__, topic, key) |> List.keyfind(pid, 0)
+
+    case current do
+      {^pid, %{membership_id: member, section: ^section, seen_at: seen_at}}
+      when member == scope.id and is_integer(seen_at) and seen_at <= now and
+             now - seen_at < @publication_interval ->
+        :ok
+
+      _ ->
+        meta = %{membership_id: scope.id, section: section, seen_at: now}
+
+        case update(pid, topic, key, meta) do
+          {:error, :nopresence} -> track(pid, topic, key, meta)
+          result -> result
+        end
     end
   end
 

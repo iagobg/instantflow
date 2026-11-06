@@ -18,7 +18,7 @@ Transitions compare the reviewed request revision and readable section revisions
 
 Drafts are in memory and the current LiveView form only. They are not stored in localStorage, browser databases or server draft tables. A full browser reload/navigation can discard them. Losing section edit permission removes its draft; losing record/membership access clears protected data and redirects. Other authorized section drafts survive a local grant change.
 
-Presence is advisory and never locks a form or authorizes a command. Heartbeats run every 15 seconds, expire after 45 seconds, and contain only local membership, section and timestamp metadata. Names are resolved only after current viewer/participant checks. Presence process monitoring also removes departed sessions. Hidden sections do not expose participant names.
+Presence is advisory and never locks a form or authorizes a command. Heartbeat requests run every 15 seconds and always check current authority. Repeated draft/heartbeat events for the same tab and section publish presence at most once per 15 seconds; entering another section or recreating a missing entry publishes immediately. Tabs have independent tracker entries. Published metadata contains only local membership, section and timestamp, and expires after 45 seconds. Names are resolved only after current viewer/participant checks. Denied heartbeats withdraw that tab's presence immediately, and process monitoring removes departed sessions. Hidden sections do not expose participant names.
 
 ## Tables and reconciliation
 
