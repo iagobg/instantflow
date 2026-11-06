@@ -1,0 +1,216 @@
+{
+  "application": {
+    "application_commit": "6320f6aae390e4c563a761f82f93caf55ad0c836",
+    "checks_run_id": 42293617762,
+    "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42293617762",
+    "image": "ghcr.io/iagobg/instantflow@sha256:b11786265c5c32bfbc21ec60a71b63dbc727f72abe5b85480e5ef4bfa8f260ff",
+    "platform": "linux/arm64",
+    "publication_attempt": 1,
+    "publication_run_id": 42294802445,
+    "schema": 2
+  },
+  "artifact": {
+    "archive_sha256": "ad45de6f5104b1deb07b9f25c5530ff4a9eba86a8a9ade130c768af94ebf1678",
+    "id": 13540519379,
+    "verified_before_use": true
+  },
+  "date": "2026-11-06",
+  "interpretation": "Real ARM64 candidate migration, authenticated browser and matched restoration proof. This short functional pilot does not establish comparative performance or supported capacity.",
+  "pilot": {
+    "checked_saves": 6,
+    "checks": {
+      "fails": 0,
+      "passes": 6,
+      "rate": 1
+    },
+    "cpu": {
+      "db": {
+        "nr_periods": 113,
+        "nr_throttled": 0,
+        "system_usec": 403303,
+        "throttled_usec": 0,
+        "usage_usec": 1173274,
+        "user_usec": 769971
+      },
+      "web": {
+        "nr_periods": 119,
+        "nr_throttled": 0,
+        "system_usec": 285153,
+        "throttled_usec": 0,
+        "usage_usec": 990991,
+        "user_usec": 705838
+      }
+    },
+    "measurement_seconds": 10,
+    "observation_seconds": 15.282690286636353,
+    "sql_calls": 2264,
+    "users": 1,
+    "warmup_seconds": 0
+  },
+  "provenance": {
+    "application": {
+      "application_commit": "6320f6aae390e4c563a761f82f93caf55ad0c836",
+      "checks_run_id": 42293617762,
+      "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42293617762",
+      "image": "ghcr.io/iagobg/instantflow@sha256:b11786265c5c32bfbc21ec60a71b63dbc727f72abe5b85480e5ef4bfa8f260ff",
+      "platform": "linux/arm64",
+      "publication_attempt": 1,
+      "publication_run_id": 42294802445,
+      "schema": 2
+    },
+    "fixture": {
+      "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+      "initial_records": 12,
+      "load_actors": 10,
+      "name": "school-v1",
+      "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+      "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+    },
+    "host_controller_sha256": {
+      "benchmark_candidate.py": "5aaf42436dffb9861fb090e0446d3b3f9cf0bfb966adc6c561194a6397e6f397",
+      "benchmark_host.py": "bb2094c996e69aba63f2fb36c6a7d0f427c520355a5d423de3e21724779b2f05",
+      "benchmark_metrics.py": "df9a625c9a77f13aaa00579d10f860330c9927937705bbcb62e31652578c5eab",
+      "benchmark_metrics_setup.py": "c467407f0c29d4fa9b94969e7962e749a857004f6c07525b93023092a5589d2b",
+      "benchmark_provenance.py": "13fc3dca638792fe5cb27d01545ea0b01d2f546c1733aef587c8c0dd6ea7baf7",
+      "benchmark_rollout.py": "39c749799ecc75c2ae7326e876bff7a7ebd6fcdf812777edbb08dd82093a42d7",
+      "benchmark_session.py": "9847e22d399c97833ab6122d39bb52eb26db2bfcc1c21ef14b3a5fefa14f1e2e",
+      "benchmark_smoke.py": "f10c6ba5cd1667642af3f0e15b68e4a3b439cd2508aaf666997409f58da86f1c",
+      "remote.py": "1100e88a66a12a903232c404ed1a1db1d6a9ba3fe404949ea01f1070e73ca02b"
+    },
+    "initial_inventory": {
+      "schema_versions": [
+        "20261020180524",
+        "20261020184948",
+        "20261020200807",
+        "20261020205338",
+        "20261021002628",
+        "20261021011853",
+        "20261021012546",
+        "20261021080918",
+        "20261021083132",
+        "20261021094238",
+        "20261021123137",
+        "20261021124325",
+        "20261021190401",
+        "20261021193830",
+        "20261021224308",
+        "20261021231607",
+        "20261021233544",
+        "20261022100818",
+        "20261022175214",
+        "20261023033124",
+        "20261023040903",
+        "20261023151405",
+        "20261023152158",
+        "20261023160944",
+        "20261106140436",
+        "20261106165113"
+      ],
+      "table_counts": {
+        "budget_accounts": 0,
+        "budget_entries": 0,
+        "budget_holds": 0,
+        "calculation_attempts": 0,
+        "calculation_reviews": 0,
+        "calculation_runs": 0,
+        "calculation_scripts": 0,
+        "calculation_switch": 1,
+        "calculation_switch_events": 0,
+        "catalog_products": 0,
+        "command_receipts": 36,
+        "delivery_attempts": 36,
+        "departments": 1,
+        "enrollments": 0,
+        "fulfillment_batches": 0,
+        "fulfillment_lines": 0,
+        "guardian_links": 0,
+        "invitations": 0,
+        "membership_grants": 12,
+        "memberships": 14,
+        "operation_day_closes": 0,
+        "operation_receipts": 0,
+        "organization_events": 12,
+        "organizations": 1,
+        "outbox_messages": 36,
+        "private_documents": 0,
+        "retired_workflow_versions": 0,
+        "schema_migrations": 26,
+        "section_assignments": 0,
+        "service_resources": 0,
+        "service_sessions": 0,
+        "sessions": 0,
+        "template_events": 3,
+        "ticket_participants": 0,
+        "ticket_sections": 24,
+        "tickets": 12,
+        "transition_events": 36,
+        "users": 14,
+        "workflow_catalog_generations": 1,
+        "workflow_drafts": 1,
+        "workflow_versions": 1,
+        "workflows": 1
+      }
+    },
+    "k6_image": "grafana/k6@sha256:8663335c8c1c5a40dd51823ef980c584761a4a084a2297fca29a29ee495c6bc1",
+    "operation_id": "operation-0e01e8c81f54",
+    "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+    "postgres_metrics_settings": {
+      "server_version_num": "160015",
+      "shared_preload_libraries": "pg_stat_statements",
+      "track_activities": "on",
+      "track_counts": "on",
+      "track_io_timing": "on",
+      "track_wal_io_timing": "on"
+    },
+    "recovery_snapshot": "snapshot-20261106T211802Z-c1232e6a9bc2",
+    "resources": {
+      "db_cpus": 1,
+      "db_memory_bytes": 1073741824,
+      "pool_size": 10,
+      "web_cpus": 2,
+      "web_memory_bytes": 2147483648
+    },
+    "schema": 1,
+    "statement_statistics_available": true,
+    "target": "https://instantflow-benchmark.iagobussoletti.com.br",
+    "transport": {
+      "hostname": "instantflow-benchmark.iagobussoletti.com.br",
+      "origin_ip": "134.65.245.186",
+      "tls_verification": true
+    },
+    "workload": {
+      "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "name": "school-v1-browser",
+      "sha256": "5b7aa7011e796b3794847052e2e94d7820143a96d5a4088456f0ca468990aba6"
+    }
+  },
+  "restoration": {
+    "identity": {
+      "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "database": "instantflow_benchmark",
+      "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+      "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+      "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+      "pool_size": 10,
+      "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+      "project": "instantflow-benchmark",
+      "root": "/home/ubuntu/apps/instantflow-benchmark"
+    },
+    "operation_id": "operation-0e01e8c81f54",
+    "recovery_snapshot": "snapshot-20261106T211802Z-c1232e6a9bc2",
+    "smoke": {
+      "authenticated_record_read": true,
+      "logout": true,
+      "tls_verified": true,
+      "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+    },
+    "status": "recovered"
+  },
+  "status": "passed",
+  "validation": {
+    "application_tests": 505,
+    "deployment_tests": 80,
+    "failures": 0
+  }
+}
