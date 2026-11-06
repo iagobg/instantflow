@@ -1,0 +1,41 @@
+{
+  "recorded_on": "2026-11-06",
+  "parent_commit": "e71c8a0",
+  "environment": "Local loopback Phoenix server, disposable PostgreSQL database, synthetic simple-approval records, Chromium through Playwright Core 1.64.1 and Node 24.22.0",
+  "method": {
+    "assets": "mix assets.deploy; compressed and uncompressed assets rebuilt together",
+    "typing": "Wait for the initial immediate draft acknowledgement and locked-input DOM restoration, then type 16 characters at 10 ms intervals and await the draft acknowledgement. Count outgoing LiveView draft events without retaining field values.",
+    "immediate_submit": "Dispatch an input event and requestSubmit in the same JavaScript evaluation, before the 250 ms debounce can fire; reload and verify the persisted final value.",
+    "fixture": "test/browser/input_debounce_server.exs",
+    "driver": "test/browser/input_debounce.cjs"
+  },
+  "measurements": {
+    "rapid_typing_characters": 16,
+    "rapid_typing_draft_events": 1,
+    "five_repeated_typing_captures": [1, 1, 1, 1, 1],
+    "immediate_submit_pending_draft_events": 0
+  },
+  "correctness": [
+    "The first edit is immediate; the server establishes dirty-state guards before subsequent draft text is debounced.",
+    "Immediate Save persists the full submitted values even if the final draft event has not run.",
+    "A transition persists its current required reason without a preceding reason-change event.",
+    "A peer save preserves focus, local text and observed revisions until explicit conflict reapply.",
+    "Disconnect/reconnect restores the pending draft without automatically submitting a mutation.",
+    "Current authorization and visibility-removal paths remain covered by the full regression suite."
+  ],
+  "validation": {
+    "focused_form_collaboration_presence_tests": 12,
+    "precommit_tests": 475,
+    "precommit_failures": 0,
+    "production_asset_build": "passed",
+    "browser_correctness_checks": 5,
+    "browser_correctness_status": "passed"
+  },
+  "limitations": [
+    "The first draft edit is not debounced. Measurements begin after its acknowledgement and DOM restoration.",
+    "Native blur, submit and DOM patch behavior can flush pending input earlier; this is not a hard per-second event limit.",
+    "This increment applies to staff-record draft fields and transition reasons; other FieldInput callers retain their existing behavior unless they opt in.",
+    "Browser event counts do not establish hosted latency, database CPU savings or concurrency capacity."
+  ],
+  "diagnostics": "Early browser runs exposed blur-triggered flushes while initial locked inputs were still being restored and stale local compressed assets. The final controlled measurement uses current production assets and a settled initial acknowledgement; five repetitions produce the same result."
+}

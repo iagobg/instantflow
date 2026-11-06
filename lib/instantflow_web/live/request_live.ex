@@ -746,7 +746,9 @@ defmodule InstantflowWeb.RequestLive do
       {:noreply,
        socket
        |> assign(:presence, projection.editors)
-       |> stream(:sections, data.sections, reset: true)}
+       # The section set is unchanged. Update rows in place so a presence patch
+       # does not detach focused inputs and flush their pending debounce on blur.
+       |> stream(:sections, data.sections)}
     else
       refresh(socket)
     end
@@ -1011,12 +1013,14 @@ defmodule InstantflowWeb.RequestLive do
                 value={@editors[section.key].stage_revision}
               />
               <input type="hidden" name="observed[key]" value={@editors[section.key].key} />
+              <%!-- Establish the dirty draft immediately before debouncing later text edits. --%>
               <.field_input
                 :for={field <- definition["fields"]}
                 field={@forms[section.key][field["key"]]}
                 id={"section-#{section.key}-#{field["key"]}"}
                 label={field["label"]}
                 type={field["type"]}
+                debounce={if @editors[section.key].dirty, do: 250}
                 disabled={
                   field["type"] == "attachment" or
                     (field["type"] == "directory_reference" and field["reference"] == nil)
@@ -1353,6 +1357,7 @@ defmodule InstantflowWeb.RequestLive do
                 label="Motivo (obrigatório para correção, rejeição e cancelamento)"
                 type="textarea"
                 maxlength="2000"
+                phx-debounce="250"
               /><div class="transition-buttons">
                 <button
                   :for={edge <- @data.transitions}

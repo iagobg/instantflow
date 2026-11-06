@@ -9,6 +9,7 @@ defmodule InstantflowWeb.FieldInput do
   attr :label, :string, required: true
   attr :options, :list, default: []
   attr :disabled, :boolean, default: false
+  attr :debounce, :integer, default: nil
 
   def field_input(assigns) do
     assigns =
@@ -25,6 +26,7 @@ defmodule InstantflowWeb.FieldInput do
       options={@input_options}
       multiple={@type == "multiple_choice"}
       disabled={@disabled}
+      phx-debounce={if @input_type in ~w(text textarea number), do: @debounce}
       min={if @type == "money", do: 0}
       step={if @type in ~w(integer money), do: 1}
       placeholder={if @type == "datetime", do: "2026-10-23T14:00:00-03:00"}
