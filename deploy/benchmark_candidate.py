@@ -21,17 +21,21 @@ def verify(run, revision, repository):
         raise ValueError("A successful same-repository Checks run for this exact commit is required")
 
 
-def manifest(run, revision, repository, digest):
+def manifest(run, revision, repository, digest, publication_run_id, publication_attempt):
     verify(run, revision, repository)
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
         raise ValueError("Expected an immutable SHA-256 image digest")
+    if not all(re.fullmatch(r"[1-9][0-9]*", str(value)) for value in [publication_run_id, publication_attempt]):
+        raise ValueError("Expected positive publication run and attempt identifiers")
     return {
-        "schema": 1,
+        "schema": 2,
         "application_commit": revision,
         "image": f"ghcr.io/{repository.lower()}@{digest}",
         "platform": "linux/arm64",
         "checks_run_id": run["id"],
         "checks_url": f"https://github.com/{repository}/actions/runs/{run['id']}",
+        "publication_run_id": int(publication_run_id),
+        "publication_attempt": int(publication_attempt),
     }
 
 
@@ -40,7 +44,7 @@ if __name__ == "__main__":
     run = json.loads(Path(filename).read_text())
     if action == "verify" and not extra:
         verify(run, revision, repository)
-    elif action == "manifest" and len(extra) == 1:
-        print(json.dumps(manifest(run, revision, repository, extra[0]), indent=2))
+    elif action == "manifest" and len(extra) == 3:
+        print(json.dumps(manifest(run, revision, repository, *extra), indent=2))
     else:
-        raise SystemExit("Expected verify RUN_JSON COMMIT REPOSITORY or manifest RUN_JSON COMMIT REPOSITORY DIGEST")
+        raise SystemExit("Expected verify RUN_JSON COMMIT REPOSITORY or manifest RUN_JSON COMMIT REPOSITORY DIGEST PUBLICATION_RUN_ID ATTEMPT")

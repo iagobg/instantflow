@@ -1,9 +1,4 @@
-"""Guard and preserve the dedicated benchmark; never reset or deploy an app.
-
-Install this file in ROOT and run it as the directory owner. Only a randomly
-named verification database is created/dropped. Restoring the benchmark itself
-and selecting a candidate image are deliberately separate future commands.
-"""
+"""Guard and preserve the dedicated benchmark. Rollouts use benchmark_rollout.py."""
 import argparse
 import contextlib
 import datetime
@@ -29,6 +24,39 @@ BASE_HASH = "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c"
 CONFIG_FILES = ("compose.json", "fixture.json", "db.env", "web.env", "operator-private.json")
 SNAPSHOT_PATTERN = r"snapshot-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{12}"
 VERIFY_PREFIX = "instantflow_benchmark_verify_"
+
+
+def baseline_application():
+    return {"schema": 0, "application_commit": BASE_COMMIT, "image": BASE_IMAGE,
+            "platform": "linux/arm64"}
+
+
+def validate_application(application):
+    if application == baseline_application():
+        return application
+    require(set(application) == {"schema", "application_commit", "image", "platform", "checks_run_id",
+                                 "checks_url", "publication_run_id", "publication_attempt"}
+            and application["schema"] == 2 and application["platform"] == "linux/arm64"
+            and re.fullmatch(r"[0-9a-f]{40}", application["application_commit"])
+            and re.fullmatch(re.escape(REPOSITORY) + r"@sha256:[0-9a-f]{64}", application["image"])
+            and application["image"] != BASE_IMAGE
+            and all(type(application[k]) is int and application[k] > 0 for k in
+                    ["checks_run_id", "publication_run_id", "publication_attempt"])
+            and application["checks_url"] == "https://github.com/iagobg/instantflow/actions/runs/"
+            + str(application["checks_run_id"]), "Invalid immutable application manifest")
+    return application
+
+
+def application_for(config):
+    image = config["services"]["web"]["image"]
+    if image == BASE_IMAGE:
+        return baseline_application()
+    require(re.fullmatch(re.escape(REPOSITORY) + r"@sha256:[0-9a-f]{64}", image),
+            "Unrecognized application image")
+    folder = private_path(ROOT / "candidates", directory=True)
+    application = validate_application(read_json(folder / (image.split(":")[-1] + ".json")))
+    require(application["image"] == image, "Application manifest/image mismatch")
+    return application
 
 
 class GuardError(RuntimeError):
@@ -87,7 +115,8 @@ def read_env(path):
     return result
 
 
-def validate_config(config, marker):
+def validate_config(config, marker, application=None):
+    application = validate_application(application or baseline_application())
     require(marker == {
         "fixture": "school-v1", "database": DATABASE, "application_commit": BASE_COMMIT,
         "image": BASE_IMAGE, "postgres_image": POSTGRES_IMAGE, "baseline_sha256": BASE_HASH,
@@ -102,8 +131,8 @@ def validate_config(config, marker):
               "networks", "healthcheck", "logging"}
     require(set(web) == common | {"init", "environment", "ports", "cap_drop", "security_opt"}
             and set(db) == common | {"volumes"}, "Unexpected service options")
-    require(web["image"] == BASE_IMAGE and db["image"] == POSTGRES_IMAGE,
-            "Only the recorded historical image is supported by this preservation version")
+    require(web["image"] == application["image"] and db["image"] == POSTGRES_IMAGE,
+            "Compose image differs from immutable application manifest")
     require(web["container_name"] == PROJECT + "-web" and db["container_name"] == PROJECT + "-db",
             "Unexpected benchmark container names")
     require(web["env_file"] == ["web.env"] and db["env_file"] == ["db.env"],
@@ -177,33 +206,54 @@ class Host:
                            "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", database,
                            input=statement.encode(), label="database inspection").decode().strip()
 
-    def guard(self):
+    def guard(self, *, stopped=False, transition=None, ready=False):
         require(ROOT.resolve() == ROOT and Path(__file__).resolve().parent == ROOT,
                 "Wrong benchmark management directory")
         private_path(ROOT, directory=True)
         marker = read_json(ROOT / "fixture.json")
         config = read_json(ROOT / "compose.json")
-        validate_config(config, marker)
+        application = application_for(config)
+        validate_config(config, marker, application)
+        if transition is None:
+            require(not (ROOT / "pending-operation.json").exists(),
+                    "Interrupted operation requires benchmark_rollout.py recover")
         db_env, web_env = validate_credentials(ROOT)
         require(digest(private_path(ROOT / "baseline.dump")) == BASE_HASH, "Frozen baseline checksum mismatch")
 
-        containers = json.loads(self.docker("inspect", PROJECT + "-web", PROJECT + "-db",
-                                           label="container identity"))
+        try:
+            containers = json.loads(self.docker("inspect", PROJECT + "-web", PROJECT + "-db",
+                                               label="container identity"))
+        except GuardError:
+            if not transition or ready:
+                raise
+            # Compose can be interrupted between deleting and recreating web.
+            missing = not self.docker("ps", "-aq", "--filter", "name=^/" + PROJECT + "-web$",
+                                      label="missing benchmark web inspection").strip()
+            require(missing, "Existing benchmark web could not be inspected")
+            database = json.loads(self.docker("inspect", PROJECT + "-db", label="database identity"))
+            require(len(database) == 1, "Unexpected database inspection")
+            containers = [None, database[0]]
         require(len(containers) == 2, "Unexpected container inspection")
         for container, service, image, cpus, memory, env in [
-            (containers[0], "web", BASE_IMAGE, 2_000_000_000, 2_147_483_648, web_env),
+            (containers[0], "web", application["image"], 2_000_000_000, 2_147_483_648, web_env),
             (containers[1], "db", POSTGRES_IMAGE, 1_000_000_000, 1_073_741_824, db_env),
         ]:
+            if container is None:
+                continue
             labels = container["Config"]["Labels"]
+            allowed_images = transition["images"] if service == "web" and transition and not ready else [image]
             require(container["Name"] == "/" + PROJECT + "-" + service
-                    and container["Config"]["Image"] == image
+                    and container["Config"]["Image"] in allowed_images
                     and labels.get("com.docker.compose.project") == PROJECT
                     and labels.get("com.docker.compose.service") == service
                     and labels.get("com.docker.compose.project.working_dir") == str(ROOT)
                     and labels.get("com.docker.compose.project.config_files") == str(ROOT / "compose.json"),
                     "Running container identity differs from benchmark configuration")
-            require(container["State"]["Running"] and container["State"]["Health"]["Status"] == "healthy",
-                    "Benchmark containers must be running and healthy")
+            if service != "web" or ready or not (stopped or transition):
+                require(container["State"]["Running"] and container["State"]["Health"]["Status"] == "healthy",
+                        "Benchmark containers must be running and healthy")
+            elif stopped:
+                require(not container["State"]["Running"], "Benchmark web must be stopped")
             require(container["HostConfig"]["NanoCpus"] == cpus
                     and container["HostConfig"]["Memory"] == memory
                     and not container["HostConfig"]["Privileged"], "Running container limits differ")
@@ -230,13 +280,12 @@ class Host:
                         and set(container["NetworkSettings"]["Networks"]) == {PROJECT + "_database"},
                         "Unexpected running database topology")
 
-        image = json.loads(self.docker("image", "inspect", BASE_IMAGE, label="image identity"))[0]
-        require(image["Architecture"] == "arm64" and image["Os"] == "linux"
-                and containers[0]["Image"] == image["Id"]
-                and BASE_IMAGE in image["RepoDigests"]
-                and image["Config"]["Labels"].get("org.opencontainers.image.revision") == BASE_COMMIT
-                and image["Config"]["Labels"].get("org.opencontainers.image.source") == "https://github.com/iagobg/instantflow",
-                "Unexpected application image provenance")
+        running_application = application
+        if transition and containers[0]:
+            running_application = next(a for a in transition["applications"]
+                                       if a["image"] == containers[0]["Config"]["Image"])
+        image = self.image_identity(running_application)
+        require(not containers[0] or containers[0]["Image"] == image["Id"], "Running image bytes differ")
         network = json.loads(self.docker("network", "inspect", PROJECT + "_database",
                                         label="database network identity"))[0]
         volume = json.loads(self.docker("volume", "inspect", PROJECT + "_data",
@@ -246,9 +295,28 @@ class Host:
                 and volume["Name"] == PROJECT + "_data"
                 and volume["Labels"].get("com.docker.compose.project") == PROJECT,
                 "Database network or volume belongs to another stack")
-        require(self.sql("postgres", "SELECT datname FROM pg_database WHERE NOT datistemplate ORDER BY datname;").splitlines()
-                == [DATABASE, "postgres"], "Database container is not exclusive to the benchmark")
-        require(self.sql(DATABASE, "SELECT current_database();") == DATABASE, "Wrong connected database")
+        databases = self.sql("postgres", "SELECT datname FROM pg_database WHERE NOT datistemplate ORDER BY datname;").splitlines()
+        require(databases == [DATABASE, "postgres"] or (transition and databases == ["postgres"]),
+                "Database container is not exclusive to the benchmark")
+        if not transition:
+            require(self.sql(DATABASE, "SELECT current_database();") == DATABASE, "Wrong connected database")
+            self.runtime_guard()
+        return {"root": str(ROOT), "project": PROJECT, "database": DATABASE,
+                "application_commit": application["application_commit"], "image": application["image"],
+                "postgres_image": POSTGRES_IMAGE,
+                "fixture_sha256": BASE_HASH, "endpoint_host": web_env["PHX_HOST"], "pool_size": 10}
+
+    def image_identity(self, application):
+        validate_application(application)
+        image = json.loads(self.docker("image", "inspect", application["image"], label="image identity"))[0]
+        require(image["Architecture"] == "arm64" and image["Os"] == "linux"
+                and application["image"] in image["RepoDigests"]
+                and image["Config"]["Labels"].get("org.opencontainers.image.revision") == application["application_commit"]
+                and image["Config"]["Labels"].get("org.opencontainers.image.source") == "https://github.com/iagobg/instantflow",
+                "Unexpected application image provenance")
+        return image
+
+    def runtime_guard(self):
         require(self.sql(DATABASE, """
             SELECT rolcanlogin AND NOT (rolsuper OR rolcreatedb OR rolcreaterole OR rolinherit OR rolbypassrls)
             AND NOT pg_has_role('instantflow_runtime', 'postgres', 'MEMBER')
@@ -256,9 +324,6 @@ class Host:
                             AND c.relowner=pg_roles.oid)
             FROM pg_roles WHERE rolname='instantflow_runtime';
         """) == "t", "Unexpected runtime database privileges")
-        return {"root": str(ROOT), "project": PROJECT, "database": DATABASE,
-                "application_commit": BASE_COMMIT, "image": BASE_IMAGE, "postgres_image": POSTGRES_IMAGE,
-                "fixture_sha256": BASE_HASH, "endpoint_host": web_env["PHX_HOST"], "pool_size": 10}
 
     def inventory(self, database):
         # Only identifiers/counts leave PostgreSQL; no rows, identities or field values.
@@ -299,8 +364,8 @@ class Host:
             if created:
                 self.sql("postgres", f'DROP DATABASE "{temporary}";')
 
-    def snapshot(self):
-        identity = self.guard()
+    def snapshot(self, *, stopped=False, transition=None):
+        identity = self.guard(stopped=stopped, transition=transition)
         base = ROOT / "snapshots"
         base.mkdir(mode=0o700, exist_ok=True)
         private_path(base, directory=True)
@@ -323,12 +388,13 @@ class Host:
             os.fsync(stream.fileno())
         require(archive.stat().st_size > 0, "Empty snapshot archive")
         inventory = self.rehearse(archive)
-        require(identity == self.guard(), "Benchmark identity changed during preservation")
+        require(identity == self.guard(stopped=stopped, transition=transition), "Benchmark identity changed during preservation")
         require(before == {name: digest(ROOT / name) for name in CONFIG_FILES}
                 == {name: digest(folder / name) for name in CONFIG_FILES},
                 "Benchmark configuration changed during preservation")
         snapshot = {
-            "schema": 1, "snapshot_id": snapshot_id, "identity": identity,
+            "schema": 2, "snapshot_id": snapshot_id, "identity": identity,
+            "application": application_for(read_json(ROOT / "compose.json")),
             "started_at": started, "verified_at": utc_now(), "inventory": inventory,
             "files": {name: digest(folder / name) for name in (*CONFIG_FILES, "database.dump")},
             "verification_database_removed": True,
@@ -344,19 +410,28 @@ class Host:
                 os.close(fd)
         return snapshot
 
-    def verify_snapshot(self, snapshot_id):
+    def load_snapshot(self, snapshot_id):
         require(re.fullmatch(SNAPSHOT_PATTERN, snapshot_id), "Invalid snapshot identifier")
-        identity = self.guard()
         folder = private_path(private_path(ROOT / "snapshots", directory=True) / snapshot_id, directory=True)
         snapshot = read_json(folder / "snapshot.json")
-        require(snapshot["schema"] == 1 and snapshot["snapshot_id"] == snapshot_id
-                and snapshot["identity"] == identity and snapshot["verification_database_removed"] is True,
+        application = validate_application(snapshot.get("application", baseline_application()))
+        expected_identity = {"root": str(ROOT), "project": PROJECT, "database": DATABASE,
+                             "application_commit": application["application_commit"], "image": application["image"],
+                             "postgres_image": POSTGRES_IMAGE, "fixture_sha256": BASE_HASH,
+                             "endpoint_host": read_env(folder / "web.env")["PHX_HOST"], "pool_size": 10}
+        require(snapshot["schema"] in {1, 2} and snapshot["snapshot_id"] == snapshot_id
+                and snapshot["identity"] == expected_identity and snapshot["verification_database_removed"] is True,
                 "Snapshot belongs to a different benchmark identity")
         require(set(snapshot["files"]) == {*CONFIG_FILES, "database.dump"}, "Incomplete snapshot manifest")
         for name, expected in snapshot["files"].items():
             require(digest(private_path(folder / name)) == expected, "Snapshot checksum mismatch")
-        validate_config(read_json(folder / "compose.json"), read_json(folder / "fixture.json"))
+        validate_config(read_json(folder / "compose.json"), read_json(folder / "fixture.json"), application)
         validate_credentials(folder)
+        return snapshot, folder
+
+    def verify_snapshot(self, snapshot_id):
+        snapshot, folder = self.load_snapshot(snapshot_id)
+        identity = self.guard()
         require(self.rehearse(folder / "database.dump") == snapshot["inventory"],
                 "Restored snapshot inventory mismatch")
         require(all(digest(folder / name) == expected for name, expected in snapshot["files"].items()),
@@ -410,5 +485,5 @@ if __name__ == "__main__":
     except Exception:
         # Input/command exceptions can embed private values; never print their repr.
         import sys
-        print("Benchmark operation refused or failed; no deployment/reset was performed.", file=sys.stderr)
+        print("Benchmark preservation operation refused or failed.", file=sys.stderr)
         raise SystemExit(1) from None

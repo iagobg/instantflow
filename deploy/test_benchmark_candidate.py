@@ -16,10 +16,12 @@ class CandidateTest(unittest.TestCase):
         }
 
     def test_accepts_exact_successful_revision_and_records_immutable_digest(self):
-        result = manifest(self.run, self.revision, self.repository, "sha256:" + "b" * 64)
+        result = manifest(self.run, self.revision, self.repository, "sha256:" + "b" * 64, 456, 1)
         self.assertEqual(result["application_commit"], self.revision)
         self.assertEqual(result["image"], "ghcr.io/iagobg/instantflow@sha256:" + "b" * 64)
         self.assertEqual(result["checks_run_id"], 123)
+        self.assertEqual(result["publication_run_id"], 456)
+        self.assertEqual(result["publication_attempt"], 1)
         self.run.update(path=".github/workflows/checks.yml@main", event="workflow_dispatch")
         verify(self.run, self.revision, self.repository)
 
@@ -40,7 +42,7 @@ class CandidateTest(unittest.TestCase):
     def test_rejects_tags_partial_commits_and_invalid_repository(self):
         for digest in ["latest", "sha256:abc", "sha256:" + "g" * 64]:
             with self.subTest(digest=digest), self.assertRaises(ValueError):
-                manifest(self.run, self.revision, self.repository, digest)
+                manifest(self.run, self.revision, self.repository, digest, 456, 1)
         with self.assertRaises(ValueError):
             verify(self.run, "abc123", self.repository)
         with self.assertRaises(ValueError):
