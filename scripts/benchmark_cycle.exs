@@ -12,6 +12,7 @@ defmodule Instantflow.CycleBenchmark do
   import Ecto.Query
   alias Instantflow.{Delivery, Identity, OperatorRepo, Repo, WorkflowCatalog, WorkflowFixtures}
   alias Instantflow.Diagnostics.{ConnectionProbe, QueryProbe}
+  alias Instantflow.Collaboration.Presence
   alias Instantflow.Identity.{Department, Membership, Organization, User}
   alias Instantflow.WorkflowRuntime.{Section, Ticket}
   @endpoint InstantflowWeb.Endpoint
@@ -223,6 +224,7 @@ defmodule Instantflow.CycleBenchmark do
     curated_burst = curated_burst(f, tasks)
 
     report = %{
+      source: source(),
       environment: "Local disposable database; runtime login; committed writes; pool size 4",
       postgres: postgres,
       pool_size: 4,
@@ -238,24 +240,30 @@ defmodule Instantflow.CycleBenchmark do
       notification_burst: burst,
       unrelated_workspace: unrelated_workspace,
       curated_burst: curated_burst,
+      collaboration_matrix: collaboration_matrix(tasks),
       observer_control: overhead(),
       completion:
         "Outbox empty after bounded drains on an independent connection; dispatcher committed; all three LiveViews rendered; both record revisions match storage; delivery failure and retry visible without a new ticket revision",
       limitations:
-        "Local synthetic workload, not a capacity estimate. HTTP/LiveView protocol driven in-process; no browser/network latency. Workers invoked explicitly without poll delay. No presence heartbeats or recovery timers. Operator-only validation queries excluded. Only the outer window traces leases; nested phase query counters add overhead. Control measures one probe pair and includes separate setup/teardown cost. Lease boundaries exclude final handoff bookkeeping."
+        "Local synthetic workload, not a capacity estimate. HTTP/LiveView protocol driven in-process; no browser/network latency. Workers invoked explicitly without poll delay. Legacy scenarios exclude presence heartbeats; the collaboration matrix includes explicit heartbeat events. Recovery timers excluded. Operator-only validation queries excluded. Only the outer window traces leases; nested phase query counters add overhead. Control measures one probe pair and includes separate setup/teardown cost. Lease boundaries exclude final handoff bookkeeping."
     }
 
     File.mkdir_p!(Path.dirname(report_path()))
     File.write!(report_path(), Jason.encode!(report, pretty: true) <> "\n")
   end
 
-  defp fixture do
-    org = OperatorRepo.insert!(%Organization{slug: "cycle", name: "Synthetic"})
+  defp fixture(opts \\ []) do
+    org =
+      OperatorRepo.insert!(%Organization{
+        slug: Keyword.get(opts, :slug, "cycle"),
+        name: "Synthetic"
+      })
+
     department = OperatorRepo.insert!(%Department{organization_id: org.id, name: "Synthetic"})
     password_hash = Instantflow.Identity.Password.hash("fictional-password-123")
 
-    [admin, requester, reviewer] =
-      for role <- ["admin", "staff", "staff"] do
+    [admin | members] =
+      for role <- ["admin" | List.duplicate("staff", Keyword.get(opts, :users, 2))] do
         user =
           OperatorRepo.insert!(%User{
             email: "cycle-#{System.unique_integer([:positive])}@example.test",
@@ -279,9 +287,278 @@ defmodule Instantflow.CycleBenchmark do
     }
 
     {:ok, version} =
-      WorkflowCatalog.publish(admin, WorkflowFixtures.definition_fixture(), bindings)
+      WorkflowCatalog.publish(
+        admin,
+        Keyword.get(opts, :definition, WorkflowFixtures.definition_fixture()),
+        bindings
+      )
 
-    %{admin: admin, requester: requester, reviewer: reviewer, version: version}
+    %{
+      admin: admin,
+      requester: hd(members),
+      reviewer: List.last(members),
+      members: members,
+      slug: org.slug,
+      version: version
+    }
+  end
+
+  defp collaboration_matrix(tasks) do
+    %{
+      audience: Enum.map([1, 5, 10], &audience_cycle(&1, tasks)),
+      same_section: Enum.map([2, 5], &editing_race(&1, :same, tasks)),
+      different_sections: editing_race(2, :different, tasks),
+      completion:
+        "Presence refs observed on PubSub, tracker barrier completed, then every view rendered; saves committed and outbox empty; losing same-section drafts preserved; independent-section saves both committed",
+      limitations:
+        "One connected record per distinct staff user, one organization per case, four runtime connections; HTTP mounts are sequential, heartbeat/save bursts use a start barrier; draft events are delivered after client debounce; no browser timing, network or polling delay. Presence follow-up SQL is included. Each connected case must finish before the 30-second reconciliation timer. Timings include assertions and observers."
+    }
+  end
+
+  defp collaboration_definition do
+    definition = WorkflowFixtures.definition_fixture()
+    [section] = definition["sections"]
+
+    section =
+      Map.update!(section, "access", fn access ->
+        Enum.map(access, &Map.put(&1, "edit_stages", ["draft"]))
+      end)
+
+    Map.put(definition, "sections", [section, Map.put(section, "key", "notes")])
+  end
+
+  defp audience_cycle(count, tasks) do
+    {f, id, topic, views, mount, started} = connected_case(count, "audience-#{count}", tasks)
+    [author | _] = views
+    original = OperatorRepo.get_by!(Section, ticket_id: id, key: "request")
+
+    {_, idle} =
+      measure(fn ->
+        parallel(tasks, views, &render_hook(&1, "heartbeat", %{}))
+        Enum.each(views, &render/1)
+        assert Presence.list(topic) == %{}
+      end)
+
+    drafts =
+      for n <- 1..3 do
+        {_, report} =
+          measure(fn ->
+            before = presence_refs(topic)
+
+            author
+            |> form("#section-form-request", section: %{summary: "Draft #{n}"})
+            |> render_change()
+
+            await_presence(topic, views, before)
+            assert has_element?(author, "#section-form-request input[value='Draft #{n}']")
+            assert OperatorRepo.get_by!(Section, ticket_id: id, key: "request") == original
+          end)
+
+        report
+      end
+
+    {_, heartbeat} =
+      measure(fn ->
+        before = presence_refs(topic)
+        render_hook(author, "heartbeat", %{})
+        await_presence(topic, views, before)
+        assert has_element?(author, "#section-form-request input[value='Draft 3']")
+      end)
+
+    saves =
+      for n <- 1..3 do
+        values = Map.put(WorkflowFixtures.values(), "summary", "Saved #{n}")
+
+        {_, report} =
+          measure(fn ->
+            author |> form("#section-form-request", section: values) |> render_submit()
+            drain(tasks)
+            Enum.each(views, &render/1)
+            assert_converged(id, views)
+            assert OperatorRepo.get_by!(Section, ticket_id: id, key: "request").values == values
+
+            for view <- views do
+              refute has_element?(view, "#conflict-request")
+              assert has_element?(view, "#section-form-request input[value='Saved #{n}']")
+            end
+          end)
+
+        report
+      end
+
+    close_case(topic, views, started)
+
+    %{
+      connected_users: count,
+      organization_members: length(f.members) + 1,
+      mounts: mount,
+      idle_heartbeat_burst: idle,
+      draft_events: drafts,
+      recent_author_heartbeat: heartbeat,
+      saves: saves
+    }
+  end
+
+  defp editing_race(count, mode, tasks) do
+    {_f, id, topic, views, _mount, started} =
+      connected_case(count, "edit-#{mode}-#{count}", tasks)
+
+    edits =
+      views
+      |> Enum.with_index()
+      |> Enum.map(fn {view, index} ->
+        section = if mode == :different and index == 1, do: "notes", else: "request"
+        values = Map.put(WorkflowFixtures.values(), "summary", "Editor #{index}")
+        {view, section, values}
+      end)
+
+    parallel(tasks, edits, fn {view, section, values} ->
+      view |> form("#section-form-#{section}", section: values) |> render_change()
+    end)
+
+    await_presence(topic, views)
+    before_attempts = OperatorRepo.aggregate(Instantflow.Delivery.Attempt, :count)
+    before_revision = OperatorRepo.get!(Ticket, id).revision
+
+    before_sections =
+      Map.new(
+        OperatorRepo.all(from s in Section, where: s.ticket_id == ^id),
+        &{&1.key, &1.revision}
+      )
+
+    accepted = if mode == :same, do: 1, else: count
+
+    {_, report} =
+      measure(fn ->
+        parallel(tasks, edits, fn {view, section, values} ->
+          view |> form("#section-form-#{section}", section: values) |> render_submit()
+        end)
+
+        drain(tasks)
+        Enum.each(views, &render/1)
+        assert_converged(id, views)
+        assert OperatorRepo.get!(Ticket, id).revision == before_revision + accepted
+
+        assert OperatorRepo.aggregate(Instantflow.Delivery.Attempt, :count) ==
+                 before_attempts + accepted
+
+        outcomes =
+          for {view, section, values} <- edits do
+            persisted = OperatorRepo.get_by!(Section, ticket_id: id, key: section)
+            assert persisted.revision == Map.fetch!(before_sections, section) + 1
+
+            assert has_element?(
+                     view,
+                     "#section-form-#{section} input[value='#{values["summary"]}']"
+                   )
+
+            if persisted.values == values do
+              refute has_element?(view, "#conflict-#{section}")
+              :accepted
+            else
+              assert has_element?(view, "#conflict-#{section}")
+              :conflict
+            end
+          end
+
+        assert Enum.count(outcomes, &(&1 == :accepted)) == accepted
+      end)
+
+    close_case(topic, views, started)
+    Map.merge(report, %{editors: count, accepted: accepted, conflicts: count - accepted})
+  end
+
+  defp connected_case(count, slug, tasks) do
+    f = fixture(users: count, slug: slug, definition: collaboration_definition())
+    id = WorkflowFixtures.create_ticket(f)
+    drain(tasks)
+    topic = Presence.topic(f.requester.organization_id, id)
+    Phoenix.PubSub.subscribe(Instantflow.PubSub, topic)
+    conns = Enum.map(f.members, &login/1)
+    started = System.monotonic_time(:millisecond)
+
+    {views, mount} =
+      measure(fn ->
+        for conn <- conns do
+          {:ok, view, _} = live(conn, "/o/#{slug}/solicitacoes/#{id}")
+          assert has_element?(view, "#section-form-request")
+          assert has_element?(view, "#section-form-notes")
+          view
+        end
+      end)
+
+    {f, id, topic, views, mount, started}
+  end
+
+  defp parallel(supervisor, items, fun) do
+    parent = self()
+    barrier = make_ref()
+
+    tasks =
+      Enum.map(items, fn item ->
+        Task.Supervisor.async_nolink(supervisor, fn ->
+          send(parent, {:ready, barrier, self()})
+
+          receive do
+            {:start, ^barrier} -> fun.(item)
+          after
+            5_000 -> flunk("concurrent operation start barrier timed out")
+          end
+        end)
+      end)
+
+    for task <- tasks do
+      pid = task.pid
+      assert_receive {:ready, ^barrier, ^pid}, 5_000
+    end
+
+    for task <- tasks, do: send(task.pid, {:start, barrier})
+    Enum.map(tasks, &Task.await(&1, 15_000))
+  end
+
+  defp presence_refs(topic) do
+    topic
+    |> Presence.list()
+    |> Enum.flat_map(fn {_, %{metas: metas}} -> Enum.map(metas, & &1.phx_ref) end)
+    |> MapSet.new()
+  end
+
+  defp await_presence(topic, views, before \\ MapSet.new()) do
+    await_refs(topic, MapSet.difference(presence_refs(topic), before), :joins)
+    # Presence.list synchronizes with the tracker that sent the local broadcast.
+    # Its reply proves dispatch to every subscriber finished before render barriers.
+    Presence.list(topic)
+    Enum.each(views, &render/1)
+  end
+
+  defp await_refs(topic, expected, kind) do
+    if MapSet.size(expected) > 0 do
+      assert_receive %Phoenix.Socket.Broadcast{
+                       topic: ^topic,
+                       event: "presence_diff",
+                       payload: diff
+                     },
+                     5_000
+
+      received =
+        diff
+        |> Map.fetch!(kind)
+        |> Enum.flat_map(fn {_, %{metas: metas}} -> Enum.map(metas, & &1.phx_ref) end)
+        |> MapSet.new()
+
+      await_refs(topic, MapSet.difference(expected, received), kind)
+    end
+  end
+
+  defp close_case(topic, views, started) do
+    assert System.monotonic_time(:millisecond) - started < 30_000,
+           "connected case overlapped the reconciliation timer"
+
+    refs = presence_refs(topic)
+    Enum.each(views, &GenServer.stop(&1.pid))
+    await_refs(topic, refs, :leaves)
+    assert Presence.list(topic) == %{}
+    Phoenix.PubSub.unsubscribe(Instantflow.PubSub, topic)
   end
 
   defp notification_burst(f, conn, tasks) do
@@ -506,6 +783,25 @@ defmodule Instantflow.CycleBenchmark do
   end
 
   defp report_path, do: System.get_env("CYCLE_BENCHMARK_REPORT", ".local/cycle-benchmark.json")
+
+  defp source do
+    root = Path.expand("..", __DIR__)
+    {revision, 0} = System.cmd("git", ["rev-parse", "HEAD"], cd: root)
+
+    {diff, 0} =
+      System.cmd(
+        "git",
+        ["diff", "--no-ext-diff", "HEAD", "--", "lib", "config", "priv", "mix.exs", "mix.lock"],
+        cd: root
+      )
+
+    %{
+      git_head: String.trim(revision),
+      tracked_runtime_dirty: diff != "",
+      tracked_runtime_diff_sha256: Base.encode16(:crypto.hash(:sha256, diff), case: :lower),
+      harness_sha256: Base.encode16(:crypto.hash(:sha256, File.read!(__ENV__.file)), case: :lower)
+    }
+  end
 end
 
 Instantflow.CycleBenchmark.run()
