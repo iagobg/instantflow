@@ -226,6 +226,247 @@ defmodule Instantflow.RuntimeRoleTest do
     assert {:ok, _} = WorkflowRuntime.get(c.a_scope, c.ticket_id)
   end
 
+  @tag :read_lock
+  test "two reads by the same membership overlap on independent connections", c do
+    overlapping_reads(c, [c.a_scope, c.a_scope], &Tenant.context_scope!(&1).id)
+  end
+
+  @tag :read_lock
+  test "one identity can read two organizations concurrently", c do
+    overlapping_reads(c, [c.a_scope, c.b_scope], &Tenant.context_scope!(&1).organization_id)
+  end
+
+  @tag :read_lock
+  test "different authorized readers share a consistent record snapshot", c do
+    {id, _} = collaborative_ticket(c)
+    peer = reviewer(c, "concurrent-read")
+
+    results =
+      overlapping_reads(c, [c.a_scope, peer], fn context ->
+        {ticket, _version} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, id)
+        {ticket.id, ticket.revision}
+      end)
+
+    assert results == [{id, 1}, {id, 1}]
+  end
+
+  @tag :read_lock
+  test "metadata-only document pages overlap for different authorized actors", c do
+    {id, _} = collaborative_ticket(c)
+    peer = reviewer(c, "document-read")
+
+    results =
+      overlapping_reads(c, [c.a_scope, peer], fn context ->
+        Instantflow.PrivateDocuments.list_page(Tenant.context_scope!(context), id)
+      end)
+
+    assert results == [%{rows: [], next_cursor: nil}, %{rows: [], next_cursor: nil}]
+  end
+
+  @tag :read_lock
+  test "a record snapshot blocks a concurrent writer until the read finishes", c do
+    {id, data} = collaborative_ticket(c)
+    peer = reviewer(c, "snapshot-write")
+
+    {reader, tag} =
+      held_read(c, c.a_scope, fn context ->
+        {ticket, _} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, id)
+        ticket.revision
+      end)
+
+    assert_receive {:read_held, ^tag, _}, 5000
+    supervisor = start_supervised!(Task.Supervisor)
+
+    writer =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        WorkflowRuntime.command(
+          peer,
+          Instantflow.CollaborationFixtures.section_command(data, "request", %{
+            "summary" => "After the snapshot"
+          })
+        )
+      end)
+
+    observer =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :snapshot_write_observer
+        )
+      )
+
+    try do
+      assert wait_for_waiters(observer, c.database, 1, 1000)
+    after
+      send(reader.pid, :release_read)
+    end
+
+    assert Task.await(reader) == 1
+    assert {:ok, _} = Task.await(writer)
+    assert {:ok, final} = WorkflowRuntime.get(c.a_scope, id)
+    assert final.ticket.revision == 2
+
+    assert Enum.find(final.sections, &(&1.key == "request")).values["summary"] ==
+             "After the snapshot"
+  end
+
+  @tag :read_lock
+  test "a composed read inside a write transaction retains write locks for later mutation", c do
+    {id, data} = collaborative_ticket(c)
+    writer_scope = reviewer(c, "nested-writer")
+    reader_scope = reviewer(c, "nested-reader")
+    parent = self()
+    supervisor = start_supervised!(Task.Supervisor)
+
+    writer =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        Tenant.transaction(c.a_scope, fn _ ->
+          assert {:ok, _} = Instantflow.WorkflowRuntime.RecordProjection.load(writer_scope, id)
+          send(parent, :nested_write_read_held)
+
+          receive do
+            :continue_write ->
+              WorkflowRuntime.command(
+                writer_scope,
+                Instantflow.CollaborationFixtures.section_command(data, "request", %{
+                  "summary" => "Read then written in one transaction"
+                })
+              )
+          after
+            15_000 -> Repo.rollback(:barrier_timeout)
+          end
+        end)
+      end)
+
+    assert_receive :nested_write_read_held, 5000
+
+    reader =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+        Instantflow.WorkflowRuntime.RecordProjection.load(reader_scope, id)
+      end)
+
+    observer =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :nested_read_observer
+        )
+      )
+
+    try do
+      assert wait_for_waiters(observer, c.database, 1, 1000)
+    after
+      send(writer.pid, :continue_write)
+    end
+
+    assert {:ok, {:ok, _}} = Task.await(writer)
+    assert {:ok, projection} = Task.await(reader)
+    assert projection.data.ticket.revision == 2
+
+    assert Enum.find(projection.data.sections, &(&1.key == "request")).values["summary"] ==
+             "Read then written in one transaction"
+  end
+
+  @tag :read_lock
+  test "a non-key user deactivation waits for a read and fences the next read", c do
+    {reader, tag} = held_read(c, c.a_scope, &Tenant.context_scope!(&1).user.active)
+    assert_receive {:read_held, ^tag, _}, 5000
+
+    connection =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :deactivation_writer
+        )
+      )
+
+    observer =
+      start_supervised!(
+        Supervisor.child_spec({Postgrex, c.owner_config ++ [database: c.database]},
+          id: :deactivation_observer
+        )
+      )
+
+    [[backend]] = Postgrex.query!(connection, "SELECT pg_backend_pid()").rows
+    supervisor = start_supervised!(Task.Supervisor)
+
+    writer =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Postgrex.query!(connection, "UPDATE users SET active=false WHERE id=$1", [
+          c.a_scope.user_id
+        ])
+      end)
+
+    try do
+      assert wait_for_blocked_backend(observer, backend, 1000)
+    after
+      send(reader.pid, :release_read)
+    end
+
+    assert Task.await(reader) == true
+    assert Task.await(writer).num_rows == 1
+
+    assert Tenant.read(c.a_scope, fn _ -> flunk("inactive user authorized") end, :denied) ==
+             :denied
+
+    assert Tenant.read(c.b_scope, fn _ -> flunk("inactive user authorized") end, :denied) ==
+             :denied
+  end
+
+  defp overlapping_reads(c, scopes, read) do
+    readers = Enum.map(scopes, &held_read(c, &1, read))
+
+    try do
+      backends =
+        Enum.map(readers, fn {_task, tag} ->
+          assert_receive {:read_held, ^tag, backend}, 5000
+          backend
+        end)
+
+      assert length(Enum.uniq(backends)) == length(scopes)
+    after
+      Enum.each(readers, fn {task, _} -> send(task.pid, :release_read) end)
+    end
+
+    Enum.map(readers, fn {task, _} -> Task.await(task) end)
+  end
+
+  defp held_read(c, scope, read) do
+    parent = self()
+    tag = make_ref()
+    supervisor = start_supervised!(Supervisor.child_spec(Task.Supervisor, id: make_ref()))
+
+    task =
+      Task.Supervisor.async_nolink(supervisor, fn ->
+        Repo.put_dynamic_repo(c.runtime)
+
+        Tenant.read_context(scope, fn context ->
+          value = read.(context)
+          [[backend]] = Repo.query!("SELECT pg_backend_pid()").rows
+          send(parent, {:read_held, tag, backend})
+
+          receive do
+            :release_read -> value
+          after
+            15_000 -> Repo.rollback(:barrier_timeout)
+          end
+        end)
+      end)
+
+    {task, tag}
+  end
+
+  defp wait_for_blocked_backend(_, _, 0), do: false
+
+  defp wait_for_blocked_backend(connection, backend, remaining) do
+    [[blocked]] =
+      Postgrex.query!(connection, "SELECT cardinality(pg_blocking_pids($1)) > 0", [backend]).rows
+
+    blocked or wait_for_blocked_backend(connection, backend, remaining - 1)
+  end
+
   test "due-work control functions expose only bounded organization IDs to the runtime role", c do
     assert Repo.query!("SELECT current_user").rows == [["instantflow_runtime"]]
 

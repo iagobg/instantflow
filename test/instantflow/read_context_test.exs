@@ -93,6 +93,45 @@ defmodule Instantflow.ReadContextTest do
     assert {:ok, :ok} = Tenant.transaction(f.requester, fn _ -> :ok end)
   end
 
+  @tag :read_lock
+  test "ordinary read boundaries also reject implicit write upgrades" do
+    f = workflow_fixture()
+
+    Tenant.read(f.requester, fn _ ->
+      for mutate <- [
+            fn -> Tenant.transaction(f.requester, fn _ -> :unexpected end) end,
+            fn -> Tenant.authorize_change(f.requester, fn _ -> :unexpected end) end,
+            fn -> Tenant.raw(f.requester.organization_id, fn -> :unexpected end) end
+          ] do
+        assert_raise ArgumentError, ~r/Mutation entry points/, mutate
+      end
+    end)
+
+    assert {:ok, :ok} =
+             Tenant.transaction(f.requester, fn _ ->
+               assert Tenant.read(f.requester, & &1.id) == f.requester.id
+               assert {:ok, :ok} = Tenant.transaction(f.requester, fn _ -> :ok end)
+               :ok
+             end)
+  end
+
+  @tag :read_lock
+  test "ordinary read errors restore the mutation boundary" do
+    f = workflow_fixture()
+
+    assert_raise RuntimeError, "interrupted read", fn ->
+      Tenant.read(f.requester, fn _ -> raise "interrupted read" end)
+    end
+
+    assert :denied == Tenant.read(f.requester, fn _ -> Repo.rollback(:test) end, :denied)
+
+    assert_raise ArgumentError, ~r/Read locks require/, fn ->
+      Tenant.lock_for_read(Instantflow.Identity.User)
+    end
+
+    assert {:ok, :ok} = Tenant.transaction(f.requester, fn _ -> :ok end)
+  end
+
   test "exceptions and rollbacks discard context and allow later commands" do
     f = workflow_fixture()
     owner = self()

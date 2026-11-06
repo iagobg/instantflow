@@ -164,7 +164,7 @@ defmodule Instantflow.PrivateDocuments do
     Tenant.read(
       actor,
       fn a ->
-        {ticket, version} = ticket!(a, ticket_id)
+        {ticket, version} = ticket!(a, ticket_id, :read)
 
         list_page_scoped(a, ticket, version, before_id)
       end,
@@ -410,13 +410,14 @@ defmodule Instantflow.PrivateDocuments do
   defp ready_ref?(_, _, _), do: false
   defp ready?(d), do: d.status == "ready" and DateTime.compare(d.expires_at, now()) == :gt
 
-  defp ticket!(a, id) do
+  defp ticket!(a, id, mode \\ :write) do
+    query = from t in Ticket, where: t.id == ^id and t.organization_id == ^a.organization_id
+
     t =
-      Repo.one(
-        from t in Ticket,
-          where: t.id == ^id and t.organization_id == ^a.organization_id,
-          lock: "FOR UPDATE"
-      )
+      case mode do
+        :read -> Repo.one(Tenant.lock_for_read(query))
+        :write -> Repo.one(lock(query, "FOR UPDATE"))
+      end
 
     unless t, do: Repo.rollback(:not_found)
     {t, Repo.get!(Version, t.workflow_version_id)}

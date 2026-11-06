@@ -17,9 +17,13 @@ defmodule Instantflow.WorkflowRuntime.RecordRead do
 
   defp snapshot!(context, id) do
     Tenant.context_fetch!(context, {__MODULE__, id}, fn scope ->
-      # The composite document projection retains its existing ticket lock.
-      # Acquire it once, after the authorization locks and before business reads.
-      ticket = Repo.one(from t in Ticket, where: t.id == ^id, lock: "FOR UPDATE")
+      # Keep ticket/section projections stable across their component queries,
+      # while allowing other readers to hold the same snapshot boundary.
+      ticket =
+        from(t in Ticket, where: t.id == ^id)
+        |> Tenant.lock_for_read()
+        |> Repo.one()
+
       unless ticket, do: Repo.rollback(:not_found)
       version = Repo.get!(Version, ticket.workflow_version_id)
       facts = Map.fetch!(AccessFacts.load([scope], ticket, version), scope.id)

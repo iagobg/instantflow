@@ -1,17 +1,18 @@
 defmodule Instantflow.Tenant do
-  @moduledoc "Lock order: organization, authorization gate, user, membership, business rows."
+  @moduledoc "Lock order: organization, authorization gate, user, membership, business rows. Reads share actor locks; mutations select write locks before entering the callback."
   import Ecto.Query
   alias Instantflow.Repo
   alias Instantflow.Identity.{Membership, Organization, User}
   alias Instantflow.Tenant.ReadContext
   @read_depth {__MODULE__, :read_depth}
+  @read_lock_mode {__MODULE__, :read_lock_mode}
 
   @doc "Lease one pooled connection for a composite web read; each context still owns its authorization transaction."
   def with_connection(fun) when is_function(fun, 0), do: Repo.checkout(fun)
 
   def transaction(%Membership{organization_id: id} = scope, fun) when is_integer(id) do
     require_writable!()
-    scoped_transaction(scope, fun, :shared)
+    scoped_transaction(scope, fun, :write)
   end
 
   def transaction(_, _), do: {:error, :forbidden}
@@ -34,14 +35,17 @@ defmodule Instantflow.Tenant do
         to_string(id)
       ])
 
-      user = Repo.one(from u in User, where: u.id == ^scope.user_id, lock: "FOR UPDATE")
+      user =
+        from(u in User, where: u.id == ^scope.user_id)
+        |> actor_lock(mode)
+        |> Repo.one()
 
       member =
-        Repo.one(
-          from m in Membership,
-            where: m.organization_id == ^id and m.user_id == ^scope.user_id and m.id == ^scope.id,
-            lock: "FOR UPDATE"
+        from(m in Membership,
+          where: m.organization_id == ^id and m.user_id == ^scope.user_id and m.id == ^scope.id
         )
+        |> actor_lock(mode)
+        |> Repo.one()
 
       unless user && user.active && member && member.active, do: Repo.rollback(:forbidden)
       fresh = Instantflow.Access.load(member)
@@ -50,6 +54,9 @@ defmodule Instantflow.Tenant do
   end
 
   defp scoped_transaction(_, _, _), do: {:error, :forbidden}
+
+  defp actor_lock(query, :read), do: lock(query, "FOR SHARE")
+  defp actor_lock(query, mode) when mode in [:write, :exclusive], do: lock(query, "FOR UPDATE")
 
   # Infrastructure only: invitations prove a token; jobs carry persisted ownership. Neither accepts browser tenant claims.
   def raw(id, fun) when is_integer(id) and id > 0 do
@@ -106,7 +113,28 @@ defmodule Instantflow.Tenant do
   end
 
   def read(scope, fun, fallback \\ nil) do
-    case scoped_transaction(scope, fun, :shared) do
+    # Reads nested in a write/untyped transaction retain write locks. Choosing
+    # share locks there could require an unsafe upgrade later in that transaction.
+    previous_mode = Process.get(@read_lock_mode)
+    mode = previous_mode || if(Repo.in_transaction?(), do: :write, else: :read)
+
+    read = fn fresh ->
+      depth = Process.get(@read_depth, 0)
+      Process.put(@read_depth, depth + 1)
+      Process.put(@read_lock_mode, mode)
+
+      try do
+        fun.(fresh)
+      after
+        if depth == 0, do: Process.delete(@read_depth), else: Process.put(@read_depth, depth)
+
+        if is_nil(previous_mode),
+          do: Process.delete(@read_lock_mode),
+          else: Process.put(@read_lock_mode, previous_mode)
+      end
+    end
+
+    case scoped_transaction(scope, read, mode) do
       {:ok, value} ->
         value
 
@@ -117,6 +145,15 @@ defmodule Instantflow.Tenant do
     end
   end
 
+  @doc false
+  def lock_for_read(query) do
+    case Process.get(@read_lock_mode) do
+      :read -> lock(query, "FOR SHARE")
+      :write -> lock(query, "FOR UPDATE")
+      _ -> raise ArgumentError, "Read locks require a tenant read boundary"
+    end
+  end
+
   @doc "Compose reads under one current authorization boundary. Contexts expire when the callback returns."
   def read_context(scope, fun, fallback \\ nil) do
     read(
@@ -124,15 +161,12 @@ defmodule Instantflow.Tenant do
       fn fresh ->
         context = %ReadContext{ref: make_ref()}
         key = {__MODULE__, context.ref}
-        depth = Process.get(@read_depth, 0)
-        Process.put(@read_depth, depth + 1)
         Process.put(key, %{scope: fresh, repo: Repo.get_dynamic_repo(), cache: %{}})
 
         try do
           fun.(context)
         after
           Process.delete(key)
-          if depth == 0, do: Process.delete(@read_depth), else: Process.put(@read_depth, depth)
         end
       end,
       fallback
@@ -180,7 +214,7 @@ defmodule Instantflow.Tenant do
 
   defp require_writable! do
     if Process.get(@read_depth, 0) > 0,
-      do: raise(ArgumentError, "Mutation entry points cannot run inside a tenant read context")
+      do: raise(ArgumentError, "Mutation entry points cannot run inside a tenant read boundary")
   end
 
   def scope(user_id, organization_id) do
