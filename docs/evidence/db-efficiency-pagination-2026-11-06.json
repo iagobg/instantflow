@@ -1,0 +1,44 @@
+{
+  "recorded_on": "2026-11-06",
+  "baseline_commit": "7ec77ef",
+  "environment": "Local WSL; isolated SQL sandbox; background workers disabled",
+  "page_size": 50,
+  "lookahead_rows": 1,
+  "scenarios": [
+    {
+      "scenario": "document_page_1",
+      "statements": 17,
+      "binary_bytes": 2158,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "elapsed_ms": 9.253,
+      "document_rows_fetched": 1
+    },
+    {
+      "scenario": "document_page_1001",
+      "statements": 17,
+      "binary_bytes": 6808,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "elapsed_ms": 8.392,
+      "document_rows_fetched": 51
+    },
+    {
+      "scenario": "document_page_10001",
+      "statements": 17,
+      "binary_bytes": 6808,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "elapsed_ms": 9.164,
+      "document_rows_fetched": 51
+    }
+  ],
+  "correctness": [
+    "Visible rows filtered before LIMIT; hidden newer rows do not hide older visible documents.",
+    "Exclusive cursor yields every original row once despite new appends.",
+    "Revocation and malformed cursors fail closed.",
+    "LiveView replaces the current page, preserves draft fields and its page on reconciliation.",
+    "Revoked views redirect after the upload channel has stopped; live uploads terminate with their owning view."
+  ],
+  "limitations": "Decoded binary bytes are not wire bytes. Wall time includes observer overhead. No hosted run or capacity claim."
+}

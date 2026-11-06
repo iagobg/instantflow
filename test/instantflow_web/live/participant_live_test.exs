@@ -209,14 +209,32 @@ defmodule InstantflowWeb.ParticipantLiveTest do
 
     render_upload(pending, "pending.pdf")
 
-    assert {:ok, _} =
-             Participants.command(
-               admin,
-               BuilderFixtures.participant_command(id, visitor.id, "revoke", 2)
-             )
+    # Queue revocation before the upload's DOWN notification. Cleanup must not
+    # call a dead upload channel before it sends the required redirect.
+    [channel] =
+      :sys.get_state(portal.pid).socket.assigns.uploads.document.entry_refs_to_pids
+      |> Map.values()
 
-    assert_redirect(portal, "/o/horizonte/processos")
-    assert_redirect(reconnected, "/o/horizonte/processos")
+    :ok = :sys.suspend(portal.pid)
+
+    try do
+      assert {:ok, _} =
+               Participants.command(
+                 admin,
+                 BuilderFixtures.participant_command(id, visitor.id, "revoke", 2)
+               )
+
+      monitor = Process.monitor(channel)
+      GenServer.stop(channel, :normal)
+      assert_receive {:DOWN, ^monitor, :process, ^channel, :normal}
+    after
+      :sys.resume(portal.pid)
+    end
+
+    # Permission fan-out includes several reads; use the documented UI bound,
+    # not ExUnit's generic 100 ms mailbox default.
+    assert_redirect(portal, "/o/horizonte/processos", 1_000)
+    assert_redirect(reconnected, "/o/horizonte/processos", 1_000)
 
     assert {:error, {:redirect, %{to: "/o/horizonte/processos"}}} =
              live(login(Phoenix.ConnTest.build_conn(), visitor), path)

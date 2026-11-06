@@ -248,8 +248,10 @@ defmodule InstantflowWeb.ParticipantLive do
         end
 
       _ ->
+        # Redirect stops the LiveView; upload channels monitor it and clean up.
+        # A synchronous cancel here can race with an already closed channel and
+        # prevent the revoked view from redirecting.
         socket
-        |> clear_uploads()
         |> assign(
           data: nil,
           forms: %{},

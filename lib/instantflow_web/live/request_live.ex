@@ -302,7 +302,7 @@ defmodule InstantflowWeb.RequestLive do
         [{:ok, document}] ->
           editor = socket.assigns.editors[section]
           editor = Editor.draft(editor, Map.put(editor.values, field, document.object_key))
-          refresh(put_editor(socket, section, editor))
+          socket |> put_editor(section, editor) |> assign(:documents_before, nil) |> refresh()
 
         [{:error, error}] ->
           failure(socket, error)
@@ -337,6 +337,16 @@ defmodule InstantflowWeb.RequestLive do
       {:error, error} -> failure(socket, error)
     end
   end
+
+  def handle_event("older-private-documents", _, socket) do
+    case socket.assigns.documents_next_cursor do
+      nil -> {:noreply, socket}
+      cursor -> socket |> assign(:documents_before, cursor) |> refresh()
+    end
+  end
+
+  def handle_event("recent-private-documents", _, socket),
+    do: socket |> assign(:documents_before, nil) |> refresh()
 
   def handle_event("assign-section", %{"assignment" => p}, socket) do
     member_id =
@@ -543,14 +553,8 @@ defmodule InstantflowWeb.RequestLive do
         {:noreply, load(socket, data)}
 
       _ ->
-        # Remove protected values and drafts before leaving an unavailable record.
-        socket =
-          Enum.reduce(
-            socket.assigns.uploads.private_document.entries,
-            socket,
-            &cancel_upload(&2, :private_document, &1.ref)
-          )
-
+        # Redirect stops the view and its monitored upload channels, including
+        # already closed uploads. Clear protected values before leaving.
         {:noreply,
          socket
          |> assign(
@@ -560,6 +564,8 @@ defmodule InstantflowWeb.RequestLive do
            dirty: false,
            attachment_options: [],
            document_count: 0,
+           documents_before: nil,
+           documents_next_cursor: nil,
            reference_search_forms: %{},
            directory_queries: %{},
            participant_forms: %{},
@@ -652,12 +658,21 @@ defmodule InstantflowWeb.RequestLive do
         socket
       end
 
-    documents = Instantflow.PrivateDocuments.list(socket.assigns.current_scope, data.ticket.id)
+    documents_before = Map.get(socket.assigns, :documents_before)
+
+    documents =
+      Instantflow.PrivateDocuments.list_page(
+        socket.assigns.current_scope,
+        data.ticket.id,
+        documents_before
+      )
 
     socket
     |> assign(
       attachment_options: attachment_options,
-      document_count: length(documents),
+      document_count: length(documents.rows),
+      documents_before: documents_before,
+      documents_next_cursor: documents.next_cursor,
       data: data,
       assignment_search: to_form(%{"query" => assignment_query}, as: :assignment_search),
       editors: editors,
@@ -676,7 +691,7 @@ defmodule InstantflowWeb.RequestLive do
       dirty: Enum.any?(editors, fn {_, e} -> e.dirty end),
       stale: data.ticket.revision != socket.assigns.review_revision
     )
-    |> stream(:private_documents, documents, reset: true)
+    |> stream(:private_documents, documents.rows, reset: true)
     |> stream(:participant_controls, management.controls, reset: true)
     |> stream(:communications, communications, reset: true)
     |> stream(:participant_relationships, management.relationships, reset: true)
@@ -1079,7 +1094,11 @@ defmodule InstantflowWeb.RequestLive do
               </article>
             </div>
           </section>
-          <section :if={@attachment_options != [] or @document_count > 0} class="card">
+          <section
+            :if={@attachment_options != [] or @document_count > 0 or @documents_before}
+            id="private-document-panel"
+            class="card"
+          >
             <h2>Documentos privados fictícios</h2><p>
               PDF, PNG ou JPEG até 5 MiB. Quarentena e liberação manual; verificação limitada, sem antivírus.
             </p>
@@ -1147,6 +1166,23 @@ defmodule InstantflowWeb.RequestLive do
                 >Excluir conteúdo</button>
               </article>
             </div>
+            <p :if={@document_count == 0} id="private-documents-empty">
+              Nenhum documento nesta página.
+            </p>
+            <nav aria-label="Paginação de documentos">
+              <button
+                :if={@documents_next_cursor}
+                id="older-private-documents"
+                class="btn"
+                phx-click="older-private-documents"
+              >Documentos anteriores</button>
+              <button
+                :if={@documents_before}
+                id="recent-private-documents"
+                class="btn"
+                phx-click="recent-private-documents"
+              >Voltar aos mais recentes</button>
+            </nav>
           </section>
           <section :if={@participant_control_count > 0} id="participant-management" class="card">
             <h2>Relacionamentos de participantes</h2>

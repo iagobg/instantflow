@@ -7,6 +7,7 @@ defmodule Instantflow.PrivateDocuments do
   alias Instantflow.WorkflowRuntime.Ticket
   alias Instantflow.PrivateDocuments.Policy
   @max_size 5_242_880
+  @page_size 50
   @metadata_fields [
     :id,
     :object_key,
@@ -150,34 +151,57 @@ defmodule Instantflow.PrivateDocuments do
     end)
   end
 
-  def list(actor, ticket_id) do
+  @doc "The newest page of authorized metadata. Use list_page/3 to browse older documents."
+  def list(actor, ticket_id), do: list_page(actor, ticket_id).rows
+
+  @doc "Up to 50 authorized documents, newest first; next_cursor is an exclusive document ID."
+  def list_page(actor, ticket_id, before_id \\ nil)
+
+  def list_page(actor, ticket_id, before_id)
+      when is_nil(before_id) or
+             (is_integer(before_id) and before_id > 0 and before_id < 9_223_372_036_854_775_807) do
     Tenant.read(
       actor,
       fn a ->
         {ticket, version} = ticket!(a, ticket_id)
 
         readable = readable_fields(a, ticket, version)
+        cursor = if before_id, do: dynamic([d], d.id < ^before_id), else: dynamic(true)
 
-        Repo.all(
-          from d in Document,
-            where: d.ticket_id == ^ticket.id,
-            where: ^readable,
-            order_by: [desc: d.id],
-            select: struct(d, ^@reference_fields)
-        )
-        |> Enum.map(fn d ->
-          section = section!(version, d.section_key, d.field_key)
-
-          Map.put(
-            metadata(d),
-            :can_review,
-            Policy.reviewer?(a, ticket, version, section, d.field_key, d.uploaded_by_id)
+        documents =
+          Repo.all(
+            from d in Document,
+              where: d.ticket_id == ^ticket.id,
+              where: ^readable,
+              where: ^cursor,
+              order_by: [desc: d.id],
+              limit: @page_size + 1,
+              select: struct(d, ^@reference_fields)
           )
-        end)
+
+        rows =
+          documents
+          |> Enum.take(@page_size)
+          |> Enum.map(fn d ->
+            section = section!(version, d.section_key, d.field_key)
+
+            Map.put(
+              metadata(d),
+              :can_review,
+              Policy.reviewer?(a, ticket, version, section, d.field_key, d.uploaded_by_id)
+            )
+          end)
+
+        %{
+          rows: rows,
+          next_cursor: if(length(documents) > @page_size, do: List.last(rows).id)
+        }
       end,
-      []
+      %{rows: [], next_cursor: nil}
     )
   end
+
+  def list_page(_, _, _), do: %{rows: [], next_cursor: nil}
 
   def download(actor, key) when is_binary(key) do
     Tenant.transaction(actor, fn a ->
