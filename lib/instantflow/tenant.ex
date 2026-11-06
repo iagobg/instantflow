@@ -3,21 +3,29 @@ defmodule Instantflow.Tenant do
   import Ecto.Query
   alias Instantflow.Repo
   alias Instantflow.Identity.{Membership, Organization, User}
+  alias Instantflow.Tenant.ReadContext
+  @read_depth {__MODULE__, :read_depth}
 
   @doc "Lease one pooled connection for a composite web read; each context still owns its authorization transaction."
   def with_connection(fun) when is_function(fun, 0), do: Repo.checkout(fun)
 
   def transaction(%Membership{organization_id: id} = scope, fun) when is_integer(id) do
+    require_writable!()
     scoped_transaction(scope, fun, :shared)
   end
 
   def transaction(_, _), do: {:error, :forbidden}
 
-  def authorize_change(%Membership{} = scope, fun), do: scoped_transaction(scope, fun, :exclusive)
+  def authorize_change(%Membership{} = scope, fun) do
+    require_writable!()
+    scoped_transaction(scope, fun, :exclusive)
+  end
+
   def authorize_change(_, _), do: {:error, :forbidden}
 
-  defp scoped_transaction(%Membership{organization_id: id} = scope, fun, mode) do
-    raw(id, fn ->
+  defp scoped_transaction(%Membership{organization_id: id} = scope, fun, mode)
+       when is_integer(id) do
+    raw_scoped(id, fn organization ->
       # Shared command/read gates and exclusive permission changes use the same order.
       function =
         if mode == :exclusive, do: "pg_advisory_xact_lock", else: "pg_advisory_xact_lock_shared"
@@ -36,12 +44,22 @@ defmodule Instantflow.Tenant do
         )
 
       unless user && user.active && member && member.active, do: Repo.rollback(:forbidden)
-      fun.(Instantflow.Access.load(member))
+      fresh = Instantflow.Access.load(member)
+      fun.(%{fresh | user: user, organization: organization})
     end)
   end
 
+  defp scoped_transaction(_, _, _), do: {:error, :forbidden}
+
   # Infrastructure only: invitations prove a token; jobs carry persisted ownership. Neither accepts browser tenant claims.
   def raw(id, fun) when is_integer(id) and id > 0 do
+    require_writable!()
+    raw_scoped(id, fn _organization -> fun.() end)
+  end
+
+  def raw(_, _), do: {:error, :forbidden}
+
+  defp raw_scoped(id, fun) when is_integer(id) and id > 0 do
     Repo.transaction(fn ->
       [[previous, previous_role]] =
         Repo.query!("SELECT current_setting('instantflow.organization_id', true), current_user").rows
@@ -51,7 +69,7 @@ defmodule Instantflow.Tenant do
       Repo.query!("SELECT set_config('instantflow.organization_id', $1, true)", [to_string(id)])
       organization = Repo.one(from o in Organization, where: o.id == ^id, lock: "FOR SHARE")
       unless organization && organization.status == "active", do: Repo.rollback(:unavailable)
-      result = fun.()
+      result = fun.(organization)
       # Restore both settings even when nested in a caller's existing transaction
       # (including a sandbox transaction); committing a savepoint does not reset them.
       Repo.query!(
@@ -63,7 +81,7 @@ defmodule Instantflow.Tenant do
     end)
   end
 
-  def raw(_, _), do: {:error, :forbidden}
+  defp raw_scoped(_, _), do: {:error, :forbidden}
 
   @doc "Infrastructure jobs acquire the shared authorization gate before business locks."
   def authorization_gate!(id) do
@@ -74,14 +92,85 @@ defmodule Instantflow.Tenant do
   end
 
   def read(scope, fun, fallback \\ nil) do
-    case transaction(scope, fun) do
-      {:ok, value} -> value
-      _ -> fallback
+    case scoped_transaction(scope, fun, :shared) do
+      {:ok, value} ->
+        value
+
+      {:error, reason} ->
+        # A nested rollback aborts the enclosing transaction too. Propagate it
+        # before the outer boundary attempts any further reads or restoration.
+        if Repo.in_transaction?(), do: Repo.rollback(reason), else: fallback
     end
   end
 
+  @doc "Compose reads under one current authorization boundary. Contexts expire when the callback returns."
+  def read_context(scope, fun, fallback \\ nil) do
+    read(
+      scope,
+      fn fresh ->
+        context = %ReadContext{ref: make_ref()}
+        key = {__MODULE__, context.ref}
+        depth = Process.get(@read_depth, 0)
+        Process.put(@read_depth, depth + 1)
+        Process.put(key, %{scope: fresh, repo: Repo.get_dynamic_repo(), cache: %{}})
+
+        try do
+          fun.(context)
+        after
+          Process.delete(key)
+          if depth == 0, do: Process.delete(@read_depth), else: Process.put(@read_depth, depth)
+        end
+      end,
+      fallback
+    )
+  end
+
+  @doc "Current scope for a live context. This does not accept a cached membership as authority."
+  def context_scope!(context), do: context_state!(context).scope
+
+  @doc "Reuse a read result only within the owning process, repository and read callback."
+  def context_fetch!(context, key, fun) do
+    state = context_state!(context)
+
+    case Map.fetch(state.cache, key) do
+      {:ok, value} ->
+        value
+
+      :error ->
+        value = fun.(state.scope)
+        current = context_state!(context)
+
+        Process.put({__MODULE__, context.ref}, %{
+          current
+          | cache: Map.put(current.cache, key, value)
+        })
+
+        value
+    end
+  end
+
+  defp context_state!(%ReadContext{ref: ref}) when is_reference(ref) do
+    case Process.get({__MODULE__, ref}) do
+      %{repo: repo} = state ->
+        if repo == Repo.get_dynamic_repo() and Repo.in_transaction?(),
+          do: state,
+          else:
+            raise(ArgumentError, "Read context belongs to a different repository or transaction")
+
+      _ ->
+        raise ArgumentError, "Read context is expired or belongs to another process"
+    end
+  end
+
+  defp context_state!(_), do: raise(ArgumentError, "Expected a live tenant read context")
+
+  defp require_writable! do
+    if Process.get(@read_depth, 0) > 0,
+      do: raise(ArgumentError, "Mutation entry points cannot run inside a tenant read context")
+  end
+
   def scope(user_id, organization_id) do
-    case raw(organization_id, fn ->
+    case raw_scoped(organization_id, fn _organization ->
            member =
              Repo.one(
                from m in Membership,

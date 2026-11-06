@@ -122,6 +122,39 @@ defmodule Instantflow.RuntimeRoleTest do
     })
   end
 
+  test "read contexts expire after rollback and preserve tenant isolation on connection reuse",
+       c do
+    owner = self()
+
+    assert :denied ==
+             Tenant.read_context(
+               c.a_scope,
+               fn context ->
+                 send(owner, {:context, context})
+                 assert Tenant.context_scope!(context).organization_id == c.a.id
+                 assert Repo.get(Instantflow.WorkflowRuntime.Ticket, c.ticket_id)
+
+                 Tenant.read_context(c.b_scope, fn _ -> flunk("cross-tenant context accepted") end)
+               end,
+               :denied
+             )
+
+    assert_receive {:context, expired}
+
+    Tenant.read_context(c.b_scope, fn context ->
+      assert_raise ArgumentError, fn -> Tenant.context_scope!(expired) end
+      assert Tenant.context_scope!(context).organization_id == c.b.id
+      refute Repo.get(Instantflow.WorkflowRuntime.Ticket, c.ticket_id)
+    end)
+
+    assert Repo.query!(
+             "SELECT NULLIF(current_setting('instantflow.organization_id', true), ''), current_user"
+           ).rows ==
+             [[nil, "instantflow_runtime"]]
+
+    assert {:ok, _} = WorkflowRuntime.get(c.a_scope, c.ticket_id)
+  end
+
   test "due-work control functions expose only bounded organization IDs to the runtime role", c do
     assert Repo.query!("SELECT current_user").rows == [["instantflow_runtime"]]
 

@@ -67,11 +67,19 @@ defmodule InstantflowWeb.UserAuth do
 
         validate = fn socket ->
           Instantflow.Tenant.with_connection(fn ->
-            case Identity.scope_for_token(session["user_token"], scope.organization_id) do
-              nil ->
+            case Identity.read_session(session["user_token"], scope, fn context ->
+                   fresh = Instantflow.Tenant.context_scope!(context)
+                   fresh = Instantflow.Repo.preload(fresh, :department)
+
+                   navigation =
+                     Instantflow.WorkflowCatalog.Workspaces.navigation_in_context(context)
+
+                   {fresh, navigation}
+                 end) do
+              {:error, _} ->
                 {:halt, Phoenix.LiveView.redirect(socket, to: "/organizacoes")}
 
-              fresh ->
+              {:ok, {fresh, navigation}} ->
                 if(
                   socket.view in [
                     InstantflowWeb.TemplateLive,
@@ -87,7 +95,7 @@ defmodule InstantflowWeb.UserAuth do
                      |> Phoenix.Component.assign(:current_scope, fresh)
                      |> Phoenix.Component.assign(
                        :workspace_navigation,
-                       Instantflow.WorkflowCatalog.Workspaces.navigation(fresh)
+                       navigation
                      )}
                 )
             end

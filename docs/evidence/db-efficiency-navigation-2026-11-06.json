@@ -1,0 +1,80 @@
+{
+  "recorded_on": "2026-11-06",
+  "parent_commit": "4fe12a5",
+  "environment": "Local isolated SQL sandbox, same workflow fixture and synchronous lifecycle capture windows",
+  "baseline_statements": {
+    "record_mount_http_and_live": 312,
+    "idle_heartbeat": 39,
+    "reason_change": 25,
+    "draft_change": 42,
+    "save_submit": 172,
+    "ticket_invalidation": 112
+  },
+  "candidate": [
+    {
+      "scenario": "record_mount_http_and_live",
+      "statements": 290,
+      "rows": 198,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 38
+    },
+    {
+      "scenario": "idle_heartbeat",
+      "statements": 28,
+      "rows": 19,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 4
+    },
+    {
+      "scenario": "reason_change",
+      "statements": 14,
+      "rows": 10,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 2
+    },
+    {
+      "scenario": "draft_change",
+      "statements": 30,
+      "rows": 20,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 4
+    },
+    {
+      "scenario": "save_submit",
+      "statements": 151,
+      "rows": 104,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 23
+    },
+    {
+      "scenario": "ticket_invalidation",
+      "statements": 101,
+      "rows": 70,
+      "errors": 0,
+      "content_selections": 0,
+      "update_locks": 15
+    }
+  ],
+  "correctness": [
+    "Current session must match the freshly locked active membership/user.",
+    "Context and its read cache expire after the callback, including exception/rollback paths.",
+    "Cross-process, cross-repository and wrong-tenant reuse fail closed.",
+    "Normal mutation entry points reject use inside a read context.",
+    "Current navigation reads remain bounded at 25 and execute for each protected event."
+  ],
+  "limitations": [
+    "No hosted capacity or latency conclusion.",
+    "Navigation query caching/coalescing and complete deferred-work and connection-lease measurements remain pending.",
+    "Direct Repo operations are server-internal; the context API is not a PostgreSQL read-only transaction or a substitute for RLS."
+  ],
+  "validation": {
+    "focused_tests": 37,
+    "full_precommit_tests": 442,
+    "failures": 0
+  }
+}

@@ -14,6 +14,20 @@ defmodule Instantflow.Identity do
     end
   end
 
+  @doc "Check the current session and compose scoped reads; the callback receives an expiring read context."
+  def read_session(token, scope, fun) do
+    Tenant.read_context(
+      scope,
+      fn context ->
+        fresh = Tenant.context_scope!(context)
+        user = user_for_token(token)
+        unless user && user.id == fresh.user_id, do: Repo.rollback(:forbidden)
+        {:ok, fun.(context)}
+      end,
+      {:error, :forbidden}
+    )
+  end
+
   def departments(actor),
     do:
       Tenant.read(

@@ -82,17 +82,17 @@ defmodule Instantflow.WorkflowCatalog.Workspaces do
   def get(_, _), do: nil
 
   def navigation(scope) do
-    Tenant.read(
-      scope,
-      fn fresh ->
-        Repo.all(
-          from v in authorized_query(fresh, :workspace),
-            order_by: v.workflow_id,
-            limit: 25,
-            select: %{id: v.workflow_id, label: fragment("?->>'name'", v.definition)}
-        )
-      end,
-      []
+    Tenant.read_context(scope, &navigation_in_context/1, [])
+  end
+
+  def navigation_in_context(context) do
+    scope = Tenant.context_scope!(context)
+
+    Repo.all(
+      from v in authorized_query(scope, :workspace),
+        order_by: v.workflow_id,
+        limit: 25,
+        select: %{id: v.workflow_id, label: fragment("?->>'name'", v.definition)}
     )
   end
 
