@@ -11,7 +11,7 @@ defmodule Instantflow.WorkflowRuntime.Notifications do
   import Ecto.Query
   alias Instantflow.{Access, Repo, WorkflowRuntime}
   alias Instantflow.Identity.{Membership, User}
-  alias Instantflow.WorkflowCatalog.Version
+  alias Instantflow.WorkflowCatalog.{Capabilities, Version}
   alias Instantflow.WorkflowRuntime.{AccessFacts, Policy, Ticket}
 
   def invalidate_lists(organization_id, ticket_id) when is_integer(ticket_id),
@@ -31,7 +31,13 @@ defmodule Instantflow.WorkflowRuntime.Notifications do
     versions = Repo.all(from v in Version, where: v.id in ^version_ids) |> Map.new(&{&1.id, &1})
     records = Enum.map(tickets, &{&1, Map.fetch!(versions, &1.workflow_version_id)})
 
-    for _ <- records, do: Instantflow.Finance.broadcast(organization_id)
+    # Accounts can be shared by several workflows. Keep the organization-wide
+    # signal for finance-capable pinned records, once for the whole batch.
+    if Enum.any?(records, fn {_, version} ->
+         Capabilities.enabled?(version.definition, "finance")
+       end),
+       do: Instantflow.Finance.broadcast(organization_id)
+
     if records != [], do: invalidate_member_batch(organization_id, records, 0)
   end
 

@@ -92,6 +92,66 @@ defmodule InstantflowWeb.BudgetsLiveTest do
     assert [%{allocated: 10_000}] = Finance.accounts(f.finance)
   end
 
+  test "a core record change causes no SQL in an unrelated workspace", %{conn: conn} do
+    f = Instantflow.WorkflowFixtures.workflow_fixture()
+    id = Instantflow.WorkflowFixtures.create_ticket(f)
+    Instantflow.Delivery.drain()
+    assert {:error, :not_found} = Instantflow.WorkflowRuntime.get(f.admin, id)
+
+    {:ok, view, _} =
+      live(login(conn, f.admin), ~p"/o/horizonte/processos/#{f.version.workflow_id}")
+
+    assert has_element?(view, "#process-view-navigation")
+    probe = start_supervised!({Instantflow.Diagnostics.QueryProbe, owner: view.pid})
+
+    assert {:ok, _} =
+             Instantflow.WorkflowFixtures.save(
+               f.requester,
+               id,
+               Instantflow.WorkflowFixtures.values()
+             )
+
+    Instantflow.Delivery.drain()
+    render(view)
+    assert Instantflow.Diagnostics.QueryProbe.finish(probe).statements == 0
+    assert has_element?(view, "#process-view-navigation")
+  end
+
+  test "shared-account views converge for financial records the viewer cannot discover", %{
+    conn: conn
+  } do
+    f = finance_fixture() |> expose()
+
+    {:ok, _} =
+      Instantflow.Access.grant(f.admin, f.admin.id, f.admin.department_id, "finance_allocator")
+
+    id = request(f)
+    Instantflow.Delivery.drain()
+    assert {:error, :not_found} = Instantflow.WorkflowRuntime.get(f.admin, id)
+
+    definition = Map.put(f.version.definition, "template_key", "shared_budget_observer")
+    bindings = put_in(f.version.bindings, ["roles", "finance"], ["finance_allocator"])
+    {:ok, observer_version} = Instantflow.WorkflowCatalog.publish(f.admin, definition, bindings)
+
+    {:ok, source, _} =
+      live(login(conn, f.finance), ~p"/o/horizonte/processos/#{f.version.workflow_id}/p/finance")
+
+    {:ok, observer, _} =
+      live(
+        login(build_conn(), f.admin),
+        ~p"/o/horizonte/processos/#{observer_version.workflow_id}/p/finance"
+      )
+
+    assert has_element?(source, "#process-finance-summary", "Disponível: 10000")
+    assert has_element?(observer, "#process-finance-summary", "Disponível: 10000")
+
+    assert {:ok, _} = Instantflow.WorkflowFixtures.transition(f.finance, id, "reserve")
+    Instantflow.Delivery.drain()
+    assert has_element?(source, "#process-finance-summary", "Disponível: 4000")
+    assert has_element?(observer, "#process-finance-summary", "Disponível: 4000")
+    assert {:error, :not_found} = Instantflow.WorkflowRuntime.get(f.admin, id)
+  end
+
   test "calendar presents permitted trip dates and assignment view includes the current department",
        %{conn: conn} do
     f = finance_fixture("field_trip")

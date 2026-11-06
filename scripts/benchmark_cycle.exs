@@ -219,6 +219,7 @@ defmodule Instantflow.CycleBenchmark do
     Enum.each(views, fn view -> GenServer.stop(view.pid) end)
 
     burst = notification_burst(f, reviewer, tasks)
+    unrelated_workspace = unrelated_workspace(f, tasks)
 
     report = %{
       environment: "Local disposable database; runtime login; committed writes; pool size 4",
@@ -234,6 +235,7 @@ defmodule Instantflow.CycleBenchmark do
       submit: Map.put(phases, :full_cycle, transition),
       retry: retry_report,
       notification_burst: burst,
+      unrelated_workspace: unrelated_workspace,
       observer_control: overhead(),
       completion:
         "Outbox empty after bounded drains on an independent connection; dispatcher committed; all three LiveViews rendered; both record revisions match storage; delivery failure and retry visible without a new ticket revision",
@@ -311,6 +313,35 @@ defmodule Instantflow.CycleBenchmark do
 
     GenServer.stop(list.pid)
     Map.merge(report, %{changed_records: 20, connected_list_views: 1, window: "deferred only"})
+  end
+
+  defp unrelated_workspace(f, tasks) do
+    id = WorkflowFixtures.create_ticket(f)
+    drain(tasks)
+    assert {:error, :not_found} = Instantflow.WorkflowRuntime.get(f.admin, id)
+    {:ok, view, _} = live(login(f.admin), "/o/cycle/processos/#{f.version.workflow_id}")
+    assert has_element?(view, "#process-view-navigation")
+    {:ok, _} = WorkflowFixtures.save(f.requester, id, WorkflowFixtures.values())
+    probe = start_supervised!({QueryProbe, owner: view.pid})
+
+    {_, report} =
+      measure(fn ->
+        drain(tasks)
+        render(view)
+        assert has_element?(view, "#process-view-navigation")
+        assert OperatorRepo.get!(Ticket, id).refreshed_revision == 2
+      end)
+
+    workspace_queries = QueryProbe.finish(probe)
+    stop_supervised(QueryProbe)
+    GenServer.stop(view.pid)
+
+    Map.merge(report, %{
+      workspace_queries: workspace_queries,
+      window: "deferred only",
+      description:
+        "Core-only record; one connected process workspace; viewer cannot discover the changed record"
+    })
   end
 
   defp login(scope),
