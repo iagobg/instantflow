@@ -1,0 +1,303 @@
+{
+  "recorded_on": "2026-11-06",
+  "parent_commit": "186abea",
+  "environment": "Local isolated sandbox with participant/document and incident named-assignment fixtures",
+  "baseline": [
+    {
+      "rows": 21,
+      "errors": 0,
+      "groups": {
+        "other": {
+          "rows": 16,
+          "errors": 0,
+          "binary_bytes": 1973,
+          "statements": 21,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 1,
+          "decode_time_ms": 0.031,
+          "query_time_ms": 10.453,
+          "queue_time_ms": 0.015,
+          "total_time_ms": 10.5
+        },
+        "history": {
+          "rows": 2,
+          "errors": 0,
+          "binary_bytes": 62,
+          "statements": 1,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 0,
+          "decode_time_ms": 0.002,
+          "query_time_ms": 0.827,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 0.83
+        },
+        "authorization": {
+          "rows": 2,
+          "errors": 0,
+          "binary_bytes": 123,
+          "statements": 3,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 2,
+          "decode_time_ms": 0.001,
+          "query_time_ms": 1.071,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 1.073
+        },
+        "documents": {
+          "rows": 1,
+          "errors": 0,
+          "binary_bytes": 93,
+          "statements": 1,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 0,
+          "decode_time_ms": 0.0,
+          "query_time_ms": 0.315,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 0.315
+        }
+      },
+      "scenario": "participant",
+      "binary_bytes": 2251,
+      "elapsed_ms": 38.181,
+      "statements": 26,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "update_locks": 3,
+      "decode_time_ms": 0.034,
+      "query_time_ms": 12.665999999999999,
+      "queue_time_ms": 0.015,
+      "total_time_ms": 12.718
+    },
+    {
+      "rows": 26,
+      "errors": 0,
+      "groups": {
+        "other": {
+          "rows": 21,
+          "errors": 0,
+          "binary_bytes": 4920,
+          "statements": 24,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 1,
+          "decode_time_ms": 0.012,
+          "query_time_ms": 9.042,
+          "queue_time_ms": 0.015,
+          "total_time_ms": 9.071
+        },
+        "history": {
+          "rows": 2,
+          "errors": 0,
+          "binary_bytes": 32,
+          "statements": 1,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 0,
+          "decode_time_ms": 0.006,
+          "query_time_ms": 0.279,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 0.286
+        },
+        "authorization": {
+          "rows": 3,
+          "errors": 0,
+          "binary_bytes": 131,
+          "statements": 3,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 2,
+          "decode_time_ms": 0.002,
+          "query_time_ms": 1.41,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 1.413
+        },
+        "documents": {
+          "rows": 0,
+          "errors": 0,
+          "binary_bytes": 0,
+          "statements": 1,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 0,
+          "decode_time_ms": 0.003,
+          "query_time_ms": 1.037,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 1.04
+        }
+      },
+      "scenario": "counselor",
+      "binary_bytes": 5083,
+      "elapsed_ms": 15.232,
+      "statements": 29,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "update_locks": 3,
+      "decode_time_ms": 0.023000000000000003,
+      "query_time_ms": 11.768,
+      "queue_time_ms": 0.015,
+      "total_time_ms": 11.809999999999999
+    }
+  ],
+  "candidate": [
+    {
+      "rows": 15,
+      "errors": 0,
+      "groups": {
+        "other": {
+          "rows": 10,
+          "errors": 0,
+          "binary_bytes": 1973,
+          "statements": 15,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 1,
+          "decode_time_ms": 0.01,
+          "query_time_ms": 5.023,
+          "queue_time_ms": 0.016,
+          "total_time_ms": 5.049
+        },
+        "history": {
+          "rows": 2,
+          "errors": 0,
+          "binary_bytes": 62,
+          "statements": 1,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 0,
+          "decode_time_ms": 0.002,
+          "query_time_ms": 0.647,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 0.649
+        },
+        "authorization": {
+          "rows": 2,
+          "errors": 0,
+          "binary_bytes": 122,
+          "statements": 3,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 2,
+          "decode_time_ms": 0.002,
+          "query_time_ms": 1.18,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 1.183
+        },
+        "documents": {
+          "rows": 1,
+          "errors": 0,
+          "binary_bytes": 93,
+          "statements": 1,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 0,
+          "decode_time_ms": 0.001,
+          "query_time_ms": 0.424,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 0.425
+        }
+      },
+      "scenario": "participant",
+      "binary_bytes": 2250,
+      "elapsed_ms": 30.99,
+      "statements": 20,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "update_locks": 3,
+      "decode_time_ms": 0.015,
+      "query_time_ms": 7.274,
+      "queue_time_ms": 0.016,
+      "total_time_ms": 7.306
+    },
+    {
+      "rows": 17,
+      "errors": 0,
+      "groups": {
+        "other": {
+          "rows": 12,
+          "errors": 0,
+          "binary_bytes": 4920,
+          "statements": 15,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 1,
+          "decode_time_ms": 0.01,
+          "query_time_ms": 5.299,
+          "queue_time_ms": 0.026,
+          "total_time_ms": 5.336
+        },
+        "history": {
+          "rows": 2,
+          "errors": 0,
+          "binary_bytes": 32,
+          "statements": 1,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 0,
+          "decode_time_ms": 0.0,
+          "query_time_ms": 0.611,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 0.612
+        },
+        "authorization": {
+          "rows": 3,
+          "errors": 0,
+          "binary_bytes": 131,
+          "statements": 3,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 2,
+          "decode_time_ms": 0.001,
+          "query_time_ms": 1.145,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 1.146
+        },
+        "documents": {
+          "rows": 0,
+          "errors": 0,
+          "binary_bytes": 0,
+          "statements": 1,
+          "content_bytes": 0,
+          "content_selections": 0,
+          "update_locks": 0,
+          "decode_time_ms": 0.0,
+          "query_time_ms": 0.713,
+          "queue_time_ms": 0.0,
+          "total_time_ms": 0.714
+        }
+      },
+      "scenario": "counselor",
+      "binary_bytes": 5083,
+      "elapsed_ms": 9.774,
+      "statements": 20,
+      "content_bytes": 0,
+      "content_selections": 0,
+      "update_locks": 3,
+      "decode_time_ms": 0.011,
+      "query_time_ms": 7.768,
+      "queue_time_ms": 0.026,
+      "total_time_ms": 7.808
+    }
+  ],
+  "correctness": [
+    "Relationship and eligible assignment facts load once per composite read.",
+    "Facts stay inside the expiring read context, not socket assigns or cross-request caches.",
+    "Section, transition, retry and event-history decisions match live policy queries.",
+    "Reassignment and grant/relationship revocation affect the next read.",
+    "Mutation paths retain live checks; authorization gates and lock modes are unchanged."
+  ],
+  "limitations": [
+    "Fact reuse reduces repeated policy probes, not candidate-directory or peer-batch reads.",
+    "No hosted capacity claim; deferred-cycle and lease-duration measurements remain pending."
+  ],
+  "validation": {
+    "policy_context_and_history_focused_tests": 28,
+    "fact_contract_and_runtime_role_tests": 31,
+    "focused_failures": 0,
+    "precommit_tests": 459,
+    "precommit_failures": 0
+  }
+}

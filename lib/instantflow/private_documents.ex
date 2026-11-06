@@ -181,12 +181,19 @@ defmodule Instantflow.PrivateDocuments do
 
     if is_nil(before_id) or
          (is_integer(before_id) and before_id > 0 and before_id < 9_223_372_036_854_775_807),
-       do: list_page_scoped(scope, ticket, version, before_id),
+       do:
+         list_page_scoped(
+           scope,
+           ticket,
+           version,
+           before_id,
+           Instantflow.WorkflowRuntime.RecordRead.facts!(context, ticket_id)
+         ),
        else: %{rows: [], next_cursor: nil}
   end
 
-  defp list_page_scoped(a, ticket, version, before_id) do
-    readable = readable_fields(a, ticket, version)
+  defp list_page_scoped(a, ticket, version, before_id, facts \\ :live) do
+    readable = readable_fields(a, ticket, version, facts)
     cursor = if before_id, do: dynamic([d], d.id < ^before_id), else: dynamic(true)
 
     documents =
@@ -209,7 +216,7 @@ defmodule Instantflow.PrivateDocuments do
         Map.put(
           metadata(d),
           :can_review,
-          Policy.reviewer?(a, ticket, version, section, d.field_key, d.uploaded_by_id)
+          Policy.reviewer?(a, ticket, version, section, d.field_key, d.uploaded_by_id, facts)
         )
       end)
 
@@ -441,11 +448,11 @@ defmodule Instantflow.PrivateDocuments do
     )
   end
 
-  defp readable_fields(actor, ticket, version) do
+  defp readable_fields(actor, ticket, version, facts) do
     for section <- version.definition["sections"],
         field <- section["fields"],
         field["type"] == "attachment",
-        allowed?(actor, ticket, version, section, field["key"], :read),
+        Policy.allowed?(actor, ticket, version, section, field["key"], :read, facts),
         reduce: dynamic(false) do
       predicate ->
         key = section["key"]

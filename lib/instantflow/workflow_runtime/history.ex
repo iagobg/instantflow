@@ -7,7 +7,7 @@ defmodule Instantflow.WorkflowRuntime.History do
   @page_size 50
 
   @doc "Internal query: caller holds the tenant authorization boundary with a fresh scope."
-  def authorized_query(scope, ticket, version) do
+  def authorized_query(scope, ticket, version, facts \\ :live) do
     unless Repo.in_transaction?(),
       do: raise(ArgumentError, "History requires a tenant transaction")
 
@@ -23,18 +23,19 @@ defmodule Instantflow.WorkflowRuntime.History do
         Enum.flat_map(sections, &["save:" <> &1, "assign:" <> &1]) ++
         Enum.map(releases, &("release:" <> &1))
 
-    allowed = Enum.filter(operations, &Policy.history?(scope, ticket, version, %{operation: &1}))
+    allowed =
+      Enum.filter(operations, &Policy.history?(scope, ticket, version, %{operation: &1}, facts))
 
     participant_keys =
       Enum.filter(
         participants,
-        &Policy.history?(scope, ticket, version, %{operation: "participant:any:" <> &1})
+        &Policy.history?(scope, ticket, version, %{operation: "participant:any:" <> &1}, facts)
       )
 
     document_keys =
       Enum.filter(
         sections,
-        &Policy.history?(scope, ticket, version, %{operation: "document:any:" <> &1})
+        &Policy.history?(scope, ticket, version, %{operation: "document:any:" <> &1}, facts)
       )
 
     # Parse exactly the suffix used by Policy.history?/4, including legacy
@@ -56,8 +57,8 @@ defmodule Instantflow.WorkflowRuntime.History do
   end
 
   @doc false
-  def pages(scope, ticket, version, options) do
-    events = authorized_query(scope, ticket, version)
+  def pages(scope, ticket, version, options, facts \\ :live) do
+    events = authorized_query(scope, ticket, version, facts)
 
     %{
       history: page(events, :revision, Keyword.get(options, :history_before)),

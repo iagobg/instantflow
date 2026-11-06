@@ -89,8 +89,9 @@ defmodule Instantflow.WorkflowRuntime do
   defp get_scoped(scope, id, options) do
     with %Ticket{} = ticket <- Repo.get(Ticket, id),
          %Version{} = version <- Repo.get(Version, ticket.workflow_version_id),
-         true <- Policy.discover?(scope, ticket, version) do
-      project(scope, ticket, version, options)
+         facts <- Map.fetch!(AccessFacts.load([scope], ticket, version), scope.id),
+         true <- Policy.discover?(scope, ticket, version, facts) do
+      project(scope, ticket, version, options, facts)
     else
       _ -> {:error, :not_found}
     end
@@ -100,21 +101,28 @@ defmodule Instantflow.WorkflowRuntime do
   def get_in_context(context, id, options \\ []) do
     scope = Tenant.context_scope!(context)
     {ticket, version} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, id)
-    project(scope, ticket, version, options)
+
+    project(
+      scope,
+      ticket,
+      version,
+      options,
+      Instantflow.WorkflowRuntime.RecordRead.facts!(context, id)
+    )
   end
 
-  defp project(scope, ticket, version, options) do
+  defp project(scope, ticket, version, options, facts) do
     sections = Repo.all(from s in Section, where: s.ticket_id == ^ticket.id, order_by: s.key)
 
     readable =
       Enum.filter(
         version.definition["sections"],
-        &Policy.section?(scope, ticket, version, &1, :read)
+        &Policy.section?(scope, ticket, version, &1, :read, facts)
       )
 
     keys = Enum.map(readable, & &1["key"])
 
-    pages = Instantflow.WorkflowRuntime.History.pages(scope, ticket, version, options)
+    pages = Instantflow.WorkflowRuntime.History.pages(scope, ticket, version, options, facts)
 
     directory =
       Instantflow.Participants.Directory.project(
@@ -123,7 +131,8 @@ defmodule Instantflow.WorkflowRuntime do
         version,
         sections,
         readable,
-        Keyword.get(options, :directory_queries, %{})
+        Keyword.get(options, :directory_queries, %{}),
+        facts
       )
 
     projected_definition =
@@ -135,7 +144,7 @@ defmodule Instantflow.WorkflowRuntime do
       )
       |> Map.update!("transitions", fn edges ->
         Enum.filter(edges, fn edge ->
-          Policy.history?(scope, ticket, version, %{operation: edge["key"]})
+          Policy.history?(scope, ticket, version, %{operation: edge["key"]}, facts)
         end)
         |> Enum.map(&Map.take(&1, ~w(key label from to kind)))
       end)
@@ -161,23 +170,24 @@ defmodule Instantflow.WorkflowRuntime do
                scope,
                ticket,
                version,
-               Keyword.get(options, :assignment_query, "")
+               Keyword.get(options, :assignment_query, ""),
+               facts
              )
          ),
-       can_retry: not archived? and Policy.retry?(scope, ticket, version),
+       can_retry: not archived? and Policy.retry?(scope, ticket, version, facts),
        editable:
          Enum.filter(
            readable,
-           &(not archived? and Policy.section?(scope, ticket, version, &1, :edit))
+           &(not archived? and Policy.section?(scope, ticket, version, &1, :edit, facts))
          )
          |> Enum.map(& &1["key"]),
        transitions:
          Enum.filter(
            version.definition["transitions"],
-           &(not archived? and Policy.transition?(scope, ticket, version, &1))
+           &(not archived? and Policy.transition?(scope, ticket, version, &1, facts))
          )
          |> Enum.map(&Map.take(&1, ~w(key label require_reason kind))),
-       calculations: Instantflow.Calculations.statuses(scope, ticket, version),
+       calculations: Instantflow.Calculations.statuses(scope, ticket, version, facts),
        events: pages.history.rows,
        history_next_cursor: pages.history.next_cursor,
        deliveries: pages.deliveries.rows,

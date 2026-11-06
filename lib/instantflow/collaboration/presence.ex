@@ -30,7 +30,7 @@ defmodule Instantflow.Collaboration.Presence do
   def editors_in_context(context, id) do
     scope = Tenant.context_scope!(context)
     {ticket, version} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, id)
-    facts = Map.fetch!(AccessFacts.load([scope], ticket, version), scope.id)
+    facts = Instantflow.WorkflowRuntime.RecordRead.facts!(context, id)
 
     keys =
       version.definition["sections"]

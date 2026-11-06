@@ -74,7 +74,7 @@ defmodule Instantflow.Participants.Directory do
   end
 
   @doc false
-  def project(actor, ticket, version, sections, readable, queries \\ %{}) do
+  def project(actor, ticket, version, sections, readable, queries \\ %{}, facts \\ :live) do
     Enum.reduce(readable, %{options: %{}, labels: %{}}, fn section, result ->
       stored = Enum.find(sections, &(&1.key == section["key"]))
 
@@ -82,7 +82,7 @@ defmodule Instantflow.Participants.Directory do
         if field["type"] == "directory_reference" do
           ref = section["key"] <> "." <> field["key"]
           value = stored.values[field["key"]]
-          label = selected(actor, ticket, version, section, field, value)
+          label = selected(actor, ticket, version, section, field, value, facts)
 
           options =
             options_scoped(
@@ -92,7 +92,8 @@ defmodule Instantflow.Participants.Directory do
               section,
               field,
               value,
-              Map.get(queries, ref, "")
+              Map.get(queries, ref, ""),
+              facts
             )
 
           %{
@@ -106,8 +107,8 @@ defmodule Instantflow.Participants.Directory do
     end)
   end
 
-  defp options_scoped(actor, ticket, version, section, field, value, text) do
-    case authorized_query(actor, ticket, version, section, field, :edit) do
+  defp options_scoped(actor, ticket, version, section, field, value, text, facts \\ :live) do
+    case authorized_query(actor, ticket, version, section, field, :edit, facts) do
       nil ->
         []
 
@@ -123,7 +124,7 @@ defmodule Instantflow.Participants.Directory do
               select: {u.name, r.id}
           )
 
-        label = selected(actor, ticket, version, section, field, value)
+        label = selected(actor, ticket, version, section, field, value, facts)
 
         if label && not Enum.any?(rows, &(elem(&1, 1) == value)),
           do: rows ++ [{label, value}],
@@ -131,14 +132,16 @@ defmodule Instantflow.Participants.Directory do
     end
   end
 
-  defp selected(_, _, _, _, _, nil), do: nil
+  defp selected(_, _, _, _, _, nil, _facts), do: nil
 
-  defp selected(actor, ticket, version, section, field, value) do
-    query = authorized_query(actor, ticket, version, section, field, :read)
+  defp selected(actor, ticket, version, section, field, value, facts) do
+    query = authorized_query(actor, ticket, version, section, field, :read, facts)
 
     if query && is_integer(value),
       do: Repo.one(from [r, _m, u] in query, where: r.id == ^value, select: u.name)
   end
+
+  defp authorized_query(actor, ticket, version, section, field, action, facts \\ :live)
 
   defp authorized_query(
          actor,
@@ -146,17 +149,18 @@ defmodule Instantflow.Participants.Directory do
          version,
          section,
          %{"type" => "directory_reference", "reference" => spec},
-         action
+         action,
+         facts
        ) do
-    if Policy.section?(actor, ticket, version, section, action) do
-      manager? = Participants.manage?(actor, ticket, version, spec["relationship"])
+    if Policy.section?(actor, ticket, version, section, action, facts) do
+      manager? = Participants.manage?(actor, ticket, version, spec["relationship"], facts)
 
       from [r, m, _u] in base_query(ticket, spec),
         where: r.organization_id == ^actor.organization_id and (^manager? or m.id == ^actor.id)
     end
   end
 
-  defp authorized_query(_, _, _, _, _, _), do: nil
+  defp authorized_query(_, _, _, _, _, _, _), do: nil
 
   defp base_query(ticket, spec) do
     from r in Relationship,

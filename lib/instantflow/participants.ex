@@ -130,14 +130,21 @@ defmodule Instantflow.Participants do
   def controls_in_context(context, ticket_id, search) do
     scope = Tenant.context_scope!(context)
     {ticket, version} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, ticket_id)
-    controls_scoped(scope, ticket, version, search)
+
+    controls_scoped(
+      scope,
+      ticket,
+      version,
+      search,
+      Instantflow.WorkflowRuntime.RecordRead.facts!(context, ticket_id)
+    )
   end
 
-  defp controls_scoped(scope, ticket, version, search) do
+  defp controls_scoped(scope, ticket, version, search, facts \\ :live) do
     specs =
       Enum.filter(
         Map.get(version.definition, "participants", []),
-        &manage?(scope, ticket, version, &1["key"])
+        &manage?(scope, ticket, version, &1["key"], facts)
       )
 
     query = String.slice(String.trim(search), 0, 100)
@@ -227,9 +234,9 @@ defmodule Instantflow.Participants do
   end
 
   @doc false
-  def manage?(scope, ticket, version, key) do
+  def manage?(scope, ticket, version, key, facts \\ :live) do
     spec = Enum.find(Map.get(version.definition, "participants", []), &(&1["key"] == key))
-    spec != nil and Enum.any?(spec["managers"], &Policy.actor?(scope, ticket, version, &1))
+    spec != nil and Enum.any?(spec["managers"], &Policy.actor?(scope, ticket, version, &1, facts))
   end
 
   @doc "Only call inside the shared tenant authorization gate."

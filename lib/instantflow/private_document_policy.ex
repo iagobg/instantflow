@@ -7,9 +7,9 @@ defmodule Instantflow.PrivateDocuments.Policy do
     field && field["document_policy"]
   end
 
-  def allowed?(actor, ticket, version, section, field, permission) do
+  def allowed?(actor, ticket, version, section, field, permission, facts \\ :live) do
     not is_nil(declaration(section, field)) and
-      RecordPolicy.section?(actor, ticket, version, section, permission)
+      RecordPolicy.section?(actor, ticket, version, section, permission, facts)
   end
 
   def download_allowed?(actor, ticket, version, section, field) do
@@ -23,14 +23,14 @@ defmodule Instantflow.PrivateDocuments.Policy do
       )
   end
 
-  def reviewer?(actor, ticket, version, section, field, uploader) do
+  def reviewer?(actor, ticket, version, section, field, uploader, facts \\ :live) do
     case declaration(section, field) do
       nil ->
         false
 
       policy ->
         actor.user_id != uploader and
-          Enum.any?(policy["reviewers"], &RecordPolicy.actor?(actor, ticket, version, &1))
+          Enum.any?(policy["reviewers"], &RecordPolicy.actor?(actor, ticket, version, &1, facts))
     end
   end
 

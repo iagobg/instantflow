@@ -31,7 +31,7 @@ defmodule Instantflow.WorkflowRuntime.Policy do
       transition_actor?(actor, ticket, version, transition, facts)
   end
 
-  defp transition_actor?(actor, ticket, version, transition, facts \\ :live) do
+  defp transition_actor?(actor, ticket, version, transition, facts) do
     (not Map.get(transition, "disallow_requester", false) or
        actor.user_id != ticket.requester_id) and
       (not Map.get(transition, "finance_sensitive", false) or actor.user_id != ticket.requester_id) and
@@ -76,66 +76,71 @@ defmodule Instantflow.WorkflowRuntime.Policy do
     end)
   end
 
-  def retry?(actor, ticket, version) do
+  def retry?(actor, ticket, version, facts \\ :live) do
     Enum.any?(version.definition["transitions"], fn edge ->
       Enum.any?(
         edge["actors"],
         &(&1["scope"] in ~w(assigned_department workflow_department) and
-            actor?(actor, ticket, version, &1))
+            actor?(actor, ticket, version, &1, facts))
       )
     end)
   end
 
-  def history?(actor, ticket, version, %{operation: "save:" <> key}) do
+  def history?(actor, ticket, version, event, facts \\ :live)
+
+  def history?(actor, ticket, version, %{operation: "save:" <> key}, facts) do
     case Enum.find(version.definition["sections"], &(&1["key"] == key)) do
       nil -> false
-      section -> section?(actor, ticket, version, section, :read)
+      section -> section?(actor, ticket, version, section, :read, facts)
     end
   end
 
-  def history?(actor, ticket, version, %{operation: "assign:" <> key}) do
+  def history?(actor, ticket, version, %{operation: "assign:" <> key}, facts) do
     section = Enum.find(version.definition["sections"], &(&1["key"] == key))
-    section && Instantflow.Collaboration.Assignments.manager?(actor, ticket, version, section)
+
+    section &&
+      Instantflow.Collaboration.Assignments.manager?(actor, ticket, version, section, facts)
   end
 
-  def history?(actor, ticket, version, %{operation: "participant:" <> operation}) do
+  def history?(actor, ticket, version, %{operation: "participant:" <> operation}, facts) do
     case String.split(operation, ":", parts: 2) do
-      [_, key] -> Instantflow.Participants.manage?(actor, ticket, version, key)
+      [_, key] -> Instantflow.Participants.manage?(actor, ticket, version, key, facts)
       _ -> false
     end
   end
 
-  def history?(_actor, _ticket, _version, %{operation: "create"}), do: true
+  def history?(_actor, _ticket, _version, %{operation: "create"}, _facts), do: true
 
-  def history?(actor, ticket, version, %{operation: "release:" <> key}),
+  def history?(actor, ticket, version, %{operation: "release:" <> key}, facts),
     do:
       Instantflow.Delivery.Curated.authorized?(
         actor,
         ticket,
         version,
-        Instantflow.WorkflowCatalog.Communications.find(version.definition, key)
+        Instantflow.WorkflowCatalog.Communications.find(version.definition, key),
+        facts
       )
 
-  def history?(actor, ticket, version, %{operation: "document:" <> operation}) do
+  def history?(actor, ticket, version, %{operation: "document:" <> operation}, facts) do
     case String.split(operation, ":", parts: 2) do
       [_, ref] ->
         key = ref |> String.split(".", parts: 2) |> hd()
         section = Enum.find(version.definition["sections"], &(&1["key"] == key))
-        section != nil and section?(actor, ticket, version, section, :read)
+        section != nil and section?(actor, ticket, version, section, :read, facts)
 
       _ ->
         false
     end
   end
 
-  def history?(actor, ticket, version, event) do
+  def history?(actor, ticket, version, event, facts) do
     case Enum.find(version.definition["transitions"], &(&1["key"] == event.operation)) do
       nil ->
         false
 
       edge ->
         Map.get(edge, "history_visibility", "participants") == "participants" or
-          transition_actor?(actor, ticket, version, edge)
+          transition_actor?(actor, ticket, version, edge, facts)
     end
   end
 end

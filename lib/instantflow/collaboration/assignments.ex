@@ -6,9 +6,9 @@ defmodule Instantflow.Collaboration.Assignments do
   alias Instantflow.Identity.Membership
   alias Instantflow.WorkflowRuntime.Policy
 
-  def manager?(actor, ticket, version, section) do
+  def manager?(actor, ticket, version, section, facts \\ :live) do
     spec = section["assignment"]
-    spec && Enum.any?(spec["managers"], &Policy.actor?(actor, ticket, version, &1))
+    spec && Enum.any?(spec["managers"], &Policy.actor?(actor, ticket, version, &1, facts))
   end
 
   def assigned?(actor, ticket, version, key) do
@@ -35,11 +35,11 @@ defmodule Instantflow.Collaboration.Assignments do
     )
   end
 
-  def controls(actor, ticket, version, search \\ "") do
+  def controls(actor, ticket, version, search \\ "", facts \\ :live) do
     search = if is_binary(search), do: String.slice(search, 0, 100), else: ""
 
     Enum.flat_map(version.definition["sections"], fn section ->
-      if manager?(actor, ticket, version, section) do
+      if manager?(actor, ticket, version, section, facts) do
         spec = section["assignment"]
 
         roles = version.bindings["roles"][spec["role"]]

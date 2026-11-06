@@ -7,13 +7,13 @@ defmodule Instantflow.Delivery.Curated do
   alias Instantflow.WorkflowCatalog.{Communications, Definition, Version}
   alias Instantflow.WorkflowRuntime.{Policy, Receipt, Section, Ticket}
 
-  def authorized?(scope, ticket, version, spec) do
-    spec && Enum.any?(spec["release_actors"], &Policy.actor?(scope, ticket, version, &1)) &&
+  def authorized?(scope, ticket, version, spec, facts \\ :live) do
+    spec && Enum.any?(spec["release_actors"], &Policy.actor?(scope, ticket, version, &1, facts)) &&
       Enum.all?(spec["fields"], fn ref ->
         section =
           Enum.find(version.definition["sections"], &(&1["key"] == hd(String.split(ref, "."))))
 
-        section && Policy.section?(scope, ticket, version, section, :read)
+        section && Policy.section?(scope, ticket, version, section, :read, facts)
       end)
   end
 
@@ -221,11 +221,11 @@ defmodule Instantflow.Delivery.Curated do
     end)
   end
 
-  def controls(scope, ticket, version, search \\ "") do
+  def controls(scope, ticket, version, search \\ "", facts \\ :live) do
     search = if is_binary(search), do: String.slice(search, 0, 100), else: ""
 
     for spec <- Communications.specs(version.definition),
-        authorized?(scope, ticket, version, spec) do
+        authorized?(scope, ticket, version, spec, facts) do
       recipients =
         Repo.all(
           from [r, m, u] in recipient_query(version, spec["recipient_relationship"]),
@@ -279,7 +279,14 @@ defmodule Instantflow.Delivery.Curated do
   def controls_in_context(context, id, search) do
     scope = Tenant.context_scope!(context)
     {ticket, version} = Instantflow.WorkflowRuntime.RecordRead.fetch!(context, id)
-    controls(scope, ticket, version, search)
+
+    controls(
+      scope,
+      ticket,
+      version,
+      search,
+      Instantflow.WorkflowRuntime.RecordRead.facts!(context, id)
+    )
   end
 
   def successes(ticket, version) do

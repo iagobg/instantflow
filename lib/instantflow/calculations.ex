@@ -310,13 +310,13 @@ defmodule Instantflow.Calculations do
   end
 
   # Only a bounded status projection; source, snapshots and runner stdout never enter ticket views.
-  def statuses(actor, ticket, version) do
+  def statuses(actor, ticket, version, facts \\ :live) do
     if Contract.calculations?(version.definition),
-      do: calculation_statuses(actor, ticket, version),
+      do: calculation_statuses(actor, ticket, version, facts),
       else: []
   end
 
-  defp calculation_statuses(actor, ticket, version) do
+  defp calculation_statuses(actor, ticket, version, facts) do
     [[enabled, generation]] =
       Repo.query!("SELECT enabled, generation FROM calculation_switch WHERE id = 1").rows
 
@@ -351,7 +351,7 @@ defmodule Instantflow.Calculations do
     |> Enum.filter(fn r ->
       Enum.all?(
         referenced_sections(version, r.spec),
-        &Policy.section?(actor, ticket, version, &1, :read)
+        &Policy.section?(actor, ticket, version, &1, :read, facts)
       )
     end)
     |> Enum.map(fn r ->
