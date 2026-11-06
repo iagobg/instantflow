@@ -1,0 +1,707 @@
+{
+  "date": "2026-11-06",
+  "commit": "10cb39783293765a858b6f342cf4803773048423",
+  "application_source_changed": false,
+  "remote_method": "Temporary Ecto telemetry observer in the running benchmark release, detached in try/after; 20 second background window and 20 authorized reads per read operation. No browser load generated. No image or database configuration changed.",
+  "hosted": {
+    "url": "https://instantflow-benchmark.iagobussoletti.com.br",
+    "app_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+    "postgres_version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "cpu_limits": {
+      "application_cores": 2,
+      "postgres_cores": 1
+    },
+    "memory_limits": {
+      "application_gib": 2,
+      "postgres_gib": 1
+    },
+    "pool_size": 10,
+    "delivery_poll_interval_ms": 250,
+    "counts": {
+      "organizations": 1,
+      "memberships": 15,
+      "tickets": 15,
+      "events": 48,
+      "documents": 0,
+      "pending_outbox": 0
+    },
+    "pg_stat_statements_installed": false,
+    "shared_preload_libraries": "",
+    "track_io_timing": "off",
+    "probes": [
+      {
+        "label": "hosted_background_20s",
+        "elapsed_ms": 20000.998,
+        "samples": 0,
+        "median_ms": null,
+        "minimum_ms": null,
+        "maximum_ms": null,
+        "summaries": [
+          {
+            "origin": "delivery_worker",
+            "statements": 2356,
+            "database_total_ms": 610.817,
+            "queue_ms": 35.985
+          }
+        ],
+        "sql_categories": [
+          {
+            "count": 228,
+            "origin": "delivery_worker",
+            "category": "begin",
+            "total_ms": 51.158,
+            "queue_ms": 7.478,
+            "query_ms": 43.679
+          },
+          {
+            "count": 76,
+            "origin": "delivery_worker",
+            "category": "calculation_runs",
+            "total_ms": 12.683,
+            "queue_ms": 0.0,
+            "query_ms": 12.603
+          },
+          {
+            "count": 228,
+            "origin": "delivery_worker",
+            "category": "commit",
+            "total_ms": 273.742,
+            "queue_ms": 0.0,
+            "query_ms": 273.742
+          },
+          {
+            "count": 76,
+            "origin": "delivery_worker",
+            "category": "dispatch_discovery",
+            "total_ms": 58.621,
+            "queue_ms": 28.507,
+            "query_ms": 29.897
+          },
+          {
+            "count": 228,
+            "origin": "delivery_worker",
+            "category": "organizations",
+            "total_ms": 42.373,
+            "queue_ms": 0.0,
+            "query_ms": 41.928
+          },
+          {
+            "count": 76,
+            "origin": "delivery_worker",
+            "category": "outbox_messages",
+            "total_ms": 13.021,
+            "queue_ms": 0.0,
+            "query_ms": 12.899
+          },
+          {
+            "count": 76,
+            "origin": "delivery_worker",
+            "category": "private_documents",
+            "total_ms": 15.062,
+            "queue_ms": 0.0,
+            "query_ms": 14.98
+          },
+          {
+            "count": 228,
+            "origin": "delivery_worker",
+            "category": "role_read",
+            "total_ms": 21.45,
+            "queue_ms": 0.0,
+            "query_ms": 21.161
+          },
+          {
+            "count": 228,
+            "origin": "delivery_worker",
+            "category": "role_restore",
+            "total_ms": 23.09,
+            "queue_ms": 0.0,
+            "query_ms": 22.805
+          },
+          {
+            "count": 228,
+            "origin": "delivery_worker",
+            "category": "role_set",
+            "total_ms": 19.586,
+            "queue_ms": 0.0,
+            "query_ms": 19.365
+          },
+          {
+            "count": 228,
+            "origin": "delivery_worker",
+            "category": "tenant_context_read",
+            "total_ms": 32.95,
+            "queue_ms": 0.0,
+            "query_ms": 32.573
+          },
+          {
+            "count": 456,
+            "origin": "delivery_worker",
+            "category": "tenant_context_set",
+            "total_ms": 47.081,
+            "queue_ms": 0.0,
+            "query_ms": 46.458
+          }
+        ]
+      },
+      {
+        "label": "hosted_detail_20_reads",
+        "elapsed_ms": 237.941,
+        "samples": 20,
+        "median_ms": 11.063,
+        "minimum_ms": 10.271,
+        "maximum_ms": 16.022,
+        "summaries": [
+          {
+            "origin": "delivery_worker",
+            "statements": 31,
+            "database_total_ms": 10.837,
+            "queue_ms": 0.471
+          },
+          {
+            "origin": "diagnostic_read",
+            "statements": 620,
+            "database_total_ms": 117.41,
+            "queue_ms": 0.969
+          }
+        ],
+        "sql_categories": [
+          {
+            "count": 3,
+            "origin": "delivery_worker",
+            "category": "begin",
+            "total_ms": 0.918,
+            "queue_ms": 0.119,
+            "query_ms": 0.798
+          },
+          {
+            "count": 1,
+            "origin": "delivery_worker",
+            "category": "calculation_runs",
+            "total_ms": 0.226,
+            "queue_ms": 0.0,
+            "query_ms": 0.225
+          },
+          {
+            "count": 3,
+            "origin": "delivery_worker",
+            "category": "commit",
+            "total_ms": 3.949,
+            "queue_ms": 0.0,
+            "query_ms": 3.949
+          },
+          {
+            "count": 1,
+            "origin": "delivery_worker",
+            "category": "dispatch_discovery",
+            "total_ms": 0.84,
+            "queue_ms": 0.352,
+            "query_ms": 0.486
+          },
+          {
+            "count": 3,
+            "origin": "delivery_worker",
+            "category": "organizations",
+            "total_ms": 0.952,
+            "queue_ms": 0.0,
+            "query_ms": 0.945
+          },
+          {
+            "count": 1,
+            "origin": "delivery_worker",
+            "category": "outbox_messages",
+            "total_ms": 0.201,
+            "queue_ms": 0.0,
+            "query_ms": 0.199
+          },
+          {
+            "count": 1,
+            "origin": "delivery_worker",
+            "category": "private_documents",
+            "total_ms": 0.242,
+            "queue_ms": 0.0,
+            "query_ms": 0.24
+          },
+          {
+            "count": 3,
+            "origin": "delivery_worker",
+            "category": "role_read",
+            "total_ms": 0.528,
+            "queue_ms": 0.0,
+            "query_ms": 0.523
+          },
+          {
+            "count": 3,
+            "origin": "delivery_worker",
+            "category": "role_restore",
+            "total_ms": 0.38,
+            "queue_ms": 0.0,
+            "query_ms": 0.376
+          },
+          {
+            "count": 3,
+            "origin": "delivery_worker",
+            "category": "role_set",
+            "total_ms": 0.403,
+            "queue_ms": 0.0,
+            "query_ms": 0.399
+          },
+          {
+            "count": 3,
+            "origin": "delivery_worker",
+            "category": "tenant_context_read",
+            "total_ms": 0.783,
+            "queue_ms": 0.0,
+            "query_ms": 0.777
+          },
+          {
+            "count": 6,
+            "origin": "delivery_worker",
+            "category": "tenant_context_set",
+            "total_ms": 1.415,
+            "queue_ms": 0.0,
+            "query_ms": 1.403
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "authorization_gate",
+            "total_ms": 2.664,
+            "queue_ms": 0.0,
+            "query_ms": 2.635
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "begin",
+            "total_ms": 5.203,
+            "queue_ms": 0.969,
+            "query_ms": 4.234
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "commit",
+            "total_ms": 26.217,
+            "queue_ms": 0.0,
+            "query_ms": 26.217
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "departments",
+            "total_ms": 2.636,
+            "queue_ms": 0.0,
+            "query_ms": 2.606
+          },
+          {
+            "count": 40,
+            "origin": "diagnostic_read",
+            "category": "membership_grants",
+            "total_ms": 5.277,
+            "queue_ms": 0.0,
+            "query_ms": 5.214
+          },
+          {
+            "count": 40,
+            "origin": "diagnostic_read",
+            "category": "memberships",
+            "total_ms": 6.884,
+            "queue_ms": 0.0,
+            "query_ms": 6.822
+          },
+          {
+            "count": 60,
+            "origin": "diagnostic_read",
+            "category": "organizations",
+            "total_ms": 9.665,
+            "queue_ms": 0.0,
+            "query_ms": 9.569
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "outbox_messages",
+            "total_ms": 4.02,
+            "queue_ms": 0.0,
+            "query_ms": 3.985
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "retired_workflow_versions",
+            "total_ms": 3.2,
+            "queue_ms": 0.0,
+            "query_ms": 3.167
+          },
+          {
+            "count": 40,
+            "origin": "diagnostic_read",
+            "category": "role_read",
+            "total_ms": 5.314,
+            "queue_ms": 0.0,
+            "query_ms": 5.263
+          },
+          {
+            "count": 40,
+            "origin": "diagnostic_read",
+            "category": "role_restore",
+            "total_ms": 4.562,
+            "queue_ms": 0.0,
+            "query_ms": 4.508
+          },
+          {
+            "count": 40,
+            "origin": "diagnostic_read",
+            "category": "role_set",
+            "total_ms": 3.786,
+            "queue_ms": 0.0,
+            "query_ms": 3.745
+          },
+          {
+            "count": 40,
+            "origin": "diagnostic_read",
+            "category": "tenant_context_read",
+            "total_ms": 5.186,
+            "queue_ms": 0.0,
+            "query_ms": 5.127
+          },
+          {
+            "count": 80,
+            "origin": "diagnostic_read",
+            "category": "tenant_context_set",
+            "total_ms": 9.452,
+            "queue_ms": 0.0,
+            "query_ms": 9.34
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "ticket_sections",
+            "total_ms": 4.728,
+            "queue_ms": 0.0,
+            "query_ms": 4.693
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "tickets",
+            "total_ms": 3.205,
+            "queue_ms": 0.0,
+            "query_ms": 3.174
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "transition_events",
+            "total_ms": 4.253,
+            "queue_ms": 0.0,
+            "query_ms": 4.217
+          },
+          {
+            "count": 40,
+            "origin": "diagnostic_read",
+            "category": "users",
+            "total_ms": 5.895,
+            "queue_ms": 0.0,
+            "query_ms": 5.834
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "workflow_versions",
+            "total_ms": 5.263,
+            "queue_ms": 0.0,
+            "query_ms": 5.214
+          }
+        ]
+      },
+      {
+        "label": "hosted_navigation_20_reads",
+        "elapsed_ms": 117.983,
+        "samples": 20,
+        "median_ms": 5.9815000000000005,
+        "minimum_ms": 5.389,
+        "maximum_ms": 6.348,
+        "summaries": [
+          {
+            "origin": "diagnostic_read",
+            "statements": 280,
+            "database_total_ms": 60.925,
+            "queue_ms": 0.732
+          }
+        ],
+        "sql_categories": [
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "authorization_gate",
+            "total_ms": 2.058,
+            "queue_ms": 0.0,
+            "query_ms": 2.033
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "begin",
+            "total_ms": 4.91,
+            "queue_ms": 0.732,
+            "query_ms": 4.178
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "commit",
+            "total_ms": 22.758,
+            "queue_ms": 0.0,
+            "query_ms": 22.758
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "membership_grants",
+            "total_ms": 2.538,
+            "queue_ms": 0.0,
+            "query_ms": 2.509
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "memberships",
+            "total_ms": 2.949,
+            "queue_ms": 0.0,
+            "query_ms": 2.918
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "organizations",
+            "total_ms": 3.712,
+            "queue_ms": 0.0,
+            "query_ms": 3.681
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "other_sql",
+            "total_ms": 6.057,
+            "queue_ms": 0.0,
+            "query_ms": 6.02
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "role_read",
+            "total_ms": 1.879,
+            "queue_ms": 0.0,
+            "query_ms": 1.854
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "role_restore",
+            "total_ms": 2.19,
+            "queue_ms": 0.0,
+            "query_ms": 2.162
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "role_set",
+            "total_ms": 1.668,
+            "queue_ms": 0.0,
+            "query_ms": 1.648
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "tenant_context_read",
+            "total_ms": 2.954,
+            "queue_ms": 0.0,
+            "query_ms": 2.923
+          },
+          {
+            "count": 40,
+            "origin": "diagnostic_read",
+            "category": "tenant_context_set",
+            "total_ms": 4.564,
+            "queue_ms": 0.0,
+            "query_ms": 4.508
+          },
+          {
+            "count": 20,
+            "origin": "diagnostic_read",
+            "category": "users",
+            "total_ms": 2.688,
+            "queue_ms": 0.0,
+            "query_ms": 2.658
+          }
+        ]
+      }
+    ],
+    "post_probe_verification": {
+      "temporary_handlers_remaining": 0,
+      "healthy": true,
+      "counts": {
+        "tickets": 15,
+        "events": 48,
+        "documents": 0,
+        "pending_outbox": 0
+      },
+      "image_unchanged": true
+    }
+  },
+  "local": {
+    "method": "Synthetic Phoenix.LiveViewTest and SQL sandbox probes from the prior review. Five diagnostic tests passed. Counts include transaction/role/tenant setup; asynchronous presence can shift event boundaries slightly. Timings excluded here because another test suite ran concurrently.",
+    "probes": [
+      {
+        "label": "record_mount_http_and_live",
+        "content_bytes": 0,
+        "statements": 412,
+        "update_locks": 38,
+        "event_rows": 4
+      },
+      {
+        "label": "idle_heartbeat",
+        "content_bytes": 0,
+        "statements": 153,
+        "update_locks": 15,
+        "event_rows": 2
+      },
+      {
+        "label": "reason_change",
+        "content_bytes": 0,
+        "statements": 29,
+        "update_locks": 2,
+        "event_rows": 0
+      },
+      {
+        "label": "draft_change",
+        "content_bytes": 0,
+        "statements": 62,
+        "update_locks": 4,
+        "event_rows": 1
+      },
+      {
+        "label": "save_submit",
+        "content_bytes": 0,
+        "statements": 366,
+        "update_locks": 31,
+        "event_rows": 9
+      },
+      {
+        "label": "ticket_invalidation",
+        "content_bytes": 0,
+        "statements": 213,
+        "update_locks": 19,
+        "event_rows": 6
+      },
+      {
+        "label": "invalidation_3_members",
+        "content_bytes": 0,
+        "statements": 15,
+        "update_locks": 0,
+        "event_rows": 0
+      },
+      {
+        "label": "invalidation_103_members",
+        "content_bytes": 0,
+        "statements": 115,
+        "update_locks": 0,
+        "event_rows": 0
+      },
+      {
+        "label": "idle_drain_1_org",
+        "content_bytes": 0,
+        "statements": 31,
+        "update_locks": 0,
+        "event_rows": 0
+      },
+      {
+        "label": "idle_drain_10_orgs",
+        "content_bytes": 0,
+        "statements": 301,
+        "update_locks": 0,
+        "event_rows": 0
+      },
+      {
+        "label": "detail_1_event",
+        "content_bytes": 0,
+        "statements": 31,
+        "update_locks": 2,
+        "event_rows": 1
+      },
+      {
+        "label": "detail_1001_events",
+        "content_bytes": 0,
+        "statements": 31,
+        "update_locks": 2,
+        "event_rows": 1001
+      },
+      {
+        "label": "document_metadata_1mb",
+        "content_bytes": 1048591,
+        "statements": 16,
+        "update_locks": 3,
+        "event_rows": 0
+      }
+    ]
+  },
+  "interpretation": [
+    "The delivery worker made 2356 statements in 20.001 seconds, approximately 117.8 statements per second, across 76 passes and 228 transactions. No other application SQL was captured in this window.",
+    "Hosted detail and navigation observations are authorized backend reads only, not HTTP, LiveView, browser or capacity benchmarks.",
+    "No evidence from this idle sample establishes sustained CPU saturation. Earlier loaded browser evidence approached a one-core quota; that causal attribution requires controlled workload profiling.",
+    "Current benchmark has 15 records; historical frozen school-v1 baseline has 12. Preserve current state before future resets."
+  ],
+  "local_validation_from_prior_review": {
+    "precommit": {
+      "exit_code": 0,
+      "tests": 387,
+      "failures": 0,
+      "seconds": 325.1,
+      "note": "Historical migration tests emit module-redefinition warnings; compile --warnings-as-errors passed."
+    },
+    "runner_python": {
+      "tests": 17,
+      "failures": 0
+    },
+    "deploy_python": {
+      "tests": 8,
+      "failures": 0
+    },
+    "benchmark_tools_python": {
+      "tests": 7,
+      "failures": 0
+    },
+    "assets_build": "passed",
+    "git_diff_check": "passed",
+    "compile_connected_cycles": 0,
+    "diagnostic_tests": {
+      "tests": 5,
+      "failures": 0
+    }
+  },
+  "probe_source_sha256": {
+    "hosted_probe.exs": "af1d1ef689882004f0181dafcff5278e8dcfa1c62c603b2ef7acefe74e48c0a8",
+    "run_hosted_probe.py": "409dabcf6b1ba0b21071417b31d831848e523ad16d8cf02411538a37a2d90613",
+    "remote_snapshot.py": "334d1fb1b9b64f58afabf5f20e615b72d443550bdbeb38df2b6716dd95de0ddf"
+  },
+  "github_workflows_verified": {
+    "ref": "main",
+    "checks_blob_sha": "8a5df1cde11195d10333b9eb9eb09f8811a1b90a",
+    "deploy_blob_sha": "8c85e7dcdc2e1ac014399067646d71b755132019",
+    "serving_deploy_trigger": "Checks success on main, excluding pull_request",
+    "benchmark_auto_deploy_present": false
+  },
+  "plan_validation": {
+    "precommit": {
+      "exit_code": 0,
+      "tests": 387,
+      "failures": 0,
+      "seed": 113119,
+      "seconds": 323.7
+    },
+    "relative_links": "passed",
+    "evidence_consistency": "passed",
+    "note": "Historical migration tests emit module-redefinition warnings; compile --warnings-as-errors passed."
+  }
+}

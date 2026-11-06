@@ -1,0 +1,61 @@
+name: Publish benchmark candidate
+on:
+  workflow_dispatch:
+    inputs:
+      checks_run_id:
+        description: Successful Checks run ID for this exact selected branch revision
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+  packages: write
+concurrency:
+  group: instantflow-benchmark-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify successful checks for this revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHECKS_RUN_ID: ${{ inputs.checks_run_id }}
+        run: |
+          [[ "$CHECKS_RUN_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CHECKS_RUN_ID" > "$RUNNER_TEMP/checks-run.json"
+          python3 deploy/benchmark_candidate.py verify "$RUNNER_TEMP/checks-run.json" "$GITHUB_SHA" "$GITHUB_REPOSITORY"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Select candidate tag
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}:benchmark-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          push: true
+          platforms: linux/arm64
+          tags: ${{ steps.image.outputs.name }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Record immutable candidate identity
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          python3 deploy/benchmark_candidate.py manifest "$RUNNER_TEMP/checks-run.json" "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$IMAGE_DIGEST" > "$RUNNER_TEMP/benchmark-candidate.json"
+          cat "$RUNNER_TEMP/benchmark-candidate.json" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-candidate-${{ github.sha }}
+          path: ${{ runner.temp }}/benchmark-candidate.json
+          if-no-files-found: error
