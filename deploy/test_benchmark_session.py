@@ -44,7 +44,8 @@ class SessionTest(unittest.TestCase):
 
     def setUp(self):
         fixture.BenchmarkHostTest.setUp(self)
-        for name, value in [("capture", {"settings": {}, "statements_available": False}), ("difference", {})]:
+        for name, value in [("capture", {"settings": {}, "statements_available": False}),
+                            ("difference", {}), ("prune_obsolete_statements", {"available": False})]:
             patcher = patch.object(session.metrics, name, return_value=value)
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -71,6 +72,28 @@ class SessionTest(unittest.TestCase):
         self.assertEqual(controller.live_counts["tickets"], 15)
         self.assertTrue(list((self.root / "operations").glob("*/campaign.json")))
         controller.guard()
+
+    def test_statement_cleanup_precedes_counter_capture_and_failed_cleanup_restores(self):
+        for fail in [False, True]:
+            with self.subTest(fail=fail):
+                controller = rollout_fixture.RolloutHost(self.root)
+                channel = FakeChannel(controller)
+                calls = []
+                def prune(_):
+                    calls.append("prune")
+                    if fail:
+                        raise host.GuardError("incomplete cleanup")
+                    return {"available": True, "pruned_databases": 4}
+                def capture(_):
+                    calls.append("capture")
+                    return {"settings": {}, "statements_available": False}
+                with host.host_lock(), patch.object(session.metrics, "prune_obsolete_statements", prune), \
+                        patch.object(session.metrics, "capture", capture):
+                    self.assertEqual(session.Session(controller, channel).run(), 1 if fail else 0)
+                self.assertEqual(calls, ["prune"] if fail else ["prune", "capture", "capture"])
+                self.assertEqual(controller.live_counts["tickets"], 15)
+                self.assertEqual(channel.events[-1]["report"]["restoration"]["status"], "recovered")
+                self.assertFalse((self.root / "pending-operation.json").exists())
 
     def test_recovery_failure_retains_journal_and_cannot_emit_restored(self):
         controller = rollout_fixture.RolloutHost(self.root)

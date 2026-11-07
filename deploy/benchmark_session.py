@@ -66,6 +66,7 @@ class Session:
         journal = self.controller.journal()
         report = {"operation_id": journal["id"], "application": application, "status": "interrupted"}
         try:
+            report["statement_preparation"] = metrics.prune_obsolete_statements(self.controller)
             before = metrics.capture(self.controller)
             report["metrics_before"] = before
             ready["metrics_settings"] = before["settings"]

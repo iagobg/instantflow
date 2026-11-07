@@ -62,6 +62,50 @@ SELECT json_build_object(
     ORDER BY queryid, toplevel) s));
 """.replace("STMT_COLUMNS", ", ".join(STATEMENT_COUNTERS))
 
+STATEMENT_CAPACITY_SQL = """
+SET statement_timeout='5s';
+SELECT json_build_object(
+ 'info', (SELECT row_to_json(i) FROM instantflow_benchmark_metrics.pg_stat_statements_info i),
+ 'entries', count(*),
+ 'obsolete_entries', count(*) FILTER (WHERE d.oid IS NULL),
+ 'obsolete_databases', count(DISTINCT s.dbid) FILTER (WHERE d.oid IS NULL))
+FROM instantflow_benchmark_metrics.pg_stat_statements(false) s
+LEFT JOIN pg_database d ON d.oid=s.dbid;
+"""
+
+PRUNE_OBSOLETE_STATEMENTS_SQL = """
+SET statement_timeout='5s';
+WITH obsolete AS MATERIALIZED (
+ SELECT DISTINCT s.dbid FROM instantflow_benchmark_metrics.pg_stat_statements(false) s
+ WHERE s.dbid <> 0 AND NOT EXISTS (SELECT FROM pg_database d WHERE d.oid=s.dbid)
+), pruned AS MATERIALIZED (
+ SELECT instantflow_benchmark_metrics.pg_stat_statements_reset(0, dbid, 0) FROM obsolete
+)
+SELECT count(*) FROM pruned;
+"""
+
+
+def prune_obsolete_statements(controller):
+    """Under the campaign lock, remove dropped-fixture statistics before timing.
+
+    Live databases keep their counters. Never use a global reset or prune during
+    an observed window: entry eviction/reset still invalidates that entire run.
+    """
+    available = controller.sql(host.DATABASE, """
+        SELECT EXISTS(SELECT FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace
+          WHERE e.extname='pg_stat_statements' AND n.nspname='instantflow_benchmark_metrics');
+    """)
+    host.require(available in {"t", "f"}, "Unknown statement statistics availability")
+    if available == "f":
+        return {"available": False}
+    before = json.loads(controller.sql(host.DATABASE, STATEMENT_CAPACITY_SQL))
+    pruned = int(controller.sql(host.DATABASE, PRUNE_OBSOLETE_STATEMENTS_SQL))
+    after = json.loads(controller.sql(host.DATABASE, STATEMENT_CAPACITY_SQL))
+    host.require(pruned == before["obsolete_databases"] and after["obsolete_entries"] == 0
+                 and after["info"] == before["info"], "Statement statistics cleanup was incomplete or reset live counters")
+    return {"available": True, "before": before, "after": after, "pruned_databases": pruned,
+            "scope": "Only databases absent from pg_database; before the observation window"}
+
 
 def ensure_extension(controller):
     config = host.read_json(host.ROOT / "compose.json")

@@ -1,0 +1,111 @@
+{
+  "cleanup_rehearsal": {
+    "application_inventory_unchanged": true,
+    "cleanup": {
+      "after": {
+        "entries": 37,
+        "info": {
+          "dealloc": 4,
+          "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+        },
+        "obsolete_databases": 0,
+        "obsolete_entries": 0
+      },
+      "available": true,
+      "before": {
+        "entries": 4793,
+        "info": {
+          "dealloc": 4,
+          "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+        },
+        "obsolete_databases": 104,
+        "obsolete_entries": 4756
+      },
+      "pruned_databases": 104,
+      "scope": "Only databases absent from pg_database; before the observation window"
+    },
+    "identity_unchanged": true,
+    "live_counters_non_decreasing": true,
+    "live_statement_shapes_preserved": 36
+  },
+  "comparison_policy": "Restart all six fixed-rate runs with identical updated controller hashes; retain the prior valid candidate run and excluded baseline as diagnostic evidence.",
+  "documentation": "https://www.postgresql.org/docs/16/pgstatstatements.html#PGSTATSTATEMENTS-FUNCS",
+  "independent_restoration_exact_match": true,
+  "reason": "Fixed-rate run excluded because statement-statistics eviction changed the observation epoch; no acceptance threshold was relaxed.",
+  "rejected_run": {
+    "application": {
+      "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+      "platform": "linux/arm64",
+      "schema": 0
+    },
+    "browser_results": {
+      "business_saves": {
+        "count": 360,
+        "rate": 1.3282824733211214
+      },
+      "checks": {
+        "fails": 0,
+        "passes": 480,
+        "rate": 1
+      },
+      "completed_cycles": {
+        "count": 480,
+        "rate": 1.7710432977614952
+      },
+      "cycle_deadline_overruns": {
+        "count": 0,
+        "rate": 0
+      },
+      "missed_start_deadlines": {
+        "count": 0,
+        "rate": 0
+      },
+      "offered_cycles": {
+        "count": 480,
+        "rate": 1.7710432977614952
+      }
+    },
+    "metadata_sha256": "433a20da7f42fa328bc6bf3d5914ebc1419c5e0a8e06e6615339eb51c1f020cc",
+    "operation_id": "operation-af279f70ff48",
+    "restoration": {
+      "identity": {
+        "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+        "database": "instantflow_benchmark",
+        "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+        "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+        "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+        "pool_size": 10,
+        "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+        "project": "instantflow-benchmark",
+        "root": "/home/ubuntu/apps/instantflow-benchmark"
+      },
+      "operation_id": "operation-af279f70ff48",
+      "recovery_snapshot": "snapshot-20261107T015732Z-7417e66b5db5",
+      "smoke": {
+        "authenticated_record_read": true,
+        "logout": true,
+        "tls_verified": true,
+        "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+      },
+      "status": "recovered"
+    },
+    "statement_info_after": {
+      "dealloc": 4,
+      "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+    },
+    "statement_info_before": {
+      "dealloc": 3,
+      "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+    },
+    "status": "failed",
+    "summary_sha256": "e26e795a6271ba6fd3b6a8bda2febd17c176e7fdc2a4096277f04b0cab4fb0a8"
+  },
+  "schema": 1,
+  "validation": {
+    "application_precommit_tests": 528,
+    "deployment_tests": 112,
+    "runner_tests": 17,
+    "scheduling_tests": 5
+  }
+}

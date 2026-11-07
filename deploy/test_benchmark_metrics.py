@@ -1,6 +1,7 @@
 import copy
 import json
 import unittest
+from unittest.mock import Mock
 
 import benchmark_host as host
 import benchmark_metrics as metrics
@@ -15,6 +16,37 @@ def counters():
 
 
 class MetricsTest(unittest.TestCase):
+    def test_obsolete_statistics_cleanup_skips_unavailable_extension(self):
+        controller = Mock()
+        controller.sql.return_value = "f"
+        self.assertEqual(metrics.prune_obsolete_statements(controller), {"available": False})
+        self.assertEqual(controller.sql.call_count, 1)
+
+    def test_obsolete_statistics_cleanup_retains_epoch_and_validates_removal(self):
+        before = {"info": {"dealloc": 4, "stats_reset": "epoch"}, "entries": 4793,
+                  "obsolete_entries": 4756, "obsolete_databases": 104}
+        after = {**before, "entries": 37, "obsolete_entries": 0, "obsolete_databases": 0}
+        controller = Mock()
+        controller.sql.side_effect = ["t", json.dumps(before), "104", json.dumps(after)]
+        result = metrics.prune_obsolete_statements(controller)
+        self.assertEqual(result["pruned_databases"], 104)
+        self.assertEqual(result["before"], before)
+        self.assertEqual(result["after"], after)
+        self.assertTrue(all(call.args[0] == host.DATABASE for call in controller.sql.call_args_list))
+
+    def test_obsolete_statistics_cleanup_refuses_partial_cleanup_or_changed_epoch(self):
+        before = {"info": {"dealloc": 4, "stats_reset": "epoch"}, "entries": 100,
+                  "obsolete_entries": 80, "obsolete_databases": 2}
+        after = {**before, "entries": 20, "obsolete_entries": 0, "obsolete_databases": 0}
+        for pruned, observed in [("1", after), ("2", before),
+                                 ("2", {**after, "info": {"dealloc": 4, "stats_reset": "reset"}}),
+                                 ("2", {**after, "info": {"dealloc": 5, "stats_reset": "epoch"}})]:
+            with self.subTest(pruned=pruned, after=observed):
+                controller = Mock()
+                controller.sql.side_effect = ["t", json.dumps(before), pruned, json.dumps(observed)]
+                with self.assertRaises(host.GuardError):
+                    metrics.prune_obsolete_statements(controller)
+
     def test_deltas_are_counters_not_lifetime_totals_and_disabled_timing_is_explicit(self):
         before = counters()
         after = copy.deepcopy(before)
