@@ -1,0 +1,2463 @@
+{
+  "campaign_records": [
+    {
+      "arm": "baseline",
+      "label": "01-mixed-1-baseline-r1",
+      "metadata_sha256": "a8b0d9257a7ec34a38bf731244681f724b56ce7c1f78172919abb14dfcdaf434",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "4915c692676a2269eb469cf83d2d53fc91cb9b63105ee757b3fa827a09095737",
+      "users": 1
+    },
+    {
+      "arm": "candidate",
+      "label": "02-mixed-1-candidate-r1",
+      "metadata_sha256": "88ff2f81f9ff49cde8cde85cf9b6bc29bee40f6e0fe4dba23760ab5cbb852519",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "11a07bfb336520104e2b005676e7f2ea3cbb3187b30cde73963da1d78c5b44f0",
+      "users": 1
+    },
+    {
+      "arm": "candidate",
+      "label": "03-mixed-5-candidate-r1",
+      "metadata_sha256": "86435f4b890c37ca20daa858e79204c426028477ec8e9d8d18cadd5441e36b3d",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "39e9c4140c46aa5d104be61703dadf02437ca48dfb095635005ffc7adec50f55",
+      "users": 5
+    },
+    {
+      "arm": "baseline",
+      "label": "04-mixed-5-baseline-r1",
+      "metadata_sha256": "742d7cb0c401952e9ff19950d2ca2cb3e54987a340a2ad049feee9228e8696e2",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "f2341296dcdfa79d33d8d36a17345801dea6ac3a8025b0df93557a61cd14f257",
+      "users": 5
+    },
+    {
+      "arm": "baseline",
+      "label": "05-mixed-10-baseline-r1",
+      "metadata_sha256": "179c9d364867dcdb762dc3bba972e12d947ce28c8584d02536f63d65f596c434",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "0eadbcb8a059ef46fc7dfd145079d003d146c66656fb5a29cf4a98a220d3c192",
+      "users": 10
+    },
+    {
+      "arm": "candidate",
+      "label": "06-mixed-10-candidate-r1",
+      "metadata_sha256": "90225b2c648ba9a0637f3ce27913dec2af2d7dfd3163fac4ce36a6b8a92b311e",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "396e5a9249484799691a48a46ca5ef54ecbff79340c5faa7de749a11c0afb8ab",
+      "users": 10
+    },
+    {
+      "arm": "candidate",
+      "label": "07-mixed-10-candidate-r2",
+      "metadata_sha256": "5080ce46cc6e33e9cf9efd82ec674987a1c64516280806474811cecd7b9735d4",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "e54703360dcb3b9f20dbbd2d242b5f7a8cb19455166b571d6c9495725d203ff8",
+      "users": 10
+    },
+    {
+      "arm": "baseline",
+      "label": "08-mixed-10-baseline-r2",
+      "metadata_sha256": "c17abeca0ca8baa0ec9304afc10992161865a175a885650020d1ab7011916306",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "8d743640ee83bd82bfa226ef8875f27848d68be484df6c803cb11ac346c2e777",
+      "users": 10
+    },
+    {
+      "arm": "baseline",
+      "label": "09-mixed-5-baseline-r2",
+      "metadata_sha256": "b0ad367a8d085bd22d19b2a7e7d938082f7b929ebb53e4ee8b7a4d286fe77a16",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "ef228aee2ba82abe4dfa1029a7febe8cef7b861e475b6261668a5928964877e9",
+      "users": 5
+    },
+    {
+      "arm": "candidate",
+      "label": "10-mixed-5-candidate-r2",
+      "metadata_sha256": "53d9a1f9bde713c3c9d0cd70e012eab7a290577e2b79e08f093eb101806fe2a4",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "762e5e4dd1736d814f55da32c74e793f53e56693e1bfbb0a0f39b286df71d0db",
+      "users": 5
+    },
+    {
+      "arm": "candidate",
+      "label": "11-mixed-1-candidate-r2",
+      "metadata_sha256": "ee36158df890c6d49aafc2cf3a6f119ab164709cf8d2ffd0fb14804bff83b714",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "9c1fec6e5d414f5f82272e451f1ad5ba7f300d55d8f441ee024dd0dbb72e4648",
+      "users": 1
+    },
+    {
+      "arm": "baseline",
+      "label": "12-mixed-1-baseline-r2",
+      "metadata_sha256": "5ebadf36fc9ca30d0f337888be9ae9535cd8d0dc33fd3913ad76e2b082af37c1",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "f6daa33528af49df98be8a7af87690da697670e65cd37f13fd4de49603253e49",
+      "users": 1
+    },
+    {
+      "arm": "baseline",
+      "label": "13-mixed-1-baseline-r3",
+      "metadata_sha256": "868d72d9550832629673b86f4b6cbd3bf54e8746c12e97de40fef412b0d98bab",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "ae3a7f4f6f956db4048ed39238aba7d2a3d68f5b2415cba9f25cc385c4923adf",
+      "users": 1
+    },
+    {
+      "arm": "candidate",
+      "label": "14-mixed-1-candidate-r3",
+      "metadata_sha256": "5cba837a5cb3bf0312671c785e5b4bfd5226240a285097dfb335ab82d97c7b08",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "f5c599ff418257b5e57aab4eb11ea633841311eb9ea67023fde090dc30502d99",
+      "users": 1
+    },
+    {
+      "arm": "candidate",
+      "label": "15-mixed-5-candidate-r3",
+      "metadata_sha256": "07b259a278aecbdf4a897a111b46d9a849043c73901c2d636d0af8eaf8024d2c",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "a8fecff1bb7b01d49377580c9228b57ef77b818834f01787fcf93d4d4cb68cd0",
+      "users": 5
+    },
+    {
+      "arm": "baseline",
+      "label": "16-mixed-5-baseline-r3",
+      "metadata_sha256": "abed68cc45db69d9c5547de99adc09357622e138ac01a474d1dcd52db92abcf3",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "95bd5ea6508f427bcbc7dae62bf9da5d1304827f7b231f3826782a74fcfd4fe6",
+      "users": 5
+    },
+    {
+      "arm": "baseline",
+      "label": "17-mixed-10-baseline-r3",
+      "metadata_sha256": "36e56e6fb93e0010c1134ea648e5ef87e2ec93fbb18c6fa284a991fefb24a26d",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "2f85f2659ccf335162716c2d0960489afb5d8c33bfb2d59f222893a5f5cebd77",
+      "users": 10
+    },
+    {
+      "arm": "candidate",
+      "label": "18-mixed-10-candidate-r3",
+      "metadata_sha256": "e8b41922d66643bb28be987f029518587d32310c08081614aacfbad2f44a3802",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "7999f4bb25ff02c41474a6e0d4a45082eb0e6c95b05e72795a2abfe0f2985713",
+      "users": 10
+    }
+  ],
+  "candidate_commit": "716b42ea88d5d28779a6c2ab6b2e40f335d2f56a",
+  "comparison": {
+    "applications": {
+      "baseline": {
+        "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+        "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+        "platform": "linux/arm64",
+        "schema": 0
+      },
+      "candidate": {
+        "application_commit": "716b42ea88d5d28779a6c2ab6b2e40f335d2f56a",
+        "checks_run_id": 42313262543,
+        "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42313262543",
+        "image": "ghcr.io/iagobg/instantflow@sha256:14e0987587515aa23257eb3178975f78785748ebdf726819552468a022903584",
+        "platform": "linux/arm64",
+        "publication_attempt": 1,
+        "publication_run_id": 42313987494,
+        "schema": 2
+      }
+    },
+    "conditions": {
+      "fixture": {
+        "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+        "initial_records": 12,
+        "load_actors": 10,
+        "name": "school-v1",
+        "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+        "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+        "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+      },
+      "host_controller_sha256": {
+        "benchmark_candidate.py": "5aaf42436dffb9861fb090e0446d3b3f9cf0bfb966adc6c561194a6397e6f397",
+        "benchmark_host.py": "bb2094c996e69aba63f2fb36c6a7d0f427c520355a5d423de3e21724779b2f05",
+        "benchmark_metrics.py": "df9a625c9a77f13aaa00579d10f860330c9927937705bbcb62e31652578c5eab",
+        "benchmark_metrics_setup.py": "c467407f0c29d4fa9b94969e7962e749a857004f6c07525b93023092a5589d2b",
+        "benchmark_provenance.py": "0e9dbd143a943e228231e9833d099cbd94a3252ff0d91ca5acee469ecb40eacd",
+        "benchmark_rollout.py": "39c749799ecc75c2ae7326e876bff7a7ebd6fcdf812777edbb08dd82093a42d7",
+        "benchmark_session.py": "9847e22d399c97833ab6122d39bb52eb26db2bfcc1c21ef14b3a5fefa14f1e2e",
+        "benchmark_smoke.py": "f10c6ba5cd1667642af3f0e15b68e4a3b439cd2508aaf666997409f58da86f1c",
+        "remote.py": "1100e88a66a12a903232c404ed1a1db1d6a9ba3fe404949ea01f1070e73ca02b"
+      },
+      "k6_image": "grafana/k6@sha256:8663335c8c1c5a40dd51823ef980c584761a4a084a2297fca29a29ee495c6bc1",
+      "measurement_seconds": 180,
+      "mode": "mixed",
+      "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+      "postgres_metrics_settings": {
+        "server_version_num": "160015",
+        "shared_preload_libraries": "pg_stat_statements",
+        "track_activities": "on",
+        "track_counts": "on",
+        "track_io_timing": "on",
+        "track_wal_io_timing": "on"
+      },
+      "resources": {
+        "db_cpus": 1,
+        "db_memory_bytes": 1073741824,
+        "pool_size": 10,
+        "web_cpus": 2,
+        "web_memory_bytes": 2147483648
+      },
+      "route_verification": {
+        "remote_ip": "134.65.245.186",
+        "status": 200,
+        "tls_verified": true
+      },
+      "runner": {
+        "cpus": 24,
+        "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "source_sha256": "5785b2fd9d05d5c5aeab3d46811d622a029e494467a44aa1f2964536dbfb3320"
+      },
+      "statement_statistics_available": true,
+      "target": "https://instantflow-benchmark.iagobussoletti.com.br",
+      "transport": {
+        "hostname": "instantflow-benchmark.iagobussoletti.com.br",
+        "origin_ip": "134.65.245.186",
+        "tls_verification": true
+      },
+      "warmup_seconds": 60,
+      "workload": {
+        "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+        "name": "school-v1-browser",
+        "sha256": "5b7aa7011e796b3794847052e2e94d7820143a96d5a4088456f0ca468990aba6"
+      },
+      "workload_contract": {
+        "kind": "closed_browser_load"
+      }
+    },
+    "interpretation": [
+      "Latency summaries are medians/ranges of per-run p95 values, never pooled percentiles or confidence intervals.",
+      "Full-window SQL/CPU per verified cycle includes browser initialization, warmup, final reads, background work and observers.",
+      "The closed workload records latency only for operations completing inside the measured window; crossing-boundary cycles remain correctness-checked. Short windows are more sensitive to this censoring.",
+      "Closed workload throughput is not an equal-offered-rate headroom comparison.",
+      "A comparison alone does not establish supported capacity; assess the complete correctness, volume and recovery evidence."
+    ],
+    "levels": [
+      {
+        "baseline": {
+          "runs": [
+            {
+              "cpu_throttled_usec": {
+                "db": 58816,
+                "web": 0
+              },
+              "database_average_cpu_cores": 0.10469837775204521,
+              "database_cpu_seconds": 28.741196,
+              "database_cpu_seconds_per_verified_cycle": 0.22108612307692307,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T00:24:50.686724+00:00",
+              "measured_saves": 96,
+              "measured_saves_per_second": 0.5333333333333333,
+              "observation_seconds": 274.51424384117126,
+              "operation_id": "operation-24673c6c9e58",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 502.25,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 364.5,
+              "sql_calls": 216954,
+              "sql_calls_per_verified_cycle": 1668.876923076923,
+              "started_at": "2026-11-07T00:19:47.799140+00:00",
+              "statement_execution_ms": 2439.887042,
+              "users": 1,
+              "verified_cycles_including_warmup": 130,
+              "web_average_cpu_cores": 0.17936551601485712,
+              "web_cpu_seconds": 49.238389,
+              "web_cpu_seconds_per_verified_cycle": 0.37875683846153846
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 0,
+                "web": 0
+              },
+              "database_average_cpu_cores": 0.10445220019698645,
+              "database_cpu_seconds": 28.601398,
+              "database_cpu_seconds_per_verified_cycle": 0.22001075384615384,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:20:36.325006+00:00",
+              "measured_saves": 95,
+              "measured_saves_per_second": 0.5277777777777778,
+              "observation_seconds": 273.82283902168274,
+              "operation_id": "operation-13e575204ceb",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 510.25,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 365.6,
+              "sql_calls": 216836,
+              "sql_calls_per_verified_cycle": 1667.9692307692308,
+              "started_at": "2026-11-07T01:15:34.308851+00:00",
+              "statement_execution_ms": 2435.268652999998,
+              "users": 1,
+              "verified_cycles_including_warmup": 130,
+              "web_average_cpu_cores": 0.17670674649665913,
+              "web_cpu_seconds": 48.386343,
+              "web_cpu_seconds_per_verified_cycle": 0.37220263846153845
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 0,
+                "web": 0
+              },
+              "database_average_cpu_cores": 0.10543001464942622,
+              "database_cpu_seconds": 28.869426,
+              "database_cpu_seconds_per_verified_cycle": 0.22207250769230769,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:25:38.419553+00:00",
+              "measured_saves": 95,
+              "measured_saves_per_second": 0.5277777777777778,
+              "observation_seconds": 273.8254954814911,
+              "operation_id": "operation-15b7a25cfe0b",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 509.75,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 365.9,
+              "sql_calls": 216836,
+              "sql_calls_per_verified_cycle": 1667.9692307692308,
+              "started_at": "2026-11-07T01:20:36.420699+00:00",
+              "statement_execution_ms": 2457.0784840000006,
+              "users": 1,
+              "verified_cycles_including_warmup": 130,
+              "web_average_cpu_cores": 0.18001237581374827,
+              "web_cpu_seconds": 49.291978,
+              "web_cpu_seconds_per_verified_cycle": 0.3791690615384615
+            }
+          ],
+          "variation": {
+            "database_average_cpu_cores": {
+              "max": 0.10543001464942622,
+              "median": 0.10469837775204521,
+              "min": 0.10445220019698645
+            },
+            "database_cpu_seconds_per_verified_cycle": {
+              "max": 0.22207250769230769,
+              "median": 0.22108612307692307,
+              "min": 0.22001075384615384
+            },
+            "measured_saves_per_second": {
+              "max": 0.5333333333333333,
+              "median": 0.5277777777777778,
+              "min": 0.5277777777777778
+            },
+            "record_read_p95_ms": {
+              "max": 510.25,
+              "median": 509.75,
+              "min": 502.25
+            },
+            "save_ack_p95_ms": {
+              "max": 365.9,
+              "median": 365.6,
+              "min": 364.5
+            },
+            "sql_calls_per_verified_cycle": {
+              "max": 1668.876923076923,
+              "median": 1667.9692307692308,
+              "min": 1667.9692307692308
+            },
+            "web_average_cpu_cores": {
+              "max": 0.18001237581374827,
+              "median": 0.17936551601485712,
+              "min": 0.17670674649665913
+            },
+            "web_cpu_seconds_per_verified_cycle": {
+              "max": 0.3791690615384615,
+              "median": 0.37875683846153846,
+              "min": 0.37220263846153845
+            }
+          }
+        },
+        "candidate": {
+          "runs": [
+            {
+              "cpu_throttled_usec": {
+                "db": 0,
+                "web": 0
+              },
+              "database_average_cpu_cores": 0.04250736197432772,
+              "database_cpu_seconds": 11.598038,
+              "database_cpu_seconds_per_verified_cycle": 0.07998646896551724,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T00:29:56.911061+00:00",
+              "measured_saves": 108,
+              "measured_saves_per_second": 0.6,
+              "observation_seconds": 272.84774827957153,
+              "operation_id": "operation-a6142208b4fa",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 355.65,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 263,
+              "sql_calls": 48461,
+              "sql_calls_per_verified_cycle": 334.21379310344827,
+              "started_at": "2026-11-07T00:24:50.759575+00:00",
+              "statement_execution_ms": 1339.7305369999995,
+              "users": 1,
+              "verified_cycles_including_warmup": 145,
+              "web_average_cpu_cores": 0.05233471080497503,
+              "web_cpu_seconds": 14.279408,
+              "web_cpu_seconds_per_verified_cycle": 0.09847867586206896
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 40479,
+                "web": 0
+              },
+              "database_average_cpu_cores": 0.04264442879640791,
+              "database_cpu_seconds": 11.672225,
+              "database_cpu_seconds_per_verified_cycle": 0.08049810344827586,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:15:34.245878+00:00",
+              "measured_saves": 108,
+              "measured_saves_per_second": 0.6,
+              "observation_seconds": 273.71043133735657,
+              "operation_id": "operation-0ef7278879ca",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 361,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 266,
+              "sql_calls": 48465,
+              "sql_calls_per_verified_cycle": 334.2413793103448,
+              "started_at": "2026-11-07T01:10:30.227980+00:00",
+              "statement_execution_ms": 1343.41301,
+              "users": 1,
+              "verified_cycles_including_warmup": 145,
+              "web_average_cpu_cores": 0.052423193847203765,
+              "web_cpu_seconds": 14.348775,
+              "web_cpu_seconds_per_verified_cycle": 0.09895706896551724
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 51910,
+                "web": 0
+              },
+              "database_average_cpu_cores": 0.04303663721492371,
+              "database_cpu_seconds": 11.842771,
+              "database_cpu_seconds_per_verified_cycle": 0.08111486986301371,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:30:43.928836+00:00",
+              "measured_saves": 108,
+              "measured_saves_per_second": 0.6,
+              "observation_seconds": 275.17881894111633,
+              "operation_id": "operation-5d471b8c623b",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 358.65,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 263,
+              "sql_calls": 48796,
+              "sql_calls_per_verified_cycle": 334.2191780821918,
+              "started_at": "2026-11-07T01:25:38.486011+00:00",
+              "statement_execution_ms": 1358.4311820000005,
+              "users": 1,
+              "verified_cycles_including_warmup": 146,
+              "web_average_cpu_cores": 0.05171793401382881,
+              "web_cpu_seconds": 14.23168,
+              "web_cpu_seconds_per_verified_cycle": 0.0974772602739726
+            }
+          ],
+          "variation": {
+            "database_average_cpu_cores": {
+              "max": 0.04303663721492371,
+              "median": 0.04264442879640791,
+              "min": 0.04250736197432772
+            },
+            "database_cpu_seconds_per_verified_cycle": {
+              "max": 0.08111486986301371,
+              "median": 0.08049810344827586,
+              "min": 0.07998646896551724
+            },
+            "measured_saves_per_second": {
+              "max": 0.6,
+              "median": 0.6,
+              "min": 0.6
+            },
+            "record_read_p95_ms": {
+              "max": 361,
+              "median": 358.65,
+              "min": 355.65
+            },
+            "save_ack_p95_ms": {
+              "max": 266,
+              "median": 263,
+              "min": 263
+            },
+            "sql_calls_per_verified_cycle": {
+              "max": 334.2413793103448,
+              "median": 334.2191780821918,
+              "min": 334.21379310344827
+            },
+            "web_average_cpu_cores": {
+              "max": 0.052423193847203765,
+              "median": 0.05233471080497503,
+              "min": 0.05171793401382881
+            },
+            "web_cpu_seconds_per_verified_cycle": {
+              "max": 0.09895706896551724,
+              "median": 0.09847867586206896,
+              "min": 0.0974772602739726
+            }
+          }
+        },
+        "median_change_percent": {
+          "database_average_cpu_cores": -59.26925544405115,
+          "database_cpu_seconds_per_verified_cycle": -63.58970778990596,
+          "measured_saves_per_second": 13.684210526315788,
+          "record_read_p95_ms": -29.64198136341344,
+          "save_ack_p95_ms": -28.063457330415766,
+          "sql_calls_per_verified_cycle": -79.9625093846571,
+          "web_average_cpu_cores": -70.82231190936386,
+          "web_cpu_seconds_per_verified_cycle": -73.99949892335233
+        },
+        "users": 1
+      },
+      {
+        "baseline": {
+          "runs": [
+            {
+              "cpu_throttled_usec": {
+                "db": 993560,
+                "web": 90322
+              },
+              "database_average_cpu_cores": 0.4088363749521545,
+              "database_cpu_seconds": 112.196326,
+              "database_cpu_seconds_per_verified_cycle": 0.18243305040650407,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T00:40:04.341443+00:00",
+              "measured_saves": 451,
+              "measured_saves_per_second": 2.5055555555555555,
+              "observation_seconds": 274.4284336566925,
+              "operation_id": "operation-6789c0a1de79",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 617.8,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 428.5,
+              "sql_calls": 894001,
+              "sql_calls_per_verified_cycle": 1453.660162601626,
+              "started_at": "2026-11-07T00:35:01.735046+00:00",
+              "statement_execution_ms": 11560.355551999979,
+              "users": 5,
+              "verified_cycles_including_warmup": 615,
+              "web_average_cpu_cores": 0.716920886726061,
+              "web_cpu_seconds": 196.743476,
+              "web_cpu_seconds_per_verified_cycle": 0.31990809105691054
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 954010,
+                "web": 50201
+              },
+              "database_average_cpu_cores": 0.40807851035011755,
+              "database_cpu_seconds": 112.04522,
+              "database_cpu_seconds_per_verified_cycle": 0.18278176182707995,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:05:25.228341+00:00",
+              "measured_saves": 450,
+              "measured_saves_per_second": 2.5,
+              "observation_seconds": 274.5678029060364,
+              "operation_id": "operation-76ba7c445a7e",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 617,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 432.54999999999995,
+              "sql_calls": 890604,
+              "sql_calls_per_verified_cycle": 1452.8613376835237,
+              "started_at": "2026-11-07T01:00:22.072133+00:00",
+              "statement_execution_ms": 11612.279620999969,
+              "users": 5,
+              "verified_cycles_including_warmup": 613,
+              "web_average_cpu_cores": 0.712344407938226,
+              "web_cpu_seconds": 195.586839,
+              "web_cpu_seconds_per_verified_cycle": 0.3190649902120718
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 756063,
+                "web": 46786
+              },
+              "database_average_cpu_cores": 0.40548572946784867,
+              "database_cpu_seconds": 111.773036,
+              "database_cpu_seconds_per_verified_cycle": 0.18115564991896274,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:40:52.234310+00:00",
+              "measured_saves": 454,
+              "measured_saves_per_second": 2.522222222222222,
+              "observation_seconds": 275.65220642089844,
+              "operation_id": "operation-9c70bfd95973",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 614.05,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 426.34999999999997,
+              "sql_calls": 897427,
+              "sql_calls_per_verified_cycle": 1454.5008103727714,
+              "started_at": "2026-11-07T01:35:48.411277+00:00",
+              "statement_execution_ms": 11539.992705999955,
+              "users": 5,
+              "verified_cycles_including_warmup": 617,
+              "web_average_cpu_cores": 0.7036696368895613,
+              "web_cpu_seconds": 193.968088,
+              "web_cpu_seconds_per_verified_cycle": 0.31437291410048623
+            }
+          ],
+          "variation": {
+            "database_average_cpu_cores": {
+              "max": 0.4088363749521545,
+              "median": 0.40807851035011755,
+              "min": 0.40548572946784867
+            },
+            "database_cpu_seconds_per_verified_cycle": {
+              "max": 0.18278176182707995,
+              "median": 0.18243305040650407,
+              "min": 0.18115564991896274
+            },
+            "measured_saves_per_second": {
+              "max": 2.522222222222222,
+              "median": 2.5055555555555555,
+              "min": 2.5
+            },
+            "record_read_p95_ms": {
+              "max": 617.8,
+              "median": 617,
+              "min": 614.05
+            },
+            "save_ack_p95_ms": {
+              "max": 432.54999999999995,
+              "median": 428.5,
+              "min": 426.34999999999997
+            },
+            "sql_calls_per_verified_cycle": {
+              "max": 1454.5008103727714,
+              "median": 1453.660162601626,
+              "min": 1452.8613376835237
+            },
+            "web_average_cpu_cores": {
+              "max": 0.716920886726061,
+              "median": 0.712344407938226,
+              "min": 0.7036696368895613
+            },
+            "web_cpu_seconds_per_verified_cycle": {
+              "max": 0.31990809105691054,
+              "median": 0.3190649902120718,
+              "min": 0.31437291410048623
+            }
+          }
+        },
+        "candidate": {
+          "runs": [
+            {
+              "cpu_throttled_usec": {
+                "db": 40842,
+                "web": 65798
+              },
+              "database_average_cpu_cores": 0.12540787819891377,
+              "database_cpu_seconds": 34.385104,
+              "database_cpu_seconds_per_verified_cycle": 0.048091054545454544,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T00:35:01.632013+00:00",
+              "measured_saves": 534,
+              "measured_saves_per_second": 2.966666666666667,
+              "observation_seconds": 274.18615555763245,
+              "operation_id": "operation-79402c93a083",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 367.34999999999997,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 269,
+              "sql_calls": 229192,
+              "sql_calls_per_verified_cycle": 320.54825174825174,
+              "started_at": "2026-11-07T00:29:57.003830+00:00",
+              "statement_execution_ms": 5307.413724,
+              "users": 5,
+              "verified_cycles_including_warmup": 715,
+              "web_average_cpu_cores": 0.23126622447817777,
+              "web_cpu_seconds": 63.409997,
+              "web_cpu_seconds_per_verified_cycle": 0.08868531048951049
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 36629,
+                "web": 73829
+              },
+              "database_average_cpu_cores": 0.12698738692473982,
+              "database_cpu_seconds": 34.792379,
+              "database_cpu_seconds_per_verified_cycle": 0.048322748611111105,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:10:30.122334+00:00",
+              "measured_saves": 536,
+              "measured_saves_per_second": 2.977777777777778,
+              "observation_seconds": 273.982950925827,
+              "operation_id": "operation-e1d90c18b9f5",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 379.09999999999997,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 269,
+              "sql_calls": 228766,
+              "sql_calls_per_verified_cycle": 317.73055555555555,
+              "started_at": "2026-11-07T01:05:25.319841+00:00",
+              "statement_execution_ms": 5363.986291000002,
+              "users": 5,
+              "verified_cycles_including_warmup": 720,
+              "web_average_cpu_cores": 0.23192028841678627,
+              "web_cpu_seconds": 63.542205,
+              "web_cpu_seconds_per_verified_cycle": 0.0882530625
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 0,
+                "web": 63952
+              },
+              "database_average_cpu_cores": 0.12590866957392507,
+              "database_cpu_seconds": 34.484393,
+              "database_cpu_seconds_per_verified_cycle": 0.04782856171983356,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:35:48.311010+00:00",
+              "measured_saves": 539,
+              "measured_saves_per_second": 2.9944444444444445,
+              "observation_seconds": 273.88418221473694,
+              "operation_id": "operation-b5799f5a4f6d",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 364.04999999999995,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 270,
+              "sql_calls": 230742,
+              "sql_calls_per_verified_cycle": 320.03051317614427,
+              "started_at": "2026-11-07T01:30:44.008041+00:00",
+              "statement_execution_ms": 5351.699794000003,
+              "users": 5,
+              "verified_cycles_including_warmup": 721,
+              "web_average_cpu_cores": 0.23104728242533412,
+              "web_cpu_seconds": 63.280196,
+              "web_cpu_seconds_per_verified_cycle": 0.08776726213592233
+            }
+          ],
+          "variation": {
+            "database_average_cpu_cores": {
+              "max": 0.12698738692473982,
+              "median": 0.12590866957392507,
+              "min": 0.12540787819891377
+            },
+            "database_cpu_seconds_per_verified_cycle": {
+              "max": 0.048322748611111105,
+              "median": 0.048091054545454544,
+              "min": 0.04782856171983356
+            },
+            "measured_saves_per_second": {
+              "max": 2.9944444444444445,
+              "median": 2.977777777777778,
+              "min": 2.966666666666667
+            },
+            "record_read_p95_ms": {
+              "max": 379.09999999999997,
+              "median": 367.34999999999997,
+              "min": 364.04999999999995
+            },
+            "save_ack_p95_ms": {
+              "max": 270,
+              "median": 269,
+              "min": 269
+            },
+            "sql_calls_per_verified_cycle": {
+              "max": 320.54825174825174,
+              "median": 320.03051317614427,
+              "min": 317.73055555555555
+            },
+            "web_average_cpu_cores": {
+              "max": 0.23192028841678627,
+              "median": 0.23126622447817777,
+              "min": 0.23104728242533412
+            },
+            "web_cpu_seconds_per_verified_cycle": {
+              "max": 0.08868531048951049,
+              "median": 0.0882530625,
+              "min": 0.08776726213592233
+            }
+          }
+        },
+        "median_change_percent": {
+          "database_average_cpu_cores": -69.14596912591655,
+          "database_cpu_seconds_per_verified_cycle": -73.63906680379664,
+          "measured_saves_per_second": 18.8470066518847,
+          "record_read_p95_ms": -40.46191247974069,
+          "save_ack_p95_ms": -37.22287047841307,
+          "sql_calls_per_verified_cycle": -77.98450274626887,
+          "web_average_cpu_cores": -67.53449287999001,
+          "web_cpu_seconds_per_verified_cycle": -72.34009834756827
+        },
+        "users": 5
+      },
+      {
+        "baseline": {
+          "runs": [
+            {
+              "cpu_throttled_usec": {
+                "db": 16226624,
+                "web": 344236
+              },
+              "database_average_cpu_cores": 0.7417416783216139,
+              "database_cpu_seconds": 203.913331,
+              "database_cpu_seconds_per_verified_cycle": 0.18141755427046263,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T00:45:07.537685+00:00",
+              "measured_saves": 816,
+              "measured_saves_per_second": 4.533333333333333,
+              "observation_seconds": 274.9115183353424,
+              "operation_id": "operation-15772dd705db",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 842,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 529.75,
+              "sql_calls": 1580120,
+              "sql_calls_per_verified_cycle": 1405.8007117437724,
+              "started_at": "2026-11-07T00:40:04.400982+00:00",
+              "statement_execution_ms": 24904.753451000528,
+              "users": 10,
+              "verified_cycles_including_warmup": 1124,
+              "web_average_cpu_cores": 1.1457860292916842,
+              "web_cpu_seconds": 314.989777,
+              "web_cpu_seconds_per_verified_cycle": 0.28024001512455515
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 13421141,
+                "web": 363780
+              },
+              "database_average_cpu_cores": 0.734946356119647,
+              "database_cpu_seconds": 202.231745,
+              "database_cpu_seconds_per_verified_cycle": 0.18088707066189624,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:00:21.934108+00:00",
+              "measured_saves": 814,
+              "measured_saves_per_second": 4.522222222222222,
+              "observation_seconds": 275.1653141975403,
+              "operation_id": "operation-bcf09b7882dd",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 832.25,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 545.0499999999997,
+              "sql_calls": 1570438,
+              "sql_calls_per_verified_cycle": 1404.685152057245,
+              "started_at": "2026-11-07T00:55:18.288160+00:00",
+              "statement_execution_ms": 24747.862751000463,
+              "users": 10,
+              "verified_cycles_including_warmup": 1118,
+              "web_average_cpu_cores": 1.1472666056062888,
+              "web_cpu_seconds": 315.687976,
+              "web_cpu_seconds_per_verified_cycle": 0.28236849373881934
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 15283949,
+                "web": 278567
+              },
+              "database_average_cpu_cores": 0.7425547073756571,
+              "database_cpu_seconds": 203.932925,
+              "database_cpu_seconds_per_verified_cycle": 0.1811127220248668,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:45:55.154796+00:00",
+              "measured_saves": 818,
+              "measured_saves_per_second": 4.544444444444444,
+              "observation_seconds": 274.63690280914307,
+              "operation_id": "operation-9fd3ed73d0ff",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 818,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 546.4499999999999,
+              "sql_calls": 1583120,
+              "sql_calls_per_verified_cycle": 1405.968028419183,
+              "started_at": "2026-11-07T01:40:52.319541+00:00",
+              "statement_execution_ms": 24857.291696000608,
+              "users": 10,
+              "verified_cycles_including_warmup": 1126,
+              "web_average_cpu_cores": 1.1568880246978321,
+              "web_cpu_seconds": 317.724144,
+              "web_cpu_seconds_per_verified_cycle": 0.28217064298401423
+            }
+          ],
+          "variation": {
+            "database_average_cpu_cores": {
+              "max": 0.7425547073756571,
+              "median": 0.7417416783216139,
+              "min": 0.734946356119647
+            },
+            "database_cpu_seconds_per_verified_cycle": {
+              "max": 0.18141755427046263,
+              "median": 0.1811127220248668,
+              "min": 0.18088707066189624
+            },
+            "measured_saves_per_second": {
+              "max": 4.544444444444444,
+              "median": 4.533333333333333,
+              "min": 4.522222222222222
+            },
+            "record_read_p95_ms": {
+              "max": 842,
+              "median": 832.25,
+              "min": 818
+            },
+            "save_ack_p95_ms": {
+              "max": 546.4499999999999,
+              "median": 545.0499999999997,
+              "min": 529.75
+            },
+            "sql_calls_per_verified_cycle": {
+              "max": 1405.968028419183,
+              "median": 1405.8007117437724,
+              "min": 1404.685152057245
+            },
+            "web_average_cpu_cores": {
+              "max": 1.1568880246978321,
+              "median": 1.1472666056062888,
+              "min": 1.1457860292916842
+            },
+            "web_cpu_seconds_per_verified_cycle": {
+              "max": 0.28236849373881934,
+              "median": 0.28217064298401423,
+              "min": 0.28024001512455515
+            }
+          }
+        },
+        "candidate": {
+          "runs": [
+            {
+              "cpu_throttled_usec": {
+                "db": 191339,
+                "web": 239715
+              },
+              "database_average_cpu_cores": 0.2310413207658978,
+              "database_cpu_seconds": 63.384919,
+              "database_cpu_seconds_per_verified_cycle": 0.04489016926345609,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T00:50:12.369788+00:00",
+              "measured_saves": 1056,
+              "measured_saves_per_second": 5.866666666666666,
+              "observation_seconds": 274.3445146083832,
+              "operation_id": "operation-221bea3dd941",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 395,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 283,
+              "sql_calls": 448194,
+              "sql_calls_per_verified_cycle": 317.41784702549575,
+              "started_at": "2026-11-07T00:45:07.653640+00:00",
+              "statement_execution_ms": 10489.889902000017,
+              "users": 10,
+              "verified_cycles_including_warmup": 1412,
+              "web_average_cpu_cores": 0.4354523514732214,
+              "web_cpu_seconds": 119.463964,
+              "web_cpu_seconds_per_verified_cycle": 0.08460620679886686
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 248843,
+                "web": 203977
+              },
+              "database_average_cpu_cores": 0.230464714369131,
+              "database_cpu_seconds": 63.489555,
+              "database_cpu_seconds_per_verified_cycle": 0.04490067538896747,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T00:55:18.208930+00:00",
+              "measured_saves": 1055,
+              "measured_saves_per_second": 5.861111111111111,
+              "observation_seconds": 275.4849269390106,
+              "operation_id": "operation-cf847c734c25",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 397,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 284,
+              "sql_calls": 447597,
+              "sql_calls_per_verified_cycle": 316.54667609618105,
+              "started_at": "2026-11-07T00:50:12.467124+00:00",
+              "statement_execution_ms": 10654.808037000019,
+              "users": 10,
+              "verified_cycles_including_warmup": 1414,
+              "web_average_cpu_cores": 0.4337480795326926,
+              "web_cpu_seconds": 119.491058,
+              "web_cpu_seconds_per_verified_cycle": 0.08450569872701555
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 301249,
+                "web": 258260
+              },
+              "database_average_cpu_cores": 0.2326078306681827,
+              "database_cpu_seconds": 63.709426,
+              "database_cpu_seconds_per_verified_cycle": 0.04467701683029453,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T01:50:59.647274+00:00",
+              "measured_saves": 1061,
+              "measured_saves_per_second": 5.894444444444445,
+              "observation_seconds": 273.8920087814331,
+              "operation_id": "operation-59b54abadad6",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 379,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 276,
+              "sql_calls": 450903,
+              "sql_calls_per_verified_cycle": 316.20126227208976,
+              "started_at": "2026-11-07T01:45:55.260211+00:00",
+              "statement_execution_ms": 10642.60429900003,
+              "users": 10,
+              "verified_cycles_including_warmup": 1426,
+              "web_average_cpu_cores": 0.44188151577865376,
+              "web_cpu_seconds": 121.027816,
+              "web_cpu_seconds_per_verified_cycle": 0.0848722412342216
+            }
+          ],
+          "variation": {
+            "database_average_cpu_cores": {
+              "max": 0.2326078306681827,
+              "median": 0.2310413207658978,
+              "min": 0.230464714369131
+            },
+            "database_cpu_seconds_per_verified_cycle": {
+              "max": 0.04490067538896747,
+              "median": 0.04489016926345609,
+              "min": 0.04467701683029453
+            },
+            "measured_saves_per_second": {
+              "max": 5.894444444444445,
+              "median": 5.866666666666666,
+              "min": 5.861111111111111
+            },
+            "record_read_p95_ms": {
+              "max": 397,
+              "median": 395,
+              "min": 379
+            },
+            "save_ack_p95_ms": {
+              "max": 284,
+              "median": 283,
+              "min": 276
+            },
+            "sql_calls_per_verified_cycle": {
+              "max": 317.41784702549575,
+              "median": 316.54667609618105,
+              "min": 316.20126227208976
+            },
+            "web_average_cpu_cores": {
+              "max": 0.44188151577865376,
+              "median": 0.4354523514732214,
+              "min": 0.4337480795326926
+            },
+            "web_cpu_seconds_per_verified_cycle": {
+              "max": 0.0848722412342216,
+              "median": 0.08460620679886686,
+              "min": 0.08450569872701555
+            }
+          }
+        },
+        "median_change_percent": {
+          "database_average_cpu_cores": -68.85151158167494,
+          "database_cpu_seconds_per_verified_cycle": -75.21423743093393,
+          "measured_saves_per_second": 29.411764705882337,
+          "record_read_p95_ms": -52.538299789726636,
+          "save_ack_p95_ms": -48.07815796715895,
+          "sql_calls_per_verified_cycle": -77.48282004328105,
+          "web_average_cpu_cores": -62.04436271871605,
+          "web_cpu_seconds_per_verified_cycle": -70.01594286913114
+        },
+        "users": 10
+      }
+    ],
+    "original_timing_and_repetitions": true,
+    "repetitions_per_arm_and_level": 3,
+    "sampled_resources": [
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-24673c6c9e58",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 18.13,
+              "median": 9.45,
+              "min": 4.48
+            },
+            "cpu_percent_of_quota": {
+              "max": 18.13,
+              "median": 9.45,
+              "min": 4.48
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 34.34,
+              "median": 21.74,
+              "min": 11.19
+            },
+            "cpu_percent_of_quota": {
+              "max": 17.17,
+              "median": 10.87,
+              "min": 5.595
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-a6142208b4fa",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 8.3,
+              "median": 2.59,
+              "min": 1.18
+            },
+            "cpu_percent_of_quota": {
+              "max": 8.3,
+              "median": 2.59,
+              "min": 1.18
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 9.1,
+              "median": 5.3,
+              "min": 1.39
+            },
+            "cpu_percent_of_quota": {
+              "max": 4.55,
+              "median": 2.65,
+              "min": 0.695
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-79402c93a083",
+        "samples": 26,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 20.43,
+              "median": 11.55,
+              "min": 6.18
+            },
+            "cpu_percent_of_quota": {
+              "max": 20.43,
+              "median": 11.55,
+              "min": 6.18
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 38.22,
+              "median": 28.37,
+              "min": 15.15
+            },
+            "cpu_percent_of_quota": {
+              "max": 19.11,
+              "median": 14.185,
+              "min": 7.575
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-6789c0a1de79",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 58.82,
+              "median": 50.28,
+              "min": 29.52
+            },
+            "cpu_percent_of_quota": {
+              "max": 58.82,
+              "median": 50.28,
+              "min": 29.52
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 114.17,
+              "median": 87.81,
+              "min": 70.47
+            },
+            "cpu_percent_of_quota": {
+              "max": 57.085,
+              "median": 43.905,
+              "min": 35.235
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-15772dd705db",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 104.2,
+              "median": 93.98,
+              "min": 69.29
+            },
+            "cpu_percent_of_quota": {
+              "max": 104.2,
+              "median": 93.98,
+              "min": 69.29
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 155.4,
+              "median": 143.37,
+              "min": 129.41
+            },
+            "cpu_percent_of_quota": {
+              "max": 77.7,
+              "median": 71.685,
+              "min": 64.705
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-221bea3dd941",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 33.39,
+              "median": 27.56,
+              "min": 16.5
+            },
+            "cpu_percent_of_quota": {
+              "max": 33.39,
+              "median": 27.56,
+              "min": 16.5
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 65.63,
+              "median": 45.73,
+              "min": 36.02
+            },
+            "cpu_percent_of_quota": {
+              "max": 32.815,
+              "median": 22.865,
+              "min": 18.01
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-cf847c734c25",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 38.55,
+              "median": 25.97,
+              "min": 12.63
+            },
+            "cpu_percent_of_quota": {
+              "max": 38.55,
+              "median": 25.97,
+              "min": 12.63
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 67.62,
+              "median": 48.94,
+              "min": 34.46
+            },
+            "cpu_percent_of_quota": {
+              "max": 33.81,
+              "median": 24.47,
+              "min": 17.23
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-bcf09b7882dd",
+        "samples": 24,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 103.29,
+              "median": 91.055,
+              "min": 78.25
+            },
+            "cpu_percent_of_quota": {
+              "max": 103.29,
+              "median": 91.055,
+              "min": 78.25
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 153.0,
+              "median": 143.675,
+              "min": 132.23
+            },
+            "cpu_percent_of_quota": {
+              "max": 76.5,
+              "median": 71.8375,
+              "min": 66.115
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-76ba7c445a7e",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 69.0,
+              "median": 49.64,
+              "min": 33.48
+            },
+            "cpu_percent_of_quota": {
+              "max": 69.0,
+              "median": 49.64,
+              "min": 33.48
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 105.79,
+              "median": 84.82,
+              "min": 75.44
+            },
+            "cpu_percent_of_quota": {
+              "max": 52.895,
+              "median": 42.41,
+              "min": 37.72
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-e1d90c18b9f5",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 23.33,
+              "median": 12.85,
+              "min": 6.17
+            },
+            "cpu_percent_of_quota": {
+              "max": 23.33,
+              "median": 12.85,
+              "min": 6.17
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 40.91,
+              "median": 30.35,
+              "min": 10.85
+            },
+            "cpu_percent_of_quota": {
+              "max": 20.455,
+              "median": 15.175,
+              "min": 5.425
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-0ef7278879ca",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 8.43,
+              "median": 2.93,
+              "min": 1.67
+            },
+            "cpu_percent_of_quota": {
+              "max": 8.43,
+              "median": 2.93,
+              "min": 1.67
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 11.43,
+              "median": 4.81,
+              "min": 1.32
+            },
+            "cpu_percent_of_quota": {
+              "max": 5.715,
+              "median": 2.405,
+              "min": 0.66
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-13e575204ceb",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 17.45,
+              "median": 8.94,
+              "min": 3.75
+            },
+            "cpu_percent_of_quota": {
+              "max": 17.45,
+              "median": 8.94,
+              "min": 3.75
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 44.96,
+              "median": 21.92,
+              "min": 7.62
+            },
+            "cpu_percent_of_quota": {
+              "max": 22.48,
+              "median": 10.96,
+              "min": 3.81
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-15b7a25cfe0b",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 20.64,
+              "median": 13.33,
+              "min": 5.08
+            },
+            "cpu_percent_of_quota": {
+              "max": 20.64,
+              "median": 13.33,
+              "min": 5.08
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 37.69,
+              "median": 18.32,
+              "min": 9.49
+            },
+            "cpu_percent_of_quota": {
+              "max": 18.845,
+              "median": 9.16,
+              "min": 4.745
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-5d471b8c623b",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 8.73,
+              "median": 2.9,
+              "min": 1.51
+            },
+            "cpu_percent_of_quota": {
+              "max": 8.73,
+              "median": 2.9,
+              "min": 1.51
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 8.7,
+              "median": 4.64,
+              "min": 0.29
+            },
+            "cpu_percent_of_quota": {
+              "max": 4.35,
+              "median": 2.32,
+              "min": 0.145
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-b5799f5a4f6d",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 23.52,
+              "median": 11.82,
+              "min": 7.15
+            },
+            "cpu_percent_of_quota": {
+              "max": 23.52,
+              "median": 11.82,
+              "min": 7.15
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 37.05,
+              "median": 24.49,
+              "min": 14.51
+            },
+            "cpu_percent_of_quota": {
+              "max": 18.525,
+              "median": 12.245,
+              "min": 7.255
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-9c70bfd95973",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 60.95,
+              "median": 51.27,
+              "min": 29.05
+            },
+            "cpu_percent_of_quota": {
+              "max": 60.95,
+              "median": 51.27,
+              "min": 29.05
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 101.07,
+              "median": 88.23,
+              "min": 61.6
+            },
+            "cpu_percent_of_quota": {
+              "max": 50.535,
+              "median": 44.115,
+              "min": 30.8
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-9fd3ed73d0ff",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 106.48,
+              "median": 90.91,
+              "min": 77.08
+            },
+            "cpu_percent_of_quota": {
+              "max": 106.48,
+              "median": 90.91,
+              "min": 77.08
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 163.81,
+              "median": 141.1,
+              "min": 131.62
+            },
+            "cpu_percent_of_quota": {
+              "max": 81.905,
+              "median": 70.55,
+              "min": 65.81
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-59b54abadad6",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 37.89,
+              "median": 25.95,
+              "min": 17.35
+            },
+            "cpu_percent_of_quota": {
+              "max": 37.89,
+              "median": 25.95,
+              "min": 17.35
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 68.98,
+              "median": 52.54,
+              "min": 30.87
+            },
+            "cpu_percent_of_quota": {
+              "max": 34.49,
+              "median": 26.27,
+              "min": 15.435
+            },
+            "quota_cores": 2
+          }
+        }
+      }
+    ],
+    "schema": 1
+  },
+  "fixed_target_results": {
+    "candidate_browser_read_p95_at_most_one_second": true,
+    "database_cpu_per_verified_cycle_reduction_at_least_40_percent": true,
+    "no_final_queue": true,
+    "save_ack_p95_reduction_at_least_25_percent": true,
+    "zero_deadlocks": true
+  },
+  "health_and_restoration": [
+    {
+      "max_pending_outbox": 1,
+      "max_pending_outbox_age_seconds": 0.761347,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-24673c6c9e58",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-24673c6c9e58",
+        "recovery_snapshot": "snapshot-20261107T001953Z-677950b26be3",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 1,
+      "max_pending_outbox_age_seconds": 1.043637,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-a6142208b4fa",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-a6142208b4fa",
+        "recovery_snapshot": "snapshot-20261107T002459Z-22f3f659f8aa",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 2,
+      "max_pending_outbox_age_seconds": 1.169772,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-79402c93a083",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-79402c93a083",
+        "recovery_snapshot": "snapshot-20261107T003003Z-a27275df4314",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 2,
+      "max_pending_outbox_age_seconds": 1.090846,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-6789c0a1de79",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-6789c0a1de79",
+        "recovery_snapshot": "snapshot-20261107T003507Z-543b1544d068",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 4,
+      "max_pending_outbox_age_seconds": 1.216443,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-15772dd705db",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-15772dd705db",
+        "recovery_snapshot": "snapshot-20261107T004010Z-6e7ffce2da7f",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 4,
+      "max_pending_outbox_age_seconds": 1.127838,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-221bea3dd941",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-221bea3dd941",
+        "recovery_snapshot": "snapshot-20261107T004513Z-ab54720b0ef1",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 3,
+      "max_pending_outbox_age_seconds": 1.096747,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-cf847c734c25",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-cf847c734c25",
+        "recovery_snapshot": "snapshot-20261107T005018Z-b7fdb5fb0c3e",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 39
+    },
+    {
+      "max_pending_outbox": 3,
+      "max_pending_outbox_age_seconds": 1.182653,
+      "max_sampled_backend_lock_waiters": 1,
+      "max_sampled_ungranted_locks": 1,
+      "operation_id": "operation-bcf09b7882dd",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-bcf09b7882dd",
+        "recovery_snapshot": "snapshot-20261107T005523Z-8463324b18dc",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 3,
+      "max_pending_outbox_age_seconds": 1.071426,
+      "max_sampled_backend_lock_waiters": 1,
+      "max_sampled_ungranted_locks": 1,
+      "operation_id": "operation-76ba7c445a7e",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-76ba7c445a7e",
+        "recovery_snapshot": "snapshot-20261107T010027Z-d0de6ece5d39",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 4,
+      "max_pending_outbox_age_seconds": 0.816919,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-e1d90c18b9f5",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-e1d90c18b9f5",
+        "recovery_snapshot": "snapshot-20261107T010531Z-b2f1417c9e89",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 1,
+      "max_pending_outbox_age_seconds": 0.671453,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-0ef7278879ca",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-0ef7278879ca",
+        "recovery_snapshot": "snapshot-20261107T011036Z-a4edac364883",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 0,
+      "max_pending_outbox_age_seconds": 0,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-13e575204ceb",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-13e575204ceb",
+        "recovery_snapshot": "snapshot-20261107T011540Z-bdad06a6a98f",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 1,
+      "max_pending_outbox_age_seconds": 0.766143,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-15b7a25cfe0b",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-15b7a25cfe0b",
+        "recovery_snapshot": "snapshot-20261107T012042Z-b28b412e21b5",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 1,
+      "max_pending_outbox_age_seconds": 0.895724,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-5d471b8c623b",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-5d471b8c623b",
+        "recovery_snapshot": "snapshot-20261107T012544Z-4bc812071f1b",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 39
+    },
+    {
+      "max_pending_outbox": 3,
+      "max_pending_outbox_age_seconds": 1.075674,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-b5799f5a4f6d",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-b5799f5a4f6d",
+        "recovery_snapshot": "snapshot-20261107T013050Z-0a7461ef3607",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 2,
+      "max_pending_outbox_age_seconds": 0.957357,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-9c70bfd95973",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-9c70bfd95973",
+        "recovery_snapshot": "snapshot-20261107T013554Z-53c915de8099",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 39
+    },
+    {
+      "max_pending_outbox": 3,
+      "max_pending_outbox_age_seconds": 1.148425,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-9fd3ed73d0ff",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-9fd3ed73d0ff",
+        "recovery_snapshot": "snapshot-20261107T014058Z-29838e983344",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    },
+    {
+      "max_pending_outbox": 3,
+      "max_pending_outbox_age_seconds": 1.048482,
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-59b54abadad6",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-59b54abadad6",
+        "recovery_snapshot": "snapshot-20261107T014601Z-9fa99bc38eb7",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38
+    }
+  ],
+  "limitations": [
+    "Shared normal-service VPS with three repetitions per arm/level; ranges are observed variation, not confidence intervals.",
+    "Full-window CPU and SQL per verified cycle include setup, warmup, final reads, background work and observers.",
+    "Closed-loop throughput changes with response time; the equal-offered-rate comparison is reported separately.",
+    "Sparse backend/lock samples do not measure Ecto connection leases or prove no brief waits occurred.",
+    "The local generalized volume/recovery evidence is separate from this frozen 12-record browser fixture.",
+    "These results validate the specified workload and quotas; they do not establish a maximum supported user count."
+  ],
+  "schema": 1,
+  "validation": {
+    "application_tests": 528,
+    "checks_run_id": 42313262543,
+    "deployment_python_tests": 108,
+    "publication_run_id": 42313987494,
+    "runner_tests": 17,
+    "scheduling_node_tests": 5
+  }
+}
