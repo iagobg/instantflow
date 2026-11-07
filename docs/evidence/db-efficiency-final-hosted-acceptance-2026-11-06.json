@@ -1,0 +1,2426 @@
+{
+  "acceptance_checks": {
+    "all_candidate_read_p95_under_one_second": true,
+    "all_six_runs_complete_and_restored": true,
+    "candidate_database_cpu_per_cycle_lower_at_equal_demand": true,
+    "candidate_save_and_read_p95_lower_at_equal_demand": true,
+    "candidate_sql_per_cycle_lower_at_equal_demand": true,
+    "database_cpu_per_cycle_reduction_at_least_40_percent": true,
+    "each_run_offered_completed_and_verified_480_cycles": true,
+    "save_ack_p95_reduction_at_least_25_percent": true,
+    "zero_deadlocks_and_no_final_queue": true,
+    "zero_scheduling_and_completion_deadline_misses": true
+  },
+  "campaign_records": [
+    {
+      "arm": "baseline",
+      "label": "01-mixed-1-baseline-r1",
+      "metadata_sha256": "a8b0d9257a7ec34a38bf731244681f724b56ce7c1f78172919abb14dfcdaf434",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "4915c692676a2269eb469cf83d2d53fc91cb9b63105ee757b3fa827a09095737",
+      "users": 1
+    },
+    {
+      "arm": "candidate",
+      "label": "02-mixed-1-candidate-r1",
+      "metadata_sha256": "88ff2f81f9ff49cde8cde85cf9b6bc29bee40f6e0fe4dba23760ab5cbb852519",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "11a07bfb336520104e2b005676e7f2ea3cbb3187b30cde73963da1d78c5b44f0",
+      "users": 1
+    },
+    {
+      "arm": "candidate",
+      "label": "03-mixed-5-candidate-r1",
+      "metadata_sha256": "86435f4b890c37ca20daa858e79204c426028477ec8e9d8d18cadd5441e36b3d",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "39e9c4140c46aa5d104be61703dadf02437ca48dfb095635005ffc7adec50f55",
+      "users": 5
+    },
+    {
+      "arm": "baseline",
+      "label": "04-mixed-5-baseline-r1",
+      "metadata_sha256": "742d7cb0c401952e9ff19950d2ca2cb3e54987a340a2ad049feee9228e8696e2",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "f2341296dcdfa79d33d8d36a17345801dea6ac3a8025b0df93557a61cd14f257",
+      "users": 5
+    },
+    {
+      "arm": "baseline",
+      "label": "05-mixed-10-baseline-r1",
+      "metadata_sha256": "179c9d364867dcdb762dc3bba972e12d947ce28c8584d02536f63d65f596c434",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "0eadbcb8a059ef46fc7dfd145079d003d146c66656fb5a29cf4a98a220d3c192",
+      "users": 10
+    },
+    {
+      "arm": "candidate",
+      "label": "06-mixed-10-candidate-r1",
+      "metadata_sha256": "90225b2c648ba9a0637f3ce27913dec2af2d7dfd3163fac4ce36a6b8a92b311e",
+      "mode": "mixed",
+      "repetition": 1,
+      "summary_sha256": "396e5a9249484799691a48a46ca5ef54ecbff79340c5faa7de749a11c0afb8ab",
+      "users": 10
+    },
+    {
+      "arm": "candidate",
+      "label": "07-mixed-10-candidate-r2",
+      "metadata_sha256": "5080ce46cc6e33e9cf9efd82ec674987a1c64516280806474811cecd7b9735d4",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "e54703360dcb3b9f20dbbd2d242b5f7a8cb19455166b571d6c9495725d203ff8",
+      "users": 10
+    },
+    {
+      "arm": "baseline",
+      "label": "08-mixed-10-baseline-r2",
+      "metadata_sha256": "c17abeca0ca8baa0ec9304afc10992161865a175a885650020d1ab7011916306",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "8d743640ee83bd82bfa226ef8875f27848d68be484df6c803cb11ac346c2e777",
+      "users": 10
+    },
+    {
+      "arm": "baseline",
+      "label": "09-mixed-5-baseline-r2",
+      "metadata_sha256": "b0ad367a8d085bd22d19b2a7e7d938082f7b929ebb53e4ee8b7a4d286fe77a16",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "ef228aee2ba82abe4dfa1029a7febe8cef7b861e475b6261668a5928964877e9",
+      "users": 5
+    },
+    {
+      "arm": "candidate",
+      "label": "10-mixed-5-candidate-r2",
+      "metadata_sha256": "53d9a1f9bde713c3c9d0cd70e012eab7a290577e2b79e08f093eb101806fe2a4",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "762e5e4dd1736d814f55da32c74e793f53e56693e1bfbb0a0f39b286df71d0db",
+      "users": 5
+    },
+    {
+      "arm": "candidate",
+      "label": "11-mixed-1-candidate-r2",
+      "metadata_sha256": "ee36158df890c6d49aafc2cf3a6f119ab164709cf8d2ffd0fb14804bff83b714",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "9c1fec6e5d414f5f82272e451f1ad5ba7f300d55d8f441ee024dd0dbb72e4648",
+      "users": 1
+    },
+    {
+      "arm": "baseline",
+      "label": "12-mixed-1-baseline-r2",
+      "metadata_sha256": "5ebadf36fc9ca30d0f337888be9ae9535cd8d0dc33fd3913ad76e2b082af37c1",
+      "mode": "mixed",
+      "repetition": 2,
+      "summary_sha256": "f6daa33528af49df98be8a7af87690da697670e65cd37f13fd4de49603253e49",
+      "users": 1
+    },
+    {
+      "arm": "baseline",
+      "label": "13-mixed-1-baseline-r3",
+      "metadata_sha256": "868d72d9550832629673b86f4b6cbd3bf54e8746c12e97de40fef412b0d98bab",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "ae3a7f4f6f956db4048ed39238aba7d2a3d68f5b2415cba9f25cc385c4923adf",
+      "users": 1
+    },
+    {
+      "arm": "candidate",
+      "label": "14-mixed-1-candidate-r3",
+      "metadata_sha256": "5cba837a5cb3bf0312671c785e5b4bfd5226240a285097dfb335ab82d97c7b08",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "f5c599ff418257b5e57aab4eb11ea633841311eb9ea67023fde090dc30502d99",
+      "users": 1
+    },
+    {
+      "arm": "candidate",
+      "label": "15-mixed-5-candidate-r3",
+      "metadata_sha256": "07b259a278aecbdf4a897a111b46d9a849043c73901c2d636d0af8eaf8024d2c",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "a8fecff1bb7b01d49377580c9228b57ef77b818834f01787fcf93d4d4cb68cd0",
+      "users": 5
+    },
+    {
+      "arm": "baseline",
+      "label": "16-mixed-5-baseline-r3",
+      "metadata_sha256": "abed68cc45db69d9c5547de99adc09357622e138ac01a474d1dcd52db92abcf3",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "95bd5ea6508f427bcbc7dae62bf9da5d1304827f7b231f3826782a74fcfd4fe6",
+      "users": 5
+    },
+    {
+      "arm": "baseline",
+      "label": "17-mixed-10-baseline-r3",
+      "metadata_sha256": "36e56e6fb93e0010c1134ea648e5ef87e2ec93fbb18c6fa284a991fefb24a26d",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "2f85f2659ccf335162716c2d0960489afb5d8c33bfb2d59f222893a5f5cebd77",
+      "users": 10
+    },
+    {
+      "arm": "candidate",
+      "label": "18-mixed-10-candidate-r3",
+      "metadata_sha256": "e8b41922d66643bb28be987f029518587d32310c08081614aacfbad2f44a3802",
+      "mode": "mixed",
+      "repetition": 3,
+      "summary_sha256": "7999f4bb25ff02c41474a6e0d4a45082eb0e6c95b05e72795a2abfe0f2985713",
+      "users": 10
+    },
+    {
+      "arm": "candidate",
+      "label": "19-contention-2-candidate-r1",
+      "metadata_sha256": "6507c94d4d26da683d16b8d7582423987a309e96aee9a5ced8f8a1f7315a37a8",
+      "mode": "contention",
+      "repetition": 1,
+      "summary_sha256": "3a6499306ab54bfa6c08a264eeab52aac4e146eee5261c81352a1ff7079b8e64",
+      "users": 2
+    },
+    {
+      "arm": "candidate",
+      "label": "20-contention-5-candidate-r1",
+      "metadata_sha256": "3b7c671ac5bed8cae9493358cbb0ebbb591f60c8403a309e757daeae18693d63",
+      "mode": "contention",
+      "repetition": 1,
+      "summary_sha256": "b0a06bfd35e965bc665ba2d0549cdc8bf65e5fbf9fe5f67bb764f6b63ff726c0",
+      "users": 5
+    },
+    {
+      "arm": "candidate",
+      "label": "01-fixed-rate-10-candidate-r1",
+      "metadata_sha256": "76ece5a1dd9426888130b3345875288cd5b75678e2b2c9bd5ebc122583928edc",
+      "mode": "fixed-rate",
+      "repetition": 1,
+      "summary_sha256": "c3623ddf37f97b2ae50912095cad8f99447a68c9a8c0ccfbe35c3e72fcb231a5",
+      "users": 10
+    },
+    {
+      "arm": "baseline",
+      "label": "02-fixed-rate-10-baseline-r1",
+      "metadata_sha256": "0c936db65f1e7b56a1a370d319238c421d8c3798945dd4dd956c298755e3a8b3",
+      "mode": "fixed-rate",
+      "repetition": 1,
+      "summary_sha256": "dedb37e322ab87a4270a59d4e1507de132523ec1646660477a32da0b365a2dc0",
+      "users": 10
+    },
+    {
+      "arm": "baseline",
+      "label": "03-fixed-rate-10-baseline-r2",
+      "metadata_sha256": "10a80d0c27194518dcf4c2cfed47a65fd8813da039bd8e92b6b8a19004ad8962",
+      "mode": "fixed-rate",
+      "repetition": 2,
+      "summary_sha256": "57d1a5db43683a5288209827c64f7dce788f376ec98cef9d6ea4853c3d5da86c",
+      "users": 10
+    },
+    {
+      "arm": "candidate",
+      "label": "04-fixed-rate-10-candidate-r2",
+      "metadata_sha256": "fe4f080d20470dbc3a596bd60fea1d28df3d2d30208a2341c259b9196fee2e63",
+      "mode": "fixed-rate",
+      "repetition": 2,
+      "summary_sha256": "119d4f82d040a1121ec1741f50158dfd72115bb6495f7aaeb8548b8c82f4e43c",
+      "users": 10
+    },
+    {
+      "arm": "candidate",
+      "label": "05-fixed-rate-10-candidate-r3",
+      "metadata_sha256": "7ae4dfe52f77cb78d4d5ff0867a790ac9c69b06f6b1cbcb7e0c48c16f116210f",
+      "mode": "fixed-rate",
+      "repetition": 3,
+      "summary_sha256": "9b2e0486fb17457e3733f1397d83dbb3f770cd9551701fad1cb2a3fe259276a4",
+      "users": 10
+    },
+    {
+      "arm": "baseline",
+      "label": "06-fixed-rate-10-baseline-r3",
+      "metadata_sha256": "0c419124f4a7417397ece4ef6010b9371957fdfdc4adac74fd5afd1f28b05b2c",
+      "mode": "fixed-rate",
+      "repetition": 3,
+      "summary_sha256": "980591692cf2b98b43cc37c1d2be15c6cde7239200c418b697d10f787844666b",
+      "users": 10
+    }
+  ],
+  "candidate_commit": "716b42ea88d5d28779a6c2ab6b2e40f335d2f56a",
+  "cleanup_verification": {
+    "checked_at": "2026-11-07T02:51:44.200547+00:00",
+    "checks": {
+      "host_campaign_processes_absent": true,
+      "host_lock_acquired": true,
+      "host_recovery_journals_absent": true,
+      "task_local_containers_absent": true,
+      "task_local_generators_absent": true,
+      "task_started_local_postgres_stopped": true
+    },
+    "scope": "Only task-owned generator containers/processes and dedicated benchmark journals; private recovery snapshots and evidence retained."
+  },
+  "final_independent_inventory": {
+    "identity": {
+      "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+      "database": "instantflow_benchmark",
+      "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+      "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+      "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+      "pool_size": 10,
+      "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+      "project": "instantflow-benchmark",
+      "root": "/home/ubuntu/apps/instantflow-benchmark"
+    },
+    "live_inventory": {
+      "schema_versions": [
+        "20261020180524",
+        "20261020184948",
+        "20261020200807",
+        "20261020205338",
+        "20261021002628",
+        "20261021011853",
+        "20261021012546",
+        "20261021080918",
+        "20261021083132",
+        "20261021094238",
+        "20261021123137",
+        "20261021124325",
+        "20261021190401",
+        "20261021193830",
+        "20261021224308",
+        "20261021231607",
+        "20261021233544",
+        "20261022100818",
+        "20261022175214",
+        "20261023033124",
+        "20261023040903",
+        "20261023151405",
+        "20261023152158",
+        "20261023160944"
+      ],
+      "table_counts": {
+        "budget_accounts": 0,
+        "budget_entries": 0,
+        "budget_holds": 0,
+        "calculation_attempts": 0,
+        "calculation_reviews": 0,
+        "calculation_runs": 0,
+        "calculation_scripts": 0,
+        "calculation_switch": 1,
+        "calculation_switch_events": 0,
+        "catalog_products": 0,
+        "command_receipts": 48,
+        "delivery_attempts": 48,
+        "departments": 1,
+        "enrollments": 0,
+        "fulfillment_batches": 0,
+        "fulfillment_lines": 0,
+        "guardian_links": 0,
+        "invitations": 0,
+        "membership_grants": 14,
+        "memberships": 15,
+        "operation_day_closes": 0,
+        "operation_receipts": 0,
+        "organization_events": 14,
+        "organizations": 1,
+        "outbox_messages": 48,
+        "private_documents": 0,
+        "retired_workflow_versions": 0,
+        "schema_migrations": 24,
+        "section_assignments": 0,
+        "service_resources": 0,
+        "service_sessions": 0,
+        "sessions": 4,
+        "template_events": 3,
+        "ticket_participants": 0,
+        "ticket_sections": 30,
+        "tickets": 15,
+        "transition_events": 48,
+        "users": 15,
+        "workflow_drafts": 1,
+        "workflow_versions": 1,
+        "workflows": 1
+      }
+    }
+  },
+  "final_validation": {
+    "application_precommit_database_timezone": "UTC",
+    "application_precommit_failures": 0,
+    "application_precommit_log_sha256": "018e1ae586f921c08a14920f60b87a9a83a3c68bac06257e5b644b9aca44d687",
+    "application_precommit_tests": 528,
+    "checks_commit": "cae6496fcea0c6d1cc2819cebf2639d558d59796",
+    "checks_conclusion": "success",
+    "checks_run_id": 42330818040,
+    "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42330818040",
+    "deployment_python_tests": 112,
+    "measurement_cleanup_commit": "7e4e2a4f1268b1a4c46ee3f5e0d6f75ce859362b",
+    "node_scheduling_tests": 5,
+    "runner_python_tests": 17,
+    "tested_application_commit": "716b42ea88d5d28779a6c2ab6b2e40f335d2f56a"
+  },
+  "fixed_rate_comparison": {
+    "applications": {
+      "baseline": {
+        "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+        "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+        "platform": "linux/arm64",
+        "schema": 0
+      },
+      "candidate": {
+        "application_commit": "716b42ea88d5d28779a6c2ab6b2e40f335d2f56a",
+        "checks_run_id": 42313262543,
+        "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42313262543",
+        "image": "ghcr.io/iagobg/instantflow@sha256:14e0987587515aa23257eb3178975f78785748ebdf726819552468a022903584",
+        "platform": "linux/arm64",
+        "publication_attempt": 1,
+        "publication_run_id": 42313987494,
+        "schema": 2
+      }
+    },
+    "conditions": {
+      "fixture": {
+        "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+        "initial_records": 12,
+        "load_actors": 10,
+        "name": "school-v1",
+        "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+        "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+        "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+      },
+      "host_controller_sha256": {
+        "benchmark_candidate.py": "5aaf42436dffb9861fb090e0446d3b3f9cf0bfb966adc6c561194a6397e6f397",
+        "benchmark_host.py": "bb2094c996e69aba63f2fb36c6a7d0f427c520355a5d423de3e21724779b2f05",
+        "benchmark_metrics.py": "2f4278393fcea2eeb0c036e43c8c6bdff787b0270e31ceecdb424f4d5443048d",
+        "benchmark_metrics_setup.py": "c467407f0c29d4fa9b94969e7962e749a857004f6c07525b93023092a5589d2b",
+        "benchmark_provenance.py": "0e9dbd143a943e228231e9833d099cbd94a3252ff0d91ca5acee469ecb40eacd",
+        "benchmark_rollout.py": "39c749799ecc75c2ae7326e876bff7a7ebd6fcdf812777edbb08dd82093a42d7",
+        "benchmark_session.py": "ba7fcdf605f018561d49dab030db9a6efc271c5dc9192067abf95b16aeb76db4",
+        "benchmark_smoke.py": "f10c6ba5cd1667642af3f0e15b68e4a3b439cd2508aaf666997409f58da86f1c",
+        "remote.py": "1100e88a66a12a903232c404ed1a1db1d6a9ba3fe404949ea01f1070e73ca02b"
+      },
+      "k6_image": "grafana/k6@sha256:8663335c8c1c5a40dd51823ef980c584761a4a084a2297fca29a29ee495c6bc1",
+      "measurement_seconds": 180,
+      "mode": "fixed-rate",
+      "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+      "postgres_metrics_settings": {
+        "server_version_num": "160015",
+        "shared_preload_libraries": "pg_stat_statements",
+        "track_activities": "on",
+        "track_counts": "on",
+        "track_io_timing": "on",
+        "track_wal_io_timing": "on"
+      },
+      "resources": {
+        "db_cpus": 1,
+        "db_memory_bytes": 1073741824,
+        "pool_size": 10,
+        "web_cpus": 2,
+        "web_memory_bytes": 2147483648
+      },
+      "route_verification": {
+        "remote_ip": "134.65.245.186",
+        "status": 200,
+        "tls_verified": true
+      },
+      "runner": {
+        "cpus": 24,
+        "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+        "source_sha256": "5785b2fd9d05d5c5aeab3d46811d622a029e494467a44aa1f2964536dbfb3320"
+      },
+      "statement_statistics_available": true,
+      "target": "https://instantflow-benchmark.iagobussoletti.com.br",
+      "transport": {
+        "hostname": "instantflow-benchmark.iagobussoletti.com.br",
+        "origin_ip": "134.65.245.186",
+        "tls_verification": true
+      },
+      "warmup_seconds": 60,
+      "workload": {
+        "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+        "name": "school-v1-fixed-rate",
+        "sha256": "7e4bb432b145f3da3c8fa22bec7479afa6db0f5e0afd0a3ef5af0e7fac413b36"
+      },
+      "workload_contract": {
+        "cycles_per_actor": 48,
+        "interval_ms_per_actor": 5000,
+        "kind": "fixed_rate_browser_load",
+        "max_cycle_ms": 5000,
+        "max_start_lag_ms": 250,
+        "measured_cycles_per_actor": 36,
+        "measurement_window": "All arrivals in the measured cohort, including acknowledgements after window end"
+      }
+    },
+    "interpretation": [
+      "Latency summaries are medians/ranges of per-run p95 values, never pooled percentiles or confidence intervals.",
+      "Full-window SQL/CPU per verified cycle includes browser initialization, warmup, final reads, background work and observers.",
+      "Every scheduled measured-cohort operation contributes latency, including acknowledgements after the nominal window end. Missed slots and incomplete cycles fail.",
+      "Both arms sustain the same staggered offered rate: one read/save cycle per actor every five seconds; this is one rate point, not a capacity limit.",
+      "A comparison alone does not establish supported capacity; assess the complete correctness, volume and recovery evidence."
+    ],
+    "levels": [
+      {
+        "baseline": {
+          "runs": [
+            {
+              "cpu_throttled_usec": {
+                "db": 124259,
+                "web": 405564
+              },
+              "database_average_cpu_cores": 0.27340027821681673,
+              "database_cpu_seconds": 74.651815,
+              "database_cpu_seconds_per_verified_cycle": 0.15552461458333333,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T02:24:11.969108+00:00",
+              "max_scheduled_cycle_ms": 1570,
+              "max_start_lag_ms": 2,
+              "measured_saves": 360,
+              "measured_saves_per_second": 2.0,
+              "observation_seconds": 273.04952096939087,
+              "offered_cycles": 480,
+              "offered_cycles_per_second": 2.0,
+              "operation_id": "operation-62627af52cf3",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 875,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 399.05,
+              "scheduled_cycle_p95_ms": 1390.5500000000002,
+              "sql_calls": 637777,
+              "sql_calls_per_verified_cycle": 1328.7020833333333,
+              "started_at": "2026-11-07T02:19:10.616156+00:00",
+              "statement_execution_ms": 7944.785831000023,
+              "users": 10,
+              "verified_cycles_including_warmup": 480,
+              "web_average_cpu_cores": 0.5023707183700833,
+              "web_cpu_seconds": 137.172084,
+              "web_cpu_seconds_per_verified_cycle": 0.28577517500000005
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 191009,
+                "web": 416027
+              },
+              "database_average_cpu_cores": 0.271131522830205,
+              "database_cpu_seconds": 74.048659,
+              "database_cpu_seconds_per_verified_cycle": 0.15426803958333332,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T02:29:13.614708+00:00",
+              "max_scheduled_cycle_ms": 983,
+              "max_start_lag_ms": 2,
+              "measured_saves": 360,
+              "measured_saves_per_second": 2.0,
+              "observation_seconds": 273.10973739624023,
+              "offered_cycles": 480,
+              "offered_cycles_per_second": 2.0,
+              "operation_id": "operation-d7c2e9599777",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 508,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 356.1,
+              "scheduled_cycle_p95_ms": 925,
+              "sql_calls": 637051,
+              "sql_calls_per_verified_cycle": 1327.1895833333333,
+              "started_at": "2026-11-07T02:24:12.071731+00:00",
+              "statement_execution_ms": 7892.436463000008,
+              "users": 10,
+              "verified_cycles_including_warmup": 480,
+              "web_average_cpu_cores": 0.4958088945892858,
+              "web_cpu_seconds": 135.410237,
+              "web_cpu_seconds_per_verified_cycle": 0.28210466041666665
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 249606,
+                "web": 298928
+              },
+              "database_average_cpu_cores": 0.27289846334214996,
+              "database_cpu_seconds": 74.541867,
+              "database_cpu_seconds_per_verified_cycle": 0.15529555625,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T02:44:21.967096+00:00",
+              "max_scheduled_cycle_ms": 1035,
+              "max_start_lag_ms": 2,
+              "measured_saves": 360,
+              "measured_saves_per_second": 2.0,
+              "observation_seconds": 273.1487238407135,
+              "offered_cycles": 480,
+              "offered_cycles_per_second": 2.0,
+              "operation_id": "operation-0d407087879e",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 509.05,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 363.05,
+              "scheduled_cycle_p95_ms": 936.05,
+              "sql_calls": 637837,
+              "sql_calls_per_verified_cycle": 1328.8270833333333,
+              "started_at": "2026-11-07T02:39:20.407700+00:00",
+              "statement_execution_ms": 7980.324371000008,
+              "users": 10,
+              "verified_cycles_including_warmup": 480,
+              "web_average_cpu_cores": 0.49273559146659657,
+              "web_cpu_seconds": 134.590098,
+              "web_cpu_seconds_per_verified_cycle": 0.28039603750000003
+            }
+          ],
+          "variation": {
+            "database_average_cpu_cores": {
+              "max": 0.27340027821681673,
+              "median": 0.27289846334214996,
+              "min": 0.271131522830205
+            },
+            "database_cpu_seconds_per_verified_cycle": {
+              "max": 0.15552461458333333,
+              "median": 0.15529555625,
+              "min": 0.15426803958333332
+            },
+            "measured_saves_per_second": {
+              "max": 2.0,
+              "median": 2.0,
+              "min": 2.0
+            },
+            "record_read_p95_ms": {
+              "max": 875,
+              "median": 509.05,
+              "min": 508
+            },
+            "save_ack_p95_ms": {
+              "max": 399.05,
+              "median": 363.05,
+              "min": 356.1
+            },
+            "sql_calls_per_verified_cycle": {
+              "max": 1328.8270833333333,
+              "median": 1328.7020833333333,
+              "min": 1327.1895833333333
+            },
+            "web_average_cpu_cores": {
+              "max": 0.5023707183700833,
+              "median": 0.4958088945892858,
+              "min": 0.49273559146659657
+            },
+            "web_cpu_seconds_per_verified_cycle": {
+              "max": 0.28577517500000005,
+              "median": 0.28210466041666665,
+              "min": 0.28039603750000003
+            }
+          }
+        },
+        "candidate": {
+          "runs": [
+            {
+              "cpu_throttled_usec": {
+                "db": 0,
+                "web": 257713
+              },
+              "database_average_cpu_cores": 0.08998341965815376,
+              "database_cpu_seconds": 24.84907,
+              "database_cpu_seconds_per_verified_cycle": 0.051768895833333335,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T02:19:10.526824+00:00",
+              "max_scheduled_cycle_ms": 1283,
+              "max_start_lag_ms": 2,
+              "measured_saves": 360,
+              "measured_saves_per_second": 2.0,
+              "observation_seconds": 276.151652097702,
+              "offered_cycles": 480,
+              "offered_cycles_per_second": 2.0,
+              "operation_id": "operation-2aaac9cce978",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 728.45,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 317,
+              "scheduled_cycle_p95_ms": 1159.3500000000001,
+              "sql_calls": 159367,
+              "sql_calls_per_verified_cycle": 332.01458333333335,
+              "started_at": "2026-11-07T02:14:04.020416+00:00",
+              "statement_execution_ms": 3446.3373710000023,
+              "users": 10,
+              "verified_cycles_including_warmup": 480,
+              "web_average_cpu_cores": 0.16558442671862802,
+              "web_cpu_seconds": 45.726413,
+              "web_cpu_seconds_per_verified_cycle": 0.09526336041666666
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 5467,
+                "web": 295585
+              },
+              "database_average_cpu_cores": 0.09040381992398933,
+              "database_cpu_seconds": 24.647244,
+              "database_cpu_seconds_per_verified_cycle": 0.051348425,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T02:34:16.855622+00:00",
+              "max_scheduled_cycle_ms": 706,
+              "max_start_lag_ms": 2,
+              "measured_saves": 360,
+              "measured_saves_per_second": 2.0,
+              "observation_seconds": 272.63498401641846,
+              "offered_cycles": 480,
+              "offered_cycles_per_second": 2.0,
+              "operation_id": "operation-02250c923b48",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 358.05,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 263,
+              "scheduled_cycle_p95_ms": 676.05,
+              "sql_calls": 159436,
+              "sql_calls_per_verified_cycle": 332.15833333333336,
+              "started_at": "2026-11-07T02:29:13.714084+00:00",
+              "statement_execution_ms": 3456.065557,
+              "users": 10,
+              "verified_cycles_including_warmup": 480,
+              "web_average_cpu_cores": 0.16736991463007567,
+              "web_cpu_seconds": 45.630894,
+              "web_cpu_seconds_per_verified_cycle": 0.0950643625
+            },
+            {
+              "cpu_throttled_usec": {
+                "db": 0,
+                "web": 269743
+              },
+              "database_average_cpu_cores": 0.0900243090926612,
+              "database_cpu_seconds": 24.545613,
+              "database_cpu_seconds_per_verified_cycle": 0.05113669375,
+              "deadlocks": 0,
+              "ended_at": "2026-11-07T02:39:20.325366+00:00",
+              "max_scheduled_cycle_ms": 723,
+              "max_start_lag_ms": 2,
+              "measured_saves": 360,
+              "measured_saves_per_second": 2.0,
+              "observation_seconds": 272.6553888320923,
+              "offered_cycles": 480,
+              "offered_cycles_per_second": 2.0,
+              "operation_id": "operation-a7dc9b7d1e8a",
+              "pending_outbox_after": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "pending_outbox_before": {
+                "count": 0,
+                "oldest_seconds": null
+              },
+              "record_read_p95_ms": 359,
+              "restoration_confirmed": true,
+              "save_ack_p95_ms": 264,
+              "scheduled_cycle_p95_ms": 681,
+              "sql_calls": 159606,
+              "sql_calls_per_verified_cycle": 332.5125,
+              "started_at": "2026-11-07T02:34:16.952553+00:00",
+              "statement_execution_ms": 3462.170278000002,
+              "users": 10,
+              "verified_cycles_including_warmup": 480,
+              "web_average_cpu_cores": 0.1604344450603842,
+              "web_cpu_seconds": 43.743316,
+              "web_cpu_seconds_per_verified_cycle": 0.09113190833333333
+            }
+          ],
+          "variation": {
+            "database_average_cpu_cores": {
+              "max": 0.09040381992398933,
+              "median": 0.0900243090926612,
+              "min": 0.08998341965815376
+            },
+            "database_cpu_seconds_per_verified_cycle": {
+              "max": 0.051768895833333335,
+              "median": 0.051348425,
+              "min": 0.05113669375
+            },
+            "measured_saves_per_second": {
+              "max": 2.0,
+              "median": 2.0,
+              "min": 2.0
+            },
+            "record_read_p95_ms": {
+              "max": 728.45,
+              "median": 359,
+              "min": 358.05
+            },
+            "save_ack_p95_ms": {
+              "max": 317,
+              "median": 264,
+              "min": 263
+            },
+            "sql_calls_per_verified_cycle": {
+              "max": 332.5125,
+              "median": 332.15833333333336,
+              "min": 332.01458333333335
+            },
+            "web_average_cpu_cores": {
+              "max": 0.16736991463007567,
+              "median": 0.16558442671862802,
+              "min": 0.1604344450603842
+            },
+            "web_cpu_seconds_per_verified_cycle": {
+              "max": 0.09526336041666666,
+              "median": 0.0950643625,
+              "min": 0.09113190833333333
+            }
+          }
+        },
+        "median_change_percent": {
+          "database_average_cpu_cores": -67.01179332776526,
+          "database_cpu_seconds_per_verified_cycle": -66.9350326307228,
+          "measured_saves_per_second": 0.0,
+          "record_read_p95_ms": -29.47647578823298,
+          "save_ack_p95_ms": -27.282743423770828,
+          "sql_calls_per_verified_cycle": -75.00129355558447,
+          "web_average_cpu_cores": -66.60317543197898,
+          "web_cpu_seconds_per_verified_cycle": -66.30173980125298
+        },
+        "users": 10
+      }
+    ],
+    "original_timing_and_repetitions": true,
+    "repetitions_per_arm_and_level": 3,
+    "sampled_resources": [
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-2aaac9cce978",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 12.98,
+              "median": 8.36,
+              "min": 5.87
+            },
+            "cpu_percent_of_quota": {
+              "max": 12.98,
+              "median": 8.36,
+              "min": 5.87
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 21.69,
+              "median": 17.86,
+              "min": 12.09
+            },
+            "cpu_percent_of_quota": {
+              "max": 10.845,
+              "median": 8.93,
+              "min": 6.045
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-62627af52cf3",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 47.21,
+              "median": 31.01,
+              "min": 24.71
+            },
+            "cpu_percent_of_quota": {
+              "max": 47.21,
+              "median": 31.01,
+              "min": 24.71
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 86.63,
+              "median": 59.26,
+              "min": 37.07
+            },
+            "cpu_percent_of_quota": {
+              "max": 43.315,
+              "median": 29.63,
+              "min": 18.535
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-d7c2e9599777",
+        "samples": 24,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 38.94,
+              "median": 30.82,
+              "min": 24.9
+            },
+            "cpu_percent_of_quota": {
+              "max": 38.94,
+              "median": 30.82,
+              "min": 24.9
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 67.15,
+              "median": 56.295,
+              "min": 50.87
+            },
+            "cpu_percent_of_quota": {
+              "max": 33.575,
+              "median": 28.1475,
+              "min": 25.435
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-02250c923b48",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 12.98,
+              "median": 8.01,
+              "min": 7.22
+            },
+            "cpu_percent_of_quota": {
+              "max": 12.98,
+              "median": 8.01,
+              "min": 7.22
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 20.54,
+              "median": 17.53,
+              "min": 15.59
+            },
+            "cpu_percent_of_quota": {
+              "max": 10.27,
+              "median": 8.765,
+              "min": 7.795
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-a7dc9b7d1e8a",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 13.91,
+              "median": 8.08,
+              "min": 7.15
+            },
+            "cpu_percent_of_quota": {
+              "max": 13.91,
+              "median": 8.08,
+              "min": 7.15
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 19.94,
+              "median": 17.0,
+              "min": 14.07
+            },
+            "cpu_percent_of_quota": {
+              "max": 9.97,
+              "median": 8.5,
+              "min": 7.035
+            },
+            "quota_cores": 2
+          }
+        }
+      },
+      {
+        "boundary_margin_seconds": 2,
+        "interpretation": "Sparse Docker CPU observations; neither continuous utilization nor exact peaks. PostgreSQL backend states do not measure Ecto connection leases.",
+        "operation_id": "operation-0d407087879e",
+        "samples": 25,
+        "services": {
+          "db": {
+            "cpu_percent_of_one_core": {
+              "max": 39.23,
+              "median": 30.58,
+              "min": 25.09
+            },
+            "cpu_percent_of_quota": {
+              "max": 39.23,
+              "median": 30.58,
+              "min": 25.09
+            },
+            "quota_cores": 1
+          },
+          "web": {
+            "cpu_percent_of_one_core": {
+              "max": 65.2,
+              "median": 55.3,
+              "min": 49.4
+            },
+            "cpu_percent_of_quota": {
+              "max": 32.6,
+              "median": 27.65,
+              "min": 24.7
+            },
+            "quota_cores": 2
+          }
+        }
+      }
+    ],
+    "schema": 1
+  },
+  "generator_resources": [
+    {
+      "label": "01-mixed-1-baseline-r1",
+      "max_sampled_cpu_percent_of_one_core": 49.51,
+      "max_sampled_memory_percent": 1.44,
+      "max_sampled_system_one_minute_load": 0.84375,
+      "raw_resources_sha256": "e8f0ca9bfcbc69fd6336f200da6271633266d79a0758f2073888561fccd2d5c9",
+      "samples": 65
+    },
+    {
+      "label": "02-mixed-1-candidate-r1",
+      "max_sampled_cpu_percent_of_one_core": 49.76,
+      "max_sampled_memory_percent": 1.29,
+      "max_sampled_system_one_minute_load": 1.18603515625,
+      "raw_resources_sha256": "c7dbfb2be45b3e942634fc5817c9c2011c44ca1e7ec86dcb73248752fefebd43",
+      "samples": 65
+    },
+    {
+      "label": "03-mixed-5-candidate-r1",
+      "max_sampled_cpu_percent_of_one_core": 264.68,
+      "max_sampled_memory_percent": 6.11,
+      "max_sampled_system_one_minute_load": 1.76611328125,
+      "raw_resources_sha256": "7db23975c1bf4d87ed226d5b7dd97fa0a9094b3802ecdd6c66e368d28cd38c55",
+      "samples": 65
+    },
+    {
+      "label": "04-mixed-5-baseline-r1",
+      "max_sampled_cpu_percent_of_one_core": 232.85,
+      "max_sampled_memory_percent": 5.91,
+      "max_sampled_system_one_minute_load": 2.71240234375,
+      "raw_resources_sha256": "782f93541ac998c3c18a0c63eb643664ed3fc7793c8b065c12ccd725eaa20c66",
+      "samples": 66
+    },
+    {
+      "label": "05-mixed-10-baseline-r1",
+      "max_sampled_cpu_percent_of_one_core": 481.75,
+      "max_sampled_memory_percent": 11.82,
+      "max_sampled_system_one_minute_load": 3.82275390625,
+      "raw_resources_sha256": "260a7b47bcd77b292f01ae8b99c0f9de0e74e34bf394c6284a7d4602065fd7d1",
+      "samples": 65
+    },
+    {
+      "label": "06-mixed-10-candidate-r1",
+      "max_sampled_cpu_percent_of_one_core": 822.72,
+      "max_sampled_memory_percent": 12.09,
+      "max_sampled_system_one_minute_load": 4.3447265625,
+      "raw_resources_sha256": "45f2104fe9c414c4aa112d32154559a25daded361e008952553521cc115ef94f",
+      "samples": 65
+    },
+    {
+      "label": "07-mixed-10-candidate-r2",
+      "max_sampled_cpu_percent_of_one_core": 802.16,
+      "max_sampled_memory_percent": 11.99,
+      "max_sampled_system_one_minute_load": 4.67431640625,
+      "raw_resources_sha256": "770d50c2c0d7f792b97f99b869dcb33c48ad0edbebe3a6b388c313fc63135838",
+      "samples": 65
+    },
+    {
+      "label": "08-mixed-10-baseline-r2",
+      "max_sampled_cpu_percent_of_one_core": 903.1,
+      "max_sampled_memory_percent": 11.53,
+      "max_sampled_system_one_minute_load": 3.671875,
+      "raw_resources_sha256": "d015b3391efdf64d886432f4af556a520d899b12fbe99a6a87db465ad7958912",
+      "samples": 65
+    },
+    {
+      "label": "09-mixed-5-baseline-r2",
+      "max_sampled_cpu_percent_of_one_core": 298.05,
+      "max_sampled_memory_percent": 5.99,
+      "max_sampled_system_one_minute_load": 2.13427734375,
+      "raw_resources_sha256": "a2d00040d4df51164acf0f0ffdd373cfc137fc2da8e714ee94356b0ea4c51227",
+      "samples": 66
+    },
+    {
+      "label": "10-mixed-5-candidate-r2",
+      "max_sampled_cpu_percent_of_one_core": 247.74,
+      "max_sampled_memory_percent": 6.08,
+      "max_sampled_system_one_minute_load": 3.732421875,
+      "raw_resources_sha256": "a00f0fc6d5e6cec60b1778522ef9d70613b8caef248d202ee6d39c6fb4974c42",
+      "samples": 65
+    },
+    {
+      "label": "11-mixed-1-candidate-r2",
+      "max_sampled_cpu_percent_of_one_core": 62.45,
+      "max_sampled_memory_percent": 1.19,
+      "max_sampled_system_one_minute_load": 1.97412109375,
+      "raw_resources_sha256": "b314669ccc6d19f7b69bfe033fc217c1d0157fe68df34feb358b669eafe12c2f",
+      "samples": 65
+    },
+    {
+      "label": "12-mixed-1-baseline-r2",
+      "max_sampled_cpu_percent_of_one_core": 49.54,
+      "max_sampled_memory_percent": 1.28,
+      "max_sampled_system_one_minute_load": 0.78125,
+      "raw_resources_sha256": "d4173f732e45f63c192fc924d06bc234139e72b8c8142e618ae67c613a411f55",
+      "samples": 66
+    },
+    {
+      "label": "13-mixed-1-baseline-r3",
+      "max_sampled_cpu_percent_of_one_core": 47.61,
+      "max_sampled_memory_percent": 1.26,
+      "max_sampled_system_one_minute_load": 0.81884765625,
+      "raw_resources_sha256": "14320bebdca430372e6321b8503963c4a6db09531990b48ba9617726d15e85c6",
+      "samples": 65
+    },
+    {
+      "label": "14-mixed-1-candidate-r3",
+      "max_sampled_cpu_percent_of_one_core": 53.8,
+      "max_sampled_memory_percent": 1.28,
+      "max_sampled_system_one_minute_load": 0.3486328125,
+      "raw_resources_sha256": "4675b552bf504d66973d0797b646b3983eefa7f281e47b90042b591b74abf909",
+      "samples": 65
+    },
+    {
+      "label": "15-mixed-5-candidate-r3",
+      "max_sampled_cpu_percent_of_one_core": 245.03,
+      "max_sampled_memory_percent": 6.09,
+      "max_sampled_system_one_minute_load": 3.5068359375,
+      "raw_resources_sha256": "43ee74df849e917408c92dc3a84fe2abd9182609ba5344f45b1fbbeac8ef8cec",
+      "samples": 65
+    },
+    {
+      "label": "16-mixed-5-baseline-r3",
+      "max_sampled_cpu_percent_of_one_core": 231.25,
+      "max_sampled_memory_percent": 5.92,
+      "max_sampled_system_one_minute_load": 1.37548828125,
+      "raw_resources_sha256": "f70aba8ddd2eb84853f934b5502f5901ac5a6f5354becf88d9c4c405356b4c4b",
+      "samples": 65
+    },
+    {
+      "label": "17-mixed-10-baseline-r3",
+      "max_sampled_cpu_percent_of_one_core": 543.72,
+      "max_sampled_memory_percent": 11.45,
+      "max_sampled_system_one_minute_load": 3.33935546875,
+      "raw_resources_sha256": "29c25c852f31c11575ddb41a19d595498df082cc46c5cee0c2ed3a67a2580aa9",
+      "samples": 65
+    },
+    {
+      "label": "18-mixed-10-candidate-r3",
+      "max_sampled_cpu_percent_of_one_core": 538.16,
+      "max_sampled_memory_percent": 12.01,
+      "max_sampled_system_one_minute_load": 4.44970703125,
+      "raw_resources_sha256": "e4c19acb7ae1a829fb814217eca0796b8827ff77461e6717e80a1881effcab5b",
+      "samples": 65
+    },
+    {
+      "label": "01-fixed-rate-10-candidate-r1",
+      "max_sampled_cpu_percent_of_one_core": 270.45,
+      "max_sampled_memory_percent": 10.64,
+      "max_sampled_system_one_minute_load": 1.11767578125,
+      "raw_resources_sha256": "4a8eec21fce8389833522da6abf35a0637ee7dd7d9b3d401d087c6f4ea82c219",
+      "samples": 65
+    },
+    {
+      "label": "02-fixed-rate-10-baseline-r1",
+      "max_sampled_cpu_percent_of_one_core": 377.24,
+      "max_sampled_memory_percent": 10.39,
+      "max_sampled_system_one_minute_load": 1.8330078125,
+      "raw_resources_sha256": "e31458709978ec0db2289dc39a1e6bfc04603897641e7610b07fba48d28a260b",
+      "samples": 65
+    },
+    {
+      "label": "03-fixed-rate-10-baseline-r2",
+      "max_sampled_cpu_percent_of_one_core": 337.68,
+      "max_sampled_memory_percent": 10.39,
+      "max_sampled_system_one_minute_load": 9.85595703125,
+      "raw_resources_sha256": "9b1297f61d18031a7e357cea073345f072f35b3fcb41e53c040f21c9e360ab29",
+      "samples": 65
+    },
+    {
+      "label": "04-fixed-rate-10-candidate-r2",
+      "max_sampled_cpu_percent_of_one_core": 335.54,
+      "max_sampled_memory_percent": 10.45,
+      "max_sampled_system_one_minute_load": 1.38232421875,
+      "raw_resources_sha256": "7eb69dbdc40dd069cce5d2fc22ea2d7b24e2e55102528fe2f32681fe0c80e01c",
+      "samples": 65
+    },
+    {
+      "label": "05-fixed-rate-10-candidate-r3",
+      "max_sampled_cpu_percent_of_one_core": 326.71,
+      "max_sampled_memory_percent": 10.44,
+      "max_sampled_system_one_minute_load": 1.4384765625,
+      "raw_resources_sha256": "70b1fabe6ddf6e2fd6ad1df8b1df2c4dac60d1d0f2f411d01af693c0d3cf078b",
+      "samples": 65
+    },
+    {
+      "label": "06-fixed-rate-10-baseline-r3",
+      "max_sampled_cpu_percent_of_one_core": 286.56,
+      "max_sampled_memory_percent": 10.45,
+      "max_sampled_system_one_minute_load": 2.830078125,
+      "raw_resources_sha256": "c5f22b98eddb471df4f1d1e6fb15d388991a3747f5ba1dbe4a66ec5cc7831dc3",
+      "samples": 65
+    }
+  ],
+  "health_and_restoration": [
+    {
+      "database_counters": {
+        "active_time": 14733.345000000001,
+        "blk_read_time": 0.062000000000000055,
+        "blk_write_time": 7.633000000000001,
+        "blks_hit": 374741,
+        "blks_read": 7,
+        "conflicts": 0,
+        "deadlocks": 0,
+        "idle_in_transaction_time": 22314.096999999998,
+        "session_time": 2755554.482,
+        "sessions": 101,
+        "sessions_abandoned": 0,
+        "sessions_fatal": 0,
+        "sessions_killed": 0,
+        "temp_bytes": 0,
+        "temp_files": 0,
+        "tup_deleted": 12,
+        "tup_fetched": 140292,
+        "tup_inserted": 2043,
+        "tup_returned": 1554120,
+        "tup_updated": 2231,
+        "xact_commit": 16612,
+        "xact_rollback": 0
+      },
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_pending_outbox": 1,
+      "max_sampled_pending_outbox_age_seconds": 0.922932,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-2aaac9cce978",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-2aaac9cce978",
+        "recovery_snapshot": "snapshot-20261107T021410Z-54f9f6725f08",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 39,
+      "statement_preparation": {
+        "after": {
+          "entries": 72,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 0,
+          "obsolete_entries": 0
+        },
+        "available": true,
+        "before": {
+          "entries": 108,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 1,
+          "obsolete_entries": 36
+        },
+        "pruned_databases": 1,
+        "scope": "Only databases absent from pg_database; before the observation window"
+      },
+      "wal_counters": {
+        "wal_buffers_full": 0,
+        "wal_bytes": 3742380,
+        "wal_fpi": 4,
+        "wal_records": 57783,
+        "wal_sync": 10309,
+        "wal_sync_time": 9718.46100000001,
+        "wal_write": 10312,
+        "wal_write_time": 227.27200000000084
+      }
+    },
+    {
+      "database_counters": {
+        "active_time": 43098.638999999996,
+        "blk_read_time": 0.06899999999999995,
+        "blk_write_time": 6.2459999999999996,
+        "blks_hit": 748945,
+        "blks_read": 7,
+        "conflicts": 0,
+        "deadlocks": 0,
+        "idle_in_transaction_time": 88318.317,
+        "session_time": 2731978.916,
+        "sessions": 99,
+        "sessions_abandoned": 0,
+        "sessions_fatal": 0,
+        "sessions_killed": 0,
+        "temp_bytes": 0,
+        "temp_files": 0,
+        "tup_deleted": 13,
+        "tup_fetched": 199837,
+        "tup_inserted": 2051,
+        "tup_returned": 5265291,
+        "tup_updated": 2231,
+        "xact_commit": 91878,
+        "xact_rollback": 0
+      },
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_pending_outbox": 1,
+      "max_sampled_pending_outbox_age_seconds": 0.923691,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-62627af52cf3",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-62627af52cf3",
+        "recovery_snapshot": "snapshot-20261107T021916Z-96bff410cb28",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38,
+      "statement_preparation": {
+        "after": {
+          "entries": 45,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 0,
+          "obsolete_entries": 0
+        },
+        "available": true,
+        "before": {
+          "entries": 166,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 2,
+          "obsolete_entries": 121
+        },
+        "pruned_databases": 2,
+        "scope": "Only databases absent from pg_database; before the observation window"
+      },
+      "wal_counters": {
+        "wal_buffers_full": 0,
+        "wal_bytes": 7681217,
+        "wal_fpi": 3,
+        "wal_records": 138529,
+        "wal_sync": 31732,
+        "wal_sync_time": 29518.783000000054,
+        "wal_write": 31736,
+        "wal_write_time": 645.1039999999994
+      }
+    },
+    {
+      "database_counters": {
+        "active_time": 42091.828,
+        "blk_read_time": 0.06499999999999995,
+        "blk_write_time": 6.251999999999999,
+        "blks_hit": 749901,
+        "blks_read": 7,
+        "conflicts": 0,
+        "deadlocks": 0,
+        "idle_in_transaction_time": 84998.57400000001,
+        "session_time": 2734562.6470000003,
+        "sessions": 99,
+        "sessions_abandoned": 0,
+        "sessions_fatal": 0,
+        "sessions_killed": 0,
+        "temp_bytes": 0,
+        "temp_files": 0,
+        "tup_deleted": 14,
+        "tup_fetched": 200202,
+        "tup_inserted": 2051,
+        "tup_returned": 5247468,
+        "tup_updated": 2248,
+        "xact_commit": 91704,
+        "xact_rollback": 0
+      },
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_pending_outbox": 1,
+      "max_sampled_pending_outbox_age_seconds": 1.195847,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-d7c2e9599777",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-d7c2e9599777",
+        "recovery_snapshot": "snapshot-20261107T022417Z-5dd26c62a06f",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38,
+      "statement_preparation": {
+        "after": {
+          "entries": 45,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 0,
+          "obsolete_entries": 0
+        },
+        "available": true,
+        "before": {
+          "entries": 136,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 2,
+          "obsolete_entries": 91
+        },
+        "pruned_databases": 2,
+        "scope": "Only databases absent from pg_database; before the observation window"
+      },
+      "wal_counters": {
+        "wal_buffers_full": 0,
+        "wal_bytes": 7617331,
+        "wal_fpi": 3,
+        "wal_records": 137450,
+        "wal_sync": 31728,
+        "wal_sync_time": 28646.71100000001,
+        "wal_write": 31732,
+        "wal_write_time": 653.4470000000001
+      }
+    },
+    {
+      "database_counters": {
+        "active_time": 14730.392,
+        "blk_read_time": 0.06799999999999984,
+        "blk_write_time": 6.829000000000001,
+        "blks_hit": 371718,
+        "blks_read": 7,
+        "conflicts": 0,
+        "deadlocks": 0,
+        "idle_in_transaction_time": 22204.158,
+        "session_time": 2724259.718,
+        "sessions": 99,
+        "sessions_abandoned": 0,
+        "sessions_fatal": 0,
+        "sessions_killed": 0,
+        "temp_bytes": 0,
+        "temp_files": 0,
+        "tup_deleted": 14,
+        "tup_fetched": 158979,
+        "tup_inserted": 2049,
+        "tup_returned": 1549454,
+        "tup_updated": 2229,
+        "xact_commit": 16598,
+        "xact_rollback": 0
+      },
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_pending_outbox": 1,
+      "max_sampled_pending_outbox_age_seconds": 0.65063,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-02250c923b48",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-02250c923b48",
+        "recovery_snapshot": "snapshot-20261107T022919Z-27e021ce8693",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38,
+      "statement_preparation": {
+        "after": {
+          "entries": 72,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 0,
+          "obsolete_entries": 0
+        },
+        "available": true,
+        "before": {
+          "entries": 163,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 2,
+          "obsolete_entries": 91
+        },
+        "pruned_databases": 2,
+        "scope": "Only databases absent from pg_database; before the observation window"
+      },
+      "wal_counters": {
+        "wal_buffers_full": 0,
+        "wal_bytes": 3720996,
+        "wal_fpi": 3,
+        "wal_records": 57659,
+        "wal_sync": 10311,
+        "wal_sync_time": 9611.440999999992,
+        "wal_write": 10315,
+        "wal_write_time": 227.81600000000253
+      }
+    },
+    {
+      "database_counters": {
+        "active_time": 14428.815999999999,
+        "blk_read_time": 0.05899999999999994,
+        "blk_write_time": 6.161,
+        "blks_hit": 362395,
+        "blks_read": 7,
+        "conflicts": 0,
+        "deadlocks": 0,
+        "idle_in_transaction_time": 22247.061,
+        "session_time": 2724929.534,
+        "sessions": 98,
+        "sessions_abandoned": 0,
+        "sessions_fatal": 0,
+        "sessions_killed": 0,
+        "temp_bytes": 0,
+        "temp_files": 0,
+        "tup_deleted": 13,
+        "tup_fetched": 153684,
+        "tup_inserted": 2009,
+        "tup_returned": 1552361,
+        "tup_updated": 2114,
+        "xact_commit": 16596,
+        "xact_rollback": 0
+      },
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_pending_outbox": 1,
+      "max_sampled_pending_outbox_age_seconds": 0.928551,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-a7dc9b7d1e8a",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-a7dc9b7d1e8a",
+        "recovery_snapshot": "snapshot-20261107T023423Z-f2b6ae1bdf94",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38,
+      "statement_preparation": {
+        "after": {
+          "entries": 72,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 0,
+          "obsolete_entries": 0
+        },
+        "available": true,
+        "before": {
+          "entries": 193,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 2,
+          "obsolete_entries": 121
+        },
+        "pruned_databases": 2,
+        "scope": "Only databases absent from pg_database; before the observation window"
+      },
+      "wal_counters": {
+        "wal_buffers_full": 0,
+        "wal_bytes": 3614484,
+        "wal_fpi": 1,
+        "wal_records": 57116,
+        "wal_sync": 10313,
+        "wal_sync_time": 9433.91100000008,
+        "wal_write": 10315,
+        "wal_write_time": 225.22300000000178
+      }
+    },
+    {
+      "database_counters": {
+        "active_time": 42576.036,
+        "blk_read_time": 0.06499999999999995,
+        "blk_write_time": 6.4639999999999995,
+        "blks_hit": 725504,
+        "blks_read": 7,
+        "conflicts": 0,
+        "deadlocks": 0,
+        "idle_in_transaction_time": 84432.225,
+        "session_time": 2731423.789,
+        "sessions": 99,
+        "sessions_abandoned": 0,
+        "sessions_fatal": 0,
+        "sessions_killed": 0,
+        "temp_bytes": 0,
+        "temp_files": 0,
+        "tup_deleted": 12,
+        "tup_fetched": 200203,
+        "tup_inserted": 2013,
+        "tup_returned": 5176863,
+        "tup_updated": 2118,
+        "xact_commit": 91865,
+        "xact_rollback": 0
+      },
+      "max_sampled_backend_lock_waiters": 0,
+      "max_sampled_pending_outbox": 1,
+      "max_sampled_pending_outbox_age_seconds": 0.993244,
+      "max_sampled_ungranted_locks": 0,
+      "operation_id": "operation-0d407087879e",
+      "pending_outbox_after": {
+        "count": 0,
+        "oldest_seconds": null
+      },
+      "restoration": {
+        "identity": {
+          "application_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "database": "instantflow_benchmark",
+          "endpoint_host": "instantflow-benchmark.iagobussoletti.com.br",
+          "fixture_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+          "image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628",
+          "pool_size": 10,
+          "postgres_image": "postgres@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+          "project": "instantflow-benchmark",
+          "root": "/home/ubuntu/apps/instantflow-benchmark"
+        },
+        "operation_id": "operation-0d407087879e",
+        "recovery_snapshot": "snapshot-20261107T023926Z-05a680e90be1",
+        "smoke": {
+          "authenticated_record_read": true,
+          "logout": true,
+          "tls_verified": true,
+          "transport": "local Caddy HTTPS; fixed loopback socket, public hostname/SNI"
+        },
+        "status": "recovered"
+      },
+      "samples": 38,
+      "statement_preparation": {
+        "after": {
+          "entries": 45,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 0,
+          "obsolete_entries": 0
+        },
+        "available": true,
+        "before": {
+          "entries": 166,
+          "info": {
+            "dealloc": 4,
+            "stats_reset": "2026-11-06T21:08:00.95528+00:00"
+          },
+          "obsolete_databases": 2,
+          "obsolete_entries": 121
+        },
+        "pruned_databases": 2,
+        "scope": "Only databases absent from pg_database; before the observation window"
+      },
+      "wal_counters": {
+        "wal_buffers_full": 0,
+        "wal_bytes": 7513457,
+        "wal_fpi": 1,
+        "wal_records": 137143,
+        "wal_sync": 31744,
+        "wal_sync_time": 28873.50199999998,
+        "wal_write": 31746,
+        "wal_write_time": 662.8880000000026
+      }
+    }
+  ],
+  "limitations": [
+    "One offered-rate point: ten distinct actors, one cycle per actor every five seconds, two cycles per second total. Not a capacity limit.",
+    "Three repetitions per arm on the shared normal-service VPS. Observed ranges are not confidence intervals.",
+    "Every offered measured-cohort operation contributes latency, including acknowledgements past the nominal window end.",
+    "Whole-window CPU/SQL/WAL counters include initialization, warmup, final reads, background work and observer overhead.",
+    "PostgreSQL counters can lag; sparse backend/lock/resource samples cannot establish exact peaks or Ecto connection lease occupancy.",
+    "Generator CPU is percent of one core on a 24-logical-CPU workstation; memory percentage uses the sampled container limit. System load includes unrelated workstation activity.",
+    "The first fixed-rate attempt was interrupted by statement-entry eviction. Its baseline was rejected and the earlier candidate was excluded; all six final fixed-rate runs use the updated matching controllers.",
+    "Serving deployment promotion is separate from candidate validation. The preserved benchmark image and database are restored."
+  ],
+  "migration_date_regression": {
+    "corrected_test_passed_same_clock_difference": true,
+    "database_timezone_reproduction": "Pacific/Kiritimati",
+    "format_check_passed": true,
+    "full_precommit_database_timezone": "UTC",
+    "organization_timezone": "America/Sao_Paulo",
+    "original_test_reproduced_archived_count_failure": true
+  },
+  "original_inventory_exact_match": true,
+  "protocol": {
+    "fixed_rate": {
+      "application": {
+        "application_commit": "716b42ea88d5d28779a6c2ab6b2e40f335d2f56a",
+        "checks_run_id": 42313262543,
+        "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42313262543",
+        "image": "ghcr.io/iagobg/instantflow@sha256:14e0987587515aa23257eb3178975f78785748ebdf726819552468a022903584",
+        "platform": "linux/arm64",
+        "publication_attempt": 1,
+        "publication_run_id": 42313987494,
+        "schema": 2
+      },
+      "cases": [
+        {
+          "arm": "candidate",
+          "mode": "fixed-rate",
+          "repetition": 1,
+          "users": 10
+        },
+        {
+          "arm": "baseline",
+          "mode": "fixed-rate",
+          "repetition": 1,
+          "users": 10
+        },
+        {
+          "arm": "baseline",
+          "mode": "fixed-rate",
+          "repetition": 2,
+          "users": 10
+        },
+        {
+          "arm": "candidate",
+          "mode": "fixed-rate",
+          "repetition": 2,
+          "users": 10
+        },
+        {
+          "arm": "candidate",
+          "mode": "fixed-rate",
+          "repetition": 3,
+          "users": 10
+        },
+        {
+          "arm": "baseline",
+          "mode": "fixed-rate",
+          "repetition": 3,
+          "users": 10
+        }
+      ],
+      "comparison_sha256": "d7c60940fa4615e1ae8280c553f17a215a7885bc23d4b86f84086db30cd0a17e",
+      "fixture": {
+        "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+        "initial_records": 12,
+        "load_actors": 10,
+        "name": "school-v1",
+        "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+        "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+        "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+      },
+      "interpretation": "Fixed original durations/repetitions; candidate targets are assessed after paired runs, never relaxed after failure",
+      "measurement_seconds": 180,
+      "runner_sha256": "5785b2fd9d05d5c5aeab3d46811d622a029e494467a44aa1f2964536dbfb3320",
+      "stop_conditions": [
+        "Any correctness or restoration failure",
+        "Database deadlock",
+        "Nonempty outbox after drain",
+        "Browser p95 above five seconds"
+      ],
+      "warmup_seconds": 60,
+      "workloads": {
+        "contention": {
+          "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "name": "school-v1-contention",
+          "sha256": "30a993dbc339f8ad1f1ff384ee678e2fff9e7e0d161f009b57ec353ede047d35"
+        },
+        "fixed-rate": {
+          "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "name": "school-v1-fixed-rate",
+          "sha256": "7e4bb432b145f3da3c8fa22bec7479afa6db0f5e0afd0a3ef5af0e7fac413b36"
+        },
+        "mixed": {
+          "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "name": "school-v1-browser",
+          "sha256": "5b7aa7011e796b3794847052e2e94d7820143a96d5a4088456f0ca468990aba6"
+        }
+      }
+    },
+    "mixed_and_contention": {
+      "application": {
+        "application_commit": "716b42ea88d5d28779a6c2ab6b2e40f335d2f56a",
+        "checks_run_id": 42313262543,
+        "checks_url": "https://github.com/iagobg/instantflow/actions/runs/42313262543",
+        "image": "ghcr.io/iagobg/instantflow@sha256:14e0987587515aa23257eb3178975f78785748ebdf726819552468a022903584",
+        "platform": "linux/arm64",
+        "publication_attempt": 1,
+        "publication_run_id": 42313987494,
+        "schema": 2
+      },
+      "cases": [
+        {
+          "arm": "baseline",
+          "mode": "mixed",
+          "repetition": 1,
+          "users": 1
+        },
+        {
+          "arm": "candidate",
+          "mode": "mixed",
+          "repetition": 1,
+          "users": 1
+        },
+        {
+          "arm": "candidate",
+          "mode": "mixed",
+          "repetition": 1,
+          "users": 5
+        },
+        {
+          "arm": "baseline",
+          "mode": "mixed",
+          "repetition": 1,
+          "users": 5
+        },
+        {
+          "arm": "baseline",
+          "mode": "mixed",
+          "repetition": 1,
+          "users": 10
+        },
+        {
+          "arm": "candidate",
+          "mode": "mixed",
+          "repetition": 1,
+          "users": 10
+        },
+        {
+          "arm": "candidate",
+          "mode": "mixed",
+          "repetition": 2,
+          "users": 10
+        },
+        {
+          "arm": "baseline",
+          "mode": "mixed",
+          "repetition": 2,
+          "users": 10
+        },
+        {
+          "arm": "baseline",
+          "mode": "mixed",
+          "repetition": 2,
+          "users": 5
+        },
+        {
+          "arm": "candidate",
+          "mode": "mixed",
+          "repetition": 2,
+          "users": 5
+        },
+        {
+          "arm": "candidate",
+          "mode": "mixed",
+          "repetition": 2,
+          "users": 1
+        },
+        {
+          "arm": "baseline",
+          "mode": "mixed",
+          "repetition": 2,
+          "users": 1
+        },
+        {
+          "arm": "baseline",
+          "mode": "mixed",
+          "repetition": 3,
+          "users": 1
+        },
+        {
+          "arm": "candidate",
+          "mode": "mixed",
+          "repetition": 3,
+          "users": 1
+        },
+        {
+          "arm": "candidate",
+          "mode": "mixed",
+          "repetition": 3,
+          "users": 5
+        },
+        {
+          "arm": "baseline",
+          "mode": "mixed",
+          "repetition": 3,
+          "users": 5
+        },
+        {
+          "arm": "baseline",
+          "mode": "mixed",
+          "repetition": 3,
+          "users": 10
+        },
+        {
+          "arm": "candidate",
+          "mode": "mixed",
+          "repetition": 3,
+          "users": 10
+        },
+        {
+          "arm": "candidate",
+          "mode": "contention",
+          "repetition": 1,
+          "users": 2
+        },
+        {
+          "arm": "candidate",
+          "mode": "contention",
+          "repetition": 1,
+          "users": 5
+        },
+        {
+          "arm": "candidate",
+          "mode": "fixed-rate",
+          "repetition": 1,
+          "users": 10
+        },
+        {
+          "arm": "baseline",
+          "mode": "fixed-rate",
+          "repetition": 1,
+          "users": 10
+        },
+        {
+          "arm": "baseline",
+          "mode": "fixed-rate",
+          "repetition": 2,
+          "users": 10
+        },
+        {
+          "arm": "candidate",
+          "mode": "fixed-rate",
+          "repetition": 2,
+          "users": 10
+        },
+        {
+          "arm": "candidate",
+          "mode": "fixed-rate",
+          "repetition": 3,
+          "users": 10
+        },
+        {
+          "arm": "baseline",
+          "mode": "fixed-rate",
+          "repetition": 3,
+          "users": 10
+        }
+      ],
+      "comparison_sha256": "d7c60940fa4615e1ae8280c553f17a215a7885bc23d4b86f84086db30cd0a17e",
+      "fixture": {
+        "archive_sha256": "ca9165d79ef6dffa5dec258b9d2010156110027bdd2f8c2173dcfde2f09b442c",
+        "initial_records": 12,
+        "load_actors": 10,
+        "name": "school-v1",
+        "private_manifest_sha256": "e68057e9545249424a67a0d19c8d14914bd1d4d7be8e5aa5b344284436c25aed",
+        "source_commit": "10cb39783293765a858b6f342cf4803773048423",
+        "source_image": "ghcr.io/iagobg/instantflow@sha256:5acd3a923620cba8756cc37a4ff0db45a909adf3225c3a346083bf623d7f4628"
+      },
+      "interpretation": "Fixed original durations/repetitions; candidate targets are assessed after paired runs, never relaxed after failure",
+      "measurement_seconds": 180,
+      "runner_sha256": "5785b2fd9d05d5c5aeab3d46811d622a029e494467a44aa1f2964536dbfb3320",
+      "stop_conditions": [
+        "Any correctness or restoration failure",
+        "Database deadlock",
+        "Nonempty outbox after drain",
+        "Browser p95 above five seconds"
+      ],
+      "warmup_seconds": 60,
+      "workloads": {
+        "contention": {
+          "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "name": "school-v1-contention",
+          "sha256": "30a993dbc339f8ad1f1ff384ee678e2fff9e7e0d161f009b57ec353ede047d35"
+        },
+        "fixed-rate": {
+          "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "name": "school-v1-fixed-rate",
+          "sha256": "7e4bb432b145f3da3c8fa22bec7479afa6db0f5e0afd0a3ef5af0e7fac413b36"
+        },
+        "mixed": {
+          "fixture_source_commit": "10cb39783293765a858b6f342cf4803773048423",
+          "name": "school-v1-browser",
+          "sha256": "5b7aa7011e796b3794847052e2e94d7820143a96d5a4088456f0ca468990aba6"
+        }
+      }
+    }
+  },
+  "related_evidence": [
+    "db-efficiency-final-local-2026-11-06.json",
+    "db-efficiency-full-hosted-comparison-2026-11-06.json",
+    "db-efficiency-final-contention-2026-11-06.json",
+    "db-efficiency-statistics-cleanup-2026-11-06.json"
+  ],
+  "schedule_results": [
+    {
+      "arm": "candidate",
+      "metrics": {
+        "business_failure": {
+          "fails": 480,
+          "passes": 0,
+          "rate": 0
+        },
+        "business_saves": {
+          "count": 360,
+          "rate": 1.3305583936965357
+        },
+        "checks": {
+          "fails": 0,
+          "passes": 480,
+          "rate": 1
+        },
+        "completed_cycles": {
+          "count": 480,
+          "rate": 1.7740778582620478
+        },
+        "cycle_deadline_overruns": {
+          "count": 0,
+          "rate": 0
+        },
+        "missed_start_deadlines": {
+          "count": 0,
+          "rate": 0
+        },
+        "offered_cycles": {
+          "count": 480,
+          "rate": 1.7740778582620478
+        },
+        "schedule_lag_ms": {
+          "avg": 0.5958333333333333,
+          "count": 480,
+          "max": 2,
+          "med": 1,
+          "min": 0,
+          "p(90)": 1,
+          "p(95)": 1,
+          "p(99)": 1
+        },
+        "scheduled_cycle_ms": {
+          "avg": 749.6111111111111,
+          "count": 360,
+          "max": 1283,
+          "med": 664,
+          "min": 628,
+          "p(90)": 1056.4000000000003,
+          "p(95)": 1159.3500000000001,
+          "p(99)": 1244.6900000000003
+        }
+      },
+      "operation_id": "operation-2aaac9cce978",
+      "repetition": 1
+    },
+    {
+      "arm": "baseline",
+      "metrics": {
+        "business_failure": {
+          "fails": 480,
+          "passes": 0,
+          "rate": 0
+        },
+        "business_saves": {
+          "count": 360,
+          "rate": 1.328359090660179
+        },
+        "checks": {
+          "fails": 0,
+          "passes": 480,
+          "rate": 1
+        },
+        "completed_cycles": {
+          "count": 480,
+          "rate": 1.771145454213572
+        },
+        "cycle_deadline_overruns": {
+          "count": 0,
+          "rate": 0
+        },
+        "missed_start_deadlines": {
+          "count": 0,
+          "rate": 0
+        },
+        "offered_cycles": {
+          "count": 480,
+          "rate": 1.771145454213572
+        },
+        "schedule_lag_ms": {
+          "avg": 0.6020833333333333,
+          "count": 480,
+          "max": 2,
+          "med": 1,
+          "min": 0,
+          "p(90)": 1,
+          "p(95)": 1,
+          "p(99)": 1
+        },
+        "scheduled_cycle_ms": {
+          "avg": 975.3305555555555,
+          "count": 360,
+          "max": 1570,
+          "med": 916,
+          "min": 790,
+          "p(90)": 1274.7000000000012,
+          "p(95)": 1390.5500000000002,
+          "p(99)": 1467.5300000000009
+        }
+      },
+      "operation_id": "operation-62627af52cf3",
+      "repetition": 1
+    },
+    {
+      "arm": "baseline",
+      "metrics": {
+        "business_failure": {
+          "fails": 480,
+          "passes": 0,
+          "rate": 0
+        },
+        "business_saves": {
+          "count": 360,
+          "rate": 1.3284113793820969
+        },
+        "checks": {
+          "fails": 0,
+          "passes": 480,
+          "rate": 1
+        },
+        "completed_cycles": {
+          "count": 480,
+          "rate": 1.7712151725094627
+        },
+        "cycle_deadline_overruns": {
+          "count": 0,
+          "rate": 0
+        },
+        "missed_start_deadlines": {
+          "count": 0,
+          "rate": 0
+        },
+        "offered_cycles": {
+          "count": 480,
+          "rate": 1.7712151725094627
+        },
+        "schedule_lag_ms": {
+          "avg": 0.5875,
+          "count": 480,
+          "max": 2,
+          "med": 1,
+          "min": 0,
+          "p(90)": 1,
+          "p(95)": 1,
+          "p(99)": 1
+        },
+        "scheduled_cycle_ms": {
+          "avg": 860.2666666666667,
+          "count": 360,
+          "max": 983,
+          "med": 855,
+          "min": 789,
+          "p(90)": 918.1,
+          "p(95)": 925,
+          "p(99)": 961.1000000000003
+        }
+      },
+      "operation_id": "operation-d7c2e9599777",
+      "repetition": 2
+    },
+    {
+      "arm": "candidate",
+      "metrics": {
+        "business_failure": {
+          "fails": 480,
+          "passes": 0,
+          "rate": 0
+        },
+        "business_saves": {
+          "count": 360,
+          "rate": 1.330394540829997
+        },
+        "checks": {
+          "fails": 0,
+          "passes": 480,
+          "rate": 1
+        },
+        "completed_cycles": {
+          "count": 480,
+          "rate": 1.7738593877733293
+        },
+        "cycle_deadline_overruns": {
+          "count": 0,
+          "rate": 0
+        },
+        "missed_start_deadlines": {
+          "count": 0,
+          "rate": 0
+        },
+        "offered_cycles": {
+          "count": 480,
+          "rate": 1.7738593877733293
+        },
+        "schedule_lag_ms": {
+          "avg": 0.5958333333333333,
+          "count": 480,
+          "max": 2,
+          "med": 1,
+          "min": 0,
+          "p(90)": 1,
+          "p(95)": 1,
+          "p(99)": 1
+        },
+        "scheduled_cycle_ms": {
+          "avg": 654.9638888888888,
+          "count": 360,
+          "max": 706,
+          "med": 651,
+          "min": 630,
+          "p(90)": 668,
+          "p(95)": 676.05,
+          "p(99)": 687.4100000000001
+        }
+      },
+      "operation_id": "operation-02250c923b48",
+      "repetition": 2
+    },
+    {
+      "arm": "candidate",
+      "metrics": {
+        "business_failure": {
+          "fails": 480,
+          "passes": 0,
+          "rate": 0
+        },
+        "business_saves": {
+          "count": 360,
+          "rate": 1.3305227757548252
+        },
+        "checks": {
+          "fails": 0,
+          "passes": 480,
+          "rate": 1
+        },
+        "completed_cycles": {
+          "count": 480,
+          "rate": 1.7740303676731004
+        },
+        "cycle_deadline_overruns": {
+          "count": 0,
+          "rate": 0
+        },
+        "missed_start_deadlines": {
+          "count": 0,
+          "rate": 0
+        },
+        "offered_cycles": {
+          "count": 480,
+          "rate": 1.7740303676731004
+        },
+        "schedule_lag_ms": {
+          "avg": 0.6145833333333334,
+          "count": 480,
+          "max": 2,
+          "med": 1,
+          "min": 0,
+          "p(90)": 1,
+          "p(95)": 1,
+          "p(99)": 1
+        },
+        "scheduled_cycle_ms": {
+          "avg": 655.8194444444445,
+          "count": 360,
+          "max": 723,
+          "med": 651,
+          "min": 630,
+          "p(90)": 667,
+          "p(95)": 681,
+          "p(99)": 690
+        }
+      },
+      "operation_id": "operation-a7dc9b7d1e8a",
+      "repetition": 3
+    },
+    {
+      "arm": "baseline",
+      "metrics": {
+        "business_failure": {
+          "fails": 480,
+          "passes": 0,
+          "rate": 0
+        },
+        "business_saves": {
+          "count": 360,
+          "rate": 1.3282561900871217
+        },
+        "checks": {
+          "fails": 0,
+          "passes": 480,
+          "rate": 1
+        },
+        "completed_cycles": {
+          "count": 480,
+          "rate": 1.7710082534494955
+        },
+        "cycle_deadline_overruns": {
+          "count": 0,
+          "rate": 0
+        },
+        "missed_start_deadlines": {
+          "count": 0,
+          "rate": 0
+        },
+        "offered_cycles": {
+          "count": 480,
+          "rate": 1.7710082534494955
+        },
+        "schedule_lag_ms": {
+          "avg": 0.6020833333333333,
+          "count": 480,
+          "max": 2,
+          "med": 1,
+          "min": 0,
+          "p(90)": 1,
+          "p(95)": 1,
+          "p(99)": 2
+        },
+        "scheduled_cycle_ms": {
+          "avg": 862.6138888888889,
+          "count": 360,
+          "max": 1035,
+          "med": 859,
+          "min": 779,
+          "p(90)": 920,
+          "p(95)": 936.05,
+          "p(99)": 970.4100000000001
+        }
+      },
+      "operation_id": "operation-0d407087879e",
+      "repetition": 3
+    }
+  ],
+  "schema": 1
+}
