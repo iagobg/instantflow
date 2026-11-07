@@ -93,6 +93,8 @@ defmodule Instantflow.ProcessMigrationTest do
         })
 
       actor = Identity.scope(user.id, a.id)
+      # Database and organization clocks can be on different calendar dates.
+      business_date = ~D[2026-10-21]
 
       {:ok, ticket} =
         Instantflow.WorkflowRuntime.command(
@@ -119,8 +121,8 @@ defmodule Instantflow.ProcessMigrationTest do
 
       visit =
         insert.(
-          "INSERT INTO service_sessions(organization_id,resource_id,ticket_id,resource_name,waiter,business_date,status,total,opened_at) VALUES($1,$2,$3,'Mesa 08','Carlos',CURRENT_DATE,'open',0,now()) RETURNING id",
-          [a.id, resource, ticket["ticket_id"]]
+          "INSERT INTO service_sessions(organization_id,resource_id,ticket_id,resource_name,waiter,business_date,status,total,opened_at) VALUES($1,$2,$3,'Mesa 08','Carlos',$4,'open',0,now()) RETURNING id",
+          [a.id, resource, ticket["ticket_id"], business_date]
         )
 
       batch =
@@ -140,8 +142,8 @@ defmodule Instantflow.ProcessMigrationTest do
       )
 
       insert.(
-        "INSERT INTO operation_day_closes(organization_id,business_date,actor_id,summary,inserted_at) VALUES($1,CURRENT_DATE - 1,$2,$3,now()) RETURNING id",
-        [a.id, user.id, %{"sales" => 0}]
+        "INSERT INTO operation_day_closes(organization_id,business_date,actor_id,summary,inserted_at) VALUES($1,$4,$2,$3,now()) RETURNING id",
+        [a.id, user.id, %{"sales" => 0}, Date.add(business_date, -1)]
       )
 
       insert.(
@@ -180,14 +182,14 @@ defmodule Instantflow.ProcessMigrationTest do
       assert OperatorRepo.get!(Instantflow.WorkflowRuntime.Ticket, ticket["ticket_id"]).workflow_version_id ==
                version.id
 
-      data = Operations.workspace(actor, Operations.today(actor))
+      data = Operations.workspace(actor, business_date)
       assert hd(data.products).price == 600
       assert Operations.visit(actor, visit).total == 1200
       assert Operations.visit(actor, visit).archived?
       assert data.report.archived_count == 1
       assert data.report.archived_total == 1200
       assert data.sessions == []
-      second = Operations.workspace(Identity.scope(user.id, b.id), Operations.today(actor))
+      second = Operations.workspace(Identity.scope(user.id, b.id), business_date)
       assert hd(second.products).name == "Sopa"
       assert second.version.definition["interface"]["pages"] != []
     after
